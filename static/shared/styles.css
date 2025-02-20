@@ -1,0 +1,97 @@
+/* Common styles for Last Apple Brain */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f8f9fa;
+}
+
+.navbar {
+    background: #2c3e50;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.navbar-toggler {
+    border-color: rgba(255,255,255,0.5);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-brand {
+    color: white !important;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: rgba(255,255,255,0.8) !important;
+}
+
+.nav-link:hover {
+    color: white !important;
+}
+
+.main-content {
+    padding: 2rem;
+}
+
+/* Card styles */
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+}
+
+/* Table styles */
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,.075);
+    cursor: pointer;
+}
+
+/* Form styles */
+.form-control {
+    border-radius: 6px;
+}
+
+.btn {
+    border-radius: 6px;
+}
+
+/* Grid styles */
+.grid-container { 
+    height: 800px; 
+    width: 100%;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Modal styles */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    background: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Utility classes */
+.text-muted {
+    color: #6c757d !important;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+/* Status badges */
+.badge-corporate { background-color: #28a745; color: white; }
+.badge-service { background-color: #17a2b8; color: white; }
+.badge-free { background-color: #ffc107; color: black; }
+.badge-unknown { background-color: #6c757d; color: white; }

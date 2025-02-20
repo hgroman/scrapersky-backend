@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Last Apple Brain - Web Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+        }
+        .navbar {
+            background: #2c3e50;
+            padding: 1rem;
+        }
+        .navbar-toggler {
+            border-color: rgba(255,255,255,0.5);
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .nav-link:hover {
+            color: white !important;
+        }
+        .tool-card {
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        iframe {
+            border: none;
+            width: 100%;
+            height: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">ScraperSky</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('dashboard')">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('website-grid')">Website Grid</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('sitemap-viewer')">Sitemap Scanner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('sitemap-data-viewer')">Data Viewer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('contact-viewer')">Contact Manager</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('email-scanner')">Email Scanner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadTool('chat')">AI Chat</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid main-content">
+        <div id="dashboard" class="view">
+            <h2 class="mb-4">Web Tools Dashboard</h2>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card tool-card">
+                        <div class="card-body text-center">
+                            <div class="tool-icon">🕷️</div>
+                            <h5 class="card-title">Sitemap Scanner</h5>
+                            <p class="card-text">Scan websites, detect technology stacks, and analyze page structures.</p>
+                            <button class="btn btn-primary" onclick="loadTool('sitemap-viewer')">Open Scanner</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card tool-card">
+                        <div class="card-body text-center">
+                            <div class="tool-icon">🗂️</div>
+                            <h5 class="card-title">Website Grid</h5>
+                            <p class="card-text">View and manage websites in an interactive grid layout.</p>
+                            <button class="btn btn-primary" onclick="loadTool('website-grid')">Open Grid</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card tool-card">
+                        <div class="card-body text-center">
+                            <div class="tool-icon">📊</div>
+                            <h5 class="card-title">Data Viewer</h5>
+                            <p class="card-text">View and analyze collected website data, manage batch operations.</p>
+                            <button class="btn btn-primary" onclick="loadTool('sitemap-data-viewer')">Open Viewer</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card tool-card">
+                        <div class="card-body text-center">
+                            <div class="tool-icon">👥</div>
+                            <h5 class="card-title">Contact Tools</h5>
+                            <p class="card-text">Manage contacts and scan for email addresses across websites.</p>
+                            <button class="btn btn-primary" onclick="loadTool('contact-viewer')">Open Contacts</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tool-frame-container" style="display: none;">
+            <iframe id="tool-frame" src=""></iframe>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Tool loading and navigation
+        function loadTool(tool) {
+            const dashboard = document.getElementById('dashboard');
+            const frameContainer = document.getElementById('tool-frame-container');
+            const frame = document.getElementById('tool-frame');
+
+            if (tool === 'dashboard') {
+                dashboard.style.display = 'block';
+                frameContainer.style.display = 'none';
+                frame.src = '';
+                return;
+            }
+
+            dashboard.style.display = 'none';
+            frameContainer.style.display = 'block';
+            
+            // Map tool names to their URLs
+            const toolUrls = {
+                'sitemap-viewer': '/static/sitemap-viewer.html',
+                'sitemap-data-viewer': '/static/sitemap-data-viewer.html',
+                'contact-viewer': '/static/contact-viewer.html',
+                'email-scanner': '/static/email-scanner.html',
+                'chat': '/static/chat.html',
+                'website-grid': '/static/website-grid.html'
+            };
+
+            frame.src = toolUrls[tool];
+        }
+
+        // Load dashboard by default
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTool('dashboard');
+        });
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>

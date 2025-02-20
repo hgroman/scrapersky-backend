@@ -1,0 +1,18 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# Environment and secret files
+.env
+
+# macOS artifacts
+.DS_Store
+
+# Logs
+*.log

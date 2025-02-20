@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Scanner - Last Apple Brain</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="shared/styles.css" rel="stylesheet">
+    <style>
+        .website-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .website-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .website-card.selected {
+            border: 2px solid #0d6efd;
+        }
+        .progress {
+            height: 25px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include shared navigation -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container main-content">
+        <h1 class="mb-4">Email Scanner</h1>
+        
+        <!-- Website Selection -->
+        <div class="row mb-4">
+            <div class="col">
+                <h3>Select Website to Scan</h3>
+                <div id="websiteList" class="row g-4">
+                    <!-- Websites will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan Controls -->
+        <div class="row mb-4">
+            <div class="col">
+                <button id="startScanBtn" class="btn btn-primary btn-lg" disabled>
+                    Start Scanning
+                </button>
+            </div>
+        </div>
+
+        <!-- Scan Progress -->
+        <div id="scanProgress" class="d-none">
+            <h3>Scan Progress</h3>
+            <div class="card">
+                <div class="card-body">
+                    <h5 id="scanningDomain" class="card-title mb-3"></h5>
+                    <div class="progress mb-3">
+                        <div id="scanProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%">
+                            0%
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <p class="mb-1">Pages Scanned: <span id="pagesScanned">0</span> / <span id="totalPages">0</span></p>
+                            <p class="mb-1">Contacts Found: <span id="contactsFound">0</span></p>
+                            <p class="mb-0">Status: <span id="scanStatus">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Load navigation
+        $(function(){
+            $("#nav-placeholder").load("shared/header.html");
+        });
+        let selectedWebsite = null;
+        let scanInterval = null;
+
+        // Load available websites
+        async function loadWebsites() {
+            try {
+                const response = await fetch('/email-scanner/websites');
+                const websites = await response.json();
+                
+                const websiteList = document.getElementById('websiteList');
+                websiteList.innerHTML = websites.map(website => `
+                    <div class="col-md-4">
+                        <div class="card website-card" data-website-id="${website.id}">
+                            <div class="card-body">
+                                <h5 class="card-title">${website.domain}</h5>
+                                <p class="card-text">Pages: ${website.pages_count}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Add click handlers to all website cards
+                document.querySelectorAll('.website-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const websiteId = parseInt(this.dataset.websiteId);
+                        selectWebsite(websiteId, this);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading websites:', error);
+            }
+        }
+
+        // Select a website for scanning
+        function selectWebsite(websiteId, cardElement) {
+            selectedWebsite = websiteId;
+            console.log('Selected website:', websiteId);
+            
+            // Update UI
+            document.querySelectorAll('.website-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            cardElement.classList.add('selected');
+            
+            // Enable scan button
+            document.getElementById('startScanBtn').disabled = false;
+        }
+
+        // Start scanning
+        async function startScan() {
+            if (!selectedWebsite) {
+                console.error('No website selected');
+                return;
+            }
+
+            try {
+                console.log('Starting scan for website:', selectedWebsite);
+                
+                // Start scan
+                const response = await fetch(`/email-scanner/scan/${selectedWebsite}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const scanData = await response.json();
+                console.log('Scan started:', scanData);
+                
+                // Update UI
+                document.getElementById('scanProgress').classList.remove('d-none');
+                document.getElementById('scanningDomain').textContent = scanData.domain;
+                document.getElementById('totalPages').textContent = scanData.total_pages;
+                document.getElementById('scanStatus').textContent = 'running';
+                
+                // Reset progress
+                document.getElementById('scanProgressBar').style.width = '0%';
+                document.getElementById('scanProgressBar').textContent = '0%';
+                document.getElementById('pagesScanned').textContent = '0';
+                document.getElementById('contactsFound').textContent = '0';
+                
+                // Remove any previous completion alerts
+                const existingAlerts = document.querySelectorAll('.alert');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                // Start progress polling
+                if (scanInterval) clearInterval(scanInterval);
+                scanInterval = setInterval(updateScanProgress, 1000);
+                
+                // Disable scan button
+                document.getElementById('startScanBtn').disabled = true;
+            } catch (error) {
+                console.error('Error starting scan:', error);
+                alert('Failed to start scan: ' + error.message);
+            }
+        }
+
+        // Update scan progress
+        async function updateScanProgress() {
+            try {
+                const response = await fetch(`/email-scanner/scan/${selectedWebsite}/status`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const status = await response.json();
+                
+                // Show progress container if hidden
+                document.getElementById('scanProgress').classList.remove('d-none');
+                
+                // Update progress
+                const progress = Math.round((status.pages_scanned / status.total_pages) * 100);
+                document.getElementById('scanProgressBar').style.width = `${progress}%`;
+                document.getElementById('scanProgressBar').textContent = `${progress}%`;
+                
+                // Update stats
+                document.getElementById('pagesScanned').textContent = status.pages_scanned;
+                document.getElementById('contactsFound').textContent = status.contacts_found;
+                document.getElementById('scanStatus').textContent = status.status;
+                
+                // Check if complete or failed
+                if (status.status === 'completed' || status.status === 'failed') {
+                    clearInterval(scanInterval);
+                    document.getElementById('startScanBtn').disabled = false;
+                    
+                    // Add completion message
+                    const alertClass = status.status === 'completed' ? 'alert-success' : 'alert-danger';
+                    const message = status.status === 'completed' 
+                        ? `Scan completed! Found ${status.contacts_found} contacts.`
+                        : 'Scan failed. Please check the logs for details.';
+                    
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert ${alertClass} mt-3`;
+                    alertDiv.textContent = message;
+                    document.getElementById('scanProgress').appendChild(alertDiv);
+                }
+            } catch (error) {
+                console.error('Error updating progress:', error);
+                document.getElementById('scanStatus').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('startScanBtn').addEventListener('click', startScan);
+
+        // Load websites when page is ready
+        window.addEventListener('load', loadWebsites);
+    </script>
+</body>
+</html>

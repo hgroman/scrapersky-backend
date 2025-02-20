@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  scrapersky:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: scrapersky:v1
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SCRAPER_API_KEY=${SCRAPER_API_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - UVICORN_RELOAD=false
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+# Notes for Production Deployment:
+# 1. Supabase is used as the managed database service, providing:
+#    - Automatic backups
+#    - Point-in-time recovery
+#    - High availability
+#    - Automatic scaling
+#    - Security patches
+# 2. All sensitive data is passed via environment variables
+# 3. For Kubernetes deployment, use k8s/secrets.yaml and k8s/deployment.yaml
