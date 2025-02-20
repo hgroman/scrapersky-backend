@@ -4,8 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
-from src.routers import chat, email_scanner
-from src.routers.sitemap_scraper import router as sitemap_router
+from src.routers import routers  # Import routers list from __init__.py
 
 # Configure logging with environment-based levels
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -33,10 +32,9 @@ app.add_middleware(
     allow_headers=["*"],  # TODO: Restrict to specific headers in production
 )
 
-# Include routers
-app.include_router(chat.router, tags=["chat"])
-app.include_router(sitemap_router, tags=["scrapersky"])  # Updated tag to "scrapersky"
-app.include_router(email_scanner.router, tags=["email-scanner"])
+# Dynamically include all routers from the routers list
+for router in routers:
+    app.include_router(router)
 
 # Serve static files with absolute path
 static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")

@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     port: int = 8000
     host: str = "0.0.0.0"
     max_workers: int = 4
+    user_agent: Optional[str] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 
     # Storage Settings
     chroma_persist_dir: str = "./chroma_data"
@@ -24,3 +25,4 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False  # Allow case-insensitive env var names
+        extra = "ignore"        # Ignore extra environment variables

@@ -1,5 +1,8 @@
 Below is a revised version of your README that reflects your current workflow and technology choices. I've replaced references to BigQuery with Supabase, updated the project structure accordingly, and highlighted your modern deployment workflow with Vercel and Lovable.dev.
 
+Test Domain
+curl -X POST "http://localhost:8000/api/v1/scrapersky" -H "Content-Type: application/json" -d '{"base_url": "https://txkidney.com", "max_pages": 100}'
+
 ---
 
 # ScraperSky
@@ -70,14 +73,32 @@ ScraperSky/
 
 ### API Endpoints
 
-| Endpoint                        | Method | Purpose                             | Example                                                                 |
-|---------------------------------|--------|-------------------------------------|-------------------------------------------------------------------------|
-| `/api/v1/scrapersky_endpoint`   | POST   | Scan website metadata               | `curl -X POST http://localhost:8000/api/v1/scrapersky_endpoint -d '{"base_url":"https://example.com", "max_pages": 100}'` |
-| `/api/v1/status/{job_id}`      | GET    | Get scan status                     | `curl http://localhost:8000/api/v1/status/scan_123`                      |
-| `/chat`                         | POST   | Chat with the AI (OpenAI integration)| `curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"message":"Hello"}'`  |
-| `/email-scanner/domains`        | GET    | List available domains for scanning | `curl http://localhost:8000/email-scanner/domains`                        |
-| `/email-scanner/scan/{domain_id}` | POST | Start scanning a domain for emails  | `curl -X POST http://localhost:8000/email-scanner/scan/1 -H "Content-Type: application/json"`  |
-| `/email-scanner/scan/{domain_id}/status` | GET | Check email scanning status | `curl http://localhost:8000/email-scanner/scan/1/status`                  |
+| Endpoint                    | Method | Purpose                             | Example Request                                                          |
+|----------------------------|--------|-------------------------------------|------------------------------------------------------------------------|
+| `/api/v1/scrapersky`      | POST   | Start sitemap scanning              | `curl -X POST http://localhost:8000/api/v1/scrapersky -H "Content-Type: application/json" -d '{"base_url":"https://example.com", "max_pages": 100}'` |
+| `/api/v1/status/{job_id}` | GET    | Get scan job status                 | `curl http://localhost:8000/api/v1/status/job_123abc`                     |
+| `/health`                 | GET    | Check service health                | `curl http://localhost:8000/health`                                       |
+
+Response Examples:
+```json
+# POST /api/v1/scrapersky response:
+{
+    "job_id": "job_123abc",
+    "status": "started",
+    "status_url": "/api/v1/status/job_123abc"
+}
+
+# GET /api/v1/status/{job_id} response:
+{
+    "status": "completed",
+    "metadata": {
+        "pages_scanned": 50,
+        "wordpress_version": "6.4.3",
+        "has_elementor": true
+        // ... other metadata
+    }
+}
+```
 
 ## Quick Start
 
@@ -174,6 +195,28 @@ For detailed Supabase setup and troubleshooting, see our internal documentation.
 3. **Infrastructure**
    - Finalize Docker and Kubernetes deployment configurations.
    - Set up monitoring, CI/CD pipelines, and automated testing.
+
+## Recent Updates
+
+### 1. Endpoint and Router Fixes
+- Fixed and simplified `/api/v1/scrapersky` endpoint
+- Added asynchronous job processing with status tracking
+- Improved error handling and validation
+- Added `/health` endpoint for service monitoring
+
+### 2. Database Integration
+- Enhanced Supabase connection with proper connection pooling
+- Improved data insertion logic for website metadata
+- Added comprehensive database testing
+
+### 3. Frontend Testing
+- Added `/static/endpoint-test.html` for easy API testing
+- Improved error feedback and status monitoring
+
+### 4. Development and Testing
+- Enhanced Docker integration
+- Added environment variable validation
+- Improved logging and error tracking
 
 ## Contributing
 
