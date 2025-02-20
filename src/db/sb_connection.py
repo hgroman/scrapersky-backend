@@ -58,11 +58,23 @@ class DatabaseConnection:
     
     def __init__(self, min_conn: int = 1, max_conn: int = 10):
         self.config = DatabaseConfig()
-        self._pool = SimpleConnectionPool(
-            minconn=min_conn,
-            maxconn=max_conn,
-            dsn=self.config.connection_string
-        )
+        self._pool = None
+        self.min_conn = min_conn
+        self.max_conn = max_conn
+    
+    def _ensure_pool(self):
+        """Ensure the connection pool exists, create it if it doesn't."""
+        if self._pool is None:
+            try:
+                self._pool = SimpleConnectionPool(
+                    minconn=self.min_conn,
+                    maxconn=self.max_conn,
+                    dsn=self.config.connection_string
+                )
+            except Exception as e:
+                print(f"Warning: Could not initialize database pool: {str(e)}")
+                return False
+        return True
     
     @contextmanager
     def get_connection(self) -> Generator[psycopg2.extensions.connection, None, None]:
@@ -74,11 +86,15 @@ class DatabaseConnection:
                 with conn.cursor() as cur:
                     cur.execute("SELECT NOW();")
         """
+        if not self._ensure_pool():
+            raise ConnectionError("Database connection pool is not available")
+            
         conn = self._pool.getconn()
         try:
             yield conn
         finally:
-            self._pool.putconn(conn)
+            if self._pool:
+                self._pool.putconn(conn)
     
     @contextmanager
     def get_cursor(self, cursor_factory=RealDictCursor) -> Generator[psycopg2.extensions.cursor, None, None]:
