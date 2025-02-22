@@ -42,7 +42,21 @@ class DatabaseConfig:
     
     @property
     def connection_string(self) -> str:
-        """Generate the connection string with proper URL encoding."""
+        """Generate the connection string with proper URL encoding.
+        Tries pooler connection first, falls back to direct connection.
+        """
+        # Try pooler connection first (IPv4 compatible)
+        pooler_host = os.getenv('SUPABASE_POOLER_HOST')
+        pooler_port = os.getenv('SUPABASE_POOLER_PORT')
+        pooler_user = os.getenv('SUPABASE_POOLER_USER')
+        
+        if all([pooler_host, pooler_port, pooler_user]):
+            return (
+                f"postgresql://{pooler_user}:{quote_plus(self.password)}"
+                f"@{pooler_host}:{pooler_port}/{self.dbname}?sslmode=require"
+            )
+        
+        # Fall back to direct connection if pooler not configured
         return (
             f"postgresql://{self.user}:{quote_plus(self.password)}"
             f"@{self.host}:{self.port}/{self.dbname}?sslmode=require"
@@ -66,13 +80,21 @@ class DatabaseConnection:
         """Ensure the connection pool exists, create it if it doesn't."""
         if self._pool is None:
             try:
+                import logging
+                logging.info(f"Attempting to connect to database at {self.config.host}")
+                logging.info(f"Using connection string format: postgresql://<user>@{self.config.host}:{self.config.port}/{self.config.dbname}?sslmode=require")
+                
                 self._pool = SimpleConnectionPool(
                     minconn=self.min_conn,
                     maxconn=self.max_conn,
                     dsn=self.config.connection_string
                 )
+                logging.info("Database connection pool created successfully")
             except Exception as e:
-                print(f"Warning: Could not initialize database pool: {str(e)}")
+                import traceback
+                logging.error(f"Database connection error: {str(e)}")
+                logging.error(f"Connection traceback: {traceback.format_exc()}")
+                logging.error(f"Host: {self.config.host}, Port: {self.config.port}, DB: {self.config.dbname}")
                 return False
         return True
     
