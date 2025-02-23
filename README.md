@@ -155,13 +155,25 @@ Response Examples:
 4. Update tests and documentation.
 
 ### Environment Variables
+
+#### Core API Keys
 - `OPENAI_API_KEY`: OpenAI API key for chat functionality.
 - `SCRAPER_API_KEY`: Key for ScraperAPI.
+- `USER_AGENT`: Custom user agent string for HTTP requests (optional).
+
+#### Supabase Configuration
+##### Basic Connection (Required)
 - `SUPABASE_URL`: Your Supabase project URL.
 - `SUPABASE_SERVICE_ROLE_KEY`: Service role key for Supabase.
 - `SUPABASE_ANON_KEY`: Anonymous key for Supabase.
 - `SUPABASE_DB_PASSWORD`: Database password for Supabase.
-- `USER_AGENT`: Custom user agent string for HTTP requests (optional).
+
+##### Pooler Connection (Required for Render.com and IPv4-only environments)
+- `SUPABASE_POOLER_HOST`: Supabase pooler hostname (e.g., aws-0-us-west-1.pooler.supabase.com)
+- `SUPABASE_POOLER_PORT`: Pooler port (default: 6543)
+- `SUPABASE_POOLER_USER`: Pooler username (format: postgres.[project-ref])
+
+> **Note**: Pooler configuration is essential for deployments on platforms like Render.com that require IPv4 connectivity.
 
 ### Supabase Integration
 
@@ -198,7 +210,63 @@ For detailed Supabase setup and troubleshooting, see our internal documentation.
 
 ## Recent Updates
 
-### 1. Endpoint and Router Fixes
+### 1. Development Workflow Enhancement (February 2025)
+Our project leverages a modern, integrated development pipeline:
+
+#### Frontend Development
+- **Design & Development**: Lovable.dev
+  - Direct integration with GitHub
+  - Automated publishing of UI changes
+  - Seamless version control integration
+
+#### Backend Development
+- **IDE & Development**: Windsurf
+  - AI-assisted development environment
+  - Direct GitHub integration
+  - Advanced codebase management
+  - Integrated testing and validation
+
+#### Deployment Pipeline
+- **Frontend**: GitHub → Vercel
+  - Automatic deployment on push
+  - Zero-configuration setup
+  - Instant preview environments
+
+- **Backend**: GitHub → Render.com
+  - Automated deployment from main branch
+  - Container-based deployment
+  - IPv4-compatible infrastructure
+
+### 2. Database Connection Improvements (February 2025)
+#### IPv4 Compatibility for Cloud Deployments
+- Added support for Supabase connection pooler to ensure IPv4 compatibility
+- Implemented smart fallback mechanism: pooler first, direct connection as backup
+- Critical for deployments on platforms like Render.com that require IPv4 connectivity
+
+#### Additional Environment Variables
+For Supabase pooler support, add these to your `.env`:
+```env
+# Supabase Pooler Configuration (IPv4 Compatible)
+SUPABASE_POOLER_HOST=aws-0-us-west-1.pooler.supabase.com
+SUPABASE_POOLER_PORT=6543
+SUPABASE_POOLER_USER=postgres.[your-project-ref]
+```
+
+#### Connection Testing
+Added two utility scripts for connection validation:
+- `test_db_connection.py`: Comprehensive database connection testing
+- `check_env.py`: Environment variable verification
+
+To verify your setup:
+```bash
+# Check environment variables
+python check_env.py
+
+# Test database connection
+python test_db_connection.py
+```
+
+### 3. Endpoint and Router Fixes
 - Fixed and simplified `/api/v1/scrapersky` endpoint
 - Added asynchronous job processing with status tracking
 - Improved error handling and validation
@@ -231,6 +299,66 @@ MIT
 
 ---
 
+## Database Connection Evolution
+
+### Connection Strategy Changes
+
+#### Previous Implementation
+- Direct connection to Supabase database
+- Used standard PostgreSQL connection (port 5432)
+- IPv6-first DNS resolution
+- Challenges with IPv4-only environments
+
+#### Current Implementation (February 2025)
+- Primary: Supabase Connection Pooler
+  - IPv4-compatible connection
+  - Transaction pooling for better resource management
+  - Improved reliability in cloud environments
+- Fallback: Direct Connection
+  - Maintains backward compatibility
+  - Supports IPv6-capable environments
+  - Useful for local development
+
+### Why We Made These Changes
+
+1. **Cloud Deployment Compatibility**
+   - Render.com and similar platforms often lack IPv6 support
+   - Direct connections defaulting to IPv6 caused deployment failures
+   - Pooler connection ensures reliable IPv4 connectivity
+
+2. **Performance Benefits**
+   - Connection pooling reduces database connection overhead
+   - Better handling of concurrent connections
+   - Improved resource utilization
+
+3. **Reliability Improvements**
+   - Smart fallback mechanism ensures connection availability
+   - Automatic retry with alternative connection method
+   - Better error handling and logging
+
+### Implementation Details
+
+#### Connection Logic
+```python
+# The system tries pooler connection first:
+postgresql://postgres.[project-ref]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+
+# Falls back to direct connection if pooler not configured:
+postgresql://postgres.[project-ref]@db.[project-ref].supabase.co:5432/postgres
+```
+
+#### Verification
+Use the provided test scripts to verify your connection:
+```bash
+# Verify environment setup
+python check_env.py
+
+# Test database connectivity
+python test_db_connection.py
+```
+
+---
+
 ### Summary of Revisions:
 - **BigQuery to Supabase:**  
   All references to BigQuery have been removed; data operations now use Supabase.
@@ -244,3 +372,170 @@ MIT
   Emphasized Docker, Kubernetes, and continuous integration practices.
 
 Feel free to adjust any details further to ensure the README accurately reflects your project's reality. Let me know if you need any more changes or additional information!
+
+---
+
+## API Integration Guide for Frontend Development
+
+### API Endpoints
+
+#### 1. Sitemap Scanning Endpoint
+```
+POST /api/v1/scrapersky
+```
+
+##### Request Format
+```json
+{
+    "base_url": "https://example.com",
+    "max_pages": 100  // optional, defaults to system maximum
+}
+```
+
+##### Response Format
+```json
+{
+    "job_id": "unique_job_id",
+    "status": "started",
+    "status_url": "/api/v1/status/unique_job_id"
+}
+```
+
+#### 2. Job Status Endpoint
+```
+GET /api/v1/status/{job_id}
+```
+
+##### Response Format
+```json
+{
+    "status": "completed",  // or "running", "failed"
+    "metadata": {
+        "title": "Website Title",
+        "description": "Meta description",
+        "language": "en",
+        "is_wordpress": true,
+        "wordpress_version": "6.4.3",
+        "has_elementor": true,
+        "favicon_url": "https://example.com/favicon.ico",
+        "logo_url": "https://example.com/logo.png",
+        "contact_info": {
+            "email": ["contact@example.com"],
+            "phone": ["+1-555-0123"]
+        },
+        "social_links": {
+            "facebook": "https://facebook.com/example",
+            "twitter": "https://twitter.com/example"
+        }
+    }
+}
+```
+
+### Integration Requirements
+
+1. **CORS Support**
+   - API supports CORS for frontend integration
+   - No additional headers required for basic operation
+   - Production endpoints should restrict origins
+
+2. **Error Handling**
+   ```json
+   {
+       "detail": "Error message description",
+       "status_code": 400
+   }
+   ```
+
+3. **Rate Limiting**
+   - Maximum 100 requests per minute per IP
+   - Status code 429 when limit exceeded
+
+### Example Integration Code
+
+```javascript
+// Submit URL for scanning
+async function scanWebsite(url) {
+    try {
+        const response = await fetch('https://scrapersky-backend.onrender.com/api/v1/scrapersky', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                base_url: url
+            })
+        });
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Scanning error:', error);
+        throw error;
+    }
+}
+
+// Check job status
+async function checkStatus(jobId) {
+    try {
+        const response = await fetch(`https://scrapersky-backend.onrender.com/api/v1/status/${jobId}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Status check error:', error);
+        throw error;
+    }
+}
+
+// Example usage with status polling
+async function scanAndMonitor(url) {
+    // Start scan
+    const scanResult = await scanWebsite(url);
+    
+    // Poll for status
+    const checkInterval = setInterval(async () => {
+        const status = await checkStatus(scanResult.job_id);
+        
+        if (status.status === 'completed') {
+            clearInterval(checkInterval);
+            // Handle completion
+            console.log('Scan completed:', status.metadata);
+        } else if (status.status === 'failed') {
+            clearInterval(checkInterval);
+            // Handle failure
+            console.error('Scan failed:', status.error);
+        }
+        // Continue polling if status is 'running'
+    }, 5000); // Check every 5 seconds
+}
+```
+
+### UI Implementation Guidelines
+
+1. **User Input**
+   - URL input field with validation
+   - Optional max pages input
+   - Submit button with loading state
+
+2. **Progress Display**
+   - Job ID display
+   - Status indicator
+   - Loading animation during scanning
+
+3. **Results Display**
+   - Organized sections for different metadata types
+   - Error handling and user feedback
+   - Copy/export functionality for results
+
+4. **Recommended Libraries**
+   - Axios or fetch for API calls
+   - React Query for state management
+   - Material-UI or Tailwind for components
+
+### Testing Endpoints
+
+- Development: `http://localhost:8000`
+- Production: `https://scrapersky-backend.onrender.com`
+- Swagger Docs: `https://scrapersky-backend.onrender.com/docs`
+- OpenAPI Spec: `https://scrapersky-backend.onrender.com/openapi.json`
+
+Refer to the example implementation in `/static/endpoint-test.html` for a working reference.
