@@ -6,7 +6,9 @@ It supports both single domain scanning and batch processing.
 
 Endpoints:
 - POST /api/v1/scrapersky: Scan a single domain
+- POST /api/v1/batch: Scan multiple domains in batch mode
 - GET /api/v1/status/{job_id}: Check the status of a scan
+- GET /api/v1/batch/status/{batch_id}: Check the status of a batch scan
 
 The module handles:
 - Domain validation and standardization
@@ -16,7 +18,7 @@ The module handles:
 - Error handling
 """
 from fastapi import APIRouter, HTTPException, Body
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from pydantic import BaseModel
 import logging
 import asyncio
@@ -44,8 +46,21 @@ class ScanStatus(BaseModel):
     error: Optional[str] = None
     progress: Optional[Dict] = None
 
+# Batch status tracking model
+class BatchStatus(BaseModel):
+    """Model for tracking batch scan status."""
+    batch_id: str
+    status: str  # "pending", "in_progress", "completed", "failed", "partial"
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+    total_jobs: int
+    completed_jobs: int = 0
+    failed_jobs: int = 0
+    jobs: List[Dict[str, Any]] = []
+
 # Redis will be used in production for better scalability
 _job_statuses: Dict[str, ScanStatus] = {}
+_batch_statuses: Dict[str, BatchStatus] = {}
 
 # Security prefix 'api/v1' added for proper versioning and routing.
 # Updated tag to "scrapersky" for consistency with the new endpoint naming.
@@ -56,6 +71,17 @@ class ScanResponse(BaseModel):
     job_id: str
     status: str
     message: str
+
+class BatchRequest(BaseModel):
+    """Request model for batch domain scanning."""
+    domains: List[str]
+    tenant_id: str
+
+class BatchResponse(BaseModel):
+    """Response model for batch scan operations."""
+    batch_id: str
+    status_url: str
+    job_count: int
 
 class DomainData(BaseModel):
     """Model for domain data."""
@@ -107,6 +133,59 @@ async def scan_domain(request: SitemapScrapingRequest) -> SitemapScrapingRespons
 
     except Exception as e:
         logger.error(f"Error initiating scan: {str(e)}")
+        if isinstance(e, HTTPException):
+            raise
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/batch", response_model=BatchResponse)
+async def batch_scan_domains(request: BatchRequest) -> BatchResponse:
+    """
+    Scan multiple domains in batch mode.
+
+    This endpoint initiates scans for multiple domains and tracks them as a batch.
+    It extracts metadata such as title, description, technology stack, and contact
+    information for each domain.
+
+    Args:
+        request: The request containing the list of domains to scan and tenant ID
+
+    Returns:
+        A response containing the batch ID, status URL, and job count
+
+    Raises:
+        HTTPException: If the domains are invalid or the batch fails to initiate
+    """
+    try:
+        # Validate input
+        if not request.domains:
+            raise HTTPException(status_code=400, detail="No domains provided")
+
+        if len(request.domains) > 100:
+            raise HTTPException(status_code=400, detail="Maximum 100 domains allowed per batch")
+
+        # Generate unique batch ID
+        batch_id = f"batch_{uuid.uuid4().hex}"
+
+        # Initialize batch status tracking
+        _batch_statuses[batch_id] = BatchStatus(
+            batch_id=batch_id,
+            status="pending",
+            started_at=datetime.utcnow(),
+            total_jobs=len(request.domains),
+            jobs=[]
+        )
+
+        # Start background task for batch processing
+        asyncio.create_task(process_batch_scan(batch_id, request.domains, request.tenant_id))
+
+        return BatchResponse(
+            batch_id=batch_id,
+            status_url=f"/api/v1/batch/status/{batch_id}",
+            job_count=len(request.domains)
+        )
+
+    except Exception as e:
+        logger.error(f"Error initiating batch scan: {str(e)}")
         if isinstance(e, HTTPException):
             raise
         raise HTTPException(status_code=500, detail=str(e))
@@ -248,6 +327,100 @@ async def process_domain_scan(job_id: str, domain: str, tenant_id: str):
         status.completed_at = datetime.utcnow()
         status.progress = {"step": "failed", "message": f"Scan failed: {str(e)}"}
 
+async def process_batch_scan(batch_id: str, domains: List[str], tenant_id: str):
+    """
+    Process batch domain scan in background.
+
+    This function handles the batch scanning process as a background task.
+    It processes each domain in the batch, tracking individual and overall progress.
+
+    Args:
+        batch_id: The unique identifier for this batch
+        domains: List of domains to scan
+        tenant_id: The tenant ID associated with this scan
+
+    Note:
+        This function is designed to be run as a background task and does not return a value.
+        It updates the global _batch_statuses dictionary with the batch results.
+    """
+    batch_status = _batch_statuses[batch_id]
+    batch_status.status = "in_progress"
+
+    # Process domains concurrently with a limit on concurrency
+    semaphore = asyncio.Semaphore(5)  # Limit to 5 concurrent scans
+
+    async def process_domain(domain: str):
+        async with semaphore:
+            try:
+                # Validate and standardize domain
+                try:
+                    std_domain = standardize_domain(domain)
+                except ValueError as e:
+                    logger.error(f"Invalid domain in batch: {domain}, error: {str(e)}")
+                    return {
+                        "domain": domain,
+                        "job_id": None,
+                        "status": "failed",
+                        "error": str(e)
+                    }
+
+                # Generate job ID for this domain
+                job_id = generate_job_id()
+
+                # Add to batch jobs list
+                job_info = {
+                    "domain": std_domain,
+                    "job_id": job_id,
+                    "status": "pending"
+                }
+                batch_status.jobs.append(job_info)
+
+                # Initialize job status
+                _job_statuses[job_id] = ScanStatus(
+                    job_id=job_id,
+                    status="pending",
+                    started_at=datetime.utcnow()
+                )
+
+                # Process the domain
+                await process_domain_scan(job_id, std_domain, tenant_id)
+
+                # Update job info in batch
+                job_info["status"] = _job_statuses[job_id].status
+                if _job_statuses[job_id].status == "completed":
+                    batch_status.completed_jobs += 1
+                elif _job_statuses[job_id].status == "failed":
+                    batch_status.failed_jobs += 1
+                    if _job_statuses[job_id].error:
+                        job_info["error"] = str(_job_statuses[job_id].error)
+                    else:
+                        job_info["error"] = "Unknown error"
+
+                return job_info
+
+            except Exception as e:
+                logger.error(f"Error processing domain {domain} in batch: {str(e)}")
+                return {
+                    "domain": domain,
+                    "job_id": None,
+                    "status": "failed",
+                    "error": str(e)
+                }
+
+    # Create tasks for all domains
+    tasks = [process_domain(domain) for domain in domains]
+    results = await asyncio.gather(*tasks)
+
+    # Update batch status
+    if batch_status.failed_jobs == batch_status.total_jobs:
+        batch_status.status = "failed"
+    elif batch_status.completed_jobs == batch_status.total_jobs:
+        batch_status.status = "completed"
+    else:
+        batch_status.status = "partial"
+
+    batch_status.completed_at = datetime.utcnow()
+
 @router.get("/status/{job_id}")
 async def get_scan_status(job_id: str):
     """
@@ -269,3 +442,25 @@ async def get_scan_status(job_id: str):
     if job_id not in _job_statuses:
         raise HTTPException(status_code=404, detail="Job not found")
     return _job_statuses[job_id]
+
+@router.get("/batch/status/{batch_id}")
+async def get_batch_status(batch_id: str):
+    """
+    Get the status of a batch scan.
+
+    This endpoint retrieves the current status of a batch domain scan.
+    It returns detailed information about the batch progress, including
+    the status of each individual domain in the batch.
+
+    Args:
+        batch_id: The unique identifier of the batch scan
+
+    Returns:
+        The current status of the batch scan
+
+    Raises:
+        HTTPException: If the batch ID is not found
+    """
+    if batch_id not in _batch_statuses:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return _batch_statuses[batch_id]
