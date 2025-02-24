@@ -16,3 +16,16 @@ env/
 
 # Logs
 *.log
+
+# Test files
+.pytest_cache/
+pytest.ini
+tests/test_*.py
+tests/*.csv
+
+# Docker
+.docker/
+
+# IDE files
+.vscode/
+.idea/

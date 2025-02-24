@@ -1,0 +1,47 @@
+# Version control
+.git
+.gitignore
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# Environment and secret files
+.env
+.env.example
+
+# Test files
+.pytest_cache/
+pytest.ini
+tests/
+test_*.py
+*.csv
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Docker files
+.docker/
+docker-compose*.yml
+
+# IDE files
+.vscode/
+.idea/
+
+# macOS artifacts
+.DS_Store
+
+# Logs
+*.log
+
+# Kubernetes
+k8s/

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScraperSky - Batch Domain Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00e5ff;
+            --primary-dark: #00b8cc;
+            --secondary: #0a1929;
+            --dark: #050d18;
+            --light: #f8f9fa;
+            --text: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            padding: 3rem 0;
+            text-align: center;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .scanner-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1rem;
+        }
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 0.25rem rgba(0, 229, 255, 0.25);
+        }
+
+        .form-text {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: var(--dark);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            color: var(--dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        pre {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status-section h3 {
+            color: white;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .back-button {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .table {
+            color: var(--text);
+        }
+
+        .table thead th {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 600;
+        }
+
+        .table tbody td {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress {
+            background-color: rgba(255, 255, 255, 0.1);
+            height: 0.8rem;
+            border-radius: 50px;
+        }
+
+        .progress-bar {
+            background-color: var(--primary);
+        }
+
+        .badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: rgba(25, 135, 84, 0.2);
+            color: #4ade80;
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #f87171;
+        }
+
+        .badge-info {
+            background-color: rgba(13, 202, 240, 0.2);
+            color: #0dcaf0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include the shared header -->
+    <div id="nav-placeholder"></div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>Batch Domain Scanner</h1>
+            <p class="lead">Import and scan multiple domains via CSV upload for efficient bulk processing</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="back-button">
+            <a href="/static/index.html" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <div class="scanner-card">
+            <h3 class="card-title">Import Domains</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <label for="csvFile" class="form-label">Upload CSV File</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent text-light border-end-0">
+                                <i class="fas fa-file-csv"></i>
+                            </span>
+                            <input type="file" class="form-control border-start-0" id="csvFile" accept=".csv">
+                        </div>
+                        <small class="form-text">CSV file should have a column named 'domain' or 'url'</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <label for="tenant-id" class="form-label">Tenant ID</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent text-light border-end-0">
+                                <i class="fas fa-key"></i>
+                            </span>
+                            <input type="text" id="tenant-id" class="form-control border-start-0"
+                                value="550e8400-e29b-41d4-a716-446655440000" required>
+                        </div>
+                        <small class="form-text">Must be a valid UUID (32-36 characters)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="domainList" class="form-label">Or Enter Domains (one per line)</label>
+                <textarea class="form-control" id="domainList" rows="5" placeholder="example.com&#10;another-domain.com&#10;third-domain.net"></textarea>
+            </div>
+            <div class="d-flex gap-3">
+                <button id="importBtn" class="btn btn-primary">
+                    <i class="fas fa-upload me-2"></i>Import & Scan
+                </button>
+                <button id="clearBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-trash-alt me-2"></i>Clear
+                </button>
+            </div>
+        </div>
+
+        <div class="scanner-card">
+            <h3 class="card-title">Batch Processing Status</h3>
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Overall Progress:</span>
+                    <span id="progressText">0%</span>
+                </div>
+                <div class="progress mb-3">
+                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th>Status</th>
+                            <th>Job ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable">
+                        <!-- Results will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="scanner-card">
+            <h3 class="card-title">Domain Details</h3>
+            <pre id="domainDetails">// Select a domain from the table to view details</pre>
+        </div>
+    </div>
+
+    <!-- Include the shared footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load shared header and footer
+        $(function(){
+            $("#nav-placeholder").load("shared/header.html");
+            $("#footer-placeholder").load("shared/footer.html");
+        });
+
+        // Store all domains and their statuses
+        const domains = [];
+        const domainStatuses = {};
+        let completedCount = 0;
+
+        // Clean domain function
+        function cleanDomain(domain) {
+            if (!domain) return null;
+
+            // Clean the domain - remove whitespace, convert to lowercase
+            domain = domain.trim().toLowerCase();
+
+            // Remove any protocol prefix if present
+            if (domain.includes('://')) {
+                domain = domain.split('://')[1];
+            }
+
+            // Remove www. prefix if present
+            if (domain.startsWith('www.')) {
+                domain = domain.substring(4);
+            }
+
+            // Remove any paths or query parameters
+            domain = domain.split('/')[0];
+
+            // Basic domain validation
+            const domainPattern = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
+            if (!domainPattern.test(domain)) {
+                return null;
+            }
+
+            return domain;
+        }
+
+        // Parse CSV file
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const contents = e.target.result;
+                const lines = contents.split('\n');
+
+                // Try to find header row and domain column
+                let domainColumnIndex = -1;
+                const headerRow = lines[0].split(',');
+
+                for (let i = 0; i < headerRow.length; i++) {
+                    const header = headerRow[i].trim().toLowerCase();
+                    if (header === 'domain' || header === 'url' || header === 'website') {
+                        domainColumnIndex = i;
+                        break;
+                    }
+                }
+
+                if (domainColumnIndex === -1) {
+                    alert('Could not find a column named "domain", "url", or "website" in the CSV file.');
+                    return;
+                }
+
+                // Extract domains
+                const extractedDomains = [];
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+
+                    const columns = lines[i].split(',');
+                    if (columns.length > domainColumnIndex) {
+                        const domain = cleanDomain(columns[domainColumnIndex]);
+                        if (domain) extractedDomains.push(domain);
+                    }
+                }
+
+                // Update textarea with extracted domains
+                document.getElementById('domainList').value = extractedDomains.join('\n');
+            };
+            reader.readAsText(file);
+        });
+
+        // Import and scan domains
+        document.getElementById('importBtn').addEventListener('click', async function() {
+            const domainListText = document.getElementById('domainList').value;
+            const tenantId = document.getElementById('tenant-id').value.trim();
+
+            if (!domainListText.trim()) {
+                alert('Please enter at least one domain or upload a CSV file.');
+                return;
+            }
+
+            if (!tenantId) {
+                alert('Please enter a tenant ID.');
+                return;
+            }
+
+            // Parse domains
+            const domainLines = domainListText.split('\n');
+            const cleanedDomains = [];
+
+            for (const line of domainLines) {
+                if (!line.trim()) continue;
+                const domain = cleanDomain(line);
+                if (domain) cleanedDomains.push(domain);
+            }
+
+            if (cleanedDomains.length === 0) {
+                alert('No valid domains found. Please check your input.');
+                return;
+            }
+
+            // Reset status
+            domains.length = 0;
+            Object.keys(domainStatuses).forEach(key => delete domainStatuses[key]);
+            completedCount = 0;
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').textContent = '0%';
+            document.getElementById('resultsTable').innerHTML = '';
+            document.getElementById('domainDetails').textContent = '// Select a domain from the table to view details';
+
+            // Add domains to the list
+            domains.push(...cleanedDomains);
+
+            // Initialize table
+            const tbody = document.getElementById('resultsTable');
+            tbody.innerHTML = '';
+
+            for (const domain of domains) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${domain}</td>
+                    <td><span class="badge badge-info">Pending</span></td>
+                    <td>-</td>
+                    <td>-</td>
+                `;
+                tbody.appendChild(tr);
+
+                // Initialize status
+                domainStatuses[domain] = {
+                    status: 'pending',
+                    jobId: null,
+                    data: null
+                };
+            }
+
+            // Start scanning domains (5 at a time)
+            const batchSize = 5;
+            let currentIndex = 0;
+
+            async function processBatch() {
+                const batch = domains.slice(currentIndex, currentIndex + batchSize);
+                currentIndex += batchSize;
+
+                const promises = batch.map(domain => scanDomain(domain, tenantId));
+                await Promise.all(promises);
+
+                if (currentIndex < domains.length) {
+                    processBatch();
+                }
+            }
+
+            processBatch();
+        });
+
+        // Clear button
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            document.getElementById('domainList').value = '';
+            document.getElementById('csvFile').value = '';
+            document.getElementById('resultsTable').innerHTML = '';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').textContent = '0%';
+            document.getElementById('domainDetails').textContent = '// Select a domain from the table to view details';
+
+            domains.length = 0;
+            Object.keys(domainStatuses).forEach(key => delete domainStatuses[key]);
+            completedCount = 0;
+        });
+
+        // Scan a single domain
+        async function scanDomain(domain, tenantId) {
+            try {
+                // Update status to scanning
+                updateDomainStatus(domain, 'scanning');
+
+                // Send scan request
+                const response = await fetch('/api/v1/scrapersky', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        base_url: domain,
+                        tenant_id: tenantId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to scan domain');
+                }
+
+                // Update status with job ID
+                domainStatuses[domain].jobId = data.job_id;
+                updateDomainStatus(domain, 'processing', data.job_id);
+
+                // Start polling for status
+                pollDomainStatus(domain, data.job_id);
+
+            } catch (error) {
+                updateDomainStatus(domain, 'failed', null, error.message);
+                updateProgress();
+            }
+        }
+
+        // Poll for domain scan status
+        async function pollDomainStatus(domain, jobId) {
+            try {
+                const response = await fetch(`/api/v1/status/${jobId}`);
+                const data = await response.json();
+
+                if (data.status === 'completed') {
+                    updateDomainStatus(domain, 'completed', jobId, null, data);
+                    completedCount++;
+                    updateProgress();
+                } else if (data.status === 'failed') {
+                    updateDomainStatus(domain, 'failed', jobId, data.error || 'Scan failed');
+                    completedCount++;
+                    updateProgress();
+                } else {
+                    // Continue polling
+                    setTimeout(() => pollDomainStatus(domain, jobId), 2000);
+                }
+            } catch (error) {
+                updateDomainStatus(domain, 'failed', jobId, 'Error checking status');
+                completedCount++;
+                updateProgress();
+            }
+        }
+
+        // Update domain status in the table
+        function updateDomainStatus(domain, status, jobId = null, error = null, data = null) {
+            domainStatuses[domain] = {
+                status,
+                jobId,
+                error,
+                data
+            };
+
+            const rows = document.getElementById('resultsTable').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                if (cells[0].textContent === domain) {
+                    // Update status cell
+                    let statusBadge;
+                    switch (status) {
+                        case 'scanning':
+                            statusBadge = '<span class="badge badge-info">Scanning</span>';
+                            break;
+                        case 'processing':
+                            statusBadge = '<span class="badge badge-warning">Processing</span>';
+                            break;
+                        case 'completed':
+                            statusBadge = '<span class="badge badge-success">Completed</span>';
+                            break;
+                        case 'failed':
+                            statusBadge = '<span class="badge badge-danger">Failed</span>';
+                            break;
+                        default:
+                            statusBadge = '<span class="badge badge-info">Pending</span>';
+                    }
+                    cells[1].innerHTML = statusBadge;
+
+                    // Update job ID cell
+                    cells[2].textContent = jobId || '-';
+
+                    // Update actions cell
+                    if (status === 'completed') {
+                        cells[3].innerHTML = `<button class="btn btn-sm btn-outline-primary view-details" data-domain="${domain}">View Details</button>`;
+                    } else if (status === 'failed') {
+                        cells[3].innerHTML = `<span class="text-danger">${error || 'Unknown error'}</span>`;
+                    } else {
+                        cells[3].textContent = '-';
+                    }
+
+                    break;
+                }
+            }
+
+            // Add event listeners for view details buttons
+            const viewButtons = document.querySelectorAll('.view-details');
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const domain = this.getAttribute('data-domain');
+                    const status = domainStatuses[domain];
+                    if (status && status.data) {
+                        document.getElementById('domainDetails').textContent = JSON.stringify(status.data, null, 2);
+                    }
+                });
+            });
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = (completedCount / domains.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${Math.round(progress)}%`;
+        }
+    </script>
+</body>
+</html>

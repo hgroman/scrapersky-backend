@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from src.routers import routers  # Import routers list from __init__.py
+from .routers import sitemap_scraper
+from .scraper.metadata_extractor import session_manager
 
 # Configure logging with environment-based levels
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -40,6 +42,9 @@ for router in routers:
 static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
 app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
 
+# Include routers
+app.include_router(sitemap_scraper.router)
+
 @app.get("/")
 async def root():
     """Redirect root to static index page."""
@@ -63,7 +68,12 @@ async def email_scanner_view():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "operational"}
+    return {"status": "healthy"}
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up resources on shutdown."""
+    await session_manager.close()
 
 if __name__ == "__main__":
     import uvicorn
