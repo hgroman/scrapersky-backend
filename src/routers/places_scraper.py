@@ -376,12 +376,22 @@ async def get_staging_places(
     status: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    authorization: Optional[str] = Header(None)
 ):
     """
     Get places from the staging table with optional filtering.
     """
     try:
+        # Log the authorization header for debugging
+        if authorization:
+            logging.info(f"Authorization header present: {authorization[:10]}...")
+        else:
+            logging.info("No Authorization header present")
+
+        # Log the current user info for debugging
+        logging.info(f"Current user: {current_user}")
+
         # Use authenticated user's tenant_id if none provided
         if not tenant_id:
             tenant_id = current_user.get("tenant_id", "550e8400-e29b-41d4-a716-446655440000")
@@ -399,247 +409,91 @@ async def get_staging_places(
         # Log request parameters for debugging
         logging.info(f"Fetching places with tenant_id={tenant_id}, status={status}, limit={limit}, offset={offset}")
 
-        # Try multiple approaches to get the data
+        # Simple approach: just query the database directly
+        query = "SELECT * FROM places_staging WHERE tenant_id = %(tenant_id)s"
+        params = {"tenant_id": tenant_id, "limit": limit, "offset": offset}
+
+        if status:
+            query += " AND status = %(status)s"
+            params["status"] = status
+
+        query += " ORDER BY search_time DESC LIMIT %(limit)s OFFSET %(offset)s"
+
         places = []
         total_count = 0
-        success = False
-        error_messages = []
 
-        # Approach 1: Use the database connection pool with cursor
-        if not success:
-            try:
-                logging.info("Trying database connection pool approach")
-                query = "SELECT * FROM places_staging WHERE tenant_id = %(tenant_id)s"
-                params = {"tenant_id": tenant_id, "limit": limit, "offset": offset}
+        try:
+            with db.get_cursor() as cur:
+                # Execute the main query
+                logging.debug(f"Executing query: {query} with params: {params}")
+                cur.execute(query, params)
 
-                if status:
-                    query += " AND status = %(status)s"
-                    params["status"] = status
+                # Check if cursor description exists (query returned results)
+                if cur.description:
+                    # Get column names
+                    columns = [desc[0] for desc in cur.description]
 
-                query += " ORDER BY search_time DESC LIMIT %(limit)s OFFSET %(offset)s"
+                    # Fetch all rows
+                    rows = cur.fetchall()
 
-                with db.get_cursor() as cur:
-                    # Execute the main query
-                    logging.debug(f"Executing query: {query} with params: {params}")
-                    cur.execute(query, params)
+                    # Convert rows to dictionaries
+                    places = [dict(zip(columns, row)) for row in rows]
 
-                    # Check if cursor description exists (query returned results)
-                    if cur.description:
-                        # Get column names
-                        columns = [desc[0] for desc in cur.description]
+                    # Get total count for pagination
+                    count_query = "SELECT COUNT(*) FROM places_staging WHERE tenant_id = %(tenant_id)s"
+                    count_params = {"tenant_id": tenant_id}
 
-                        # Fetch all rows
-                        rows = cur.fetchall()
+                    if status:
+                        count_query += " AND status = %(status)s"
+                        count_params["status"] = status
 
-                        # Convert rows to dictionaries
-                        places = [dict(zip(columns, row)) for row in rows]
-
-                        # Get total count for pagination
-                        count_query = "SELECT COUNT(*) FROM places_staging WHERE tenant_id = %(tenant_id)s"
-                        count_params = {"tenant_id": tenant_id}
-
-                        if status:
-                            count_query += " AND status = %(status)s"
-                            count_params["status"] = status
-
-                        cur.execute(count_query, count_params)
-                        count_result = cur.fetchone()
-                        # Handle the count result correctly
-                        if count_result:
-                            # The count result might be a tuple, a dict, or another type
-                            if isinstance(count_result, dict) and 'count' in count_result:
-                                total_count = count_result['count']
-                            elif isinstance(count_result, tuple) and len(count_result) > 0:
-                                total_count = count_result[0]
-                            elif hasattr(count_result, '__getitem__') and 'count' in count_result:
-                                total_count = count_result['count']
-                            else:
-                                # Last resort: try to convert to string and then to int
-                                try:
-                                    total_count = int(str(count_result).strip('()').split(',')[0])
-                                except (ValueError, IndexError):
-                                    total_count = 0
+                    cur.execute(count_query, count_params)
+                    count_result = cur.fetchone()
+                    if count_result:
+                        # Try to get the count value, handling different return types
+                        if isinstance(count_result, dict):
+                            total_count = next(iter(count_result.values()))
                         else:
-                            total_count = 0
+                            total_count = count_result[0]
+                else:
+                    logging.warning("Query returned no results (no cursor description)")
 
-                        success = True
-                        logging.info(f"Successfully fetched {len(places)} places using connection pool")
-                    else:
-                        logging.warning("Query returned no results (no cursor description)")
-                        error_messages.append("No results from connection pool query")
-            except Exception as e:
-                logging.error(f"Error using connection pool: {str(e)}")
-                error_messages.append(f"Connection pool error: {str(e)}")
-
-        # Approach 2: Try with default tenant ID
-        if not success and tenant_id != "550e8400-e29b-41d4-a716-446655440000":
-            try:
-                logging.info("Trying with default tenant ID")
-                default_tenant = "550e8400-e29b-41d4-a716-446655440000"
-                fallback_query = f"SELECT * FROM places_staging WHERE tenant_id = '{default_tenant}'"
-
-                if status:
-                    fallback_query += f" AND status = '{status}'"
-
-                fallback_query += f" ORDER BY search_time DESC LIMIT {limit} OFFSET {offset}"
-
-                with db.get_cursor() as cur:
-                    cur.execute(fallback_query)
-
-                    if cur.description:
-                        columns = [desc[0] for desc in cur.description]
-                        rows = cur.fetchall()
-                        places = [dict(zip(columns, row)) for row in rows]
-
-                        # Get total count
-                        count_query = f"SELECT COUNT(*) FROM places_staging WHERE tenant_id = '{default_tenant}'"
+                    # Try with default tenant ID as fallback
+                    if tenant_id != "550e8400-e29b-41d4-a716-446655440000":
+                        logging.info("Trying fallback to default tenant ID")
+                        fallback_query = "SELECT * FROM places_staging WHERE tenant_id = '550e8400-e29b-41d4-a716-446655440000'"
                         if status:
-                            count_query += f" AND status = '{status}'"
+                            fallback_query += f" AND status = '{status}'"
+                        fallback_query += f" ORDER BY search_time DESC LIMIT {limit} OFFSET {offset}"
 
-                        cur.execute(count_query)
-                        count_result = cur.fetchone()
-                        # Handle the count result correctly
-                        if count_result:
-                            # The count result might be a tuple, a dict, or another type
-                            if isinstance(count_result, dict) and 'count' in count_result:
-                                total_count = count_result['count']
-                            elif isinstance(count_result, tuple) and len(count_result) > 0:
-                                total_count = count_result[0]
-                            elif hasattr(count_result, '__getitem__') and 'count' in count_result:
-                                total_count = count_result['count']
-                            else:
-                                # Last resort: try to convert to string and then to int
-                                try:
-                                    total_count = int(str(count_result).strip('()').split(',')[0])
-                                except (ValueError, IndexError):
-                                    total_count = 0
-                        else:
-                            total_count = 0
+                        cur.execute(fallback_query)
+                        if cur.description:
+                            columns = [desc[0] for desc in cur.description]
+                            rows = cur.fetchall()
+                            places = [dict(zip(columns, row)) for row in rows]
+                            logging.info(f"Fallback query returned {len(places)} results")
 
-                        success = True
-                        logging.info(f"Successfully fetched {len(places)} places using default tenant ID")
-                    else:
-                        logging.warning("Default tenant query returned no results")
-                        error_messages.append("No results from default tenant query")
-            except Exception as e:
-                logging.error(f"Error using default tenant ID: {str(e)}")
-                error_messages.append(f"Default tenant error: {str(e)}")
+        except Exception as db_error:
+            logging.error(f"Database error in get_staging_places: {str(db_error)}")
+            logging.error(f"Error type: {type(db_error).__name__}")
+            logging.error(f"Error details: {str(db_error)}")
 
-        # Approach 3: Try direct connection to database
-        if not success:
+            # Try to get more detailed error information
+            if isinstance(db_error, psycopg2.Error) and hasattr(db_error, 'diag'):
+                logging.error(f"SQL state: {db_error.diag.sqlstate}")
+                logging.error(f"Message primary: {db_error.diag.message_primary}")
+
+            # Check if connection is still valid
             try:
-                logging.info("Trying direct database connection")
-                # Create a direct connection to the database
-                config = db.config
-                conn_string = config.connection_string
+                with db.get_cursor() as test_cur:
+                    test_cur.execute("SELECT 1")
+                    logging.info("Database connection is still valid")
+            except Exception as conn_error:
+                logging.error(f"Database connection test failed: {str(conn_error)}")
 
-                # Connect directly to the database
-                conn = psycopg2.connect(conn_string, connect_timeout=10)
-                try:
-                    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-                    try:
-                        # Execute the query
-                        direct_query = f"SELECT * FROM places_staging WHERE tenant_id = '{tenant_id}'"
-                        if status:
-                            direct_query += f" AND status = '{status}'"
-                        direct_query += f" ORDER BY search_time DESC LIMIT {limit} OFFSET {offset}"
-
-                        cursor.execute(direct_query)
-                        rows = cursor.fetchall()
-                        places = [dict(row) for row in rows]
-
-                        # Get total count
-                        count_query = f"SELECT COUNT(*) FROM places_staging WHERE tenant_id = '{tenant_id}'"
-                        if status:
-                            count_query += f" AND status = '{status}'"
-
-                        cursor.execute(count_query)
-                        count_result = cursor.fetchone()
-                        # Handle the count result correctly
-                        if count_result:
-                            # The count result might be a tuple, a dict, or another type
-                            if isinstance(count_result, dict) and 'count' in count_result:
-                                total_count = count_result['count']
-                            elif isinstance(count_result, tuple) and len(count_result) > 0:
-                                total_count = count_result[0]
-                            elif hasattr(count_result, '__getitem__') and 'count' in count_result:
-                                total_count = count_result['count']
-                            else:
-                                # Last resort: try to convert to string and then to int
-                                try:
-                                    total_count = int(str(count_result).strip('()').split(',')[0])
-                                except (ValueError, IndexError):
-                                    total_count = 0
-                        else:
-                            total_count = 0
-
-                        success = True
-                        logging.info(f"Successfully fetched {len(places)} places using direct connection")
-                    finally:
-                        cursor.close()
-                finally:
-                    conn.close()
-            except Exception as e:
-                logging.error(f"Error using direct connection: {str(e)}")
-                error_messages.append(f"Direct connection error: {str(e)}")
-
-        # Approach 4: Try with hardcoded query for any tenant
-        if not success:
-            try:
-                logging.info("Trying hardcoded query for any tenant")
-                # Create a direct connection to the database
-                config = db.config
-                conn_string = config.connection_string
-
-                # Connect directly to the database
-                conn = psycopg2.connect(conn_string, connect_timeout=10)
-                try:
-                    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-                    try:
-                        # Execute a simple query to get any places
-                        simple_query = f"SELECT * FROM places_staging LIMIT {limit} OFFSET {offset}"
-                        cursor.execute(simple_query)
-                        rows = cursor.fetchall()
-                        places = [dict(row) for row in rows]
-
-                        # Get total count
-                        cursor.execute("SELECT COUNT(*) FROM places_staging")
-                        count_result = cursor.fetchone()
-                        # Handle the count result correctly
-                        if count_result:
-                            # The count result might be a tuple, a dict, or another type
-                            if isinstance(count_result, dict) and 'count' in count_result:
-                                total_count = count_result['count']
-                            elif isinstance(count_result, tuple) and len(count_result) > 0:
-                                total_count = count_result[0]
-                            elif hasattr(count_result, '__getitem__') and 'count' in count_result:
-                                total_count = count_result['count']
-                            else:
-                                # Last resort: try to convert to string and then to int
-                                try:
-                                    total_count = int(str(count_result).strip('()').split(',')[0])
-                                except (ValueError, IndexError):
-                                    total_count = 0
-                        else:
-                            total_count = 0
-
-                        success = True
-                        logging.info(f"Successfully fetched {len(places)} places using hardcoded query")
-                    finally:
-                        cursor.close()
-                finally:
-                    conn.close()
-            except Exception as e:
-                logging.error(f"Error using hardcoded query: {str(e)}")
-                error_messages.append(f"Hardcoded query error: {str(e)}")
-
-        # If all approaches failed, return an error
-        if not success:
-            error_detail = "; ".join(error_messages)
-            logging.error(f"All database approaches failed: {error_detail}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Database error: Unable to fetch places after multiple attempts. {error_detail}"
+                detail=f"Database error: {str(db_error)}"
             )
 
         logging.info(f"Successfully fetched {len(places)} places (total: {total_count})")
