@@ -66,6 +66,7 @@ async def email_scanner_view():
     return RedirectResponse(url="/static/email-scanner.html")
 
 @app.get("/health")
+@app.head("/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
