@@ -423,55 +423,51 @@ async def get_staging_places(
         total_count = 0
 
         try:
-            with db.get_cursor() as cur:
+            with db.get_cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 # Execute the main query
                 logging.debug(f"Executing query: {query} with params: {params}")
                 cur.execute(query, params)
 
-                # Check if cursor description exists (query returned results)
-                if cur.description:
-                    # Get column names
-                    columns = [desc[0] for desc in cur.description]
+                # Fetch all rows as dictionaries
+                places = cur.fetchall()
 
-                    # Fetch all rows
-                    rows = cur.fetchall()
-
-                    # Convert rows to dictionaries
-                    places = [dict(zip(columns, row)) for row in rows]
-
-                    # Get total count for pagination
-                    count_query = "SELECT COUNT(*) FROM places_staging WHERE tenant_id = %(tenant_id)s"
-                    count_params = {"tenant_id": tenant_id}
-
-                    if status:
-                        count_query += " AND status = %(status)s"
-                        count_params["status"] = status
-
-                    cur.execute(count_query, count_params)
-                    count_result = cur.fetchone()
-                    if count_result:
-                        # Try to get the count value, handling different return types
-                        if isinstance(count_result, dict):
-                            total_count = next(iter(count_result.values()))
-                        else:
-                            total_count = count_result[0]
+                # If using RealDictCursor, we get dictionaries directly
+                if places and isinstance(places[0], dict):
+                    logging.info(f"Successfully fetched {len(places)} places as dictionaries")
                 else:
-                    logging.warning("Query returned no results (no cursor description)")
+                    # Fallback if we didn't get dictionaries
+                    logging.warning("Did not get dictionaries from RealDictCursor, converting manually")
+                    columns = [desc[0] for desc in cur.description] if cur.description else []
+                    places = [dict(zip(columns, row)) for row in places]
 
-                    # Try with default tenant ID as fallback
-                    if tenant_id != "550e8400-e29b-41d4-a716-446655440000":
-                        logging.info("Trying fallback to default tenant ID")
-                        fallback_query = "SELECT * FROM places_staging WHERE tenant_id = '550e8400-e29b-41d4-a716-446655440000'"
-                        if status:
-                            fallback_query += f" AND status = '{status}'"
-                        fallback_query += f" ORDER BY search_time DESC LIMIT {limit} OFFSET {offset}"
+                # Get total count for pagination
+                count_query = "SELECT COUNT(*) FROM places_staging WHERE tenant_id = %(tenant_id)s"
+                count_params = {"tenant_id": tenant_id}
 
-                        cur.execute(fallback_query)
-                        if cur.description:
-                            columns = [desc[0] for desc in cur.description]
-                            rows = cur.fetchall()
-                            places = [dict(zip(columns, row)) for row in rows]
-                            logging.info(f"Fallback query returned {len(places)} results")
+                if status:
+                    count_query += " AND status = %(status)s"
+                    count_params["status"] = status
+
+                cur.execute(count_query, count_params)
+                count_result = cur.fetchone()
+                if count_result:
+                    # With RealDictCursor, we should get a dict with a single key
+                    if isinstance(count_result, dict):
+                        total_count = next(iter(count_result.values()))
+                    else:
+                        total_count = count_result[0]
+
+                # If no results, try with default tenant ID as fallback
+                if not places and tenant_id != "550e8400-e29b-41d4-a716-446655440000":
+                    logging.info("Trying fallback to default tenant ID")
+                    fallback_query = "SELECT * FROM places_staging WHERE tenant_id = '550e8400-e29b-41d4-a716-446655440000'"
+                    if status:
+                        fallback_query += f" AND status = '{status}'"
+                    fallback_query += f" ORDER BY search_time DESC LIMIT {limit} OFFSET {offset}"
+
+                    cur.execute(fallback_query)
+                    places = cur.fetchall()
+                    logging.info(f"Fallback query returned {len(places)} results")
 
         except Exception as db_error:
             logging.error(f"Database error in get_staging_places: {str(db_error)}")
@@ -498,17 +494,36 @@ async def get_staging_places(
 
         logging.info(f"Successfully fetched {len(places)} places (total: {total_count})")
 
-        # Convert any non-serializable types to strings
+        # Create a new list of dictionaries with serializable values
+        serializable_places = []
         for place in places:
-            for key, value in place.items():
+            # Convert place to a dictionary if it's not already
+            if isinstance(place, dict):
+                place_dict = place
+            elif isinstance(place, tuple) and cur.description:
+                # Convert tuple to dict using column names
+                columns = [desc[0] for desc in cur.description]
+                place_dict = dict(zip(columns, place))
+            else:
+                # Skip this item if we can't convert it
+                logging.warning(f"Skipping non-dictionary place: {type(place)}")
+                continue
+
+            # Create a new dictionary with serializable values
+            serialized_place = {}
+            for key, value in place_dict.items():
                 if isinstance(value, (datetime, uuid.UUID)):
-                    place[key] = str(value)
+                    serialized_place[key] = str(value)
                 # Ensure all values are JSON serializable
-                elif not isinstance(value, (str, int, float, bool, type(None), list, dict)):
-                    place[key] = str(value)
+                elif isinstance(value, (str, int, float, bool, type(None), list, dict)):
+                    serialized_place[key] = value
+                else:
+                    serialized_place[key] = str(value)
+
+            serializable_places.append(serialized_place)
 
         return {
-            "places": places,
+            "places": serializable_places,
             "total": total_count,
             "limit": limit,
             "offset": offset
