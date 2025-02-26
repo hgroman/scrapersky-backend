@@ -6,7 +6,7 @@ from datetime import datetime
 # Chat Models
 class ChatRequest(BaseModel):
     message: str
-    
+
 class ChatResponse(BaseModel):
     response: str
     model_used: str
@@ -56,7 +56,7 @@ class TaskStatus(str, Enum):
 
 class SiteMetadata(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     # Core Identification
     url: HttpUrl
     tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
@@ -72,11 +72,11 @@ class SiteMetadata(BaseModel):
     content_scrape_status: TaskStatus = TaskStatus.QUEUED
     content_scrape_at: Optional[datetime] = None
     content_scrape_error: Optional[str] = None
-    
+
     page_scrape_status: TaskStatus = TaskStatus.QUEUED
     page_scrape_at: Optional[datetime] = None
     page_scrape_error: Optional[str] = None
-    
+
     sitemap_monitor_status: TaskStatus = TaskStatus.QUEUED
     sitemap_monitor_at: Optional[datetime] = None
     sitemap_monitor_error: Optional[str] = None
@@ -173,3 +173,32 @@ class SitemapStats(BaseModel):
     failure_count: int
     avg_response_time: float
     tech_stack_counts: Dict[str, int]
+
+# Add to existing models.py file
+class PlacesSearchRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    location: str  # Location to search (e.g., "Houston, TX")
+    business_type: str  # Type of business to search (e.g., "ophthalmology")
+    radius_km: int = Field(default=10, ge=1, le=50)
+    max_results: int = Field(default=20, ge=1, le=100)
+    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+
+class PlacesSearchResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    job_id: str
+    status: str = "started"
+    status_url: str
+class PlacesStatusResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    job_id: str
+    status: str  # "pending", "running", "completed", "failed"
+    total_places: int = 0
+    stored_places: int = 0
+    search_query: str
+    search_location: str
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    error: Optional[str] = None
