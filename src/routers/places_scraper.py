@@ -31,7 +31,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             raise ValueError("SUPABASE_JWT_SECRET not configured")
 
         # Decode the JWT token
-        payload = jwt.decode(credentials.credentials, jwt_secret, algorithms=["HS256"])
+        payload = jwt.decode(
+            credentials.credentials,
+            jwt_secret,
+            algorithms=["HS256"],
+            audience="authenticated"  # Set the expected audience to match Supabase's JWT
+        )
         user_id = payload.get("sub")
 
         if not user_id:
