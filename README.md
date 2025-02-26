@@ -29,6 +29,10 @@ ScraperSky/
 │   │   └── utils.py               # Utility functions (e.g., ScraperAPI integration)
 │   ├── services/
 │   │   └── supabase.py            # Supabase client and database operations
+│   ├── auth/                      # Authentication and authorization module
+│   │   ├── __init__.py
+│   │   ├── jwt_auth.py            # JWT authentication with Supabase
+│   │   └── auth_service.py        # Authorization service for permissions
 │   └── tasks/
 │       └── email_scraper.py       # Background task for email scraping
 ├── tests/                         # Unit and integration tests
@@ -45,6 +49,44 @@ ScraperSky/
 ```
 
 > **Note:** Old references to BigQuery have been removed. All data operations now use Supabase as the primary datastore.
+
+## Authentication & Authorization
+
+> **IMPORTANT:** All routes MUST use the authentication module for consistent security and tenant isolation.
+
+The application implements a robust multi-tenant authentication and authorization system:
+
+1. **JWT Authentication with Supabase**:
+
+   - All routes should use `get_current_user` dependency from `src/auth/jwt_auth.py`
+   - Proper tenant isolation is enforced through tenant_id validation
+   - API key fallback is available for development and testing
+
+2. **Role-Based Access Control**:
+
+   - Permission-based authorization using `AuthService.require_permission`
+   - Roles and permissions are defined in the database
+   - UI elements and API endpoints are protected based on permissions
+
+3. **Implementation Example**:
+
+   ```python
+   from fastapi import APIRouter, Depends
+   from ..auth.jwt_auth import get_current_user, validate_tenant_id
+
+   @router.get("/your-endpoint")
+   async def your_endpoint(
+       tenant_id: Optional[str] = None,
+       current_user: dict = Depends(get_current_user)
+   ):
+       # Validate and normalize tenant ID
+       tenant_id = validate_tenant_id(tenant_id, current_user)
+
+       # Your implementation with tenant isolation
+       # ...
+   ```
+
+For detailed documentation on authentication and authorization, see the [Authentication Documentation](docs/authentication/).
 
 ## Features
 
