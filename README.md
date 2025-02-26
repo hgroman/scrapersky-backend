@@ -212,6 +212,96 @@ from ..services.supabase import db
 
 For detailed Supabase setup and troubleshooting, see our internal documentation.
 
+### Authentication & Multi-Tenancy
+
+#### Authentication Flow
+
+Our application uses a robust authentication system with multiple fallback mechanisms:
+
+1. **JWT Authentication with Supabase**
+
+   - Primary authentication method
+   - JWT tokens issued by Supabase Auth
+   - Tokens must include the "authenticated" audience claim
+   - User information is retrieved from the `profiles` table
+
+2. **API Key Fallback**
+
+   - Secondary authentication method when JWT is unavailable
+   - Format: `Authorization: Bearer scraper_sky_2024`
+   - Provides access with a default tenant ID
+
+3. **Tenant ID Resolution**
+   - Each request is associated with a tenant ID for multi-tenancy
+   - Tenant ID can be provided in the request or derived from the authenticated user
+   - Default tenant ID: `550e8400-e29b-41d4-a716-446655440000`
+
+#### Implementation Details
+
+The authentication system is implemented as a reusable module:
+
+```python
+# ✅ Correct: Use the standard authentication module
+from src.auth.jwt_auth import get_current_user, validate_tenant_id
+
+@router.get("/your-endpoint")
+async def your_endpoint(
+    tenant_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    # Validate and normalize tenant ID
+    tenant_id = validate_tenant_id(tenant_id, current_user)
+
+    # Use tenant_id for data isolation
+    # ...
+```
+
+#### Key Authentication Files
+
+- **JWT Authentication:** `/src/auth/jwt_auth.py`
+- **Usage Example:** `/src/routers/places_scraper.py`
+
+#### Security Considerations
+
+1. **JWT Secret**
+
+   - The `SUPABASE_JWT_SECRET` environment variable must be set
+   - This should match the JWT secret in your Supabase project settings
+
+2. **API Key Security**
+
+   - The API key is a fallback mechanism and should be rotated regularly
+   - Consider implementing rate limiting for API key authentication
+
+3. **Tenant Isolation**
+
+   - All database queries must include tenant_id filtering
+   - Example: `WHERE tenant_id = %(tenant_id)s`
+   - This ensures proper data isolation between tenants
+
+4. **Error Handling**
+   - Authentication errors return 401 Unauthorized responses
+   - Detailed error logging helps diagnose authentication issues
+
+#### Testing Authentication
+
+```bash
+# Test with JWT token
+curl -X GET "http://localhost:8000/api/v1/places/staging" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json"
+
+# Test with API key fallback
+curl -X GET "http://localhost:8000/api/v1/places/staging" \
+  -H "Authorization: Bearer scraper_sky_2024" \
+  -H "Content-Type: application/json"
+
+# Test with specific tenant ID
+curl -X GET "http://localhost:8000/api/v1/places/staging?tenant_id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer scraper_sky_2024" \
+  -H "Content-Type: application/json"
+```
+
 ## Next Steps
 
 1. **Web Scraping Integration**

@@ -16,6 +16,7 @@ import base64
 
 from ..models import PlacesSearchRequest, PlacesSearchResponse, PlacesStatusResponse
 from ..db.sb_connection import db
+from ..auth.jwt_auth import get_current_user, validate_tenant_id
 
 # Security setup for JWT authentication
 security = HTTPBearer()
@@ -25,143 +26,7 @@ _job_statuses: Dict[str, PlacesStatusResponse] = {}
 
 router = APIRouter(prefix="/api/v1", tags=["places-search"])
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token and return user info."""
-    try:
-        # Get JWT secret from environment
-        jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
-        if not jwt_secret:
-            logging.error("SUPABASE_JWT_SECRET environment variable not configured")
-            # Try to continue with API key authentication
-            if credentials.credentials == "scraper_sky_2024":
-                logging.info("Using API key authentication as fallback due to missing JWT secret")
-                return {
-                    "user_id": "api_key_user",
-                    "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
-                    "name": "API Key User"
-                }
-            raise ValueError("SUPABASE_JWT_SECRET not configured")
-
-        # Check if the token is the API key fallback
-        if credentials.credentials == "scraper_sky_2024":
-            logging.info("Using API key authentication")
-            return {
-                "user_id": "api_key_user",
-                "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
-                "name": "API Key User"
-            }
-
-        # Log token format for debugging
-        token_parts = credentials.credentials.split('.')
-        if len(token_parts) != 3:
-            logging.error(f"Invalid JWT format: expected 3 parts, got {len(token_parts)}")
-            # Try to continue with API key authentication
-            if credentials.credentials.strip() == "scraper_sky_2024":
-                logging.info("Using API key authentication as fallback due to invalid JWT format")
-                return {
-                    "user_id": "api_key_user",
-                    "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
-                    "name": "API Key User"
-                }
-            raise ValueError("Invalid JWT format")
-
-        # Try to decode the JWT payload for debugging
-        try:
-            # Just decode the payload part without verification for debugging
-            payload_part = token_parts[1]
-            # Add padding if needed
-            padding = '=' * (4 - len(payload_part) % 4) if len(payload_part) % 4 else ''
-            payload_debug = json.loads(base64.b64decode(payload_part + padding).decode('utf-8'))
-            logging.info(f"JWT payload (debug): {payload_debug}")
-        except Exception as debug_error:
-            logging.warning(f"Could not decode JWT payload for debugging: {str(debug_error)}")
-
-        # Decode the JWT token with verification
-        try:
-            payload = jwt.decode(
-                credentials.credentials,
-                jwt_secret,
-                algorithms=["HS256"],
-                audience="authenticated"  # Set the expected audience to match Supabase's JWT
-            )
-            logging.info(f"JWT decoded successfully. Audience: {payload.get('aud')}")
-        except jwt.ExpiredSignatureError:
-            logging.error("JWT token has expired")
-            raise ValueError("Token expired")
-        except jwt.InvalidAudienceError:
-            logging.error(f"JWT has invalid audience")
-            # Try with a different audience
-            try:
-                payload = jwt.decode(
-                    credentials.credentials,
-                    jwt_secret,
-                    algorithms=["HS256"],
-                    options={"verify_aud": False}  # Skip audience verification
-                )
-                logging.info(f"JWT decoded successfully with audience verification disabled")
-            except Exception as retry_error:
-                logging.error(f"JWT decode retry error: {str(retry_error)}")
-                raise ValueError("Invalid token audience")
-        except Exception as jwt_error:
-            logging.error(f"JWT decode error: {str(jwt_error)}")
-            raise ValueError(f"JWT decode error: {str(jwt_error)}")
-
-        user_id = payload.get("sub")
-        if not user_id:
-            logging.error("User ID (sub) not found in JWT payload")
-            raise ValueError("User ID not found in token")
-
-        # Get user profile from Supabase
-        try:
-            with db.get_cursor() as cur:
-                cur.execute("SELECT * FROM profiles WHERE id = %s", (user_id,))
-                user_profile_tuple = cur.fetchone()
-
-                # Get column names from cursor description
-                columns = [desc[0] for desc in cur.description] if cur.description else []
-        except Exception as db_error:
-            logging.error(f"Database error when fetching user profile: {str(db_error)}")
-            # Return default user info instead of failing
-            return {
-                "user_id": user_id,
-                "tenant_id": payload.get("sub", "550e8400-e29b-41d4-a716-446655440000"),
-                "name": "Unknown User"
-            }
-
-        if not user_profile_tuple:
-            logging.info(f"No profile found for user {user_id}, using user_id as tenant_id")
-            # If no profile exists, use user_id as tenant_id
-            return {
-                "user_id": user_id,
-                "tenant_id": user_id,  # Use user_id as tenant_id
-                "name": "Unknown User"
-            }
-
-        # Convert tuple to dictionary
-        user_profile = dict(zip(columns, user_profile_tuple)) if columns else {}
-        logging.info(f"User profile found for {user_id}")
-
-        # Return user information
-        return {
-            "user_id": user_id,
-            "tenant_id": user_profile.get("tenant_id", user_id),  # Fallback to user_id
-            "name": user_profile.get("name", "Unknown User"),
-            "email": user_profile.get("email")
-        }
-    except Exception as e:
-        logging.error(f"Authentication error: {str(e)}")
-        # Last resort fallback to API key authentication
-        if hasattr(credentials, 'credentials') and credentials.credentials == "scraper_sky_2024":
-            logging.info("Using API key authentication as last resort fallback")
-            return {
-                "user_id": "api_key_user",
-                "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
-                "name": "API Key User"
-            }
-        raise HTTPException(
-            status_code=401,
-            detail=f"Invalid authentication credentials: {str(e)}"
-        )
+# The get_current_user function is now imported from auth.jwt_auth
 
 async def search_google_places(location: str, business_type: str, radius_km: int = 10) -> List[Dict]:
     """Search Google Places API for businesses."""
@@ -392,19 +257,8 @@ async def get_staging_places(
         # Log the current user info for debugging
         logging.info(f"Current user: {current_user}")
 
-        # Use authenticated user's tenant_id if none provided
-        if not tenant_id:
-            tenant_id = current_user.get("tenant_id", "550e8400-e29b-41d4-a716-446655440000")
-            logging.info(f"Using tenant_id from authenticated user: {tenant_id}")
-
-        # Ensure tenant_id is a valid UUID string
-        try:
-            uuid_obj = uuid.UUID(tenant_id)
-            tenant_id = str(uuid_obj)  # Normalize the UUID format
-            logging.info(f"Validated tenant_id as UUID: {tenant_id}")
-        except ValueError:
-            logging.warning(f"Invalid tenant_id format: {tenant_id}, using default")
-            tenant_id = "550e8400-e29b-41d4-a716-446655440000"  # Fallback to default
+        # Validate and normalize tenant ID
+        tenant_id = validate_tenant_id(tenant_id, current_user)
 
         # Log request parameters for debugging
         logging.info(f"Fetching places with tenant_id={tenant_id}, status={status}, limit={limit}, offset={offset}")
@@ -549,9 +403,8 @@ async def update_place_status(
     """
     Update the status of a place in the staging table.
     """
-    # Use authenticated user's tenant_id if none provided
-    if not tenant_id:
-        tenant_id = current_user.get("tenant_id", "550e8400-e29b-41d4-a716-446655440000")
+    # Validate and normalize tenant ID
+    tenant_id = validate_tenant_id(tenant_id, current_user)
 
     valid_statuses = ["new", "selected", "maybe", "not_a_fit", "archived"]
     if status not in valid_statuses:
@@ -596,9 +449,8 @@ async def update_place_notes(
     """
     Update the notes for a place in the staging table.
     """
-    # Use authenticated user's tenant_id if none provided
-    if not tenant_id:
-        tenant_id = current_user.get("tenant_id", "550e8400-e29b-41d4-a716-446655440000")
+    # Validate and normalize tenant ID
+    tenant_id = validate_tenant_id(tenant_id, current_user)
 
     query = """
         UPDATE places_staging
