@@ -197,6 +197,8 @@ class PlacesStatusResponse(BaseModel):
     status: str  # "pending", "running", "completed", "failed"
     total_places: int = 0
     stored_places: int = 0
+    created_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
     search_query: str
     search_location: str
     user_id: Optional[str] = None

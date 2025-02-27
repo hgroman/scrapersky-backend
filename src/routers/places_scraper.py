@@ -21,8 +21,11 @@ from ..auth.jwt_auth import get_current_user, validate_tenant_id
 # Security setup for JWT authentication
 security = HTTPBearer()
 
-# Status tracking (in-memory for simplicity, replace with Redis in production)
+# Status tracking (in-memory for now)
+# TODO: Replace with Redis or database for production
 _job_statuses: Dict[str, PlacesStatusResponse] = {}
+# Limit the size of the in-memory cache to prevent memory leaks
+_max_status_entries = 1000
 
 router = APIRouter(prefix="/api/v1", tags=["places-search"])
 
@@ -110,7 +113,9 @@ async def process_places_search(job_id: str, request: PlacesSearchRequest, user_
         )
 
         status.total_places = len(places)
-
+        
+        success_count = 0
+        
         # Insert results into staging table
         for place in places:
             try:
@@ -182,11 +187,13 @@ async def process_places_search(job_id: str, request: PlacesSearchRequest, user_
 
         # Mark job as completed
         status.status = "completed"
+        status.completed_at = datetime.now()
 
     except Exception as e:
         # Mark job as failed
         status.status = "failed"
         status.error = str(e)
+        status.completed_at = datetime.now()
         logging.error(f"Places search job failed: {str(e)}")
 
 @router.post("/places/search", response_model=PlacesSearchResponse)
@@ -204,6 +211,19 @@ async def search_places(
     # Use tenant ID from authenticated user if available
     if current_user and "tenant_id" in current_user:
         request.tenant_id = current_user["tenant_id"]
+        
+    # Limit the number of in-memory status entries to prevent memory leaks
+    if len(_job_statuses) >= _max_status_entries:
+        # Find oldest entries by creation time
+        now = datetime.now()
+        oldest_jobs = sorted(
+            [(job_id, job_status) for job_id, job_status in _job_statuses.items()],
+            key=lambda x: getattr(x[1], 'created_at', now)
+        )
+        # Remove older entries to make room
+        for old_job_id, _ in oldest_jobs[:len(_job_statuses) - _max_status_entries + 1]:
+            _job_statuses.pop(old_job_id, None)
+            logging.info(f"Removed old job status {old_job_id} to prevent memory leak")
 
     # Initialize job status
     _job_statuses[job_id] = PlacesStatusResponse(
@@ -212,7 +232,8 @@ async def search_places(
         search_query=request.business_type,
         search_location=request.location,
         user_id=current_user.get("user_id", "anonymous"),
-        user_name=current_user.get("name", "Unknown User")
+        user_name=current_user.get("name", "Unknown User"),
+        created_at=datetime.now()
     )
 
     # Launch search in background

@@ -21,10 +21,13 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install dependencies into a local user path
-RUN pip install --user --no-cache-dir -r requirements.txt nltk
+RUN pip install --user --no-cache-dir -r requirements.txt
 
-# Download NLTK data to user's home directory
-RUN python -c "import nltk; nltk.download('punkt', download_dir='/home/myuser/nltk_data'); nltk.download('stopwords', download_dir='/home/myuser/nltk_data'); nltk.download('wordnet', download_dir='/home/myuser/nltk_data');"
+# Install NLTK and download required data in a single layer
+RUN pip install --user --no-cache-dir nltk && \
+    python -c "import nltk; \
+    for data in ['punkt', 'stopwords', 'wordnet']: \
+        nltk.download(data, download_dir='/home/myuser/nltk_data')"
 
 # Copy entire project (excluding what's in .dockerignore)
 COPY --chown=myuser:myuser . /app
@@ -55,8 +58,9 @@ COPY --from=builder --chown=myuser:myuser /app /app
 # Expose port 8000 for FastAPI
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+# Health check - using environment variable values or defaults
+# Note: Docker Compose healthcheck will take precedence when defined there
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Use run_server.py as entrypoint
