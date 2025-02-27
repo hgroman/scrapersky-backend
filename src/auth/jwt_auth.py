@@ -88,7 +88,8 @@ async def get_current_user(
             logger.error("SUPABASE_JWT_SECRET environment variable not configured")
 
             # Try to continue with API key authentication
-            if api_key == "scraper_sky_2024":
+            api_key_from_env = os.getenv("SCRAPER_API_KEY")
+            if api_key and api_key_from_env and api_key == api_key_from_env:
                 logger.info("Using API key authentication as fallback due to missing JWT secret")
                 return {
                     "user_id": "api_key_user",
@@ -99,7 +100,8 @@ async def get_current_user(
             raise ValueError("SUPABASE_JWT_SECRET not configured")
 
         # Check if the token is the API key fallback
-        if api_key == "scraper_sky_2024":
+        api_key_from_env = os.getenv("SCRAPER_API_KEY")
+        if api_key and api_key_from_env and api_key == api_key_from_env:
             logger.info("Using API key authentication")
             return {
                 "user_id": "api_key_user",
@@ -113,7 +115,8 @@ async def get_current_user(
         if len(token_parts) != 3:
             logger.error(f"Invalid JWT format: expected 3 parts, got {len(token_parts)}")
             # Try to continue with API key authentication
-            if api_key == "scraper_sky_2024":
+            api_key_from_env = os.getenv("SCRAPER_API_KEY")
+            if api_key and api_key_from_env and api_key == api_key_from_env:
                 logger.info("Using API key authentication as fallback due to invalid JWT format")
                 return {
                     "user_id": "api_key_user",
@@ -130,7 +133,8 @@ async def get_current_user(
             # Add padding if needed
             padding = '=' * (4 - len(payload_part) % 4) if len(payload_part) % 4 else ''
             payload_debug = json.loads(base64.b64decode(payload_part + padding).decode('utf-8'))
-            logger.info(f"JWT payload (debug): {payload_debug}")
+            # Log without sensitive content
+            logger.info(f"JWT payload received with sub: {payload_debug.get('sub', 'not-present')}, exp: {payload_debug.get('exp', 'not-present')}")
         except Exception as debug_error:
             logger.warning(f"Could not decode JWT payload for debugging: {str(debug_error)}")
 
@@ -223,7 +227,8 @@ async def get_current_user(
         logger.error(f"Authentication error: {str(e)}")
         # Last resort fallback to API key authentication
         api_key = extract_api_key(credentials.credentials) if hasattr(credentials, 'credentials') else None
-        if api_key == "scraper_sky_2024":
+        api_key_from_env = os.getenv("SCRAPER_API_KEY")
+        if api_key and api_key_from_env and api_key == api_key_from_env:
             logger.info("Using API key authentication as last resort fallback")
             return {
                 "user_id": "api_key_user",

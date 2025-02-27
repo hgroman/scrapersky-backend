@@ -6,37 +6,43 @@ It handles connection pooling, environment configuration, and proper error handl
 """
 
 import os
+import time
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Generator, Optional, Dict, Any
 from urllib.parse import quote_plus
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Import settings from central config
+from src.config.settings import settings
 
 class DatabaseConfig:
     """Configuration for Supabase database connection."""
 
     def __init__(self):
         # Extract project reference from Supabase URL
-        supabase_url = os.getenv('SUPABASE_URL', '')
-        self.project_ref = supabase_url.split('//')[1].split('.')[0]
+        self.supabase_url = settings.supabase_url
+        if not self.supabase_url:
+            raise ValueError("SUPABASE_URL environment variable is not set")
+            
+        # Handle URL format with or without protocol
+        if '//' in self.supabase_url:
+            self.project_ref = self.supabase_url.split('//')[1].split('.')[0]
+        else:
+            self.project_ref = self.supabase_url.split('.')[0]
 
         # Database connection parameters
         self.user = f"postgres.{self.project_ref}"
-        # Updated to use the all-caps environment variable for consistency
-        self.password = os.getenv('SUPABASE_DB_PASSWORD')
+        self.password = settings.supabase_db_password
         self.host = f"db.{self.project_ref}.supabase.co"
         self.port = "5432"
         self.dbname = "postgres"
 
         if not all([self.project_ref, self.password]):
             raise ValueError(
-                "Missing required environment variables. "
+                "Missing required database configuration. "
                 "Please ensure SUPABASE_URL and SUPABASE_DB_PASSWORD are set in .env"
             )
 
@@ -50,16 +56,21 @@ class DatabaseConfig:
         pooler_port = os.getenv('SUPABASE_POOLER_PORT')
         pooler_user = os.getenv('SUPABASE_POOLER_USER')
 
+        # Include connection timeout from settings
+        timeout_param = f"connect_timeout={settings.db_connection_timeout}"
+
         if all([pooler_host, pooler_port, pooler_user]):
             return (
                 f"postgresql://{pooler_user}:{quote_plus(self.password)}"
-                f"@{pooler_host}:{pooler_port}/{self.dbname}?sslmode=require"
+                f"@{pooler_host}:{pooler_port}/{self.dbname}"
+                f"?sslmode=require&{timeout_param}"
             )
 
         # Fall back to direct connection if pooler not configured
         return (
             f"postgresql://{self.user}:{quote_plus(self.password)}"
-            f"@{self.host}:{self.port}/{self.dbname}?sslmode=require"
+            f"@{self.host}:{self.port}/{self.dbname}"
+            f"?sslmode=require&{timeout_param}"
         )
 
 class DatabaseConnection:
@@ -70,13 +81,15 @@ class DatabaseConnection:
     for better resource management in production environments.
     """
 
-    def __init__(self, min_conn: int = 1, max_conn: int = 10):
+    def __init__(self, min_conn: Optional[int] = None, max_conn: Optional[int] = None):
         self.config = DatabaseConfig()
         self._pool = None
-        self.min_conn = min_conn
-        self.max_conn = max_conn
+        self.min_conn = min_conn if min_conn is not None else settings.db_min_pool_size
+        self.max_conn = max_conn if max_conn is not None else settings.db_max_pool_size
         self._direct_conn_attempts = 0
         self._max_direct_conn_attempts = 3
+        self._table_cache: Dict[str, Dict[str, Any]] = {}  # Cache to store table existence checks
+        self._cache_timestamps: Dict[str, float] = {}  # Cache timestamps for expiration
 
     def _ensure_pool(self):
         """Ensure the connection pool exists, create it if it doesn't."""
@@ -86,14 +99,26 @@ class DatabaseConnection:
                 logging.info(f"Attempting to connect to database at {self.config.host}")
                 logging.info(f"Using connection string format: postgresql://<user>@{self.config.host}:{self.config.port}/{self.config.dbname}?sslmode=require")
 
-                # Add connection timeout
+                # Create connection pool with settings from config
                 self._pool = SimpleConnectionPool(
                     minconn=self.min_conn,
                     maxconn=self.max_conn,
-                    dsn=self.config.connection_string,
-                    connect_timeout=10  # 10 seconds timeout
+                    dsn=self.config.connection_string
                 )
                 logging.info("Database connection pool created successfully")
+
+                # Test the connection with a simple query that doesn't depend on specific tables
+                # Get a connection directly from the pool to avoid circular dependency
+                conn = self._pool.getconn()
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT 1")  # Simple query that doesn't depend on any tables
+                    cursor.close()
+                    conn.commit()
+                finally:
+                    self._pool.putconn(conn)
+
+                return True
             except Exception as e:
                 import traceback
                 logging.error(f"Database connection error: {str(e)}")
@@ -126,8 +151,7 @@ class DatabaseConnection:
 
                 logging.info(f"Attempting direct connection (attempt {self._direct_conn_attempts})")
                 conn = psycopg2.connect(
-                    self.config.connection_string,
-                    connect_timeout=10  # 10 seconds timeout
+                    self.config.connection_string
                 )
                 try:
                     yield conn
@@ -162,8 +186,7 @@ class DatabaseConnection:
 
                 # Create a new connection
                 conn = psycopg2.connect(
-                    self.config.connection_string,
-                    connect_timeout=10
+                    self.config.connection_string
                 )
                 try:
                     yield conn
@@ -179,8 +202,7 @@ class DatabaseConnection:
             try:
                 logging.info("Attempting direct connection as last resort")
                 conn = psycopg2.connect(
-                    self.config.connection_string,
-                    connect_timeout=10
+                    self.config.connection_string
                 )
                 try:
                     yield conn
@@ -243,6 +265,83 @@ class DatabaseConnection:
         """Close all connections in the pool."""
         if self._pool:
             self._pool.closeall()
+
+    def table_exists(self, table_name, refresh_cache=False):
+        """
+        Check if a table exists in the database.
+
+        Args:
+            table_name: The name of the table to check
+            refresh_cache: Force refresh the cache for this table
+
+        Returns:
+            bool: True if the table exists, False otherwise
+        """
+        import logging
+
+        # Check if cache is valid (not expired and not forced refresh)
+        current_time = time.time()
+        cache_valid = (
+            table_name in self._table_cache and
+            table_name in self._cache_timestamps and
+            current_time - self._cache_timestamps.get(table_name, 0) < settings.cache_ttl and
+            not refresh_cache
+        )
+        
+        # Return cached result if valid
+        if cache_valid:
+            return self._table_cache[table_name]
+
+        try:
+            with self.get_cursor() as cur:
+                # Check if the table exists in the public schema
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = %s
+                    )
+                """, (table_name,))
+                exists = cur.fetchone()
+
+                # Extract the boolean value
+                result = exists[0] if isinstance(exists, tuple) else exists.get('exists', False)
+
+                # Cache the result with timestamp
+                self._table_cache[table_name] = result
+                self._cache_timestamps[table_name] = current_time
+
+                if not result:
+                    logging.warning(f"Table '{table_name}' does not exist in the database")
+
+                return result
+        except Exception as e:
+            logging.error(f"Error checking if table '{table_name}' exists: {str(e)}")
+            return False
+
+    def execute_safe(self, cursor, query, params=None):
+        """
+        Execute a query with proper error handling.
+
+        Args:
+            cursor: The database cursor
+            query: The SQL query to execute
+            params: Query parameters (optional)
+
+        Returns:
+            bool: True if the query was executed successfully, False otherwise
+        """
+        import logging
+
+        try:
+            cursor.execute(query, params)
+            return True
+        except Exception as e:
+            logging.error(f"Error executing query: {str(e)}")
+            logging.error(f"Query: {query}")
+            logging.error(f"Params: {params}")
+            return False
 
 # Singleton instance for application-wide use
 db = DatabaseConnection()

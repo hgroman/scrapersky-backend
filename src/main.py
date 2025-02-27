@@ -22,16 +22,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Import settings from central config
+from src.config.settings import settings
+
 # CORS Configuration
-# WARNING: This configuration is for development purposes only!
-# In production, replace '*' with specific origins for security
-# Example for production: allow_origins=['https://your-domain.com']
+# Use settings-based CORS configuration
+cors_origins = settings.get_cors_origins()
+
+# In development, allow all origins if not specified
+if settings.environment == "development" and cors_origins == ["*"]:
+    cors_methods = ["*"]
+    cors_headers = ["*"]
+else:
+    # In production, use specific values
+    cors_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    cors_headers = ["Authorization", "Content-Type", "X-Tenant-Id"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Restrict this in production
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # TODO: Restrict to specific methods in production
-    allow_headers=["*"],  # TODO: Restrict to specific headers in production
+    allow_methods=cors_methods,
+    allow_headers=cors_headers,
 )
 
 # Dynamically include all routers from the routers list
@@ -41,9 +53,6 @@ for router in routers:
 # Serve static files with absolute path
 static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
 app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
-
-# Include routers
-app.include_router(sitemap_scraper.router)
 
 @app.get("/")
 async def root():
