@@ -1,74 +1,167 @@
+import logging
 import os
-from pydantic_settings import BaseSettings
 from typing import Optional, List
 from pathlib import Path
+import uuid
+import json
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    # Environment
-    environment: str = "development"
-    
-    # Database Configuration
-    supabase_url: str
-    supabase_service_role_key: str
-    supabase_anon_key: str
-    supabase_db_password: str
+    """
+    Application settings using Pydantic BaseSettings.
+
+    This reads values from environment variables matching the field names.
+    """
+    # Supabase Settings
+    supabase_url: Optional[str] = None
+    supabase_anon_key: Optional[str] = None
+    supabase_service_role_key: Optional[str] = None
+    supabase_db_password: Optional[str] = None
     supabase_jwt_secret: Optional[str] = None
-    
+
+    # Supabase Pooler Settings
+    supabase_pooler_host: Optional[str] = None
+    supabase_pooler_port: Optional[str] = None
+    supabase_pooler_user: Optional[str] = None
+    supabase_pooler_password: Optional[str] = None
+
+    # Database Settings
+    supabase_db_host: Optional[str] = None
+    supabase_db_port: Optional[str] = None
+    supabase_db_user: Optional[str] = None
+    supabase_db_name: str = "postgres"
+    database_url: Optional[str] = None
+
     # Database connection settings
     db_min_pool_size: int = 1
     db_max_pool_size: int = 10
-    db_connection_timeout: int = 10
-    
-    # API Keys
-    openai_api_key: str
-    scraper_api_key: str
+    db_connection_timeout: int = 30
+
+    # Diagnostic settings
+    DIAGNOSTIC_DIR: str = "/tmp/scraper_sky_scheduler_diagnostics"
+
+    # Scheduler settings
+    SCHEDULER_INTERVAL_MINUTES: int = 1
+    SCHEDULER_BATCH_SIZE: int = 10
+    SCHEDULER_MAX_INSTANCES: int = 1
+
+    # External API Keys
+    # openai_api_key: Optional[str] = None  # Removed OpenAI API key
+    scraper_api_key: Optional[str] = None
+    # langchain_api_key: Optional[str] = None  # Removed Langchain API key
+    google_maps_api_key: Optional[str] = None
+
+    # LangChain settings - Removed
+    # langchain_tracing_v2: Optional[str] = None
+    # langchain_endpoint: Optional[str] = None
+    # langchain_project: Optional[str] = None
+
+    # Mautic settings
+    mautic_base_url: Optional[str] = None
+    mautic_client_id: Optional[str] = None
+    mautic_client_secret: Optional[str] = None
+
+    # GCP settings
+    gcp_project_id: Optional[str] = None
+    gcp_service_account_email: Optional[str] = None
+    gcp_service_account_private_key: Optional[str] = None
+    gcp_service_account_token_uri: Optional[str] = None
 
     # Application Settings
     log_level: str = "INFO"
     port: int = 8000
     host: str = "0.0.0.0"
     max_workers: int = 4
+    environment: str = "development"
+    cors_origins: str = "*"
     user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    
-    # CORS Settings
-    cors_origins: str = "*"  # Comma-separated list in .env, parsed to list in get_cors_origins()
-    
-    # Storage Settings
-    chroma_persist_dir: str = os.path.join(Path(__file__).parent.parent.parent.absolute(), "chroma_data")
-    
+
+    # User settings
+    development_user_id: str = str(uuid.uuid4())
+    system_user_id: str = "00000000-0000-0000-0000-000000000000"
+    default_tenant_id: str = "550e8400-e29b-41d4-a716-446655440000"
+    dev_user_id: Optional[str] = None
+
+    # Path settings
+    base_dir: Optional[Path] = None
+    static_dir: Optional[Path] = None
+
     # Cache settings
     cache_ttl: int = 3600  # Default cache TTL in seconds
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False  # Allow case-insensitive env var names
-        extra = "ignore"        # Ignore extra environment variables
-        
+    # =============================================================================
+    # CRITICAL DATABASE CONNECTION REQUIREMENTS - DO NOT MODIFY OR REMOVE
+    # =============================================================================
+    # This system EXCLUSIVELY uses Supavisor for connection pooling.
+    # The following parameters are NON-NEGOTIABLE and MANDATORY for all deployments:
+    #
+    # 1. raw_sql=true     - Use raw SQL instead of ORM
+    # 2. no_prepare=true  - Disable prepared statements
+    # 3. statement_cache_size=0 - Control statement caching
+    #
+    # These settings are applied in:
+    # - src/session/async_session.py
+    # - src/db/engine.py
+    #
+    # NEVER modify these settings or reintroduce other connection pooling methods.
+    # =============================================================================
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="allow"
+    )
+
     def get_cors_origins(self) -> List[str]:
-        """Parse CORS origins from comma-separated string to list."""
+        """Get CORS origins as a list."""
         if self.cors_origins == "*":
             return ["*"]
-        return [origin.strip() for origin in self.cors_origins.split(",")]
-        
+        try:
+            # Try to parse as JSON
+            return json.loads(self.cors_origins)
+        except json.JSONDecodeError:
+            # Fallback to comma-separated list
+            return [origin.strip() for origin in self.cors_origins.split(",")]
+
+    def redacted_database_url(self) -> str:
+        """Return a redacted version of the database URL for logging."""
+        if self.database_url:
+            # Create a redacted version of the URL that hides the password
+            parts = self.database_url.split(":")
+            if len(parts) >= 3:
+                # Format: postgresql+asyncpg://user:password@host:port/dbname
+                prefix = parts[0] + ":" + parts[1] + ":"
+                remainder = ":".join(parts[2:])
+
+                # Find password section
+                if "@" in remainder:
+                    password_part = remainder.split("@")[0]
+                    host_part = "@" + remainder.split("@")[1]
+                    return prefix + "***REDACTED***" + host_part
+
+            # Fallback if we can't parse properly
+            return "postgresql+asyncpg://***REDACTED***"
+
+        # If no database_url, show connection pattern
+        if self.supabase_pooler_host:
+            return f"postgresql+asyncpg://{self.supabase_pooler_user}:***REDACTED***@{self.supabase_pooler_host}:{self.supabase_pooler_port}/{self.supabase_db_name}"
+        elif self.supabase_db_host:
+            return f"postgresql+asyncpg://{self.supabase_db_user}:***REDACTED***@{self.supabase_db_host}:{self.supabase_db_port}/{self.supabase_db_name}"
+
+        return "No database URL configured"
+
     def validate(self) -> None:
-        """Validate required settings."""
-        missing = []
-        
-        # Check required database settings
-        if not self.supabase_url:
-            missing.append("SUPABASE_URL")
-        if not self.supabase_db_password:
-            missing.append("SUPABASE_DB_PASSWORD")
-            
-        # Check API keys
-        if not self.scraper_api_key:
-            missing.append("SCRAPER_API_KEY")
-            
-        if missing:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
-            
-        return True
-        
-# Create and validate settings
+        """Validate the settings configuration."""
+        # Check for required settings
+        if self.environment == "production":
+            assert self.supabase_url, "SUPABASE_URL is required in production"
+            assert self.supabase_anon_key, "SUPABASE_ANON_KEY is required in production"
+            assert self.supabase_service_role_key, "SUPABASE_SERVICE_ROLE_KEY is required in production"
+
+        # Log warning if database credentials aren't set
+        if not self.supabase_db_host and not self.supabase_pooler_host and not self.database_url:
+            logging.warning("No database connection information provided!")
+
+# Create a settings instance
 settings = Settings()
-settings.validate()
