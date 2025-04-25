@@ -3,6 +3,7 @@ User Model Module
 
 This module provides a model for representing an authenticated user.
 """
+
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -19,8 +20,12 @@ class User(BaseModel):
     id: str = Field(..., description="Unique identifier for the user")
     username: Optional[str] = Field(None, description="Username for the user")
     email: Optional[str] = Field(None, description="Email address for the user")
-    tenant_id: Optional[str] = Field(None, description="Tenant ID that the user belongs to")
-    roles: List[str] = Field(default_factory=list, description="Roles assigned to the user")
+    tenant_id: Optional[str] = Field(
+        None, description="Tenant ID that the user belongs to"
+    )
+    roles: List[str] = Field(
+        default_factory=list, description="Roles assigned to the user"
+    )
 
     def has_role(self, role: str) -> bool:
         """

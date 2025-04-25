@@ -8,24 +8,17 @@ and database introspection.
 
 import json
 import logging
-import os
-import uuid
 from contextlib import contextmanager
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import psycopg
 import psycopg.rows
 from sqlalchemy import text
-from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from psycopg import sql
 
 from ...db.engine import get_sync_engine
-from ...session.async_session import get_session
 
 logger = logging.getLogger(__name__)
+
 
 class DatabaseService:
     """
@@ -53,7 +46,7 @@ class DatabaseService:
             # Set row_factory on the connection *before* creating cursor (psycopg v3)
             # conn.row_factory = row_factory # Incorrect for pooled connection
             # cur = conn.cursor()
-            cur = conn.cursor(row_factory=row_factory) # Pass factory here
+            cur = conn.cursor(row_factory=row_factory)  # Pass factory here
             yield cur
             conn.commit()
         except Exception as e:
@@ -96,7 +89,9 @@ class DatabaseService:
             return False
 
     @classmethod
-    async def fetch_one(cls, query: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    async def fetch_one(
+        cls, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Execute a query and return a single row as a dictionary.
 
@@ -122,7 +117,7 @@ class DatabaseService:
                     # Convert tuple to dictionary using column names
                     if cur.description:
                         columns = [desc[0] for desc in cur.description]
-                        return dict(zip(columns, result))
+                        return dict(zip(columns, result, strict=False))
                     return None
 
         except Exception as e:
@@ -132,7 +127,9 @@ class DatabaseService:
             raise
 
     @classmethod
-    async def fetch_all(cls, query: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def fetch_all(
+        cls, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Execute a query and return all rows as a list of dictionaries.
 
@@ -159,7 +156,9 @@ class DatabaseService:
                     # Convert tuples to dictionaries using column names
                     if cur.description:
                         columns = [desc[0] for desc in cur.description]
-                        return [dict(zip(columns, row)) for row in results]
+                        return [
+                            dict(zip(columns, row, strict=False)) for row in results
+                        ]
                     return []
 
         except Exception as e:
@@ -193,7 +192,9 @@ class DatabaseService:
             raise
 
     @classmethod
-    async def execute_returning(cls, query: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    async def execute_returning(
+        cls, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Execute a query with RETURNING clause and return the result.
 
@@ -219,7 +220,7 @@ class DatabaseService:
                     # Convert tuple to dictionary using column names
                     if cur.description:
                         columns = [desc[0] for desc in cur.description]
-                        return dict(zip(columns, result))
+                        return dict(zip(columns, result, strict=False))
                     return None
 
         except Exception as e:
@@ -259,7 +260,9 @@ class DatabaseService:
             raise
 
     @classmethod
-    async def execute_transaction(cls, queries_and_params: List[Tuple[str, Dict[str, Any]]]) -> None:
+    async def execute_transaction(
+        cls, queries_and_params: List[Tuple[str, Dict[str, Any]]]
+    ) -> None:
         """
         Execute multiple queries in a transaction.
 
@@ -314,7 +317,7 @@ class DatabaseService:
                 # Extract table names from results
                 if results and isinstance(results[0], dict):
                     # Convert to list of strings with type assertion
-                    return [dict(row)['table_name'] for row in results]
+                    return [dict(row)["table_name"] for row in results]
                 else:
                     return [row[0] for row in results]
 
@@ -351,7 +354,7 @@ class DatabaseService:
 
         try:
             with cls.get_cursor() as cur:
-                cur.execute(query, {'table_name': table_name})
+                cur.execute(query, {"table_name": table_name})
                 results = cur.fetchall()
 
                 if not results:
@@ -365,7 +368,9 @@ class DatabaseService:
                     # Convert tuples to dictionaries using column names
                     if cur.description:
                         columns = [desc[0] for desc in cur.description]
-                        return [dict(zip(columns, row)) for row in results]
+                        return [
+                            dict(zip(columns, row, strict=False)) for row in results
+                        ]
                     return []
 
         except Exception as e:
@@ -373,7 +378,9 @@ class DatabaseService:
             raise
 
     @classmethod
-    async def get_record_by_id(cls, table_name: str, record_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+    async def get_record_by_id(
+        cls, table_name: str, record_id: str, tenant_id: str
+    ) -> Optional[Dict[str, Any]]:
         """
         Get a record by ID with tenant isolation.
 
@@ -391,12 +398,18 @@ class DatabaseService:
             WHERE id = %(record_id)s AND tenant_id = %(tenant_id)s
         """
 
-        return await cls.fetch_one(query, {'record_id': record_id, 'tenant_id': tenant_id})
+        return await cls.fetch_one(
+            query, {"record_id": record_id, "tenant_id": tenant_id}
+        )
 
     @classmethod
-    async def get_table_count(cls, table_name: str, tenant_id: Optional[str] = None,
-                        filter_clause: Optional[str] = None,
-                        filter_params: Optional[Dict[str, Any]] = None) -> int:
+    async def get_table_count(
+        cls,
+        table_name: str,
+        tenant_id: Optional[str] = None,
+        filter_clause: Optional[str] = None,
+        filter_params: Optional[Dict[str, Any]] = None,
+    ) -> int:
         """
         Get the count of records in a table with optional filtering.
 
@@ -414,7 +427,7 @@ class DatabaseService:
 
         if tenant_id:
             where_clauses.append("tenant_id = %(tenant_id)s")
-            params['tenant_id'] = tenant_id
+            params["tenant_id"] = tenant_id
 
         if filter_clause:
             where_clauses.append(filter_clause)
@@ -435,13 +448,19 @@ class DatabaseService:
 
         # Handle different result formats
         if isinstance(result, dict):
-            return result.get('record_count', 0)
+            return result.get("record_count", 0)
         else:
             return result[0]
 
     @classmethod
-    async def json_contains(cls, table_name: str, json_column: str, key: str, value: Any,
-                      tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def json_contains(
+        cls,
+        table_name: str,
+        json_column: str,
+        key: str,
+        value: Any,
+        tenant_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Search for records where a JSON column contains a specific key/value pair.
 
@@ -456,11 +475,11 @@ class DatabaseService:
             List of matching records
         """
         where_clauses = [f"{json_column}->%(key)s = %(value)s::jsonb"]
-        params = {'key': key, 'value': json.dumps(value)}
+        params = {"key": key, "value": json.dumps(value)}
 
         if tenant_id:
             where_clauses.append("tenant_id = %(tenant_id)s")
-            params['tenant_id'] = tenant_id
+            params["tenant_id"] = tenant_id
 
         where_sql = "WHERE " + " AND ".join(where_clauses)
 
@@ -473,7 +492,9 @@ class DatabaseService:
         return await cls.fetch_all(query, params)
 
     @classmethod
-    async def create_record(cls, table_name: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def create_record(
+        cls, table_name: str, data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """
         Create a new record in the database.
 
@@ -496,8 +517,13 @@ class DatabaseService:
         return await cls.execute_returning(query, data)
 
     @classmethod
-    async def update_record(cls, table_name: str, record_id: str, data: Dict[str, Any],
-                      tenant_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    async def update_record(
+        cls,
+        table_name: str,
+        record_id: str,
+        data: Dict[str, Any],
+        tenant_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """
         Update a record in the database.
 
@@ -513,11 +539,11 @@ class DatabaseService:
         set_clauses = [f"{col} = %({col})s" for col in data.keys()]
 
         where_clauses = ["id = %(record_id)s"]
-        params = {**data, 'record_id': record_id}
+        params = {**data, "record_id": record_id}
 
         if tenant_id:
             where_clauses.append("tenant_id = %(tenant_id)s")
-            params['tenant_id'] = tenant_id
+            params["tenant_id"] = tenant_id
 
         query = f"""
             UPDATE {table_name}
@@ -529,7 +555,9 @@ class DatabaseService:
         return await cls.execute_returning(query, params)
 
     @classmethod
-    async def delete_record(cls, table_name: str, record_id: str, tenant_id: Optional[str] = None) -> bool:
+    async def delete_record(
+        cls, table_name: str, record_id: str, tenant_id: Optional[str] = None
+    ) -> bool:
         """
         Delete a record from the database.
 
@@ -542,11 +570,11 @@ class DatabaseService:
             True if a record was deleted, False otherwise
         """
         where_clauses = ["id = %(record_id)s"]
-        params = {'record_id': record_id}
+        params = {"record_id": record_id}
 
         if tenant_id:
             where_clauses.append("tenant_id = %(tenant_id)s")
-            params['tenant_id'] = tenant_id
+            params["tenant_id"] = tenant_id
 
         query = f"""
             DELETE FROM {table_name}
@@ -555,6 +583,7 @@ class DatabaseService:
 
         rows_affected = await cls.execute(query, params)
         return rows_affected > 0
+
 
 # Create singleton instance
 db_service = DatabaseService()

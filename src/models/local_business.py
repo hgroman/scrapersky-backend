@@ -1,16 +1,12 @@
 import enum
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
     Enum,
-    Float,
-    ForeignKey,
-    Index,
     Integer,
     Numeric,
     String,
@@ -25,11 +21,16 @@ from .place import PlaceStatusEnum
 try:
     from .base import Base
 except ImportError:
-    print("Warning: Could not import Base using relative path '.base'. Trying absolute path 'src.models.base'.")
+    print(
+        "Warning: Could not import Base using relative path '.base'. Trying absolute path 'src.models.base'."
+    )
     try:
         from src.models.base import Base
     except ImportError:
-        raise ImportError("Could not import Base from either '.base' or 'src.models.base'. Ensure the path is correct.")
+        raise ImportError(
+            "Could not import Base from either '.base' or 'src.models.base'. Ensure the path is correct."
+        )
+
 
 # Define the enum for the domain extraction background process status
 # Values MUST match the database enum values exactly (case-sensitive)
@@ -39,10 +40,13 @@ class DomainExtractionStatusEnum(enum.Enum):
     Completed = "Completed"
     Error = "Error"
 
+
 class LocalBusiness(Base):
     __tablename__ = "local_businesses"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
     tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     place_id = Column(String, unique=True, nullable=True, index=True)
     lead_source = Column(Text, nullable=True)
@@ -89,26 +93,43 @@ class LocalBusiness(Base):
     parking = Column(ARRAY(Text), nullable=True)
     pets = Column(ARRAY(Text), nullable=True)
     additional_json = Column(JSONB, nullable=True, server_default="{}")
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Use PlaceStatusEnum as it defines the shared user-facing statuses
-    status = Column(Enum(PlaceStatusEnum, name="place_status_enum", create_type=False, native_enum=True), default=PlaceStatusEnum.New, nullable=False, index=True)
+    status = Column(
+        Enum(
+            PlaceStatusEnum,
+            name="place_status_enum",
+            create_type=False,
+            native_enum=True,
+        ),
+        default=PlaceStatusEnum.New,
+        nullable=False,
+        index=True,
+    )
 
     # New Enum specifically for tracking domain extraction workflow for this business
     # THIS ENUM MUST ADHERE TO PASCALCASE STANDARD
     domain_extraction_status = Column(
         Enum(
-            DomainExtractionStatusEnum, # Reference the updated Enum
-            name="DomainExtractionStatusEnum", # Keep DB type name consistent for now
+            DomainExtractionStatusEnum,  # Reference the updated Enum
+            name="DomainExtractionStatusEnum",  # Keep DB type name consistent for now
             create_type=False,
             native_enum=True,
-            values_callable=lambda obj: [e.value for e in obj]
+            values_callable=lambda obj: [e.value for e in obj],
         ),
         nullable=True,
-        index=True
+        index=True,
     )
-    domain_extraction_error = Column(String, nullable=True) # To store error messages
+    domain_extraction_error = Column(String, nullable=True)  # To store error messages
 
     def to_dict(self):
         result = {}

@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
+
 def standardize_domain(input_domain: str) -> str:
     """
     Standardize domain input and return the clean domain.
@@ -22,19 +23,19 @@ def standardize_domain(input_domain: str) -> str:
         domain = input_domain.strip().lower()
 
         # If it's already a URL, extract the domain
-        if '://' in domain:
+        if "://" in domain:
             parsed = urlparse(domain)
             domain = parsed.netloc or domain  # Fallback to original if netloc is empty
 
         # Remove www. prefix if present
-        if domain.startswith('www.'):
+        if domain.startswith("www."):
             domain = domain[4:]
 
         # Remove any paths or query parameters
-        domain = domain.split('/')[0]
+        domain = domain.split("/")[0]
 
         # Validate domain format
-        domain_pattern = r'^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$'
+        domain_pattern = r"^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$"
         if not re.match(domain_pattern, domain):
             raise ValueError(f"Invalid domain format: {domain}")
 
@@ -43,6 +44,7 @@ def standardize_domain(input_domain: str) -> str:
     except Exception as e:
         logger.error(f"Error standardizing domain {input_domain}: {str(e)}")
         raise ValueError(f"Invalid domain format: {input_domain}")
+
 
 def get_domain_url(domain: str) -> str:
     """
@@ -55,6 +57,7 @@ def get_domain_url(domain: str) -> str:
         str: Full URL (e.g. 'https://domain.com')
     """
     return f"https://{domain}"
+
 
 def extract_domain_from_url(url: str) -> str:
     """
@@ -70,7 +73,7 @@ def extract_domain_from_url(url: str) -> str:
     domain = parsed.netloc.lower()
 
     # Remove www. prefix if present
-    if domain.startswith('www.'):
+    if domain.startswith("www."):
         domain = domain[4:]
 
     return domain

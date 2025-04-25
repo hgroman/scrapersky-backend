@@ -12,22 +12,22 @@ with the following required parameters:
 
 These parameters are non-negotiable and mandatory for all deployments.
 """
+
 import logging
 import os
 import socket
 import ssl
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator
 from urllib.parse import quote_plus
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy.pool import NullPool
 
 from ..config.settings import settings
 
 logger = logging.getLogger(__name__)
+
 
 # Automatically detect environment based on hostname
 def is_development_environment() -> bool:
@@ -38,26 +38,30 @@ def is_development_environment() -> bool:
         True if running in development, False if in production
     """
     # Check explicit environment setting first
-    if hasattr(settings, 'environment') and settings.environment:
-        return settings.environment.lower() in ('development', 'dev', 'local')
+    if hasattr(settings, "environment") and settings.environment:
+        return settings.environment.lower() in ("development", "dev", "local")
 
     # Check hostname
     hostname = socket.gethostname()
     is_dev = (
-        'localhost' in hostname.lower() or
-        'dev' in hostname.lower() or
-        hostname == '127.0.0.1' or
-        hostname.startswith('192.168.') or
-        hostname.startswith('10.') or
-        hostname.startswith('172.16.') or
-        hostname.endswith('.local')
+        "localhost" in hostname.lower()
+        or "dev" in hostname.lower()
+        or hostname == "127.0.0.1"
+        or hostname.startswith("192.168.")
+        or hostname.startswith("10.")
+        or hostname.startswith("172.16.")
+        or hostname.endswith(".local")
     )
 
-    logger.info(f"Detected environment: {'Development' if is_dev else 'Production'} based on hostname: {hostname}")
+    logger.info(
+        f"Detected environment: {'Development' if is_dev else 'Production'} based on hostname: {hostname}"
+    )
     return is_dev
+
 
 # Store the environment detection result
 IS_DEVELOPMENT = is_development_environment()
+
 
 # Build connection string from Supabase settings
 def get_database_url() -> str:
@@ -66,19 +70,19 @@ def get_database_url() -> str:
     Falls back to the original hardcoded string if environment variables are missing.
     """
     # Try to use environment variables first
-    pooler_host = os.environ.get('SUPABASE_POOLER_HOST')
-    pooler_port = os.environ.get('SUPABASE_POOLER_PORT')
-    pooler_user = os.environ.get('SUPABASE_POOLER_USER')
-    password = os.environ.get('SUPABASE_DB_PASSWORD')
+    pooler_host = os.environ.get("SUPABASE_POOLER_HOST")
+    pooler_port = os.environ.get("SUPABASE_POOLER_PORT")
+    pooler_user = os.environ.get("SUPABASE_POOLER_USER")
+    password = os.environ.get("SUPABASE_DB_PASSWORD")
     dbname = "postgres"  # Default database name for Supabase
 
     # Extract project reference from Supabase URL if available
     project_ref = None
     if settings.supabase_url:
-        if '//' in settings.supabase_url:
-            project_ref = settings.supabase_url.split('//')[1].split('.')[0]
+        if "//" in settings.supabase_url:
+            project_ref = settings.supabase_url.split("//")[1].split(".")[0]
         else:
-            project_ref = settings.supabase_url.split('.')[0]
+            project_ref = settings.supabase_url.split(".")[0]
 
     # Check if all required env vars are available
     if all([pooler_host, pooler_port, pooler_user, password]):
@@ -86,11 +90,15 @@ def get_database_url() -> str:
         safe_password = str(password) if password is not None else ""
 
         # If pooler_user already includes project_ref, use it directly
-        if pooler_user and '.' in pooler_user:
+        if pooler_user and "." in pooler_user:
             user_part = pooler_user
         # Otherwise, append project_ref if available
         elif project_ref:
-            user_part = f"{pooler_user}.{project_ref}" if pooler_user else f"postgres.{project_ref}"
+            user_part = (
+                f"{pooler_user}.{project_ref}"
+                if pooler_user
+                else f"postgres.{project_ref}"
+            )
         else:
             user_part = pooler_user or "postgres"
 
@@ -98,11 +106,16 @@ def get_database_url() -> str:
             f"postgresql+asyncpg://{user_part}:{quote_plus(safe_password)}"
             f"@{pooler_host}:{pooler_port}/{dbname}"
         )
-        logger.info(f"Using Supabase Supavisor connection pooler at {pooler_host}:{pooler_port}")
+        logger.info(
+            f"Using Supabase Supavisor connection pooler at {pooler_host}:{pooler_port}"
+        )
         return connection_string
 
     # Raise an error if environment variables are missing instead of using hardcoded fallback
-    raise ValueError("Missing environment variables for database connection. Please set SUPABASE_POOLER_HOST, SUPABASE_POOLER_PORT, SUPABASE_POOLER_USER, and SUPABASE_DB_PASSWORD in your .env file.")
+    raise ValueError(
+        "Missing environment variables for database connection. Please set SUPABASE_POOLER_HOST, SUPABASE_POOLER_PORT, SUPABASE_POOLER_USER, and SUPABASE_DB_PASSWORD in your .env file."
+    )
+
 
 # Get database URL with no fallback - fail loudly if connection details are missing
 try:
@@ -119,13 +132,17 @@ except Exception as e:
 # Configure SSL context based on environment
 if IS_DEVELOPMENT:
     # Development: Disable SSL verification for easier local development
-    logger.warning("Development environment detected: Disabling SSL certificate verification")
+    logger.warning(
+        "Development environment detected: Disabling SSL certificate verification"
+    )
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
 else:
     # Production: Use proper SSL verification
-    logger.info("Production environment detected: Using strict SSL certificate verification")
+    logger.info(
+        "Production environment detected: Using strict SSL certificate verification"
+    )
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = True
     ssl_context.verify_mode = ssl.CERT_REQUIRED
@@ -137,12 +154,10 @@ connect_args = {
     # Generate unique prepared statement names for Supavisor compatibility
     "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
     # Required Supavisor connection parameters
-    "server_settings": {
-        "statement_cache_size": "0"
-    },
+    "server_settings": {"statement_cache_size": "0"},
     # Explicitly disable prepared statements for asyncpg 0.30.0
     "statement_cache_size": 0,
-    "prepared_statement_cache_size": 0
+    "prepared_statement_cache_size": 0,
 }
 
 # Create async engine with environment-specific settings
@@ -159,8 +174,8 @@ engine = create_async_engine(
     execution_options={
         "isolation_level": "READ COMMITTED",
         "no_prepare": True,
-        "raw_sql": True
-    }
+        "raw_sql": True,
+    },
 )
 
 # Create async session factory
@@ -170,6 +185,7 @@ async_session_factory = async_sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
 
 # Create a dedicated background task session factory with all the necessary
 # compatibility settings for asyncpg 0.30.0
@@ -187,14 +203,13 @@ def get_background_task_session_factory():
     # The correct approach is to use the same engine since the connection parameters
     # are already set at the engine level in the connect_args
     return async_sessionmaker(
-        engine,
-        expire_on_commit=False,
-        autoflush=False,
-        autocommit=False
+        engine, expire_on_commit=False, autoflush=False, autocommit=False
     )
+
 
 # Create an instance of the background task session factory
 background_task_session_factory = get_background_task_session_factory()
+
 
 @asynccontextmanager
 async def get_background_session() -> AsyncGenerator[AsyncSession, None]:
@@ -219,6 +234,7 @@ async def get_background_session() -> AsyncGenerator[AsyncSession, None]:
     finally:
         await session.close()
 
+
 @asynccontextmanager
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """
@@ -242,6 +258,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         raise
     finally:
         await session.close()
+
 
 async def get_session_dependency() -> AsyncGenerator[AsyncSession, None]:
     """

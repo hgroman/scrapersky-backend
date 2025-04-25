@@ -4,6 +4,7 @@ Sitemap SQLAlchemy Models
 This module defines the database models for sitemap files and URLs,
 providing an ORM interface for interacting with the sitemap_files and sitemap_urls tables.
 """
+
 import enum
 import logging
 import uuid
@@ -24,36 +25,42 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from .base import Base, BaseModel, model_to_dict
 
 logger = logging.getLogger(__name__)
 
+
 # Enum definitions to match database
 class SitemapFileStatusEnum(enum.Enum):
     """Status values for sitemap_file_status_enum in database"""
+
     Pending = "Pending"
     Processing = "Processing"
     Completed = "Completed"
     Error = "Error"
 
+
 class SitemapDeepCurationStatusEnum(enum.Enum):
     """Status values for SitemapCurationStatusEnum in database"""
+
     New = "New"
     Selected = "Selected"
     Maybe = "Maybe"
     Not_a_Fit = "Not a Fit"
     Archived = "Archived"
 
+
 class SitemapDeepProcessStatusEnum(enum.Enum):
     """Status values mapped to deep_scan_status_enum in database (MUST MATCH DB DEFINITION)"""
+
     # Setting to CAPITALIZED values to match corrected DB schema
     Queued = "Queued"
     Processing = "Processing"
     Completed = "Completed"
     Error = "Error"
     Submitted = "Submitted"
+
 
 class SitemapFile(Base, BaseModel):
     """
@@ -79,6 +86,7 @@ class SitemapFile(Base, BaseModel):
         tags: JSON field for additional tags and categorization
         notes: Optional text notes about this sitemap
     """
+
     __tablename__ = "sitemap_files"
 
     # Core fields (id comes from BaseModel)
@@ -104,7 +112,12 @@ class SitemapFile(Base, BaseModel):
     lead_source = Column(Text, nullable=True)
 
     # Security and ownership
-    tenant_id = Column(PGUUID, nullable=True, index=True, default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id = Column(
+        PGUUID,
+        nullable=True,
+        index=True,
+        default="550e8400-e29b-41d4-a716-446655440000",
+    )
     created_by = Column(PGUUID, nullable=True)
     updated_by = Column(PGUUID, nullable=True)
     user_id = Column(PGUUID, nullable=True)
@@ -112,22 +125,48 @@ class SitemapFile(Base, BaseModel):
 
     # Process tracking
     job_id = Column(PGUUID, nullable=True, index=True)
-    status = Column(SQLAlchemyEnum(SitemapFileStatusEnum, name="sitemap_file_status_enum", create_type=False), nullable=False, default=SitemapFileStatusEnum.Pending, index=True)
+    status = Column(
+        SQLAlchemyEnum(
+            SitemapFileStatusEnum, name="sitemap_file_status_enum", create_type=False
+        ),
+        nullable=False,
+        default=SitemapFileStatusEnum.Pending,
+        index=True,
+    )
     is_active = Column(Boolean, nullable=True, default=True)
     process_after = Column(DateTime(timezone=True), nullable=True)
     last_processed_at = Column(DateTime(timezone=True), nullable=True)
 
     # Deep scrape columns
-    deep_scrape_curation_status = Column(SQLAlchemyEnum(SitemapDeepCurationStatusEnum, name="SitemapCurationStatusEnum", create_type=False), nullable=True, default=SitemapDeepCurationStatusEnum.New, index=True)
+    deep_scrape_curation_status = Column(
+        SQLAlchemyEnum(
+            SitemapDeepCurationStatusEnum,
+            name="SitemapCurationStatusEnum",
+            create_type=False,
+        ),
+        nullable=True,
+        default=SitemapDeepCurationStatusEnum.New,
+        index=True,
+    )
     deep_scrape_error = Column(Text, nullable=True)
-    deep_scrape_process_status = Column(SQLAlchemyEnum(SitemapDeepProcessStatusEnum, name="deep_scan_status_enum", create_type=False), nullable=True, index=True)
+    deep_scrape_process_status = Column(
+        SQLAlchemyEnum(
+            SitemapDeepProcessStatusEnum,
+            name="deep_scan_status_enum",
+            create_type=False,
+        ),
+        nullable=True,
+        index=True,
+    )
 
     # Additional metadata
     tags = Column(JSONB, nullable=True)
     notes = Column(Text, nullable=True)
 
     # Relationships
-    urls = relationship("SitemapUrl", back_populates="sitemap", cascade="all, delete-orphan")
+    urls = relationship(
+        "SitemapUrl", back_populates="sitemap", cascade="all, delete-orphan"
+    )
     domain = relationship("Domain", back_populates="sitemap_files")
 
     def to_dict(self) -> Dict[str, Any]:
@@ -145,7 +184,7 @@ class SitemapFile(Base, BaseModel):
         tenant_id: Optional[str] = None,
         created_by: Optional[str] = None,
         job_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> "SitemapFile":
         """
         Create a new sitemap file record.
@@ -189,8 +228,8 @@ class SitemapFile(Base, BaseModel):
                 tenant_id=tenant_id_obj,
                 created_by=created_by_obj,
                 job_id=job_id,
-                status='pending',
-                **kwargs
+                status="pending",
+                **kwargs,
             )
 
             session.add(sitemap_file)
@@ -201,7 +240,9 @@ class SitemapFile(Base, BaseModel):
             raise
 
     @classmethod
-    async def get_by_id(cls, session, sitemap_id: Union[str, uuid.UUID]) -> Optional["SitemapFile"]:
+    async def get_by_id(
+        cls, session, sitemap_id: Union[str, uuid.UUID]
+    ) -> Optional["SitemapFile"]:
         """
         Get a sitemap file by its ID.
 
@@ -241,7 +282,11 @@ class SitemapFile(Base, BaseModel):
         """
         from sqlalchemy import select
 
-        query = select(cls).where(cls.domain_id == domain_id).order_by(cls.created_at.desc())
+        query = (
+            select(cls)
+            .where(cls.domain_id == domain_id)
+            .order_by(cls.created_at.desc())
+        )
 
         result = await session.execute(query)
         return result.scalars().all()
@@ -282,10 +327,16 @@ class SitemapUrl(Base, BaseModel):
         tags: JSON field for additional tags and categorization
         notes: Optional text notes about this URL
     """
+
     __tablename__ = "sitemap_urls"
 
     # Core fields (id comes from BaseModel)
-    sitemap_id = Column(PGUUID, ForeignKey("sitemap_files.id", ondelete="CASCADE"), nullable=False, index=True)
+    sitemap_id = Column(
+        PGUUID,
+        ForeignKey("sitemap_files.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     url = Column(Text, nullable=False)
 
     # Metadata fields from sitemap
@@ -294,7 +345,12 @@ class SitemapUrl(Base, BaseModel):
     priority = Column(Float, nullable=True)
 
     # Security and ownership
-    tenant_id = Column(PGUUID, nullable=True, index=True, default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id = Column(
+        PGUUID,
+        nullable=True,
+        index=True,
+        default="550e8400-e29b-41d4-a716-446655440000",
+    )
     created_by = Column(PGUUID, nullable=True)
     updated_by = Column(PGUUID, nullable=True)
 
@@ -320,7 +376,7 @@ class SitemapUrl(Base, BaseModel):
         changefreq: Optional[str] = None,
         priority: Optional[float] = None,
         created_by: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> "SitemapUrl":
         """
         Create a new sitemap URL record.
@@ -347,7 +403,9 @@ class SitemapUrl(Base, BaseModel):
                     sitemap_id_obj = uuid.UUID(sitemap_id)
                 except ValueError:
                     logger.warning(f"Invalid UUID format for sitemap_id: {sitemap_id}")
-                    raise ValueError(f"Invalid UUID format for sitemap_id: {sitemap_id}")
+                    raise ValueError(
+                        f"Invalid UUID format for sitemap_id: {sitemap_id}"
+                    )
 
             tenant_id_obj = None
             if tenant_id:
@@ -373,7 +431,7 @@ class SitemapUrl(Base, BaseModel):
                 priority=priority,
                 tenant_id=tenant_id_obj,
                 created_by=created_by_obj,
-                **kwargs
+                **kwargs,
             )
 
             session.add(sitemap_url)
@@ -390,7 +448,7 @@ class SitemapUrl(Base, BaseModel):
         sitemap_id: Union[str, uuid.UUID],
         tenant_id: Optional[str] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List["SitemapUrl"]:
         """
         Get URLs for a specific sitemap with pagination.
@@ -432,7 +490,9 @@ class SitemapUrl(Base, BaseModel):
         return result.scalars().all()
 
     @classmethod
-    async def count_by_sitemap_id(cls, session, sitemap_id: Union[str, uuid.UUID], tenant_id: Optional[str] = None) -> int:
+    async def count_by_sitemap_id(
+        cls, session, sitemap_id: Union[str, uuid.UUID], tenant_id: Optional[str] = None
+    ) -> int:
         """
         Count URLs for a specific sitemap.
 
@@ -455,7 +515,11 @@ class SitemapUrl(Base, BaseModel):
                 logger.warning(f"Invalid UUID format for sitemap_id: {sitemap_id}")
                 return 0
 
-        query = select(func.count()).select_from(cls).where(cls.sitemap_id == sitemap_id_obj)
+        query = (
+            select(func.count())
+            .select_from(cls)
+            .where(cls.sitemap_id == sitemap_id_obj)
+        )
 
         if tenant_id:
             try:

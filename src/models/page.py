@@ -1,12 +1,12 @@
 """
 SQLAlchemy Model for the 'pages' table.
 """
+
 import uuid
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import List, Optional
 
 from sqlalchemy import (
-    UUID,
     ARRAY,
     Boolean,
     Column,
@@ -14,14 +14,14 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Text
+    Text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from .base import Base, BaseModel
+
 
 class Page(Base, BaseModel):
     __tablename__ = "pages"
@@ -51,28 +51,50 @@ class Page(Base, BaseModel):
     # created_at timestamp with time zone YES now() -- Handled by BaseModel
     # updated_at timestamp with time zone YES now() -- Handled by BaseModel
 
-    id: Column[uuid.UUID] = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id: Column[Optional[uuid.UUID]] = Column(PGUUID(as_uuid=True), nullable=False) # TODO: Confirm if needed post-tenant removal
-    domain_id: Column[Optional[uuid.UUID]] = Column(PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False)
+    id: Column[uuid.UUID] = Column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Column[Optional[uuid.UUID]] = Column(
+        PGUUID(as_uuid=True), nullable=False
+    )  # TODO: Confirm if needed post-tenant removal
+    domain_id: Column[Optional[uuid.UUID]] = Column(
+        PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False
+    )
     url: Column[str] = Column(Text, nullable=False)
     title: Column[Optional[str]] = Column(Text, nullable=True)
     description: Column[Optional[str]] = Column(Text, nullable=True)
     h1: Column[Optional[str]] = Column(Text, nullable=True)
     canonical_url: Column[Optional[str]] = Column(Text, nullable=True)
     meta_robots: Column[Optional[str]] = Column(Text, nullable=True)
-    has_schema_markup: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
-    schema_types: Column[Optional[List[Optional[str]]]] = Column(ARRAY(String), nullable=True)
-    has_contact_form: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
+    has_schema_markup: Column[Optional[bool]] = Column(
+        Boolean, default=False, nullable=True
+    )
+    schema_types: Column[Optional[List[Optional[str]]]] = Column(
+        ARRAY(String), nullable=True
+    )
+    has_contact_form: Column[Optional[bool]] = Column(
+        Boolean, default=False, nullable=True
+    )
     has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
     word_count: Column[Optional[int]] = Column(Integer, nullable=True)
-    inbound_links: Column[Optional[List[Optional[str]]]] = Column(ARRAY(String), nullable=True)
-    outbound_links: Column[Optional[List[Optional[str]]]] = Column(ARRAY(String), nullable=True)
-    last_modified: Column[Optional[datetime]] = Column(DateTime(timezone=True), nullable=True)
-    last_scan: Column[Optional[datetime]] = Column(DateTime(timezone=True), nullable=True)
+    inbound_links: Column[Optional[List[Optional[str]]]] = Column(
+        ARRAY(String), nullable=True
+    )
+    outbound_links: Column[Optional[List[Optional[str]]]] = Column(
+        ARRAY(String), nullable=True
+    )
+    last_modified: Column[Optional[datetime]] = Column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_scan: Column[Optional[datetime]] = Column(
+        DateTime(timezone=True), nullable=True
+    )
     page_type: Column[Optional[str]] = Column(Text, nullable=True)
     lead_source: Column[Optional[str]] = Column(Text, nullable=True)
     additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True)
 
     # Relationships
     domain = relationship("Domain", back_populates="pages")
-    contacts = relationship("Contact", back_populates="page", cascade="all, delete-orphan")
+    contacts = relationship(
+        "Contact", back_populates="page", cascade="all, delete-orphan"
+    )

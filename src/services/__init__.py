@@ -5,7 +5,6 @@ Provides service modules for database and business logic operations.
 Note: RBAC-related services have been removed to simplify the authentication system.
 """
 
-from .domain_service import domain_service
 from .job_service import job_service  # Modernized SQLAlchemy job_service
 
 # RBAC services removed
@@ -16,9 +15,12 @@ from .job_service import job_service  # Modernized SQLAlchemy job_service
 # rbac_service = RbacService()
 # feature_service = FeatureService()
 
+# Service instances - ensure these align with active services
+#rbac_service = RBACService()  # Removed
+# domain_service = DomainService() # Removed
+
+# Explicitly define what gets exported
 __all__ = [
-    'domain_service',
-    'job_service',
-    # 'rbac_service',      # Removed
-    # 'feature_service'    # Removed
+    "job_service",
+    # Add other active service exports here if any
 ]

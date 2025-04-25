@@ -3,8 +3,8 @@ SQLAlchemy model for places from the Google Places API.
 
 This module defines the database model for the places_staging table.
 """
+
 import enum
-import uuid
 from datetime import datetime
 
 from sqlalchemy import (
@@ -33,14 +33,18 @@ class PlaceStatusEnum(enum.Enum):
     Not_a_Fit = "Not a Fit"
     Archived = "Archived"
 
+
 # --- Define the NEW enum specifically for deep scan status --- #
 # Values MUST match the database enum labels exactly (case-sensitive)
 class DeepScanStatusEnum(enum.Enum):
-    Queued = "Queued"         # Changed from "queued"
-    Processing = "Processing" # Changed from "processing"
-    Completed = "Completed"   # Changed from "complete"
-    Error = "Error"           # Changed from "failed"
+    Queued = "Queued"  # Changed from "queued"
+    Processing = "Processing"  # Changed from "processing"
+    Completed = "Completed"  # Changed from "complete"
+    Error = "Error"  # Changed from "failed"
+
+
 # ------------------------------------------------------------- #
+
 
 class Place(Base):
     """
@@ -48,6 +52,7 @@ class Place(Base):
 
     This table stores place data from Google Places API searches.
     """
+
     __tablename__ = "places_staging"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -63,8 +68,20 @@ class Place(Base):
     price_level = Column(Integer)
     # Use the extended enum, assuming native DB enum type exists (Reverting to standard)
     # Ensure the default matches the new enum value
-    status = Column(Enum(PlaceStatusEnum, name="place_status_enum", create_type=False, native_enum=True), default=PlaceStatusEnum.New, nullable=False, index=True)
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True, default=DEFAULT_TENANT_ID)
+    status = Column(
+        Enum(
+            PlaceStatusEnum,
+            name="place_status_enum",
+            create_type=False,
+            native_enum=True,
+        ),
+        default=PlaceStatusEnum.New,
+        nullable=False,
+        index=True,
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True), nullable=False, index=True, default=DEFAULT_TENANT_ID
+    )
     created_by = Column(UUID(as_uuid=True), nullable=True)
     user_id = Column(UUID(as_uuid=True), nullable=True)
     user_name = Column(String(255))
@@ -86,9 +103,14 @@ class Place(Base):
 
     # --- Add the NEW column for deep scan status --- #
     deep_scan_status = Column(
-        Enum(DeepScanStatusEnum, name="deep_scan_status_enum", create_type=False, native_enum=True),
+        Enum(
+            DeepScanStatusEnum,
+            name="deep_scan_status_enum",
+            create_type=False,
+            native_enum=True,
+        ),
         nullable=True,  # Allow null for places not involved in deep scan
-        index=True      # Index for efficient querying by scheduler
+        index=True,  # Index for efficient querying by scheduler
     )
     # ------------------------------------------------- #
 

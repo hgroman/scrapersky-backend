@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import uuid
 from pathlib import Path
 from typing import List, Optional
@@ -14,6 +13,7 @@ class Settings(BaseSettings):
 
     This reads values from environment variables matching the field names.
     """
+
     # Supabase Settings
     supabase_url: Optional[str] = None
     supabase_anon_key: Optional[str] = None
@@ -59,8 +59,10 @@ class Settings(BaseSettings):
     SITEMAP_SCHEDULER_MAX_INSTANCES: int = 1
 
     # Domain Sitemap Submission Scheduler settings (New)
-    DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = 1 # Default interval changed to 1 minute
-    DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE: int = 10 # Default batch size
+    DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = (
+        1  # Default interval changed to 1 minute
+    )
+    DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE: int = 10  # Default batch size
     # DOMAIN_SITEMAP_SCHEDULER_MAX_INSTANCES: int = 1 # Add if needed, defaults to 1 in setup logic usually
 
     # External API Keys
@@ -99,7 +101,7 @@ class Settings(BaseSettings):
     system_user_id: str = "00000000-0000-0000-0000-000000000000"
     default_tenant_id: str = "550e8400-e29b-41d4-a716-446655440000"
     dev_user_id: Optional[str] = None
-    DEV_TOKEN: Optional[str] = None # Token for internal/dev API calls
+    DEV_TOKEN: Optional[str] = None  # Token for internal/dev API calls
 
     # Path settings
     base_dir: Optional[Path] = None
@@ -126,9 +128,7 @@ class Settings(BaseSettings):
     # =============================================================================
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        case_sensitive=False,
-        extra="allow"
+        env_file=".env", case_sensitive=False, extra="allow"
     )
 
     def get_cors_origins(self) -> List[str]:
@@ -175,11 +175,18 @@ class Settings(BaseSettings):
         if self.environment == "production":
             assert self.supabase_url, "SUPABASE_URL is required in production"
             assert self.supabase_anon_key, "SUPABASE_ANON_KEY is required in production"
-            assert self.supabase_service_role_key, "SUPABASE_SERVICE_ROLE_KEY is required in production"
+            assert (
+                self.supabase_service_role_key
+            ), "SUPABASE_SERVICE_ROLE_KEY is required in production"
 
         # Log warning if database credentials aren't set
-        if not self.supabase_db_host and not self.supabase_pooler_host and not self.database_url:
+        if (
+            not self.supabase_db_host
+            and not self.supabase_pooler_host
+            and not self.database_url
+        ):
             logging.warning("No database connection information provided!")
+
 
 # Create a settings instance
 settings = Settings()

@@ -3,6 +3,7 @@ Places Search Service
 
 This module provides services for interacting with the Google Places API.
 """
+
 import asyncio
 import json
 import logging
@@ -17,6 +18,7 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
+
 class PlacesSearchService:
     """
     Service for searching Google Places API.
@@ -27,10 +29,7 @@ class PlacesSearchService:
 
     @staticmethod
     async def search_places(
-        location: str,
-        business_type: str,
-        radius_km: int = 10,
-        max_results: int = 20
+        location: str, business_type: str, radius_km: int = 10, max_results: int = 20
     ) -> List[Dict[str, Any]]:
         """
         Search Google Places API for businesses.
@@ -51,20 +50,32 @@ class PlacesSearchService:
         if not api_key:
             # Log more detailed diagnostic information
             env_keys = [k for k in os.environ.keys()]
-            google_related_keys = [k for k in env_keys if 'GOOGLE' in k.upper()]
+            google_related_keys = [k for k in env_keys if "GOOGLE" in k.upper()]
 
-            logger.error("❌ [API KEY] GOOGLE_MAPS_API_KEY environment variable not set")
-            logger.error(f"❌ [API KEY] Google-related environment variables: {google_related_keys}")
+            logger.error(
+                "❌ [API KEY] GOOGLE_MAPS_API_KEY environment variable not set"
+            )
+            logger.error(
+                f"❌ [API KEY] Google-related environment variables: {google_related_keys}"
+            )
             logger.error(f"❌ [API KEY] Total environment variables: {len(env_keys)}")
 
             # Check if API key might be in settings
             from ...config.settings import settings
-            if hasattr(settings, 'google_maps_api_key') and settings.google_maps_api_key:
-                logger.info(f"✅ [API KEY] Found API key in settings, using that instead")
+
+            if (
+                hasattr(settings, "google_maps_api_key")
+                and settings.google_maps_api_key
+            ):
+                logger.info(
+                    "✅ [API KEY] Found API key in settings, using that instead"
+                )
                 api_key = settings.google_maps_api_key
             else:
                 logger.error("❌ [API KEY] No API key found in settings either")
-                raise ValueError("GOOGLE_MAPS_API_KEY environment variable not set - Google Places API search will fail")
+                raise ValueError(
+                    "GOOGLE_MAPS_API_KEY environment variable not set - Google Places API search will fail"
+                )
 
         # Convert km to meters for the API
         radius_meters = radius_km * 1000
@@ -73,11 +84,7 @@ class PlacesSearchService:
         query = f"{business_type} in {location}"
 
         url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-        params = {
-            "query": query,
-            "radius": radius_meters,
-            "key": api_key
-        }
+        params = {"query": query, "radius": radius_meters, "key": api_key}
 
         all_results = []
 
@@ -105,19 +112,22 @@ class PlacesSearchService:
                     while next_page_token and len(all_results) < max_results:
                         await asyncio.sleep(2)  # Wait for token to be valid
 
-                        next_params = {
-                            "pagetoken": next_page_token,
-                            "key": api_key
-                        }
+                        next_params = {"pagetoken": next_page_token, "key": api_key}
 
-                        async with session.get(url, params=next_params) as next_response:
+                        async with session.get(
+                            url, params=next_params
+                        ) as next_response:
                             if next_response.status != 200:
-                                logger.warning(f"Failed to fetch next page with status {next_response.status}")
+                                logger.warning(
+                                    f"Failed to fetch next page with status {next_response.status}"
+                                )
                                 break
 
                             next_data = await next_response.json()
                             if next_data.get("status") != "OK":
-                                logger.warning(f"Failed to fetch next page with error: {next_data.get('error_message', 'Unknown error')}")
+                                logger.warning(
+                                    f"Failed to fetch next page with error: {next_data.get('error_message', 'Unknown error')}"
+                                )
                                 break
 
                             all_results.extend(next_data.get("results", []))
@@ -144,7 +154,9 @@ class PlacesSearchService:
                     )
                 )
 
-            logger.info(f"Found {len(standardized_results)} places matching '{business_type}' in '{location}'")
+            logger.info(
+                f"Found {len(standardized_results)} places matching '{business_type}' in '{location}'"
+            )
             return standardized_results
 
         except Exception as e:
@@ -154,9 +166,7 @@ class PlacesSearchService:
 
     @staticmethod
     def standardize_place(
-        place: Dict[str, Any],
-        search_location: str,
-        search_query: str
+        place: Dict[str, Any], search_location: str, search_query: str
     ) -> Dict[str, Any]:
         """
         Standardize a Google Places API result.
@@ -187,7 +197,7 @@ class PlacesSearchService:
             "price_level": place.get("price_level"),
             "search_location": search_location,
             "search_query": search_query,
-            "raw_data": json.dumps(place)
+            "raw_data": json.dumps(place),
         }
 
     @staticmethod
@@ -198,7 +208,7 @@ class PlacesSearchService:
         location: str,
         radius_km: int = 10,
         api_key: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Search for places and store them in the database.
@@ -222,11 +232,10 @@ class PlacesSearchService:
 
         try:
             # Update the search record to mark it as processing
-            stmt = update(PlaceSearch).where(
-                PlaceSearch.id == uuid.UUID(job_id)
-            ).values(
-                status="processing",
-                updated_at=datetime.utcnow()
+            stmt = (
+                update(PlaceSearch)
+                .where(PlaceSearch.id == uuid.UUID(job_id))
+                .values(status="processing", updated_at=datetime.utcnow())
             )
             await session.execute(stmt)
             # Note: We don't commit here as the router owns the transaction
@@ -236,7 +245,7 @@ class PlacesSearchService:
                 location=location,
                 business_type=business_type,
                 radius_km=radius_km,
-                max_results=20
+                max_results=20,
             )
 
             # Get storage service to store places
@@ -249,52 +258,40 @@ class PlacesSearchService:
                 places=places,
                 search_id=job_id,
                 tenant_id=tenant_id,
-                user_id=user_id or "00000000-0000-0000-0000-000000000000"
+                user_id=user_id or "00000000-0000-0000-0000-000000000000",
             )
 
             # Update the status in the database
-            stmt = update(PlaceSearch).where(
-                PlaceSearch.id == uuid.UUID(job_id)
-            ).values(
-                status="complete",
-                updated_at=datetime.utcnow()
+            stmt = (
+                update(PlaceSearch)
+                .where(PlaceSearch.id == uuid.UUID(job_id))
+                .values(status="complete", updated_at=datetime.utcnow())
             )
             await session.execute(stmt)
             # Note: We don't commit here as the router owns the transaction
 
-            return {
-                "success": True,
-                "places_count": success_count,
-                "job_id": job_id
-            }
+            return {"success": True, "places_count": success_count, "job_id": job_id}
 
         except Exception as e:
             logger.error(f"Error in search and store: {str(e)}")
 
             # Update the status to failed in the database
             try:
-                stmt = update(PlaceSearch).where(
-                    PlaceSearch.id == uuid.UUID(job_id)
-                ).values(
-                    status="failed",
-                    updated_at=datetime.utcnow()
+                stmt = (
+                    update(PlaceSearch)
+                    .where(PlaceSearch.id == uuid.UUID(job_id))
+                    .values(status="failed", updated_at=datetime.utcnow())
                 )
                 await session.execute(stmt)
                 # Note: We don't commit here as the router owns the transaction
             except Exception as update_err:
                 logger.error(f"Error updating search status: {str(update_err)}")
 
-            return {
-                "success": False,
-                "error": str(e),
-                "job_id": job_id
-            }
+            return {"success": False, "error": str(e), "job_id": job_id}
 
     @staticmethod
     async def get_search_by_id(
-        session: Any,
-        job_id: str,
-        tenant_id: str
+        session: Any, job_id: str, tenant_id: str
     ) -> Optional[Any]:
         """
         Get a place search record by its ID.
@@ -304,16 +301,22 @@ class PlacesSearchService:
         from ...models.place_search import PlaceSearch
 
         try:
-            stmt = select(PlaceSearch).where(
-                PlaceSearch.id == job_id
-            )
+            stmt = select(PlaceSearch).where(PlaceSearch.id == job_id)
             result = await session.execute(stmt)
             return result.scalar()
         except Exception as e:
             logger.error(f"Error getting search by ID: {str(e)}")
             return None
 
-async def process_places_search_background(job_id: str, business_type: str, location: str, radius_km: int = 10, api_key: Optional[str] = None, user_id: Optional[str] = None):
+
+async def process_places_search_background(
+    job_id: str,
+    business_type: str,
+    location: str,
+    radius_km: int = 10,
+    api_key: Optional[str] = None,
+    user_id: Optional[str] = None,
+):
     """
     Process a places search in the background.
 
@@ -345,22 +348,21 @@ async def process_places_search_background(job_id: str, business_type: str, loca
         # Add these options to disable prepared statements for Supavisor compatibility
         session.bind.engine.update_execution_options(
             no_parameters=True,  # Disable prepared statements
-            statement_cache_size=0  # Disable statement caching
+            statement_cache_size=0,  # Disable statement caching
         )
-        print(f"DEBUGGING: Created session with Supavisor compatibility options")
+        print("DEBUGGING: Created session with Supavisor compatibility options")
 
         try:
             # Update job status to processing
             async with session.begin():
                 await job_service.update_status(
-                    session=session,
-                    job_id=job_uuid,
-                    status="processing",
-                    progress=0.1
+                    session=session, job_id=job_uuid, status="processing", progress=0.1
                 )
 
             # Perform the search
-            print(f"DEBUGGING: Performing search for {business_type} in {location} with radius {radius_km}km")
+            print(
+                f"DEBUGGING: Performing search for {business_type} in {location} with radius {radius_km}km"
+            )
 
             search_results = []
             try:
@@ -370,7 +372,7 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                     location=location,
                     business_type=business_type,
                     radius_km=radius_km,
-                    max_results=50  # Reasonable limit for testing
+                    max_results=50,  # Reasonable limit for testing
                 )
 
                 print(f"DEBUGGING: Found {len(search_results)} places")
@@ -383,8 +385,8 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                         job_query,
                         execution_options={
                             "no_parameters": True,
-                            "statement_cache_size": 0
-                        }
+                            "statement_cache_size": 0,
+                        },
                     )
                     job = job_result.scalars().first()
 
@@ -402,22 +404,21 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                             continue
 
                         existing_query = select(Place).where(
-                            Place.place_id == place_id,
-                            Place.tenant_id == tenant_id
+                            Place.place_id == place_id, Place.tenant_id == tenant_id
                         )
                         existing_result = await session.execute(
                             existing_query,
                             execution_options={
                                 "no_parameters": True,
-                                "statement_cache_size": 0
-                            }
+                                "statement_cache_size": 0,
+                            },
                         )
                         existing_place = existing_result.scalars().first()
 
                         if existing_place:
                             # Update existing place
                             for key, value in place.items():
-                                if hasattr(existing_place, key) and key != 'id':
+                                if hasattr(existing_place, key) and key != "id":
                                     setattr(existing_place, key, value)
                             session.add(existing_place)
                         else:
@@ -436,7 +437,7 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                                 rating=place.get("rating"),
                                 place_types=place.get("place_types", []),
                                 business_status=place.get("business_status", ""),
-                                raw_data=place
+                                raw_data=place,
                             )
                             session.add(new_place)
 
@@ -453,8 +454,8 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                             "places_found": len(search_results),
                             "location": location,
                             "business_type": business_type,
-                            "radius_km": radius_km
-                        }
+                            "radius_km": radius_km,
+                        },
                     )
 
                 print(f"DEBUGGING: Successfully completed search job {job_id}")
@@ -468,7 +469,7 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                         job_id=job_uuid,
                         status="failed",
                         error=str(search_error),
-                        progress=0
+                        progress=0,
                     )
 
         except Exception as e:
@@ -481,7 +482,7 @@ async def process_places_search_background(job_id: str, business_type: str, loca
                         job_id=job_uuid,
                         status="failed",
                         error=f"Critical error: {str(e)}",
-                        progress=0
+                        progress=0,
                     )
             except Exception as final_error:
                 print(f"DEBUGGING: Failed to update job status: {str(final_error)}")

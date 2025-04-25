@@ -10,7 +10,8 @@ _logged_modules = set()
 _lock = threading.Lock()
 _initialized = False
 
-def setup_runtime_logger(log_file='reports/runtime_imports.log'):
+
+def setup_runtime_logger(log_file="reports/runtime_imports.log"):
     """Overrides __import__ to log modules as they load."""
     global _log_file, _initialized
     if _initialized:
@@ -25,12 +26,13 @@ def setup_runtime_logger(log_file='reports/runtime_imports.log'):
     os.makedirs(log_dir, exist_ok=True)
 
     # Clear the log file at the start
-    with open(_log_file, 'w', encoding='utf-8') as f:
+    with open(_log_file, "w", encoding="utf-8") as f:
         f.write(f"# Runtime Import Log - Started at {datetime.now()}\n")
 
     print(f"Setting up runtime import logger. Logging to: {_log_file}")
     builtins.__import__ = _logged_import
     _initialized = True
+
 
 def _logged_import(name, globals=None, locals=None, fromlist=(), level=0):
     """The custom import function that logs module imports."""
@@ -42,7 +44,7 @@ def _logged_import(name, globals=None, locals=None, fromlist=(), level=0):
         # Check if the imported module has a file path and if it's within the project (optional)
         # This helps filter out built-in modules or site-packages if desired
         try:
-            module_path = getattr(module, '__file__', None)
+            module_path = getattr(module, "__file__", None)
             # Optionally, filter to only log modules within your project directory
             # project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
             # if module_path and module_path.startswith(project_root):
@@ -59,14 +61,18 @@ def _logged_import(name, globals=None, locals=None, fromlist=(), level=0):
             if name not in _logged_modules:
                 _logged_modules.add(name)
                 try:
-                    with open(_log_file, 'a', encoding='utf-8') as f:
+                    with open(_log_file, "a", encoding="utf-8") as f:
                         timestamp = datetime.now().isoformat()
                         f.write(f"{timestamp} | {name} | Path: {module_path}\n")
                 except Exception as e:
                     # Avoid crashing the application if logging fails
-                    print(f"[Runtime Import Logger Error] Failed to write to log: {e}", file=sys.stderr)
+                    print(
+                        f"[Runtime Import Logger Error] Failed to write to log: {e}",
+                        file=sys.stderr,
+                    )
 
     return module
+
 
 # Example Usage (e.g., in tests/conftest.py or manage.py):
 #

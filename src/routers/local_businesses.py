@@ -1,6 +1,7 @@
 """
 API Router for Local Business related operations.
 """
+
 import logging
 import math
 from datetime import datetime
@@ -8,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -25,6 +26,7 @@ from src.models.place import PlaceStatusEnum  # For DB mapping
 
 logger = logging.getLogger(__name__)
 
+
 # --- Local Pydantic Models for GET Endpoint --- #
 # Define a Pydantic model that mirrors the LocalBusiness SQLAlchemy model
 # This ensures API responses have a defined schema.
@@ -35,15 +37,16 @@ class LocalBusinessRecord(BaseModel):
     full_address: Optional[str] = None
     phone: Optional[str] = None
     website_url: Optional[str] = None
-    status: Optional[PlaceStatusEnum] = None # Use the DB enum here
+    status: Optional[PlaceStatusEnum] = None  # Use the DB enum here
     domain_extraction_status: Optional[DomainExtractionStatusEnum] = None
     created_at: datetime
     updated_at: datetime
     tenant_id: UUID
 
     class Config:
-        from_attributes = True # Enable ORM mode for conversion (Updated from orm_mode)
-        use_enum_values = True # Ensure enum values are used in response
+        from_attributes = True  # Enable ORM mode for conversion (Updated from orm_mode)
+        use_enum_values = True  # Ensure enum values are used in response
+
 
 # Response model for paginated results
 class PaginatedLocalBusinessResponse(BaseModel):
@@ -53,40 +56,65 @@ class PaginatedLocalBusinessResponse(BaseModel):
     size: int
     pages: int
 
+
 # --- Router Definition --- #
 router = APIRouter(prefix="/api/v3/local-businesses", tags=["Local Businesses"])
+
 
 # --- GET Endpoint Implementation --- #
 @router.get(
     "",
     response_model=PaginatedLocalBusinessResponse,
     summary="List Local Businesses (Paginated)",
-    description="Retrieves a paginated list of local businesses, allowing filtering and sorting."
+    description="Retrieves a paginated list of local businesses, allowing filtering and sorting.",
 )
 async def list_local_businesses(
-    status_filter: Optional[PlaceStatusEnum] = Query(None, alias="status", description="Filter by main business status (e.g., New, Selected, Maybe)"),
-    business_name: Optional[str] = Query(None, description="Filter by business name (case-insensitive partial match)"),
+    status_filter: Optional[PlaceStatusEnum] = Query(
+        None,
+        alias="status",
+        description="Filter by main business status (e.g., New, Selected, Maybe)",
+    ),
+    business_name: Optional[str] = Query(
+        None, description="Filter by business name (case-insensitive partial match)"
+    ),
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(50, ge=1, le=200, description="Page size"),
-    sort_by: Optional[str] = Query("updated_at", description="Field to sort by (e.g., business_name, status, updated_at)"),
-    sort_dir: Optional[str] = Query("desc", description="Sort direction: 'asc' or 'desc'"),
+    sort_by: Optional[str] = Query(
+        "updated_at",
+        description="Field to sort by (e.g., business_name, status, updated_at)",
+    ),
+    sort_dir: Optional[str] = Query(
+        "desc", description="Sort direction: 'asc' or 'desc'"
+    ),
     session: AsyncSession = Depends(get_db_session),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ):
     """Lists local businesses with pagination, filtering, and sorting."""
-    tenant_id_str = current_user.get("tenant_id", "550e8400-e29b-41d4-a716-446655440000") # Use default tenant
+    tenant_id_str = current_user.get(
+        "tenant_id", "550e8400-e29b-41d4-a716-446655440000"
+    )  # Use default tenant
     try:
         tenant_uuid = UUID(tenant_id_str)
     except ValueError:
         logger.error(f"Invalid tenant ID format in token: {tenant_id_str}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid tenant ID format")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid tenant ID format"
+        )
 
-    logger.info(f"Listing local businesses for tenant {tenant_uuid}, filter_status='{status_filter}', filter_name='{business_name}', page={page}, size={size}, sort_by='{sort_by}', sort_dir='{sort_dir}'")
+    logger.info(
+        f"Listing local businesses for tenant {tenant_uuid}, filter_status='{status_filter}', filter_name='{business_name}', page={page}, size={size}, sort_by='{sort_by}', sort_dir='{sort_dir}'"
+    )
 
     try:
         # --- Build Base Query --- #
-        select_stmt = select(LocalBusiness).where(LocalBusiness.tenant_id == tenant_uuid)
-        count_stmt = select(func.count()).select_from(LocalBusiness).where(LocalBusiness.tenant_id == tenant_uuid)
+        select_stmt = select(LocalBusiness).where(
+            LocalBusiness.tenant_id == tenant_uuid
+        )
+        count_stmt = (
+            select(func.count())
+            .select_from(LocalBusiness)
+            .where(LocalBusiness.tenant_id == tenant_uuid)
+        )
 
         # --- Apply Filters --- #
         if status_filter:
@@ -95,8 +123,12 @@ async def list_local_businesses(
             count_stmt = count_stmt.where(LocalBusiness.status == status_filter)
 
         if business_name:
-            select_stmt = select_stmt.where(LocalBusiness.business_name.ilike(f"%{business_name}%")) # Case-insensitive search
-            count_stmt = count_stmt.where(LocalBusiness.business_name.ilike(f"%{business_name}%"))
+            select_stmt = select_stmt.where(
+                LocalBusiness.business_name.ilike(f"%{business_name}%")
+            )  # Case-insensitive search
+            count_stmt = count_stmt.where(
+                LocalBusiness.business_name.ilike(f"%{business_name}%")
+            )
 
         # --- Calculate Total Count --- #
         total_result = await session.execute(count_stmt)
@@ -104,13 +136,13 @@ async def list_local_businesses(
         total_pages = math.ceil(total / size) if size > 0 else 0
 
         # --- Apply Sorting --- #
-        sort_field = sort_by if sort_by else "updated_at" # Ensure sort_field is str
+        sort_field = sort_by if sort_by else "updated_at"  # Ensure sort_field is str
         sort_column = getattr(LocalBusiness, sort_field, LocalBusiness.updated_at)
 
         if sort_dir and sort_dir.lower() == "asc":
             select_stmt = select_stmt.order_by(sort_column.asc())
         else:
-            select_stmt = select_stmt.order_by(sort_column.desc()) # Default desc
+            select_stmt = select_stmt.order_by(sort_column.desc())  # Default desc
 
         # --- Apply Pagination --- #
         offset = (page - 1) * size
@@ -126,26 +158,31 @@ async def list_local_businesses(
         response_items = [LocalBusinessRecord.from_orm(item) for item in db_items]
 
         return PaginatedLocalBusinessResponse(
-            items=response_items,
-            total=total,
-            page=page,
-            size=size,
-            pages=total_pages
+            items=response_items, total=total, page=page, size=size, pages=total_pages
         )
 
     except AttributeError:
-         # Use the confirmed sort_field in the error message
-         logger.warning(f"Invalid sort_by field requested: '{sort_field}'. Check available fields on LocalBusiness model.")
-         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid sort field: {sort_field}")
+        # Use the confirmed sort_field in the error message
+        logger.warning(
+            f"Invalid sort_by field requested: '{sort_field}'. Check available fields on LocalBusiness model."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid sort field: {sort_field}",
+        )
     except Exception as e:
         logger.error(f"Error listing local businesses: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list local businesses")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list local businesses",
+        )
+
 
 @router.put("/status", status_code=status.HTTP_200_OK)
 async def update_local_businesses_status_batch(
     update_request: LocalBusinessBatchStatusUpdateRequest,
     session: AsyncSession = Depends(get_db_session),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Update the main status for one or more local businesses identified by their UUIDs.
@@ -154,33 +191,49 @@ async def update_local_businesses_status_batch(
     for domain extraction.
     """
     local_business_ids_to_update: List[UUID] = update_request.local_business_ids
-    new_api_status = update_request.status # This is LocalBusinessApiStatusEnum
-    user_id = current_user.get("user_id", "unknown") # Or however user ID is stored
+    new_api_status = update_request.status  # This is LocalBusinessApiStatusEnum
+    user_id = current_user.get("user_id", "unknown")  # Or however user ID is stored
 
-    logger.info(f"Received request to update status to '{new_api_status.value}' for {len(local_business_ids_to_update)} local businesses by user '{user_id}'.")
+    logger.info(
+        f"Received request to update status to '{new_api_status.value}' for {len(local_business_ids_to_update)} local businesses by user '{user_id}'."
+    )
 
     if not local_business_ids_to_update:
-        return {"message": "No local business IDs provided.", "updated_count": 0, "queued_count": 0}
+        return {
+            "message": "No local business IDs provided.",
+            "updated_count": 0,
+            "queued_count": 0,
+        }
 
     # Map the incoming API status enum member to the DB enum member (PlaceStatusEnum)
     # Compare by NAME for robustness against potential value differences/casing
-    target_db_status_member = next((member for member in PlaceStatusEnum if member.name == new_api_status.name), None)
+    target_db_status_member = next(
+        (member for member in PlaceStatusEnum if member.name == new_api_status.name),
+        None,
+    )
 
     if target_db_status_member is None:
         # This case handles potential mismatches, e.g., if API enum has 'Not_a_Fit' and DB has 'Not a Fit'
         # A more robust mapping might be needed if values differ significantly besides underscores.
-        logger.error(f"API status '{new_api_status.name}' ({new_api_status.value}) has no matching member name in DB PlaceStatusEnum.")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid status mapping for '{new_api_status.value}'")
+        logger.error(
+            f"API status '{new_api_status.name}' ({new_api_status.value}) has no matching member name in DB PlaceStatusEnum."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status mapping for '{new_api_status.value}'",
+        )
 
     # Determine if domain extraction should be triggered based on the target DB status
-    trigger_domain_extraction = (target_db_status_member == PlaceStatusEnum.Selected)
+    trigger_domain_extraction = target_db_status_member == PlaceStatusEnum.Selected
     if trigger_domain_extraction:
-        logger.info(f"Target DB status '{target_db_status_member.name}' will trigger domain extraction queueing.")
+        logger.info(
+            f"Target DB status '{target_db_status_member.name}' will trigger domain extraction queueing."
+        )
 
     # Define which existing domain extraction statuses allow re-queueing (e.g., only if failed or not yet processed)
     eligible_queueing_statuses = [
-        None, # Not yet processed
-        DomainExtractionStatusEnum.Error # Changed from 'failed' to 'Error' to match new enum
+        None,  # Not yet processed
+        DomainExtractionStatusEnum.Error,  # Changed from 'failed' to 'Error' to match new enum
         # Add other statuses if needed (e.g., completed if re-running is desired)
     ]
 
@@ -189,27 +242,31 @@ async def update_local_businesses_status_batch(
     now = datetime.utcnow()
 
     try:
-        async with session.begin(): # Start transaction
+        async with session.begin():  # Start transaction
             # Fetch the relevant LocalBusiness objects
-            stmt_select = select(LocalBusiness).where(LocalBusiness.id.in_(local_business_ids_to_update))
+            stmt_select = select(LocalBusiness).where(
+                LocalBusiness.id.in_(local_business_ids_to_update)
+            )
             result = await session.execute(stmt_select)
             businesses_to_process = result.scalars().all()
 
             if not businesses_to_process:
-                logger.warning(f"No local businesses found for the provided UUIDs: {local_business_ids_to_update}")
+                logger.warning(
+                    f"No local businesses found for the provided UUIDs: {local_business_ids_to_update}"
+                )
                 # Return success but indicate nothing was updated/queued
                 return {
                     "message": "No matching local businesses found for the provided IDs.",
                     "updated_count": 0,
-                    "queued_count": 0
+                    "queued_count": 0,
                 }
 
             updated_count = len(businesses_to_process)
 
             # Loop and update attributes in Python before the commit
             for business in businesses_to_process:
-                business.status = target_db_status_member # type: ignore # Assign the DB enum member
-                business.updated_at = now # type: ignore
+                business.status = target_db_status_member  # type: ignore # Assign the DB enum member
+                business.updated_at = now  # type: ignore
                 # TODO: Potentially add updated_by field if tracking user modifications
 
                 # Conditional logic for domain extraction queueing
@@ -218,29 +275,39 @@ async def update_local_businesses_status_batch(
                     current_extraction_status = business.domain_extraction_status
                     # REMOVED eligibility check: current_extraction_status in eligible_queueing_statuses:
                     # if current_extraction_status in eligible_queueing_statuses:
-                    business.domain_extraction_status = DomainExtractionStatusEnum.Queued  # type: ignore # Changed from 'queued' to 'Queued' to match new enum
-                    business.domain_extraction_error = None # type: ignore # Clear any previous error
+                    business.domain_extraction_status = (
+                        DomainExtractionStatusEnum.Queued
+                    )  # type: ignore # Changed from 'queued' to 'Queued' to match new enum
+                    business.domain_extraction_error = None  # type: ignore # Clear any previous error
                     actually_queued_count += 1
-                    logger.debug(f"Queuing business {business.id} for domain extraction.")
+                    logger.debug(
+                        f"Queuing business {business.id} for domain extraction."
+                    )
                     # else:
                     #     logger.debug(f"Business {business.id} not queued. Current domain_extraction_status (\'{current_extraction_status}\') not eligible.")
 
             # session.begin() handles commit/rollback
             logger.info(f"ORM updates prepared for {updated_count} local businesses.")
             if trigger_domain_extraction:
-                logger.info(f"Attempted to queue {actually_queued_count} businesses for domain extraction.")
+                logger.info(
+                    f"Attempted to queue {actually_queued_count} businesses for domain extraction."
+                )
 
         # After successful commit
         return {
             "message": f"Successfully updated status for {updated_count} local businesses.",
             "updated_count": updated_count,
-            "queued_count": actually_queued_count
+            "queued_count": actually_queued_count,
         }
 
     except Exception as e:
         logger.error(f"Error updating local business statuses: {e}", exc_info=True)
         # Let the exception propagate if not handled by session.begin rollback, FastAPI will catch it
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An internal error occurred while updating statuses.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal error occurred while updating statuses.",
+        )
+
 
 # The GET endpoint implementation is above, so this TODO is no longer needed.
 # # TODO: Implement GET / endpoint for frontend data grid

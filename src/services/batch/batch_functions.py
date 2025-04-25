@@ -4,20 +4,18 @@ Batch Processor Functions
 This module contains the core functions for batch processing operations.
 It's separated from the main batch processor service to avoid circular dependencies.
 """
+
 import asyncio
 import logging
 import os
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Dict, List, Optional, cast
+from typing import Optional, cast
 
-import anyio
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 
-from ...models import BatchJob, Domain
-from ...session.async_session import engine, get_background_session
+from ...models import BatchJob
+from ...session.async_session import get_background_session
 from ..page_scraper.domain_processor import process_domain_with_own_session
 from .types import (
     BATCH_STATUS_COMPLETED,
@@ -37,12 +35,13 @@ from .types import (
 
 logger = logging.getLogger(__name__)
 
+
 async def create_batch(
     session: Session,
     batch_id: BatchId,
     domains: DomainList,
     user_id: UserId,
-    options: Optional[BatchOptions] = None
+    options: Optional[BatchOptions] = None,
 ) -> BatchResult:
     """
     Create a new batch with the provided domains.
@@ -79,25 +78,26 @@ async def create_batch(
         total_domains=len(domains),
         created_by=str(user_id),
         options={"max_concurrent": max_concurrent},
-        metadata={"domain_count": len(domains)}
+        metadata={"domain_count": len(domains)},
     )
 
     await session.flush()
 
-    return cast(BatchResult, {
-        "batch_id": str(batch_id),
-        "status": BATCH_STATUS_PENDING,
-        "total_domains": len(domains),
-        "completed_domains": 0,
-        "failed_domains": 0,
-        "results": [],
-        "error": None
-    })
+    return cast(
+        BatchResult,
+        {
+            "batch_id": str(batch_id),
+            "status": BATCH_STATUS_PENDING,
+            "total_domains": len(domains),
+            "completed_domains": 0,
+            "failed_domains": 0,
+            "results": [],
+            "error": None,
+        },
+    )
 
-async def get_batch_status(
-    session: Session,
-    batch_id: BatchId
-) -> BatchStatus:
+
+async def get_batch_status(session: Session, batch_id: BatchId) -> BatchStatus:
     """
     Get the status of a batch.
 
@@ -121,32 +121,38 @@ async def get_batch_status(
                 batch_uuid = uuid.UUID(batch_id)
             except ValueError:
                 logger.warning(f"Invalid UUID format for batch_id: {batch_id}")
-                return cast(BatchStatus, {
-                    "batch_id": str(batch_id),
-                    "status": BATCH_STATUS_ERROR,
-                    "total_domains": 0,
-                    "completed_domains": 0,
-                    "failed_domains": 0,
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
-                    "error": f"Invalid UUID format: {batch_id}"
-                })
+                return cast(
+                    BatchStatus,
+                    {
+                        "batch_id": str(batch_id),
+                        "status": BATCH_STATUS_ERROR,
+                        "total_domains": 0,
+                        "completed_domains": 0,
+                        "failed_domains": 0,
+                        "created_at": datetime.utcnow(),
+                        "updated_at": datetime.utcnow(),
+                        "error": f"Invalid UUID format: {batch_id}",
+                    },
+                )
 
         # Get batch using the class method
         batch = await BatchJob.get_by_batch_id(session, batch_uuid)
 
         if not batch:
             logger.warning(f"Batch {batch_id} not found")
-            return cast(BatchStatus, {
-                "batch_id": str(batch_id),
-                "status": BATCH_STATUS_UNKNOWN,
-                "total_domains": 0,
-                "completed_domains": 0,
-                "failed_domains": 0,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow(),
-                "error": "Batch not found"
-            })
+            return cast(
+                BatchStatus,
+                {
+                    "batch_id": str(batch_id),
+                    "status": BATCH_STATUS_UNKNOWN,
+                    "total_domains": 0,
+                    "completed_domains": 0,
+                    "failed_domains": 0,
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow(),
+                    "error": "Batch not found",
+                },
+            )
 
         # Use to_dict to handle SQLAlchemy Column types
         batch_dict = batch.to_dict()
@@ -169,14 +175,18 @@ async def get_batch_status(
             if end_time:
                 # Calculate from start to end time
                 if isinstance(start_time, str):
-                    start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                    start_time = datetime.fromisoformat(
+                        start_time.replace("Z", "+00:00")
+                    )
                 if isinstance(end_time, str):
-                    end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                    end_time = datetime.fromisoformat(end_time.replace("Z", "+00:00"))
                 processing_time = (end_time - start_time).total_seconds()
             else:
                 # Calculate from start to now
                 if isinstance(start_time, str):
-                    start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                    start_time = datetime.fromisoformat(
+                        start_time.replace("Z", "+00:00")
+                    )
                 processing_time = (datetime.utcnow() - start_time).total_seconds()
 
         # Extract domain statuses from metadata
@@ -185,41 +195,45 @@ async def get_batch_status(
         if isinstance(metadata, dict) and "domain_results" in metadata:
             domain_statuses = metadata["domain_results"]
 
-        return cast(BatchStatus, {
-            "batch_id": str(batch_dict["batch_id"]),
-            "status": batch_dict["status"],
-            "total_domains": total,
-            "completed_domains": completed,
-            "failed_domains": failed,
-            "progress": progress,
-            "created_at": batch_dict.get("created_at", datetime.utcnow()),
-            "updated_at": batch_dict.get("updated_at", datetime.utcnow()),
-            "start_time": start_time,
-            "end_time": end_time,
-            "processing_time": processing_time,
-            "domain_statuses": domain_statuses,
-            "error": batch_dict.get("error"),
-            "metadata": metadata
-        })
+        return cast(
+            BatchStatus,
+            {
+                "batch_id": str(batch_dict["batch_id"]),
+                "status": batch_dict["status"],
+                "total_domains": total,
+                "completed_domains": completed,
+                "failed_domains": failed,
+                "progress": progress,
+                "created_at": batch_dict.get("created_at", datetime.utcnow()),
+                "updated_at": batch_dict.get("updated_at", datetime.utcnow()),
+                "start_time": start_time,
+                "end_time": end_time,
+                "processing_time": processing_time,
+                "domain_statuses": domain_statuses,
+                "error": batch_dict.get("error"),
+                "metadata": metadata,
+            },
+        )
     except Exception as e:
         logger.error(f"Error getting batch status: {str(e)}", exc_info=True)
-        return cast(BatchStatus, {
-            "batch_id": str(batch_id),
-            "status": BATCH_STATUS_ERROR,
-            "total_domains": 0,
-            "completed_domains": 0,
-            "failed_domains": 0,
-            "progress": 0.0,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-            "error": str(e)
-        })
+        return cast(
+            BatchStatus,
+            {
+                "batch_id": str(batch_id),
+                "status": BATCH_STATUS_ERROR,
+                "total_domains": 0,
+                "completed_domains": 0,
+                "failed_domains": 0,
+                "progress": 0.0,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "error": str(e),
+            },
+        )
+
 
 async def process_batch_with_own_session(
-    batch_id: BatchId,
-    domains: DomainList,
-    user_id: UserId,
-    max_pages: int = 1000
+    batch_id: BatchId, domains: DomainList, user_id: UserId, max_pages: int = 1000
 ) -> None:
     """
     Process a batch of domains with its own database session.
@@ -255,12 +269,14 @@ async def process_batch_with_own_session(
         async with get_background_session() as session:
             batch = await BatchJob.get_by_batch_id(session, batch_id)
             if batch:
-                setattr(batch, "status", BATCH_STATUS_PROCESSING)
-                setattr(batch, "start_time", func.now())
+                batch.status = BATCH_STATUS_PROCESSING
+                batch.start_time = func.now()
                 await session.flush()
                 logger.info(f"Updated batch {batch_id} status to processing")
     except Exception as e:
-        logger.error(f"Error updating batch status to processing: {str(e)}", exc_info=True)
+        logger.error(
+            f"Error updating batch status to processing: {str(e)}", exc_info=True
+        )
         # Continue processing even if update fails
 
     # Track domain processing results
@@ -274,10 +290,7 @@ async def process_batch_with_own_session(
             # Process domain with its own session
             job_id = str(uuid.uuid4())
             await process_domain_with_own_session(
-                domain=domain,
-                job_id=job_id,
-                user_id=str(user_id),
-                max_pages=max_pages
+                domain=domain, job_id=job_id, user_id=str(user_id), max_pages=max_pages
             )
 
             # Domain processed successfully
@@ -291,9 +304,11 @@ async def process_batch_with_own_session(
                 "start_time": domain_start_time.isoformat(),
                 "end_time": domain_end_time.isoformat(),
                 "processing_time": processing_time,
-                "error": None
+                "error": None,
             }
-            logger.info(f"Successfully processed domain {domain} in {processing_time:.2f} seconds")
+            logger.info(
+                f"Successfully processed domain {domain} in {processing_time:.2f} seconds"
+            )
             return (domain, result, True)  # True means success
 
         except Exception as e:
@@ -304,11 +319,11 @@ async def process_batch_with_own_session(
             # Store comprehensive error information
             result = {
                 "status": "failed",
-                "job_id": job_id if 'job_id' in locals() else None,
+                "job_id": job_id if "job_id" in locals() else None,
                 "start_time": domain_start_time.isoformat(),
                 "end_time": domain_end_time.isoformat(),
                 "processing_time": processing_time,
-                "error": str(e)
+                "error": str(e),
             }
             logger.error(f"Error processing domain {domain}: {str(e)}", exc_info=True)
             return (domain, result, False)  # False means failure
@@ -349,7 +364,9 @@ async def process_batch_with_own_session(
             async with get_background_session() as session:
                 batch = await BatchJob.get_by_batch_id(session, batch_id)
                 if batch:
-                    batch.update_progress(completed=completed_count, failed=failed_count)
+                    batch.update_progress(
+                        completed=completed_count, failed=failed_count
+                    )
 
                     # Update metadata with results
                     batch_dict = batch.to_dict()
@@ -358,16 +375,18 @@ async def process_batch_with_own_session(
                         metadata = {}
                     metadata["domain_results"] = domain_results
                     metadata["last_updated"] = datetime.utcnow().isoformat()
-                    setattr(batch, "batch_metadata", metadata)
+                    batch.batch_metadata = metadata
 
                     # Store the most recent error if any
                     if not success:
                         error_msg = domain_result.get("error", "Unknown error")
-                        setattr(batch, "error", f"Error processing domain {domain}: {error_msg}")
+                        batch.error = f"Error processing domain {domain}: {error_msg}"
 
                     await session.flush()
         except Exception as update_error:
-            logger.error(f"Error updating batch progress for {domain}: {str(update_error)}")
+            logger.error(
+                f"Error updating batch progress for {domain}: {str(update_error)}"
+            )
 
     # Update final batch status
     try:
@@ -383,8 +402,8 @@ async def process_batch_with_own_session(
                     final_status = BATCH_STATUS_COMPLETED  # Partial success
 
                 # Update batch
-                setattr(batch, "status", final_status)
-                setattr(batch, "end_time", func.now())
+                batch.status = final_status
+                batch.end_time = func.now()
 
                 # Update metadata with domain results
                 batch_dict = batch.to_dict()
@@ -393,10 +412,12 @@ async def process_batch_with_own_session(
                     metadata = {}
                 metadata["domain_results"] = domain_results
                 metadata["last_updated"] = datetime.utcnow().isoformat()
-                setattr(batch, "batch_metadata", metadata)
+                batch.batch_metadata = metadata
 
                 await session.flush()
-                logger.info(f"Batch {batch_id} processing complete: {completed_count} succeeded, {failed_count} failed")
+                logger.info(
+                    f"Batch {batch_id} processing complete: {completed_count} succeeded, {failed_count} failed"
+                )
     except Exception as e:
         logger.error(f"Error updating final batch status: {str(e)}", exc_info=True)
 

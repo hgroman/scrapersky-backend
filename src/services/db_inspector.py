@@ -9,18 +9,15 @@ serving as the source of truth for the application. It includes methods to:
 4. Execute schema-related SQL queries safely
 """
 
-import json
 import logging
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
-from src.db.engine import get_sync_engine
-from src.services.core.db_service import db_service
-
 logger = logging.getLogger(__name__)
+
 
 class DatabaseInspector:
     """
@@ -36,10 +33,10 @@ class DatabaseInspector:
     async def list_all_tables(self, session: AsyncSession) -> List[Dict[str, Any]]:
         """
         List all tables in the database with basic information.
-        
+
         Args:
             session: An existing database session to use
-            
+
         Returns:
             List of dictionaries containing table information
         """
@@ -61,18 +58,22 @@ class DatabaseInspector:
             results = []
             result = await session.execute(text(query))
             for row in result.fetchall():
-                results.append({
-                    "schema_name": row[0],
-                    "table_name": row[1],
-                    "row_count": row[2] or 0,
-                    "last_analyzed": str(row[3]) if row[3] else None
-                })
+                results.append(
+                    {
+                        "schema_name": row[0],
+                        "table_name": row[1],
+                        "row_count": row[2] or 0,
+                        "last_analyzed": str(row[3]) if row[3] else None,
+                    }
+                )
             return results
         except Exception as e:
             logger.error(f"Error listing database tables: {str(e)}")
             return []
 
-    async def get_table_schema(self, table_name: str, session: AsyncSession) -> Dict[str, Any]:
+    async def get_table_schema(
+        self, table_name: str, session: AsyncSession
+    ) -> Dict[str, Any]:
         """
         Get detailed schema information for a specific table.
 
@@ -120,7 +121,7 @@ class DatabaseInspector:
             "table_name": table_name,
             "columns": [],
             "indexes": [],
-            "foreign_keys": []
+            "foreign_keys": [],
         }
 
         try:
@@ -150,17 +151,16 @@ class DatabaseInspector:
 
             # Using async session
             column_result = await session.execute(
-                text(column_query), 
-                {"table_name": table_name}
+                text(column_query), {"table_name": table_name}
             )
-            
+
             for row in column_result.fetchall():
                 column_info = {
                     "column_name": row[0],
                     "data_type": row[1],
                     "is_nullable": row[2],
                     "column_default": row[3],
-                    "is_primary_key": row[4]
+                    "is_primary_key": row[4],
                 }
 
                 # Add length for character types
@@ -200,19 +200,20 @@ class DatabaseInspector:
             """
 
             index_result = await session.execute(
-                text(index_query), 
-                {"table_name": table_name}
+                text(index_query), {"table_name": table_name}
             )
-            
+
             for row in index_result.fetchall():
                 # Handle potentially None array value
                 column_names = row[1] if row[1] is not None else []
 
-                result["indexes"].append({
-                    "index_name": row[0],
-                    "column_names": column_names,
-                    "is_unique": row[2]
-                })
+                result["indexes"].append(
+                    {
+                        "index_name": row[0],
+                        "column_names": column_names,
+                        "is_unique": row[2],
+                    }
+                )
 
             # Get foreign key information
             fk_query = """
@@ -232,16 +233,17 @@ class DatabaseInspector:
             """
 
             fk_result = await session.execute(
-                text(fk_query), 
-                {"table_name": table_name}
+                text(fk_query), {"table_name": table_name}
             )
-            
+
             for row in fk_result.fetchall():
-                result["foreign_keys"].append({
-                    "column_name": row[0],
-                    "foreign_table": row[1],
-                    "foreign_column": row[2]
-                })
+                result["foreign_keys"].append(
+                    {
+                        "column_name": row[0],
+                        "foreign_table": row[1],
+                        "foreign_column": row[2],
+                    }
+                )
 
             # Cache the result
             self._schema_cache[table_name] = result
@@ -251,7 +253,9 @@ class DatabaseInspector:
             logger.error(f"Error getting schema for table {table_name}: {str(e)}")
             return {"error": str(e), "table_name": table_name}
 
-    async def get_sample_data(self, table_name: str, limit: int = 5, session: AsyncSession = None) -> List[Dict[str, Any]]:
+    async def get_sample_data(
+        self, table_name: str, limit: int = 5, session: AsyncSession = None
+    ) -> List[Dict[str, Any]]:
         """
         Get sample data from a table (for previewing).
 
@@ -265,39 +269,43 @@ class DatabaseInspector:
         """
         try:
             # Sanitize table_name to prevent SQL injection
-            if not re.match(r'^[a-zA-Z0-9_]+$', table_name):
+            if not re.match(r"^[a-zA-Z0-9_]+$", table_name):
                 raise ValueError("Invalid table name")
-            
+
             # Limit the number of rows for safety
             safe_limit = min(limit, 100)
-            
+
             # Use parameterized query for better security
             query = text(f"SELECT * FROM {table_name} LIMIT :limit")
-            
+
             # Execute the query with the provided session
             result = await session.execute(query, {"limit": safe_limit})
-            
+
             columns = [desc[0] for desc in result.keys()]
             rows = result.fetchall()
-            
+
             formatted_results = []
-            
+
             for row in rows:
                 row_dict = {}
                 for i, column in enumerate(columns):
                     # Convert non-JSON serializable types to strings
                     value = row[i]
-                    if value is not None and not isinstance(value, (str, int, float, bool, list, dict)):
+                    if value is not None and not isinstance(
+                        value, (str, int, float, bool, list, dict)
+                    ):
                         value = str(value)
                     row_dict[column] = value
                 formatted_results.append(row_dict)
-            
+
             return formatted_results
         except Exception as e:
             logger.error(f"Error getting sample data for table {table_name}: {str(e)}")
             return [{"error": str(e)}]
 
-    async def validate_table_schema(self, table_name: str, expected_schema: Dict[str, Any], session: AsyncSession) -> Dict[str, Any]:
+    async def validate_table_schema(
+        self, table_name: str, expected_schema: Dict[str, Any], session: AsyncSession
+    ) -> Dict[str, Any]:
         """
         Validate expected schema against actual database schema.
 
@@ -321,43 +329,58 @@ class DatabaseInspector:
             "is_valid": True,
             "missing_columns": [],
             "type_mismatches": [],
-            "extra_columns": []
+            "extra_columns": [],
         }
 
         # Extract column names from both schemas
-        actual_columns = {col["column_name"]: col for col in actual_schema.get("columns", [])}
-        expected_columns = {col["column_name"]: col for col in expected_schema.get("columns", [])}
+        actual_columns = {
+            col["column_name"]: col for col in actual_schema.get("columns", [])
+        }
+        expected_columns = {
+            col["column_name"]: col for col in expected_schema.get("columns", [])
+        }
 
         # Check for missing columns
         for col_name, col_def in expected_columns.items():
             if col_name not in actual_columns:
                 result["is_valid"] = False
-                result["missing_columns"].append({
-                    "column_name": col_name,
-                    "expected_type": col_def.get("data_type", "unknown")
-                })
+                result["missing_columns"].append(
+                    {
+                        "column_name": col_name,
+                        "expected_type": col_def.get("data_type", "unknown"),
+                    }
+                )
             else:
                 # Check for type mismatches on existing columns
                 actual_col = actual_columns[col_name]
-                if col_def.get("data_type") and col_def["data_type"] != actual_col["data_type"]:
+                if (
+                    col_def.get("data_type")
+                    and col_def["data_type"] != actual_col["data_type"]
+                ):
                     result["is_valid"] = False
-                    result["type_mismatches"].append({
-                        "column_name": col_name,
-                        "expected_type": col_def["data_type"],
-                        "actual_type": actual_col["data_type"]
-                    })
+                    result["type_mismatches"].append(
+                        {
+                            "column_name": col_name,
+                            "expected_type": col_def["data_type"],
+                            "actual_type": actual_col["data_type"],
+                        }
+                    )
 
         # Check for extra columns in the database
         for col_name in actual_columns:
             if col_name not in expected_columns:
-                result["extra_columns"].append({
-                    "column_name": col_name,
-                    "data_type": actual_columns[col_name]["data_type"]
-                })
+                result["extra_columns"].append(
+                    {
+                        "column_name": col_name,
+                        "data_type": actual_columns[col_name]["data_type"],
+                    }
+                )
 
         return result
 
-    async def execute_safe_query(self, query: str, session: AsyncSession) -> Dict[str, Any]:
+    async def execute_safe_query(
+        self, query: str, session: AsyncSession
+    ) -> Dict[str, Any]:
         """
         Execute a safe, read-only query for database inspection.
         Only SELECT queries are allowed.
@@ -370,26 +393,28 @@ class DatabaseInspector:
             Dict with query results or error
         """
         # Check if the query is read-only
-        if not query.strip().lower().startswith('select'):
+        if not query.strip().lower().startswith("select"):
             return {
                 "error": "Only SELECT queries are permitted for database inspection",
-                "success": False
+                "success": False,
             }
 
         try:
             # Execute the query with the provided session
             result = await session.execute(text(query))
-            
+
             columns = [desc[0] for desc in result.keys()]
             rows = result.fetchall()
-            
+
             formatted_results = []
             for row in rows:
                 row_dict = {}
                 for i, column in enumerate(columns):
                     # Convert non-JSON serializable types to strings
                     value = row[i]
-                    if value is not None and not isinstance(value, (str, int, float, bool, list, dict)):
+                    if value is not None and not isinstance(
+                        value, (str, int, float, bool, list, dict)
+                    ):
                         value = str(value)
                     row_dict[column] = value
                 formatted_results.append(row_dict)
@@ -398,14 +423,11 @@ class DatabaseInspector:
                 "success": True,
                 "columns": columns,
                 "rows": formatted_results,
-                "row_count": len(formatted_results)
+                "row_count": len(formatted_results),
             }
         except Exception as e:
             logger.error(f"Error executing query: {str(e)}")
-            return {
-                "error": str(e),
-                "success": False
-            }
+            return {"error": str(e), "success": False}
 
     async def generate_model_code(self, table_name: str, session: AsyncSession) -> str:
         """
@@ -422,27 +444,27 @@ class DatabaseInspector:
 
         # Map PostgreSQL types to Python types
         type_mapping = {
-            'integer': 'int',
-            'bigint': 'int',
-            'smallint': 'int',
-            'character varying': 'str',
-            'varchar': 'str',
-            'text': 'str',
-            'boolean': 'bool',
-            'date': 'datetime.date',
-            'timestamp': 'datetime.datetime',
-            'timestamp with time zone': 'datetime.datetime',
-            'timestamp without time zone': 'datetime.datetime',
-            'uuid': 'uuid.UUID',
-            'jsonb': 'Dict[str, Any]',
-            'json': 'Dict[str, Any]',
-            'double precision': 'float',
-            'real': 'float',
-            'numeric': 'Decimal'
+            "integer": "int",
+            "bigint": "int",
+            "smallint": "int",
+            "character varying": "str",
+            "varchar": "str",
+            "text": "str",
+            "boolean": "bool",
+            "date": "datetime.date",
+            "timestamp": "datetime.datetime",
+            "timestamp with time zone": "datetime.datetime",
+            "timestamp without time zone": "datetime.datetime",
+            "uuid": "uuid.UUID",
+            "jsonb": "Dict[str, Any]",
+            "json": "Dict[str, Any]",
+            "double precision": "float",
+            "real": "float",
+            "numeric": "Decimal",
         }
 
         # Generate Python code
-        class_name = ''.join(word.capitalize() for word in table_name.split('_'))
+        class_name = "".join(word.capitalize() for word in table_name.split("_"))
         code = f"""from typing import Optional, List, Dict, Any
 import uuid
 import datetime
@@ -463,13 +485,15 @@ class {class_name}(BaseModel):
             pg_type = column["data_type"]
 
             # Get Python type from mapping
-            py_type = type_mapping.get(pg_type, 'Any')
+            py_type = type_mapping.get(pg_type, "Any")
 
             # Make nullable fields Optional
             field_type = f"Optional[{py_type}]" if is_nullable else py_type
 
             # Add default if it's a primary key with a default value
-            if column["is_primary_key"] and "uuid_generate" in str(column.get("column_default", "")):
+            if column["is_primary_key"] and "uuid_generate" in str(
+                column.get("column_default", "")
+            ):
                 default = " = Field(default_factory=uuid.uuid4)"
             elif is_nullable:
                 default = " = None"
@@ -479,6 +503,7 @@ class {class_name}(BaseModel):
             code += f"    {name}: {field_type}{default}\n"
 
         return code
+
 
 # Create a singleton instance
 db_inspector = DatabaseInspector()

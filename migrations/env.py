@@ -17,27 +17,14 @@ if config.config_file_name is not None:
 # Add the project's src directory to the Python path
 # This allows Alembic to find your models
 current_path = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.join(current_path, '..') # Assuming env.py is in migrations/
+project_root = os.path.join(current_path, "..")  # Assuming env.py is in migrations/
 sys.path.insert(0, project_root)
 
 # --- Import Base and Models ---
 # Import the Base object from where it's defined
-import src.models.batch_job
-import src.models.domain
-import src.models.feature_flag  # Import the new model
-import src.models.job
 
 # Import all your model modules here so Alembic autogenerate can see them
 # Add any other models that inherit from Base
-import src.models.local_business
-import src.models.place
-import src.models.place_search
-import src.models.profile
-import src.models.sidebar  # Contains SidebarFeature
-import src.models.sitemap  # Contains SitemapFile and SitemapURL
-import src.models.tenant
-import src.models.user
-
 # If models for other tables (roles, permissions, tasks, features, etc.) exist, import them too.
 # Example: import src.models.role
 # Example: import src.models.permission
@@ -94,15 +81,15 @@ def run_migrations_online() -> None:
     # Get the direct synchronous connection string
     sync_url = db_config.sync_connection_string
     if not sync_url:
-        raise ValueError("Direct synchronous database URL (sync_connection_string) is not configured.")
+        raise ValueError(
+            "Direct synchronous database URL (sync_connection_string) is not configured."
+        )
 
     # Create a synchronous engine using the direct URL
     connectable = create_engine(sync_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

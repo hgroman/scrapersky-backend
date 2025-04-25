@@ -4,21 +4,22 @@ Database operations for sitemap-related tables.
 This module provides functions for interacting with sitemap_files and
 sitemap_urls tables, handling tenant isolation and proper SQL operations.
 """
+
 import json
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.jwt_auth import DEFAULT_TENANT_ID
-from ..services.core.db_service import db_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 # Utility function to validate and normalize tenant ID
 def normalize_tenant_id(tenant_id: Optional[str]) -> str:
@@ -37,7 +38,9 @@ def normalize_tenant_id(tenant_id: Optional[str]) -> str:
 class SitemapDBHandler:
     """Handles all database operations for sitemap tables."""
 
-    async def create_sitemap_file(self, session: AsyncSession, sitemap_data: Dict[str, Any]) -> str:
+    async def create_sitemap_file(
+        self, session: AsyncSession, sitemap_data: Dict[str, Any]
+    ) -> str:
         """
         Create a new sitemap file record.
 
@@ -82,7 +85,13 @@ class SitemapDBHandler:
             logger.error(f"Error creating sitemap file: {str(e)}")
             raise
 
-    async def update_sitemap_file(self, session: AsyncSession, sitemap_id: str, update_data: Dict[str, Any], tenant_id: str) -> Dict[str, Any]:
+    async def update_sitemap_file(
+        self,
+        session: AsyncSession,
+        sitemap_id: str,
+        update_data: Dict[str, Any],
+        tenant_id: str,
+    ) -> Dict[str, Any]:
         """
         Update existing sitemap file data.
 
@@ -104,21 +113,23 @@ class SitemapDBHandler:
         # Build dynamic update query based on provided fields
         update_fields = []
         values = {}
-        
+
         # Add the ID and tenant_id to values
         values["id"] = sitemap_id
         values["tenant_id"] = tenant_id
 
         # Log the update operation
-        logger.info(f"Updating sitemap file {sitemap_id} with fields: {', '.join(update_data.keys())}")
+        logger.info(
+            f"Updating sitemap file {sitemap_id} with fields: {', '.join(update_data.keys())}"
+        )
 
         for key, value in update_data.items():
-            if key == 'tenant_id':
+            if key == "tenant_id":
                 # Prevent changing tenant_id for security
                 continue
 
             # Convert dict/list fields to JSON strings if needed
-            if isinstance(value, (dict, list)) and key in ['tags', 'notes']:
+            if isinstance(value, (dict, list)) and key in ["tags", "notes"]:
                 value = json.dumps(value)
 
             update_fields.append(f"{key} = :{key}")
@@ -141,13 +152,17 @@ class SitemapDBHandler:
             result = await session.execute(text(query), values)
             updated_row = result.fetchone()
             if not updated_row:
-                raise ValueError(f"Sitemap file not found or not accessible: {sitemap_id}")
+                raise ValueError(
+                    f"Sitemap file not found or not accessible: {sitemap_id}"
+                )
             return dict(updated_row)
         except Exception as e:
             logger.error(f"Error updating sitemap file {sitemap_id}: {str(e)}")
             raise
 
-    async def get_sitemap_file(self, session: AsyncSession, sitemap_id: str, tenant_id: str) -> Dict[str, Any]:
+    async def get_sitemap_file(
+        self, session: AsyncSession, sitemap_id: str, tenant_id: str
+    ) -> Dict[str, Any]:
         """
         Retrieve sitemap file data.
 
@@ -172,18 +187,21 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"sitemap_id": sitemap_id, "tenant_id": tenant_id}
+                text(query), {"sitemap_id": sitemap_id, "tenant_id": tenant_id}
             )
             record = result.fetchone()
             if not record:
-                raise ValueError(f"Sitemap file not found or not accessible: {sitemap_id}")
+                raise ValueError(
+                    f"Sitemap file not found or not accessible: {sitemap_id}"
+                )
             return dict(record)
         except Exception as e:
             logger.error(f"Error retrieving sitemap file data: {str(e)}")
             raise
 
-    async def get_sitemap_files_for_domain(self, session: AsyncSession, domain_id: str, tenant_id: str) -> List[Dict[str, Any]]:
+    async def get_sitemap_files_for_domain(
+        self, session: AsyncSession, domain_id: str, tenant_id: str
+    ) -> List[Dict[str, Any]]:
         """
         Get all sitemap files for a domain.
 
@@ -206,16 +224,19 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"domain_id": domain_id, "tenant_id": tenant_id}
+                text(query), {"domain_id": domain_id, "tenant_id": tenant_id}
             )
             records = result.fetchall()
             return [dict(row) for row in records]
         except Exception as e:
-            logger.error(f"Error retrieving sitemap files for domain {domain_id}: {str(e)}")
+            logger.error(
+                f"Error retrieving sitemap files for domain {domain_id}: {str(e)}"
+            )
             raise
 
-    async def get_sitemap_files_by_job_id(self, session: AsyncSession, job_id: str, tenant_id: str) -> List[Dict[str, Any]]:
+    async def get_sitemap_files_by_job_id(
+        self, session: AsyncSession, job_id: str, tenant_id: str
+    ) -> List[Dict[str, Any]]:
         """
         Get all sitemap files for a specific job.
 
@@ -238,8 +259,7 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"job_id": job_id, "tenant_id": tenant_id}
+                text(query), {"job_id": job_id, "tenant_id": tenant_id}
             )
             records = result.fetchall()
             return [dict(row) for row in records]
@@ -247,7 +267,9 @@ class SitemapDBHandler:
             logger.error(f"Error retrieving sitemap files for job {job_id}: {str(e)}")
             raise
 
-    async def get_domain_by_name(self, session: AsyncSession, domain_name: str, tenant_id: str) -> Dict[str, Any]:
+    async def get_domain_by_name(
+        self, session: AsyncSession, domain_name: str, tenant_id: str
+    ) -> Dict[str, Any]:
         """
         Get domain data by domain name.
 
@@ -272,8 +294,7 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"domain_name": domain_name, "tenant_id": tenant_id}
+                text(query), {"domain_name": domain_name, "tenant_id": tenant_id}
             )
             record = result.fetchone()
             if not record:
@@ -283,7 +304,9 @@ class SitemapDBHandler:
             logger.error(f"Error retrieving domain data for {domain_name}: {str(e)}")
             raise
 
-    async def get_domain_by_id(self, session: AsyncSession, domain_id: str, tenant_id: str) -> Dict[str, Any]:
+    async def get_domain_by_id(
+        self, session: AsyncSession, domain_id: str, tenant_id: str
+    ) -> Dict[str, Any]:
         """
         Get domain data by ID.
 
@@ -308,8 +331,7 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"domain_id": domain_id, "tenant_id": tenant_id}
+                text(query), {"domain_id": domain_id, "tenant_id": tenant_id}
             )
             record = result.fetchone()
             if not record:
@@ -319,7 +341,9 @@ class SitemapDBHandler:
             logger.error(f"Error retrieving domain data for ID {domain_id}: {str(e)}")
             raise
 
-    async def get_domains_for_sitemap_analysis(self, session: AsyncSession, tenant_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    async def get_domains_for_sitemap_analysis(
+        self, session: AsyncSession, tenant_id: str, limit: int = 50
+    ) -> List[Dict[str, Any]]:
         """
         Get domains that are queued for sitemap analysis.
 
@@ -344,8 +368,7 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"tenant_id": tenant_id, "limit": limit}
+                text(query), {"tenant_id": tenant_id, "limit": limit}
             )
             records = result.fetchall()
             return [dict(row) for row in records]
@@ -353,7 +376,14 @@ class SitemapDBHandler:
             logger.error(f"Error retrieving domains for sitemap analysis: {str(e)}")
             raise
 
-    async def update_domain_sitemap_status(self, session: AsyncSession, domain_id: str, status: str, tenant_id: str, error_message: Optional[str] = None) -> Dict[str, Any]:
+    async def update_domain_sitemap_status(
+        self,
+        session: AsyncSession,
+        domain_id: str,
+        status: str,
+        tenant_id: str,
+        error_message: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Update the sitemap monitoring status for a domain.
 
@@ -376,13 +406,15 @@ class SitemapDBHandler:
         try:
             # Create update data
             update_data = {
-                'sitemap_monitor_status': status,
-                'sitemap_monitor_at': datetime.utcnow(),
+                "sitemap_monitor_status": status,
+                "sitemap_monitor_at": datetime.utcnow(),
             }
 
             # Add error message if provided
             if error_message:
-                update_data['sitemap_monitor_error'] = error_message[:255]  # Truncate to reasonable length
+                update_data["sitemap_monitor_error"] = error_message[
+                    :255
+                ]  # Truncate to reasonable length
 
             query = """
                 UPDATE domains
@@ -399,16 +431,14 @@ class SitemapDBHandler:
                 RETURNING *
             """
 
-            params = {
-                **update_data,
-                'domain_id': domain_id,
-                'tenant_id': tenant_id
-            }
+            params = {**update_data, "domain_id": domain_id, "tenant_id": tenant_id}
 
             result = await session.execute(text(query), params)
             updated_row = result.fetchone()
             if not updated_row:
-                raise ValueError(f"Domain with ID {domain_id} not found or update failed")
+                raise ValueError(
+                    f"Domain with ID {domain_id} not found or update failed"
+                )
             return dict(updated_row)
 
         except Exception as e:
@@ -416,7 +446,14 @@ class SitemapDBHandler:
             raise
 
     # Add alias for backward compatibility
-    async def update_domain(self, session: AsyncSession, domain_id: str, status: str, tenant_id: str, error_message: Optional[str] = None) -> Dict[str, Any]:
+    async def update_domain(
+        self,
+        session: AsyncSession,
+        domain_id: str,
+        status: str,
+        tenant_id: str,
+        error_message: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Alias for update_domain_sitemap_status for backward compatibility.
 
@@ -430,11 +467,15 @@ class SitemapDBHandler:
         Returns:
             Updated domain record
         """
-        return await self.update_domain_sitemap_status(session, domain_id, status, tenant_id, error_message)
+        return await self.update_domain_sitemap_status(
+            session, domain_id, status, tenant_id, error_message
+        )
 
     # Sitemap URL operations
 
-    async def create_sitemap_url(self, session: AsyncSession, url_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_sitemap_url(
+        self, session: AsyncSession, url_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Create new sitemap URL record.
 
@@ -449,21 +490,21 @@ class SitemapDBHandler:
             ValueError: If the insert fails or no row is returned
         """
         # Normalize tenant_id for security
-        url_data['tenant_id'] = normalize_tenant_id(url_data.get('tenant_id'))
+        url_data["tenant_id"] = normalize_tenant_id(url_data.get("tenant_id"))
 
         # Convert dict/list fields to JSON strings if needed
-        for field in ['tags', 'notes']:
+        for field in ["tags", "notes"]:
             if isinstance(url_data.get(field), (dict, list)):
                 url_data[field] = json.dumps(url_data[field])
 
         # Generate UUID if not provided
-        if 'id' not in url_data:
-            url_data['id'] = str(uuid.uuid4())
+        if "id" not in url_data:
+            url_data["id"] = str(uuid.uuid4())
 
         # Build the columns and values
-        columns = ', '.join(url_data.keys())
-        placeholders = ', '.join([f":{key}" for key in url_data.keys()])
-        
+        columns = ", ".join(url_data.keys())
+        placeholders = ", ".join([f":{key}" for key in url_data.keys()])
+
         query = f"""
             INSERT INTO sitemap_urls (
                 {columns}
@@ -483,7 +524,14 @@ class SitemapDBHandler:
             logger.error(f"Error inserting sitemap URL: {str(e)}")
             raise
 
-    async def get_sitemap_urls(self, session: AsyncSession, sitemap_id: str, tenant_id: str, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+    async def get_sitemap_urls(
+        self,
+        session: AsyncSession,
+        sitemap_id: str,
+        tenant_id: str,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
         """
         Get URLs for a specific sitemap.
 
@@ -510,7 +558,12 @@ class SitemapDBHandler:
         try:
             result = await session.execute(
                 text(query),
-                {"sitemap_id": sitemap_id, "tenant_id": tenant_id, "limit": limit, "offset": offset}
+                {
+                    "sitemap_id": sitemap_id,
+                    "tenant_id": tenant_id,
+                    "limit": limit,
+                    "offset": offset,
+                },
             )
             records = result.fetchall()
             return [dict(row) for row in records]
@@ -518,7 +571,9 @@ class SitemapDBHandler:
             logger.error(f"Error retrieving URLs for sitemap {sitemap_id}: {str(e)}")
             raise
 
-    async def get_sitemap_urls_count(self, session: AsyncSession, sitemap_id: str, tenant_id: str) -> int:
+    async def get_sitemap_urls_count(
+        self, session: AsyncSession, sitemap_id: str, tenant_id: str
+    ) -> int:
         """
         Get count of URLs for a specific sitemap.
 
@@ -540,16 +595,19 @@ class SitemapDBHandler:
 
         try:
             result = await session.execute(
-                text(query),
-                {"sitemap_id": sitemap_id, "tenant_id": tenant_id}
+                text(query), {"sitemap_id": sitemap_id, "tenant_id": tenant_id}
             )
             record = result.fetchone()
             return record[0] if record else 0
         except Exception as e:
-            logger.error(f"Error retrieving URL count for sitemap {sitemap_id}: {str(e)}")
+            logger.error(
+                f"Error retrieving URL count for sitemap {sitemap_id}: {str(e)}"
+            )
             raise
 
-    async def bulk_insert_sitemap_urls(self, session: AsyncSession, urls: List[Dict[str, Any]], tenant_id: str) -> int:
+    async def bulk_insert_sitemap_urls(
+        self, session: AsyncSession, urls: List[Dict[str, Any]], tenant_id: str
+    ) -> int:
         """
         Insert multiple sitemap URLs in a single transaction.
 
@@ -578,14 +636,14 @@ class SitemapDBHandler:
                 prepared_url = url.copy()
 
                 # Ensure tenant ID
-                prepared_url['tenant_id'] = tenant_id
+                prepared_url["tenant_id"] = tenant_id
 
                 # Generate UUID if not provided
-                if 'id' not in prepared_url:
-                    prepared_url['id'] = str(uuid.uuid4())
+                if "id" not in prepared_url:
+                    prepared_url["id"] = str(uuid.uuid4())
 
                 # Convert JSON fields
-                for field in ['tags', 'notes']:
+                for field in ["tags", "notes"]:
                     if isinstance(prepared_url.get(field), (dict, list)):
                         prepared_url[field] = json.dumps(prepared_url[field])
 
@@ -596,7 +654,7 @@ class SitemapDBHandler:
             total_inserted = 0
 
             for i in range(0, len(prepared_urls), batch_size):
-                batch = prepared_urls[i:i+batch_size]
+                batch = prepared_urls[i : i + batch_size]
 
                 # Get all fields from the first URL
                 sample_url = batch[0]
@@ -623,7 +681,9 @@ class SitemapDBHandler:
             logger.error(f"Error in bulk insert of sitemap URLs: {str(e)}")
             raise ValueError(f"Failed to bulk insert sitemap URLs: {str(e)}")
 
-    async def sitemap_file_exists(self, session: AsyncSession, url: str, domain_id: str, tenant_id: str) -> bool:
+    async def sitemap_file_exists(
+        self, session: AsyncSession, url: str, domain_id: str, tenant_id: str
+    ) -> bool:
         """
         Check if a sitemap file already exists for a domain and URL.
 
@@ -649,17 +709,19 @@ class SitemapDBHandler:
         try:
             result = await session.execute(
                 text(query),
-                {"url": url, "domain_id": domain_id, "tenant_id": tenant_id}
+                {"url": url, "domain_id": domain_id, "tenant_id": tenant_id},
             )
             record = result.fetchone()
             # Convert to dict and check if 'exists' key is present
             result_dict = dict(record) if record else {}
-            return result_dict.get('exists', False)
+            return result_dict.get("exists", False)
         except Exception as e:
             logger.error(f"Error checking if sitemap file exists: {str(e)}")
             return False
 
-    async def get_sitemap_file_by_url(self, session: AsyncSession, url: str, domain_id: str, tenant_id: str) -> Dict[str, Any]:
+    async def get_sitemap_file_by_url(
+        self, session: AsyncSession, url: str, domain_id: str, tenant_id: str
+    ) -> Dict[str, Any]:
         """
         Get sitemap file by URL.
 
@@ -686,7 +748,7 @@ class SitemapDBHandler:
         try:
             result = await session.execute(
                 text(query),
-                {"url": url, "domain_id": domain_id, "tenant_id": tenant_id}
+                {"url": url, "domain_id": domain_id, "tenant_id": tenant_id},
             )
             record = result.fetchone()
             if not record:
@@ -699,10 +761,10 @@ class SitemapDBHandler:
     async def get_table_info(self, session: AsyncSession) -> list:
         """
         Get information about sitemap-related database tables
-        
+
         Args:
             session: SQLAlchemy async session
-            
+
         Returns:
             List of table information
         """
@@ -710,7 +772,7 @@ class SitemapDBHandler:
 
         try:
             # Get table info for each table separately
-            for table in ['jobs', 'domains', 'sitemap_files', 'sitemap_urls']:
+            for table in ["jobs", "domains", "sitemap_files", "sitemap_urls"]:
                 # Query to get column count
                 column_query = """
                     SELECT COUNT(*)
@@ -718,8 +780,7 @@ class SitemapDBHandler:
                     WHERE table_schema = 'public' AND table_name = :table
                 """
                 column_result = await session.execute(
-                    text(column_query),
-                    {"table": table}
+                    text(column_query), {"table": table}
                 )
 
                 # Query to get row count - using parameterized query properly
@@ -735,11 +796,9 @@ class SitemapDBHandler:
                     row_data = row_result.fetchone()
                     row_count = row_data[0] if row_data else 0
 
-                    tables.append({
-                        "name": table,
-                        "columns": columns_count,
-                        "rows": row_count
-                    })
+                    tables.append(
+                        {"name": table, "columns": columns_count, "rows": row_count}
+                    )
 
             return tables
         except Exception as e:

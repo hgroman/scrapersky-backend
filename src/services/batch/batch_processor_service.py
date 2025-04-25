@@ -5,38 +5,29 @@ This module provides high-level business logic for batch processing,
 coordinating between components and managing background tasks.
 """
 
-import asyncio
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, cast
-from uuid import UUID
-
-from fastapi import BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
 
 from src.services.batch.batch_functions import (
     create_batch,
     get_batch_status,
-    process_batch_with_own_session,
 )
 from src.services.batch.types import (
-    BATCH_STATUS_COMPLETED,
     BATCH_STATUS_ERROR,
-    BATCH_STATUS_FAILED,
     BATCH_STATUS_PENDING,
     BATCH_STATUS_PROCESSING,
-    BATCH_STATUS_UNKNOWN,
     BatchId,
     BatchOptions,
     BatchResult,
     BatchStatus,
     DomainList,
-    DomainResult,
     Session,
     UserId,
 )
 
 logger = logging.getLogger(__name__)
+
 
 async def initiate_batch_processing(
     session: Session,
@@ -78,6 +69,7 @@ async def initiate_batch_processing(
         logger.error(f"Failed to initiate batch processing: {str(e)}")
         raise
 
+
 async def get_batch_progress(
     session: Session,
     batch_id: BatchId,
@@ -101,6 +93,7 @@ async def get_batch_progress(
     except Exception as e:
         logger.error(f"Failed to get batch progress: {str(e)}")
         raise
+
 
 async def cancel_batch(
     session: Session,

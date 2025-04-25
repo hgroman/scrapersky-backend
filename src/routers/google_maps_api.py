@@ -4,22 +4,20 @@ Google Maps API Router
 This module provides API endpoints for interacting with Google Maps API.
 It uses standard FastAPI routing with explicit permission checks.
 """
+
 import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional
 
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
-    Body,
     Depends,
     HTTPException,
     Query,
     Request,
 )
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,8 +30,7 @@ from ..auth.jwt_auth import DEFAULT_TENANT_ID, get_current_user
 #     require_role_level
 # )
 from ..config.settings import settings
-from ..models import Place, PlaceSearch
-from ..services.job_service import job_service
+from ..models import PlaceSearch
 from ..services.places.places_search_service import PlacesSearchService
 from ..services.places.places_service import PlacesService
 from ..services.places.places_storage_service import PlacesStorageService
@@ -44,12 +41,14 @@ from ..session.async_session import get_session, get_session_dependency
 # Configure logger
 logger = logging.getLogger(__name__)
 
+
 # Create API models
 class PlacesSearchRequest(BaseModel):
     business_type: str
     location: str
     radius_km: int = 10
     tenant_id: Optional[str] = None
+
 
 class PlacesStatusResponse(BaseModel):
     job_id: str
@@ -58,11 +57,9 @@ class PlacesStatusResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+
 # Create router
-router = APIRouter(
-    prefix="/api/v3/localminer-discoveryscan",
-    tags=["google-maps-api"]
-)
+router = APIRouter(prefix="/api/v3/localminer-discoveryscan", tags=["google-maps-api"])
 
 # Initialize services
 places_service = PlacesService()
@@ -75,6 +72,7 @@ dev_mode = os.getenv("SCRAPER_SKY_DEV_MODE", "").lower() == "true"
 # Get API key from environment
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
+
 @router.get("/debug/info")
 async def get_debug_info(current_user: Dict = Depends(get_current_user)):
     """
@@ -82,7 +80,10 @@ async def get_debug_info(current_user: Dict = Depends(get_current_user)):
     """
     # This endpoint is for debugging only
     if not dev_mode and settings.environment != "development":
-        raise HTTPException(status_code=403, detail="Debug endpoints are only available in development mode")
+        raise HTTPException(
+            status_code=403,
+            detail="Debug endpoints are only available in development mode",
+        )
 
     # Check if API key is configured properly
     api_key_status = "CONFIGURED" if GOOGLE_MAPS_API_KEY else "MISSING"
@@ -96,9 +97,10 @@ async def get_debug_info(current_user: Dict = Depends(get_current_user)):
         "default_values": {
             "tenant_id": DEFAULT_TENANT_ID,
             "user_id": "dev-admin-id" if dev_mode else None,
-            "max_results": 100
-        }
+            "max_results": 100,
+        },
     }
+
 
 @router.post("/search/places", response_model=Dict)
 async def search_places(
@@ -122,7 +124,9 @@ async def search_places(
     """
     # Extract user information
     user_info = current_user
-    logger.info(f"🔍 User details: user_id={user_info.get('user_id')}, tenant_id={request.tenant_id}")
+    logger.info(
+        f"🔍 User details: user_id={user_info.get('user_id')}, tenant_id={request.tenant_id}"
+    )
 
     # Generate job ID
     job_id = str(uuid.uuid4())
@@ -140,7 +144,7 @@ async def search_places(
                 status="pending",
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                user_id=user_info.get("user_id", "unknown")
+                user_id=user_info.get("user_id", "unknown"),
             )
 
             # Store search record
@@ -153,7 +157,7 @@ async def search_places(
                 "location": request.location,
                 "radius_km": request.radius_km,
                 "user_info": user_info,
-                "tenant_id": request.tenant_id
+                "tenant_id": request.tenant_id,
             }
 
         # Start background processing task outside transaction
@@ -188,10 +192,12 @@ async def search_places(
                             location=location,
                             radius_km=radius_km,
                             api_key=GOOGLE_MAPS_API_KEY or None,
-                            user_id=user_id
+                            user_id=user_id,
                         )
 
-                        logger.info(f"🔍 Completed places search job {job_id}: {result}")
+                        logger.info(
+                            f"🔍 Completed places search job {job_id}: {result}"
+                        )
             except Exception as e:
                 logger.error(f"Error in background places search task: {str(e)}")
                 # Create a new session for error handling
@@ -203,15 +209,16 @@ async def search_places(
 
                             from ..models.place_search import PlaceSearch
 
-                            stmt = update(PlaceSearch).where(
-                                PlaceSearch.id == uuid.UUID(job_id)
-                            ).values(
-                                status="failed",
-                                updated_at=datetime.utcnow()
+                            stmt = (
+                                update(PlaceSearch)
+                                .where(PlaceSearch.id == uuid.UUID(job_id))
+                                .values(status="failed", updated_at=datetime.utcnow())
                             )
                             await error_session.execute(stmt)
                 except Exception as db_error:
-                    logger.error(f"Failed to update error status in database: {str(db_error)}")
+                    logger.error(
+                        f"Failed to update error status in database: {str(db_error)}"
+                    )
 
         # Run background task concurrently
         await process_places_search_background(task_args)
@@ -220,18 +227,21 @@ async def search_places(
         return {
             "job_id": job_id,
             "status_url": f"/api/v3/localminer-discoveryscan/search/status/{job_id}",
-            "status": "processing"
+            "status": "processing",
         }
     except Exception as e:
         logger.error(f"Error initiating places search: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error initiating search: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error initiating search: {str(e)}"
+        )
+
 
 @router.get("/search/status/{job_id}", response_model=PlacesStatusResponse)
 async def get_search_status(
     job_id: str,
     request: Request,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> PlacesStatusResponse:
     """
     Get the status of a places search job.
@@ -260,9 +270,7 @@ async def get_search_status(
         # Check database for status (primary source of truth)
         async with session.begin():
             search_record = await places_search_service.get_search_by_id(
-                session=session,
-                job_id=job_id,
-                tenant_id=tenant_id
+                session=session, job_id=job_id, tenant_id=tenant_id
             )
 
             if not search_record:
@@ -281,13 +289,16 @@ async def get_search_status(
                 status=search_record.status or "unknown",
                 progress=progress,
                 created_at=search_record.created_at,
-                updated_at=search_record.updated_at
+                updated_at=search_record.updated_at,
             )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error retrieving search status: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving status: {str(e)}"
+        )
+
 
 @router.get("/places/staging", response_model=List[Dict])
 async def get_staging_places(
@@ -296,7 +307,7 @@ async def get_staging_places(
     job_id: Optional[str] = None,
     tenant_id: Optional[str] = None,
     limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
 ) -> List[Dict]:
     """
     Get places from the staging area.
@@ -331,7 +342,9 @@ async def get_staging_places(
     #     user_permissions=current_user.get("permissions", [])
     # )
 
-    logger.info(f"Using JWT validation only (RBAC removed) for staging places, tenant: {tenant_id}")
+    logger.info(
+        f"Using JWT validation only (RBAC removed) for staging places, tenant: {tenant_id}"
+    )
 
     try:
         # Get places from staging
@@ -341,7 +354,7 @@ async def get_staging_places(
                 tenant_id=tenant_id or DEFAULT_TENANT_ID,
                 job_id=job_id or "",  # Ensure job_id is never None
                 limit=limit,
-                offset=offset
+                offset=offset,
             )
 
             # Convert to serializable dictionaries
@@ -356,19 +369,28 @@ async def get_staging_places(
                     "latitude": place.latitude,
                     "longitude": place.longitude,
                     "place_id": place.place_id,
-                    "tenant_id": str(place.tenant_id) if place.tenant_id is not None else None,
+                    "tenant_id": str(place.tenant_id)
+                    if place.tenant_id is not None
+                    else None,
                     "business_type": place.business_type,
                     "source": place.source,
-                    "created_at": place.created_at.isoformat() if place.created_at is not None else None,
-                    "updated_at": place.updated_at.isoformat() if place.updated_at is not None else None,
-                    "job_id": place.job_id
+                    "created_at": place.created_at.isoformat()
+                    if place.created_at is not None
+                    else None,
+                    "updated_at": place.updated_at.isoformat()
+                    if place.updated_at is not None
+                    else None,
+                    "job_id": place.job_id,
                 }
                 result.append(place_dict)
 
             return result
     except Exception as e:
         logger.error(f"Error retrieving staging places: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving places: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving places: {str(e)}"
+        )
+
 
 @router.post("/places/staging/status", response_model=Dict)
 async def update_place_status(
@@ -396,7 +418,9 @@ async def update_place_status(
         raise HTTPException(status_code=400, detail="Place IDs are required")
 
     if status not in ["approved", "rejected", "pending"]:
-        raise HTTPException(status_code=400, detail="Status must be one of: approved, rejected, pending")
+        raise HTTPException(
+            status_code=400, detail="Status must be one of: approved, rejected, pending"
+        )
 
     # Validate tenant ID
     tenant_id = tenant_id or current_user.get("tenant_id", "")
@@ -414,7 +438,9 @@ async def update_place_status(
     #     user_permissions=current_user.get("permissions", [])
     # )
 
-    logger.info(f"Using JWT validation only (RBAC removed) for update status, tenant: {tenant_id}")
+    logger.info(
+        f"Using JWT validation only (RBAC removed) for update status, tenant: {tenant_id}"
+    )
 
     try:
         # Update place status
@@ -427,19 +453,16 @@ async def update_place_status(
                     place_id=place_id,
                     status=status,
                     tenant_id=tenant_id,
-                    user_id=current_user.get("user_id", "system")
+                    user_id=current_user.get("user_id", "system"),
                 )
                 if success:
                     count += 1
 
-            return {
-                "success": True,
-                "updated_count": count,
-                "status": status
-            }
+            return {"success": True, "updated_count": count, "status": status}
     except Exception as e:
         logger.error(f"Error updating place status: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating status: {str(e)}")
+
 
 @router.post("/places/staging/batch", response_model=Dict)
 async def batch_update_places(
@@ -480,7 +503,9 @@ async def batch_update_places(
     #     user_permissions=current_user.get("permissions", [])
     # )
 
-    logger.info(f"Using JWT validation only (RBAC removed) for batch update, tenant: {tenant_id}")
+    logger.info(
+        f"Using JWT validation only (RBAC removed) for batch update, tenant: {tenant_id}"
+    )
 
     try:
         # Convert dict records to Place model instances
@@ -488,7 +513,9 @@ async def batch_update_places(
         for place_dict in places:
             # We need to ensure each place has an ID
             if not place_dict.get("id"):
-                raise HTTPException(status_code=400, detail="Each place must have an ID")
+                raise HTTPException(
+                    status_code=400, detail="Each place must have an ID"
+                )
 
             # Collect place IDs for batch update
             place_ids.append(place_dict.get("id"))
@@ -500,18 +527,16 @@ async def batch_update_places(
                 session=session,
                 place_ids=place_ids,
                 status="updated",  # Default status
-                tenant_id=tenant_id
+                tenant_id=tenant_id,
             )
 
-            return {
-                "success": True,
-                "updated_count": updated_count
-            }
+            return {"success": True, "updated_count": updated_count}
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in batch update places: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating places: {str(e)}")
+
 
 @router.get("/health")
 async def health_check():
@@ -519,16 +544,11 @@ async def health_check():
     config_status = {
         "api_key_configured": bool(GOOGLE_MAPS_API_KEY),
         "environment": settings.environment,
-        "default_values": {
-            "tenant_id": DEFAULT_TENANT_ID,
-            "search_radius_km": 10
-        }
+        "default_values": {"tenant_id": DEFAULT_TENANT_ID, "search_radius_km": 10},
     }
 
-    return {
-        "status": "healthy",
-        "config": config_status
-    }
+    return {"status": "healthy", "config": config_status}
+
 
 @router.get("/results/{job_id}", response_model=Dict)
 async def get_job_results(
@@ -536,7 +556,7 @@ async def get_job_results(
     session: AsyncSession = Depends(get_session_dependency),
     current_user: Dict = Depends(get_current_user),
     limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
 ) -> Dict:
     """
     Get places discovered for a specific job ID.
@@ -581,7 +601,7 @@ async def get_job_results(
             job_id=job_id,
             tenant_id=tenant_id,
             limit=limit,
-            offset=offset
+            offset=offset,
         )
 
         # Convert to serializable dictionaries
@@ -595,11 +615,14 @@ async def get_job_results(
                 "business_type": place.business_type,
                 "latitude": place.latitude,
                 "longitude": place.longitude,
-                "status": getattr(place, "status", "new")
+                "status": getattr(place, "status", "new"),
             }
 
             # Add optional fields if they exist
-            if hasattr(place, "formatted_address") and place.formatted_address is not None:
+            if (
+                hasattr(place, "formatted_address")
+                and place.formatted_address is not None
+            ):
                 place_dict["formatted_address"] = place.formatted_address
 
             if hasattr(place, "vicinity") and place.vicinity is not None:
@@ -608,7 +631,10 @@ async def get_job_results(
             if hasattr(place, "rating") and place.rating is not None:
                 place_dict["rating"] = place.rating
 
-            if hasattr(place, "user_ratings_total") and place.user_ratings_total is not None:
+            if (
+                hasattr(place, "user_ratings_total")
+                and place.user_ratings_total is not None
+            ):
                 place_dict["user_ratings_total"] = place.user_ratings_total
 
             # Add timestamps
@@ -632,17 +658,24 @@ async def get_job_results(
                 "business_type": job.business_type,
                 "location": job.location,
                 "status": job.status,
-                "created_at": job.created_at.isoformat() if job.created_at is not None else None,
-                "completed_at": job.updated_at.isoformat() if job.updated_at is not None else None
+                "created_at": job.created_at.isoformat()
+                if job.created_at is not None
+                else None,
+                "completed_at": job.updated_at.isoformat()
+                if job.updated_at is not None
+                else None,
             },
-            "filters": {}
+            "filters": {},
         }
     except ValueError as e:
         logger.error(f"Invalid UUID format: {e}")
         raise HTTPException(status_code=400, detail=f"Invalid job ID format: {e}")
     except Exception as e:
         logger.error(f"Error retrieving job results: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving results: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving results: {str(e)}"
+        )
+
 
 @router.get("/search/history", response_model=List[Dict])
 async def get_search_history(
@@ -651,7 +684,7 @@ async def get_search_history(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     status: Optional[str] = None,
-    tenant_id: Optional[str] = None
+    tenant_id: Optional[str] = None,
 ) -> List[Dict]:
     """
     Get search history for the tenant.
@@ -683,10 +716,10 @@ async def get_search_history(
         from ..models.place_search import PlaceSearch
 
         # Build base query
-        query = select(PlaceSearch).where(
-            PlaceSearch.tenant_id == uuid.UUID(tenant_id)
-        ).order_by(
-            desc(PlaceSearch.created_at)
+        query = (
+            select(PlaceSearch)
+            .where(PlaceSearch.tenant_id == uuid.UUID(tenant_id))
+            .order_by(desc(PlaceSearch.created_at))
         )
 
         # Add status filter if provided
@@ -709,8 +742,12 @@ async def get_search_history(
                 "business_type": search.business_type,
                 "location": search.location,
                 "status": search.status,
-                "created_at": search.created_at.isoformat() if search.created_at is not None else None,
-                "updated_at": search.updated_at.isoformat() if search.updated_at is not None else None
+                "created_at": search.created_at.isoformat()
+                if search.created_at is not None
+                else None,
+                "updated_at": search.updated_at.isoformat()
+                if search.updated_at is not None
+                else None,
             }
 
             # Add user ID if available
@@ -729,4 +766,6 @@ async def get_search_history(
         raise HTTPException(status_code=400, detail=f"Invalid tenant ID format: {e}")
     except Exception as e:
         logger.error(f"Error retrieving search history: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving search history: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving search history: {str(e)}"
+        )

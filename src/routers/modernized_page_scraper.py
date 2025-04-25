@@ -4,12 +4,13 @@ Page Scraper Router - Batch Operations
 This module provides API routes for batch page scraping operations.
 Uses standard FastAPI routing with explicit permission checks.
 """
+
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Dict
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.jwt_auth import DEFAULT_TENANT_ID, get_current_user
@@ -17,6 +18,7 @@ from ..auth.jwt_auth import DEFAULT_TENANT_ID, get_current_user
 # RBAC imports removed
 # from ..utils.permissions import require_permission, require_feature_enabled
 from ..config.settings import settings
+
 # Explicitly import needed models, excluding JobStatusResponse from here
 from ..models import (
     BatchRequest,
@@ -25,9 +27,9 @@ from ..models import (
     SitemapScrapingRequest,
     SitemapScrapingResponse,
 )
+
 # Import JobStatusResponse from its correct schema location
 from ..schemas.job import JobStatusResponse
-
 from ..services.core.user_context_service import user_context_service
 from ..services.page_scraper import page_processing_service
 from ..session.async_session import get_session_dependency
@@ -37,11 +39,11 @@ logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(
-    prefix="/api/v3/modernized_page_scraper",
-    tags=["modernized_page_scraper"]
+    prefix="/api/v3/modernized_page_scraper", tags=["modernized_page_scraper"]
 )
 
 # Using DEFAULT_TENANT_ID from jwt_auth.py
+
 
 def is_development_mode() -> bool:
     """
@@ -52,6 +54,7 @@ def is_development_mode() -> bool:
     if dev_mode:
         logger.warning("⚠️ Running in DEVELOPMENT mode - ALL AUTH CHECKS BYPASSED ⚠️")
     return dev_mode or settings.environment.lower() in ["development", "dev"]
+
 
 # Development user for local testing
 async def get_development_user():
@@ -67,16 +70,18 @@ async def get_development_user():
         "roles": ["admin"],
         "permissions": ["access_page_scraper", "*"],
         "auth_method": "dev_mode",
-        "is_admin": True
+        "is_admin": True,
     }
+
 
 # Choose the appropriate user dependency based on explicit development mode
 user_dependency = get_development_user if is_development_mode() else get_current_user
 
+
 # Authorization dependency
 async def verify_page_scraper_access(
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(user_dependency)
+    current_user: Dict = Depends(user_dependency),
 ) -> Dict:
     """
     Verify that the current user has access to page scraper functionality.
@@ -97,18 +102,22 @@ async def verify_page_scraper_access(
     #     user_permissions=user_permissions
     # )
 
-    logger.info(f"Using JWT validation only (RBAC removed) for page scraper access, tenant: {current_user.get('tenant_id', DEFAULT_TENANT_ID)}")
+    logger.info(
+        f"Using JWT validation only (RBAC removed) for page scraper access, tenant: {current_user.get('tenant_id', DEFAULT_TENANT_ID)}"
+    )
 
     return current_user
 
+
 # ===== Single Domain Scan =====
+
 
 @router.post("/scan", response_model=SitemapScrapingResponse)
 async def scan_domain(
     background_tasks: BackgroundTasks,
     request: SitemapScrapingRequest,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(verify_page_scraper_access)
+    current_user: Dict = Depends(verify_page_scraper_access),
 ) -> SitemapScrapingResponse:
     """
     Scan a domain to extract metadata from its pages.
@@ -136,7 +145,7 @@ async def scan_domain(
             session=session,
             base_url=request.base_url,
             user_id=user_id,
-            max_pages=request.max_pages or 1000
+            max_pages=request.max_pages or 1000,
         )
 
     # Add background task AFTER transaction commits to perform actual scraping
@@ -149,26 +158,30 @@ async def scan_domain(
         job_id=result["job_id"],
         domain=request.base_url,
         user_id=user_id,
-        max_pages=request.max_pages or 1000
+        max_pages=request.max_pages or 1000,
     )
 
-    logger.info(f"Background task added for domain: {request.base_url}, job_id: {result['job_id']}")
+    logger.info(
+        f"Background task added for domain: {request.base_url}, job_id: {result['job_id']}"
+    )
 
     # Return the response
     return SitemapScrapingResponse(
         job_id=result["job_id"],
         status_url=result["status_url"],
-        created_at=datetime.utcnow().isoformat()
+        created_at=datetime.utcnow().isoformat(),
     )
 
+
 # ===== Batch Domain Scan =====
+
 
 @router.post("/batch", response_model=BatchResponse)
 async def batch_scan_domains(
     background_tasks: BackgroundTasks,
     request: BatchRequest,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(verify_page_scraper_access)
+    current_user: Dict = Depends(verify_page_scraper_access),
 ) -> BatchResponse:
     """
     Process a batch of domains for page content.
@@ -196,7 +209,7 @@ async def batch_scan_domains(
             session=session,
             domains=request.domains,
             user_id=user_id,
-            max_pages=request.max_pages or 1000
+            max_pages=request.max_pages or 1000,
         )
 
     # Return the response
@@ -204,16 +217,18 @@ async def batch_scan_domains(
         batch_id=result["batch_id"],
         status_url=result["status_url"],
         job_count=result["job_count"],
-        created_at=datetime.utcnow().isoformat()
+        created_at=datetime.utcnow().isoformat(),
     )
 
+
 # ===== Job Status =====
+
 
 @router.get("/status/{job_id}", response_model=JobStatusResponse)
 async def get_job_status(
     job_id: str,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(verify_page_scraper_access)
+    current_user: Dict = Depends(verify_page_scraper_access),
 ) -> JobStatusResponse:
     """
     Get the status of a page scraping job.
@@ -232,20 +247,21 @@ async def get_job_status(
     async with session.begin():
         # Get job status within transaction
         status = await page_processing_service.get_job_status(
-            session=session,
-            job_id=job_id
+            session=session, job_id=job_id
         )
 
     # Return the response
     return JobStatusResponse(**status)
 
+
 # ===== Batch Status =====
+
 
 @router.get("/batch/{batch_id}/status", response_model=BatchStatusResponse)
 async def get_batch_status(
     batch_id: str,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(verify_page_scraper_access)
+    current_user: Dict = Depends(verify_page_scraper_access),
 ) -> BatchStatusResponse:
     """
     Get the status of a batch processing job.
@@ -264,8 +280,7 @@ async def get_batch_status(
     async with session.begin():
         # Get batch status within transaction
         status = await page_processing_service.get_batch_status(
-            session=session,
-            batch_id=batch_id
+            session=session, batch_id=batch_id
         )
 
     # Return the response

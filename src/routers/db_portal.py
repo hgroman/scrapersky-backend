@@ -7,7 +7,7 @@ serving as the source of truth for database schema information.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,25 +20,35 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 # Request Models
 class SqlQueryRequest(BaseModel):
     """Model for SQL query requests"""
+
     query: str = Field(..., description="SQL SELECT query to execute")
+
 
 class SchemaValidationRequest(BaseModel):
     """Model for schema validation requests"""
-    expected_schema: Dict[str, Any] = Field(..., description="Expected schema definition")
+
+    expected_schema: Dict[str, Any] = Field(
+        ..., description="Expected schema definition"
+    )
+
 
 # Response Models
 class TableInfo(BaseModel):
     """Basic table information"""
+
     schema_name: str
     table_name: str
     row_count: int
     last_analyzed: Optional[str] = None
 
+
 class ColumnInfo(BaseModel):
     """Column information"""
+
     column_name: str
     data_type: str
     is_nullable: bool
@@ -48,39 +58,50 @@ class ColumnInfo(BaseModel):
     precision: Optional[int] = None
     scale: Optional[int] = None
 
+
 class IndexInfo(BaseModel):
     """Index information"""
+
     index_name: str
     column_names: List[str]
     is_unique: bool
 
+
 class ForeignKeyInfo(BaseModel):
     """Foreign key information"""
+
     column_name: str
     foreign_table: str
     foreign_column: str
 
+
 class TableSchema(BaseModel):
     """Complete table schema"""
+
     table_name: str
     columns: List[ColumnInfo]
     indexes: List[IndexInfo]
     foreign_keys: List[ForeignKeyInfo]
 
+
 class ValidationResult(BaseModel):
     """Schema validation result"""
+
     is_valid: bool
     missing_columns: List[Dict[str, Any]]
     type_mismatches: List[Dict[str, Any]]
     extra_columns: List[Dict[str, Any]]
 
+
 class QueryResult(BaseModel):
     """SQL query result"""
+
     success: bool
     columns: Optional[List[str]] = None
     rows: Optional[List[Dict[str, Any]]] = None
     row_count: Optional[int] = None
     error: Optional[str] = None
+
 
 # API Endpoints
 @router.get("/tables", response_model=List[TableInfo], summary="List All Tables")
@@ -94,8 +115,13 @@ async def list_tables(session: AsyncSession = Depends(get_session_dependency)):
     async with session.begin():
         return await db_inspector.list_all_tables(session=session)
 
-@router.get("/tables/{table_name}", response_model=TableSchema, summary="Get Table Schema")
-async def get_table_schema(table_name: str, session: AsyncSession = Depends(get_session_dependency)):
+
+@router.get(
+    "/tables/{table_name}", response_model=TableSchema, summary="Get Table Schema"
+)
+async def get_table_schema(
+    table_name: str, session: AsyncSession = Depends(get_session_dependency)
+):
     """
     Get detailed schema information for a specific table.
 
@@ -105,11 +131,19 @@ async def get_table_schema(table_name: str, session: AsyncSession = Depends(get_
     async with session.begin():
         schema = await db_inspector.get_table_schema(table_name, session=session)
         if "error" in schema:
-            raise HTTPException(status_code=404, detail=f"Table '{table_name}' not found or error: {schema['error']}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Table '{table_name}' not found or error: {schema['error']}",
+            )
         return schema
 
+
 @router.get("/tables/{table_name}/sample", summary="Get Sample Data")
-async def get_sample_data(table_name: str, limit: int = Query(5, ge=1, le=100), session: AsyncSession = Depends(get_session_dependency)):
+async def get_sample_data(
+    table_name: str,
+    limit: int = Query(5, ge=1, le=100),
+    session: AsyncSession = Depends(get_session_dependency),
+):
     """
     Get sample data from a table for preview purposes.
 
@@ -122,8 +156,11 @@ async def get_sample_data(table_name: str, limit: int = Query(5, ge=1, le=100), 
             raise HTTPException(status_code=404, detail=data[0]["error"])
         return data
 
+
 @router.post("/query", response_model=QueryResult, summary="Execute SQL Query")
-async def execute_query(request: SqlQueryRequest, session: AsyncSession = Depends(get_session_dependency)):
+async def execute_query(
+    request: SqlQueryRequest, session: AsyncSession = Depends(get_session_dependency)
+):
     """
     Execute a safe, read-only SQL query for database inspection.
 
@@ -134,11 +171,22 @@ async def execute_query(request: SqlQueryRequest, session: AsyncSession = Depend
     async with session.begin():
         result = await db_inspector.execute_safe_query(request.query, session=session)
         if not result.get("success"):
-            raise HTTPException(status_code=400, detail=result.get("error", "Query execution failed"))
+            raise HTTPException(
+                status_code=400, detail=result.get("error", "Query execution failed")
+            )
         return result
 
-@router.post("/tables/{table_name}/validate", response_model=ValidationResult, summary="Validate Schema")
-async def validate_schema(table_name: str, request: SchemaValidationRequest, session: AsyncSession = Depends(get_session_dependency)):
+
+@router.post(
+    "/tables/{table_name}/validate",
+    response_model=ValidationResult,
+    summary="Validate Schema",
+)
+async def validate_schema(
+    table_name: str,
+    request: SchemaValidationRequest,
+    session: AsyncSession = Depends(get_session_dependency),
+):
     """
     Validate expected schema against actual database schema.
 
@@ -147,11 +195,16 @@ async def validate_schema(table_name: str, request: SchemaValidationRequest, ses
     and extra columns.
     """
     async with session.begin():
-        result = await db_inspector.validate_table_schema(table_name, request.expected_schema, session=session)
+        result = await db_inspector.validate_table_schema(
+            table_name, request.expected_schema, session=session
+        )
         return result
 
+
 @router.get("/tables/{table_name}/model", summary="Generate Model Code")
-async def generate_model(table_name: str, session: AsyncSession = Depends(get_session_dependency)):
+async def generate_model(
+    table_name: str, session: AsyncSession = Depends(get_session_dependency)
+):
     """
     Generate Python model code based on database schema.
 
@@ -161,6 +214,7 @@ async def generate_model(table_name: str, session: AsyncSession = Depends(get_se
     async with session.begin():
         code = await db_inspector.generate_model_code(table_name, session=session)
         return {"model_code": code}
+
 
 @router.get("/health", summary="Database Portal Health Check")
 async def health_check(session: AsyncSession = Depends(get_session_dependency)):
@@ -176,11 +230,13 @@ async def health_check(session: AsyncSession = Depends(get_session_dependency)):
             tables = await db_inspector.list_all_tables(session=session)
             return {
                 "status": "healthy" if tables else "warning",
-                "message": f"Successfully connected to database. Found {len(tables)} tables." if tables else "Connected to database but found no tables.",
-                "tables_count": len(tables)
+                "message": f"Successfully connected to database. Found {len(tables)} tables."
+                if tables
+                else "Connected to database but found no tables.",
+                "tables_count": len(tables),
             }
     except Exception as e:
         return {
             "status": "unhealthy",
-            "message": f"Failed to connect to database: {str(e)}"
+            "message": f"Failed to connect to database: {str(e)}",
         }

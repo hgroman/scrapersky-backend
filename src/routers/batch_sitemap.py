@@ -10,6 +10,7 @@ Transaction Management Pattern:
 - For background processing, get_background_session() is used to create new sessions
 - This follows the architectural principle: "Routers own transaction boundaries, services do not"
 """
+
 import asyncio
 import logging
 import os
@@ -21,7 +22,6 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing_extensions import TypedDict
 
 from ..auth.jwt_auth import DEFAULT_TENANT_ID, get_current_user
 from ..config.settings import settings
@@ -45,6 +45,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 # Define our own status response model using Pydantic
 class BatchStatusResponse(BaseModel):
     batch_id: str
@@ -65,6 +66,7 @@ class BatchStatusResponse(BaseModel):
     class Config:
         from_attributes = True  # For SQLAlchemy model compatibility
 
+
 # Development mode utilities
 def is_development_mode() -> bool:
     """
@@ -73,10 +75,9 @@ def is_development_mode() -> bool:
     """
     dev_mode = os.getenv("SCRAPER_SKY_DEV_MODE", "").lower() == "true"
     if dev_mode:
-        logger.warning(
-            "⚠️ Running in DEVELOPMENT mode - ALL AUTH CHECKS BYPASSED ⚠️"
-        )
+        logger.warning("⚠️ Running in DEVELOPMENT mode - ALL AUTH CHECKS BYPASSED ⚠️")
     return dev_mode or settings.environment.lower() in ["development", "dev"]
+
 
 async def get_development_user():
     """
@@ -92,20 +93,20 @@ async def get_development_user():
         "roles": ["admin"],
         "permissions": ["*"],
         "auth_method": "dev_mode",
-        "is_admin": True
+        "is_admin": True,
     }
 
+
 # Choose the appropriate user dependency based on development mode
-user_dependency = (
-    get_development_user if is_development_mode() else get_current_user
-)
+user_dependency = get_development_user if is_development_mode() else get_current_user
+
 
 # Request and response models
 class SitemapBatchRequest(BaseModel):
     domains: List[str] = Field(..., description="List of domains to process")
     max_pages: int = Field(1000, description="Maximum pages to process per domain")
 
-    @validator('domains')
+    @validator("domains")
     def validate_domains(cls, domains):
         # Basic validation of domains
         if not domains:
@@ -120,7 +121,7 @@ class SitemapBatchRequest(BaseModel):
 
         return domains
 
-    @validator('max_pages')
+    @validator("max_pages")
     def validate_max_pages(cls, max_pages):
         if max_pages < 1:
             raise ValueError("max_pages must be at least 1")
@@ -128,11 +129,13 @@ class SitemapBatchRequest(BaseModel):
             raise ValueError("max_pages cannot exceed 10000")
         return max_pages
 
+
 class SitemapBatchResponse(BaseModel):
     batch_id: str
     status: str
     total_domains: int
     status_url: str
+
 
 @router.post("/api/v3/sitemap/batch/create", response_model=SitemapBatchResponse)
 async def create_sitemap_batch(
@@ -149,14 +152,18 @@ async def create_sitemap_batch(
     """
     # Generate batch ID
     batch_id = str(uuid.uuid4())
-    logger.info(f"Creating sitemap batch {batch_id} with {len(request.domains)} domains")
+    logger.info(
+        f"Creating sitemap batch {batch_id} with {len(request.domains)} domains"
+    )
 
     try:
         # Router owns the transaction boundary - session is already managed by FastAPI dependency
         # Get user ID from current_user
         user_id = current_user.get("id", current_user.get("user_id"))
         if not user_id:
-            user_id = "5905e9fe-6c61-4694-b09a-6602017b000a"  # Default to test user if no ID
+            user_id = (
+                "5905e9fe-6c61-4694-b09a-6602017b000a"  # Default to test user if no ID
+            )
             logger.warning(f"No user ID found, using default: {user_id}")
 
         # Create batch record using existing function
@@ -165,7 +172,7 @@ async def create_sitemap_batch(
             batch_id=batch_id,
             domains=request.domains,
             user_id=user_id,
-            options={"max_concurrent": 5, "max_pages": request.max_pages}
+            options={"max_concurrent": 5, "max_pages": request.max_pages},
         )
 
         # Add background task to process the batch
@@ -174,7 +181,7 @@ async def create_sitemap_batch(
             batch_id=batch_id,
             domains=request.domains,
             user_id=str(user_id),
-            max_pages=request.max_pages
+            max_pages=request.max_pages,
         )
 
         # Return immediate response with batch details
@@ -182,16 +189,18 @@ async def create_sitemap_batch(
             batch_id=batch_id,
             status="pending",
             total_domains=len(request.domains),
-            status_url=f"/api/v3/sitemap/batch/status/{batch_id}"
+            status_url=f"/api/v3/sitemap/batch/status/{batch_id}",
         )
     except Exception as e:
         logger.error(f"Error creating sitemap batch: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create sitemap batch: {str(e)}"
+            status_code=500, detail=f"Failed to create sitemap batch: {str(e)}"
         )
 
-@router.get("/api/v3/sitemap/batch/status/{batch_id}", response_model=BatchStatusResponse)
+
+@router.get(
+    "/api/v3/sitemap/batch/status/{batch_id}", response_model=BatchStatusResponse
+)
 async def get_sitemap_batch_status(
     batch_id: str,
     session: AsyncSession = Depends(get_session_dependency),
@@ -205,25 +214,19 @@ async def get_sitemap_batch_status(
     try:
         # Router owns the transaction boundary - session is already managed by FastAPI dependency
         logger.info(f"Getting status for sitemap batch {batch_id}")
-        batch_status = await get_batch_status(
-            session=session,
-            batch_id=batch_id
-        )
+        batch_status = await get_batch_status(session=session, batch_id=batch_id)
 
         # Convert dict to Pydantic model for validation and serialization
         return BatchStatusResponse(**batch_status)
     except Exception as e:
         logger.error(f"Error getting sitemap batch status: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get batch status: {str(e)}"
+            status_code=500, detail=f"Failed to get batch status: {str(e)}"
         )
 
+
 async def process_sitemap_batch_with_own_session(
-    batch_id: str,
-    domains: List[str],
-    user_id: str,
-    max_pages: int = 1000
+    batch_id: str, domains: List[str], user_id: str, max_pages: int = 1000
 ) -> None:
     """
     Process a batch of domains for sitemap scanning with its own database session.
@@ -245,12 +248,14 @@ async def process_sitemap_batch_with_own_session(
             # Session already manages its own transaction
             batch = await BatchJob.get_by_batch_id(session, batch_id)
             if batch:
-                setattr(batch, "status", BATCH_STATUS_PROCESSING)
-                setattr(batch, "start_time", func.now())
+                batch.status = BATCH_STATUS_PROCESSING
+                batch.start_time = func.now()
                 await session.flush()
                 logger.info(f"Updated batch {batch_id} status to processing")
     except Exception as e:
-        logger.error(f"Error updating batch status to processing: {str(e)}", exc_info=True)
+        logger.error(
+            f"Error updating batch status to processing: {str(e)}", exc_info=True
+        )
 
     # Track domain processing results
     domain_results = {}
@@ -265,10 +270,7 @@ async def process_sitemap_batch_with_own_session(
             # Process domain with its own session
             job_id = str(uuid.uuid4())
             await process_domain_with_own_session(
-                job_id=job_id,
-                domain=domain,
-                user_id=user_id,
-                max_urls=max_pages
+                job_id=job_id, domain=domain, user_id=user_id, max_urls=max_pages
             )
 
             # Domain processed successfully
@@ -281,9 +283,11 @@ async def process_sitemap_batch_with_own_session(
                 "start_time": domain_start_time.isoformat(),
                 "end_time": domain_end_time.isoformat(),
                 "processing_time": processing_time,
-                "error": None
+                "error": None,
             }
-            logger.info(f"Successfully processed domain {domain} in {processing_time:.2f} seconds")
+            logger.info(
+                f"Successfully processed domain {domain} in {processing_time:.2f} seconds"
+            )
             return (domain, result, True)
 
         except Exception as e:
@@ -291,7 +295,7 @@ async def process_sitemap_batch_with_own_session(
             domain_end_time = datetime.utcnow()
             processing_time = (domain_end_time - domain_start_time).total_seconds()
 
-            job_id_str = job_id if 'job_id' in locals() else None
+            job_id_str = job_id if "job_id" in locals() else None
 
             result = {
                 "status": "failed",
@@ -299,7 +303,7 @@ async def process_sitemap_batch_with_own_session(
                 "start_time": domain_start_time.isoformat(),
                 "end_time": domain_end_time.isoformat(),
                 "processing_time": processing_time,
-                "error": str(e)
+                "error": str(e),
             }
             logger.error(f"Error processing domain {domain}: {str(e)}", exc_info=True)
             return (domain, result, False)
@@ -324,7 +328,10 @@ async def process_sitemap_batch_with_own_session(
     for i, result in enumerate(results):
         # Handle exceptions from gather
         if isinstance(result, (Exception, BaseException)):
-            logger.error(f"Task exception for domain {domains[i] if i < len(domains) else 'unknown'}: {str(result)}", exc_info=True)
+            logger.error(
+                f"Task exception for domain {domains[i] if i < len(domains) else 'unknown'}: {str(result)}",
+                exc_info=True,
+            )
             failed_count += 1
 
             # Add error entry to domain_results
@@ -333,7 +340,7 @@ async def process_sitemap_batch_with_own_session(
                 "error": str(result),
                 "start_time": datetime.utcnow().isoformat(),
                 "end_time": datetime.utcnow().isoformat(),
-                "processing_time": 0
+                "processing_time": 0,
             }
             continue
 
@@ -347,7 +354,10 @@ async def process_sitemap_batch_with_own_session(
                 failed_count += 1
         except Exception as process_error:
             # Handle any unexpected errors in processing results
-            logger.error(f"Error processing result for index {i}: {str(process_error)}", exc_info=True)
+            logger.error(
+                f"Error processing result for index {i}: {str(process_error)}",
+                exc_info=True,
+            )
             failed_count += 1
             continue
 
@@ -358,7 +368,9 @@ async def process_sitemap_batch_with_own_session(
                     # Session already manages its own transaction
                     batch = await BatchJob.get_by_batch_id(session, batch_id)
                     if batch:
-                        batch.update_progress(completed=completed_count, failed=failed_count)
+                        batch.update_progress(
+                            completed=completed_count, failed=failed_count
+                        )
 
                         # Update metadata with results
                         batch_dict = batch.to_dict()
@@ -367,13 +379,19 @@ async def process_sitemap_batch_with_own_session(
                             metadata = {}
                         metadata["domain_results"] = domain_results
                         metadata["last_updated"] = datetime.utcnow().isoformat()
-                        metadata["progress_percentage"] = ((completed_count + failed_count) / total_domains) * 100
-                        setattr(batch, "batch_metadata", metadata)
+                        metadata["progress_percentage"] = (
+                            (completed_count + failed_count) / total_domains
+                        ) * 100
+                        batch.batch_metadata = metadata
 
                         await session.flush()
-                        logger.debug(f"Updated batch progress: {completed_count} completed, {failed_count} failed, {i+1}/{len(results)} processed")
+                        logger.debug(
+                            f"Updated batch progress: {completed_count} completed, {failed_count} failed, {i+1}/{len(results)} processed"
+                        )
             except Exception as update_error:
-                logger.error(f"Error updating batch progress: {str(update_error)}", exc_info=True)
+                logger.error(
+                    f"Error updating batch progress: {str(update_error)}", exc_info=True
+                )
 
     # Update final batch status
     try:
@@ -390,8 +408,8 @@ async def process_sitemap_batch_with_own_session(
                     final_status = BATCH_STATUS_COMPLETED  # Partial success
 
                 # Update batch
-                setattr(batch, "status", final_status)
-                setattr(batch, "end_time", func.now())
+                batch.status = final_status
+                batch.end_time = func.now()
 
                 # Update metadata with domain results
                 batch_dict = batch.to_dict()
@@ -405,9 +423,11 @@ async def process_sitemap_batch_with_own_session(
                 metadata["failed_domains"] = failed_count
                 metadata["total_domains"] = total_domains
                 metadata["completion_percentage"] = 100.0
-                setattr(batch, "batch_metadata", metadata)
+                batch.batch_metadata = metadata
 
                 await session.flush()
-                logger.info(f"Batch {batch_id} processing complete: {completed_count} succeeded, {failed_count} failed")
+                logger.info(
+                    f"Batch {batch_id} processing complete: {completed_count} succeeded, {failed_count} failed"
+                )
     except Exception as e:
         logger.error(f"Error updating final batch status: {str(e)}", exc_info=True)

@@ -5,8 +5,8 @@ This is a minimal implementation of a background task handler that can be used
 to verify FastAPI background task execution. It has minimal dependencies and
 does not attempt to interact with the database.
 """
+
 import logging
-import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +19,7 @@ logger = logging.getLogger("simple_task_test")
 # Create markers directory if it doesn't exist
 MARKERS_DIR = Path("/tmp/scraper_sky_task_markers")
 MARKERS_DIR.mkdir(exist_ok=True, parents=True)
+
 
 async def simple_test_task(test_id: str, additional_data: Optional[str] = None) -> None:
     """
@@ -75,6 +76,7 @@ async def simple_test_task(test_id: str, additional_data: Optional[str] = None) 
                 f.write(f"ERROR: {error_msg}\n")
         except:
             pass
+
 
 def verify_simple_task_execution(test_id: str) -> bool:
     """

@@ -4,7 +4,7 @@ Main FastAPI Application
 This module is the entry point for the FastAPI application and handles
 the setup of all routes, middleware, and extensions.
 """
-import inspect
+
 import logging
 import os
 
@@ -16,17 +16,18 @@ setup_logging()
 # -------------------------------------
 
 from contextlib import asynccontextmanager
-from typing import Any, Coroutine, Dict, List
+from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.routing import APIRoute  # Import APIRoute
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.routing import Route
 
+# Import the runtime tracer
+from .config.runtime_tracer import get_loaded_files, start_tracing, stop_tracing
 from .health.db_health import check_database_connection
 from .routers.batch_page_scraper import router as batch_page_scraper_api_router
 from .routers.batch_sitemap import router as batch_sitemap_api_router
@@ -35,6 +36,7 @@ from .routers.dev_tools import router as dev_tools_api_router
 from .routers.domains import (
     router as domains_api_router,  # Added import for domains router
 )
+from .routers.email_scanner import router as email_scanner_api_router
 
 # Import routers - Refactored to import the router instance directly
 from .routers.google_maps_api import router as google_maps_api_router
@@ -53,13 +55,10 @@ from .routers.sitemap_files import (
 from .routers.sqlalchemy import (
     routers as sqlalchemy_routers,  # Import SQLAlchemy routers
 )
-from .routers.email_scanner import router as email_scanner_api_router
 
 # Import the shared scheduler instance and its lifecycle functions
-from .scheduler_instance import scheduler, shutdown_scheduler, start_scheduler
+from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
-# Import the runtime tracer
-from .config.runtime_tracer import start_tracing, stop_tracing, get_loaded_files
 
 # Import only the setup functions now, not shutdown
 from .services.domain_scheduler import setup_domain_scheduler
@@ -78,6 +77,7 @@ from .session.async_session import get_session
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -101,7 +101,7 @@ async def lifespan(app: FastAPI):
     try:
         setup_domain_scheduler()
     except Exception as e:
-         logger.error(f"Failed to setup Domain scheduler job: {e}", exc_info=True)
+        logger.error(f"Failed to setup Domain scheduler job: {e}", exc_info=True)
 
     try:
         setup_sitemap_scheduler()
@@ -111,11 +111,14 @@ async def lifespan(app: FastAPI):
     try:
         setup_domain_sitemap_submission_scheduler()
     except Exception as e:
-        logger.error(f"Failed to setup Domain Sitemap Submission scheduler job: {e}", exc_info=True)
+        logger.error(
+            f"Failed to setup Domain Sitemap Submission scheduler job: {e}",
+            exc_info=True,
+        )
 
     logger.info("Finished adding jobs to shared scheduler.")
 
-    yield # Application runs here
+    yield  # Application runs here
 
     logger.info("Shutting down the ScraperSky API - Lifespan End")
 
@@ -124,7 +127,7 @@ async def lifespan(app: FastAPI):
     final_loaded_files = get_loaded_files()
     logger.info(f"Total unique /app/src/*.py files loaded: {len(final_loaded_files)}")
     for file_path in sorted(list(final_loaded_files)):
-         logger.info(f"LOADED_SRC_FILE: {file_path}")
+        logger.info(f"LOADED_SRC_FILE: {file_path}")
 
     # Shutdown the shared scheduler instance
     shutdown_scheduler()
@@ -136,6 +139,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error closing session manager: {e}", exc_info=True)
 
+
 # Update the FastAPI app initialization to use the lifespan context manager
 app = FastAPI(
     title="ScraperSky API",
@@ -145,7 +149,7 @@ app = FastAPI(
     docs_url="/docs",  # Standard docs URL
     redoc_url="/redoc",  # Standard redoc URL
     openapi_url="/openapi.json",  # Standard OpenAPI schema URL
-    lifespan=lifespan  # Use the lifespan context manager
+    lifespan=lifespan,  # Use the lifespan context manager
 )
 
 # TENANT ISOLATION COMPLETELY REMOVED
@@ -180,6 +184,7 @@ async def get_api_schema():
     )
     return schema
 
+
 # Custom Swagger and ReDoc routes
 @app.get("/api/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
@@ -194,6 +199,7 @@ async def custom_swagger_ui_html():
         swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
     )
 
+
 @app.get("/api/redoc", include_in_schema=False)
 async def redoc_html():
     """
@@ -204,6 +210,7 @@ async def redoc_html():
         title=f"{app.title} - ReDoc",
         redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
     )
+
 
 @app.get("/api/documentation", include_in_schema=False)
 async def documentation_page():
@@ -616,6 +623,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code></pre>
     """
     return HTMLResponse(content=html_content, status_code=200)
 
+
 # Import settings from central config
 from src.config.settings import settings
 
@@ -649,8 +657,9 @@ logger.info("OpenAPI documentation paths should be publicly accessible:")
 for path in ["/docs", "/redoc", "/openapi.json", "/api/docs", "/api/redoc"]:
     logger.info(f"  - {path}")
 
+
 # Logging middleware
-@app.middleware("http") # RE-ENABLED
+@app.middleware("http")  # RE-ENABLED
 async def debug_request_middleware(request: Request, call_next):
     logger.debug(f"Request: {request.method} {request.url.path}")
     try:
@@ -660,6 +669,7 @@ async def debug_request_middleware(request: Request, call_next):
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
         raise
+
 
 # Add SQLAlchemy routers with FastAPI's built-in error handling
 for router in sqlalchemy_routers:
@@ -687,11 +697,17 @@ logger.info("Including API routers...")
 # --- END IMPORTANT ROUTER PREFIX CONVENTION --- #
 
 # Include all routers - Refactored to use imported instances
-app.include_router(google_maps_api_router) # Prefix is defined within the router itself
-app.include_router(modernized_sitemap_api_router) # Correct: Assuming router defines full /api/v3/sitemap prefix
-app.include_router(batch_page_scraper_api_router, prefix="/api/v3", tags=["Batch Page Scraper"])
-app.include_router(modernized_page_scraper_api_router, prefix="/api/v3", tags=["Page Scraper"])
-app.include_router(dev_tools_api_router) # Correct: Router defines its own full prefix
+app.include_router(google_maps_api_router)  # Prefix is defined within the router itself
+app.include_router(
+    modernized_sitemap_api_router
+)  # Correct: Assuming router defines full /api/v3/sitemap prefix
+app.include_router(
+    batch_page_scraper_api_router, prefix="/api/v3", tags=["Batch Page Scraper"]
+)
+app.include_router(
+    modernized_page_scraper_api_router, prefix="/api/v3", tags=["Page Scraper"]
+)
+app.include_router(dev_tools_api_router)  # Correct: Router defines its own full prefix
 app.include_router(db_portal_api_router, prefix="/api/v3", tags=["DB Portal"])
 app.include_router(profile_api_router, prefix="/api/v3", tags=["Profile"])
 app.include_router(batch_sitemap_api_router, prefix="/api/v3", tags=["Batch Sitemap"])
@@ -700,10 +716,16 @@ app.include_router(batch_sitemap_api_router, prefix="/api/v3", tags=["Batch Site
 # app.include_router(places_staging_api_router, prefix="/api/v3/") # Include with trailing slash
 # Correct inclusion according to convention doc 23
 app.include_router(places_staging_api_router, prefix="/api/v3")
-app.include_router(local_businesses_api_router) # REMOVED prefix='/api/v3' as it's defined in the router
-app.include_router(domains_api_router, tags=["Domains"]) # Removed prefix="/api/v3"
-app.include_router(sitemap_files_router) # Add the new sitemap files router (prefix defined within it)
-app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"]) # Include the email scanner router
+app.include_router(
+    local_businesses_api_router
+)  # REMOVED prefix='/api/v3' as it's defined in the router
+app.include_router(domains_api_router, tags=["Domains"])  # Removed prefix="/api/v3"
+app.include_router(
+    sitemap_files_router
+)  # Add the new sitemap files router (prefix defined within it)
+app.include_router(
+    email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"]
+)  # Include the email scanner router
 
 # Include SQLAlchemy demo routers if needed
 # for router in sqlalchemy_routers:
@@ -717,15 +739,19 @@ for route in app.routes:
     logger.info(f"Route: {str(route)}")
 
 # Serve static files with absolute path
-static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+static_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+
 # Middleware to add Cache-Control header
-@app.middleware("http") # RE-ENABLED
+@app.middleware("http")  # RE-ENABLED
 async def add_cache_control_header(request: Request, call_next):
     response = await call_next(request)
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
+
 
 # Root routes
 @app.get("/")
@@ -733,10 +759,12 @@ async def root():
     """Redirect root to the main dashboard."""
     return RedirectResponse(url="/static/index.html")
 
+
 @app.get("/docs")
 async def docs_redirect():
     """Redirect /docs to /api/docs for convenience."""
     return RedirectResponse(url="/api/docs")
+
 
 # Utility view routes
 @app.get("/sitemap-viewer")
@@ -744,20 +772,24 @@ async def sitemap_viewer():
     """Redirect to sitemap viewer frontend."""
     return RedirectResponse(url="/static/contentmap.html")
 
+
 @app.get("/static/sitemap-analyzer.html")
 async def legacy_sitemap_analyzer():
     """Redirect from old sitemap-analyzer.html path to new contentmap.html path."""
     return RedirectResponse(url="/static/contentmap.html")
+
 
 @app.get("/sitemap-data-viewer")
 async def sitemap_data_viewer():
     """Redirect to sitemap data viewer frontend."""
     return RedirectResponse(url="/static/sitemap-data-viewer.html")
 
+
 @app.get("/email-scanner")
 async def email_scanner_view():
     """Redirect to email scanner frontend."""
     return RedirectResponse(url="/static/email-scanner.html")
+
 
 # RBAC route removed
 # @app.get("/rbac-management")
@@ -765,26 +797,31 @@ async def email_scanner_view():
 #     """Redirect to RBAC management frontend."""
 #     return RedirectResponse(url="/static/rbac-management.html")
 
+
 @app.get("/batch-test")
 async def batch_test_view():
     """Redirect to batch test frontend."""
     return RedirectResponse(url="/static/batch-test.html")
+
 
 @app.get("/db-portal")
 async def db_portal_view():
     """Redirect to database portal frontend."""
     return RedirectResponse(url="/static/db-portal.html")
 
+
 @app.get("/api-test")
 async def api_test_view():
     """Redirect to API test frontend."""
     return RedirectResponse(url="/static/api-test.html")
+
 
 # Health check endpoints
 @app.get("/health", tags=["health"])
 async def health_check():
     """Basic health check endpoint."""
     return {"status": "ok"}
+
 
 @app.get("/health/database", tags=["health"])
 async def database_health():
@@ -794,46 +831,53 @@ async def database_health():
         if not is_healthy:
             return JSONResponse(
                 status_code=500,
-                content={"status": "error", "message": "Database connection failed"}
+                content={"status": "error", "message": "Database connection failed"},
             )
         return {"status": "ok", "message": "Database connection successful"}
 
+
 # Exception handlers
 @app.exception_handler(StarletteHTTPException)
-async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+async def custom_http_exception_handler(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
     """Handle Starlette HTTP exceptions."""
     return JSONResponse(
         status_code=exc.status_code,
-        content={"error": True, "message": str(exc.detail), "status_code": exc.status_code}
+        content={
+            "error": True,
+            "message": str(exc.detail),
+            "status_code": exc.status_code,
+        },
     )
 
+
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """Handle request validation errors with standardized format."""
     errors = []
     for error in exc.errors():
-        errors.append({
-            "loc": error.get("loc", []),
-            "msg": error.get("msg", ""),
-            "type": error.get("type", "")
-        })
+        errors.append(
+            {
+                "loc": error.get("loc", []),
+                "msg": error.get("msg", ""),
+                "type": error.get("type", ""),
+            }
+        )
 
-    return JSONResponse(
-        status_code=422,
-        content={"detail": errors, "error": True}
-    )
+    return JSONResponse(status_code=422, content={"detail": errors, "error": True})
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle HTTP exceptions with standardized format."""
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            "error": True,
-            "message": exc.detail,
-            "status_code": exc.status_code
-        }
+        content={"error": True, "message": exc.detail, "status_code": exc.status_code},
     )
+
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -845,9 +889,10 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
             "error": True,
             "message": "Internal server error",
             "error_detail": str(exc),
-            "status_code": 500
-        }
+            "status_code": 500,
+        },
     )
+
 
 # --- TEMPORARY DEBUG ROUTE LIST --- #
 @app.get("/debug/routes")
@@ -860,12 +905,15 @@ def list_routes():
         }
         # Check specifically for APIRoute to safely access methods
         if isinstance(route, APIRoute):
-             route_info["methods"] = list(route.methods)
+            route_info["methods"] = list(route.methods)
         else:
-             route_info["methods"] = []
+            route_info["methods"] = []
         url_list.append(route_info)
     return url_list
+
+
 # ------------------------------------ #
+
 
 # --- Endpoint to retrieve loaded files --- ADDED
 @app.get("/debug/loaded-src-files", tags=["Debug"], response_model=List[str])
@@ -874,6 +922,8 @@ async def get_loaded_src_files_endpoint():
     files = get_loaded_files()
     return sorted(list(files))
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host=settings.host, port=settings.port)

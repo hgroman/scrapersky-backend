@@ -3,15 +3,14 @@ Domain SQLAlchemy Model
 
 Represents website domains being processed by ScraperSky.
 """
+
 import enum
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import (
     ARRAY,
-    JSON,
-    UUID,
     Boolean,
     Column,
     DateTime,
@@ -31,20 +30,25 @@ from .tenant import DEFAULT_TENANT_ID
 
 logger = logging.getLogger(__name__)
 
+
 # Python Enum for USER curation status
 class SitemapCurationStatusEnum(enum.Enum):
     New = "New"
     Selected = "Selected"
     Maybe = "Maybe"
-    Not_a_Fit = "Not a Fit" # Match API potentially needed space
+    Not_a_Fit = "Not a Fit"  # Match API potentially needed space
     Archived = "Archived"
+
 
 # Define the enum for the sitemap analysis background process status
 class SitemapAnalysisStatusEnum(enum.Enum):
     Queued = "Queued"
     Processing = "Processing"
-    Completed = "Completed"  # Using Completed instead of submitted as per standardization
+    Completed = (
+        "Completed"  # Using Completed instead of submitted as per standardization
+    )
     Error = "Error"  # Using Error instead of failed as per standardization
+
 
 class Domain(Base, BaseModel):
     """
@@ -95,11 +99,18 @@ class Domain(Base, BaseModel):
         # Sitemap Curation and Analysis
         sitemap_curation_status: Curation status of the sitemap
     """
+
     __tablename__ = "domains"
 
     # Core fields
     domain = Column(String, nullable=False, index=True, unique=True)
-    tenant_id = Column(PGUUID, ForeignKey("tenants.id"), nullable=False, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID))
+    tenant_id = Column(
+        PGUUID,
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        default=lambda: uuid.UUID(DEFAULT_TENANT_ID),
+    )
 
     # Status and metadata
     created_by = Column(PGUUID)
@@ -137,27 +148,58 @@ class Domain(Base, BaseModel):
     total_sitemaps = Column(Integer, default=0)
 
     # Batch processing reference
-    batch_id = Column(PGUUID, ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"), index=True, nullable=True)
+    batch_id = Column(
+        PGUUID,
+        ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
 
     # Foreign key back to the originating local business (if created via that workflow)
-    local_business_id = Column(PGUUID, ForeignKey("local_businesses.id", ondelete="SET NULL"), index=True, nullable=True)
+    local_business_id = Column(
+        PGUUID,
+        ForeignKey("local_businesses.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
 
     # --- New fields for User-Triggered Sitemap Analysis --- #
-    sitemap_analysis_status = Column(SQLAlchemyEnum(SitemapAnalysisStatusEnum, name="SitemapAnalysisStatusEnum", create_type=False), nullable=True, index=True)
+    sitemap_analysis_status = Column(
+        SQLAlchemyEnum(
+            SitemapAnalysisStatusEnum,
+            name="SitemapAnalysisStatusEnum",
+            create_type=False,
+        ),
+        nullable=True,
+        index=True,
+    )
     sitemap_analysis_error = Column(Text, nullable=True)
     # ------------------------------------------------------- #
 
     # --- New fields for Sitemap Curation and Analysis --- #
-    sitemap_curation_status = Column(SQLAlchemyEnum(SitemapCurationStatusEnum, name="SitemapCurationStatusEnum", create_type=False), nullable=True, default=SitemapCurationStatusEnum.New, index=True)
+    sitemap_curation_status = Column(
+        SQLAlchemyEnum(
+            SitemapCurationStatusEnum,
+            name="SitemapCurationStatusEnum",
+            create_type=False,
+        ),
+        nullable=True,
+        default=SitemapCurationStatusEnum.New,
+        index=True,
+    )
     # ---------------------------------------------------- #
 
     # Relationships
     jobs = relationship("Job", back_populates="domain", lazy="selectin")
     batch = relationship("BatchJob", back_populates="domains")
     tenant = relationship("Tenant")
-    sitemap_files = relationship("SitemapFile", back_populates="domain", cascade="all, delete-orphan")
+    sitemap_files = relationship(
+        "SitemapFile", back_populates="domain", cascade="all, delete-orphan"
+    )
     pages = relationship("Page", back_populates="domain", cascade="all, delete-orphan")
-    contacts = relationship("Contact", back_populates="domain", cascade="all, delete-orphan")
+    contacts = relationship(
+        "Contact", back_populates="domain", cascade="all, delete-orphan"
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -169,19 +211,19 @@ class Domain(Base, BaseModel):
         result = model_to_dict(self)
 
         # Add convenience derived fields
-        domain_value = getattr(self, 'domain', None)
+        domain_value = getattr(self, "domain", None)
         if domain_value:
             result["domain_url"] = f"https://{domain_value}"
         else:
             result["domain_url"] = None
 
         # Format timestamp for easier client-side handling
-        last_scan = getattr(self, 'last_scan', None)
+        last_scan = getattr(self, "last_scan", None)
         if last_scan:
             result["last_scan_iso"] = last_scan.isoformat()
 
         # Check for successful scans
-        domain_metadata = getattr(self, 'domain_metadata', None)
+        domain_metadata = getattr(self, "domain_metadata", None)
         result["has_metadata"] = bool(domain_metadata)
 
         return result
@@ -194,14 +236,14 @@ class Domain(Base, BaseModel):
             batch_id: Batch ID to associate with this domain
         """
         # Use setattr to avoid SQLAlchemy Column access issues
-        setattr(self, 'batch_id', batch_id)
+        self.batch_id = batch_id
 
     def mark_scanned(self) -> None:
         """
         Mark domain as successfully scanned.
         """
-        setattr(self, 'status', 'scanned')
-        setattr(self, 'last_scan', func.now())
+        self.status = "scanned"
+        self.last_scan = func.now()
 
     def mark_failed(self, error_message: Optional[str] = None) -> None:
         """
@@ -210,21 +252,26 @@ class Domain(Base, BaseModel):
         Args:
             error_message: Optional error message explaining failure
         """
-        setattr(self, 'status', 'failed')
-        setattr(self, 'last_scan', func.now())
+        self.status = "failed"
+        self.last_scan = func.now()
 
         # Store error in metadata if provided
-        if error_message and hasattr(self, 'domain_metadata'):
-            metadata = getattr(self, 'domain_metadata', {}) or {}
+        if error_message and hasattr(self, "domain_metadata"):
+            metadata = getattr(self, "domain_metadata", {}) or {}
             if not isinstance(metadata, dict):
                 metadata = {}
-            metadata['error'] = error_message
-            setattr(self, 'domain_metadata', metadata)
+            metadata["error"] = error_message
+            self.domain_metadata = metadata
 
     @classmethod
-    async def create_from_metadata(cls, session, domain: str,
-                                  metadata: Dict[str, Any], created_by: Optional[str] = None,
-                                  batch_id: Optional[str] = None) -> "Domain":
+    async def create_from_metadata(
+        cls,
+        session,
+        domain: str,
+        metadata: Dict[str, Any],
+        created_by: Optional[str] = None,
+        batch_id: Optional[str] = None,
+    ) -> "Domain":
         """
         Create a domain record from metadata dictionary.
 
@@ -245,6 +292,7 @@ class Domain(Base, BaseModel):
         # We still need to set tenant_id in the model as it's a non-nullable field
         # but we no longer filter queries by tenant_id
         from .tenant import DEFAULT_TENANT_ID
+
         tenant_id_uuid = uuid.UUID(DEFAULT_TENANT_ID)
 
         # Convert created_by to UUID if provided
@@ -253,7 +301,9 @@ class Domain(Base, BaseModel):
             try:
                 created_by_uuid = uuid.UUID(created_by)
             except (ValueError, TypeError):
-                logger.warning(f"Invalid UUID format for created_by: {created_by}, using None")
+                logger.warning(
+                    f"Invalid UUID format for created_by: {created_by}, using None"
+                )
                 # Leave as None if invalid
 
         # Extract contact info and social links from nested structure
@@ -267,40 +317,33 @@ class Domain(Base, BaseModel):
             created_by=created_by_uuid,
             status="active",
             domain_metadata=metadata,
-
             # Basic metadata
             title=metadata.get("title", ""),
             description=metadata.get("description", ""),
             favicon_url=metadata.get("favicon_url"),
             logo_url=metadata.get("logo_url"),
             language=metadata.get("language"),
-
             # Technology
             is_wordpress=metadata.get("is_wordpress", False),
             wordpress_version=metadata.get("wordpress_version"),
             has_elementor=metadata.get("has_elementor", False),
             tech_stack=metadata.get("tech_stack", {}),
-
             # Contact info - use empty lists as defaults to avoid None
             email_addresses=contact_info.get("email", []) or [],
             phone_numbers=contact_info.get("phone", []) or [],
-
             # Social media
             facebook_url=social_links.get("facebook"),
             twitter_url=social_links.get("twitter"),
             linkedin_url=social_links.get("linkedin"),
             instagram_url=social_links.get("instagram"),
             youtube_url=social_links.get("youtube"),
-
             # Sitemap data
             sitemap_urls=metadata.get("total_urls", 0),
             total_sitemaps=metadata.get("total_sitemaps", 0),
-
             # Batch reference
             batch_id=batch_id,
-
             # Update timestamp
-            last_scan=func.now()
+            last_scan=func.now(),
         )
 
         # Save to database
@@ -309,8 +352,9 @@ class Domain(Base, BaseModel):
         return domain_obj
 
     @classmethod
-    async def update_from_metadata(cls, session, domain_obj: "Domain",
-                                  metadata: Dict[str, Any]) -> "Domain":
+    async def update_from_metadata(
+        cls, session, domain_obj: "Domain", metadata: Dict[str, Any]
+    ) -> "Domain":
         """
         Update a domain record from metadata dictionary.
 
@@ -327,32 +371,44 @@ class Domain(Base, BaseModel):
         social_links = metadata.get("social_links", {})
 
         # Update fields - use setattr for safe attribute setting
-        setattr(domain_obj, 'domain_metadata', metadata)
-        setattr(domain_obj, 'title', metadata.get("title", domain_obj.title))
-        setattr(domain_obj, 'description', metadata.get("description", domain_obj.description))
-        setattr(domain_obj, 'favicon_url', metadata.get("favicon_url", domain_obj.favicon_url))
-        setattr(domain_obj, 'logo_url', metadata.get("logo_url", domain_obj.logo_url))
-        setattr(domain_obj, 'language', metadata.get("language", domain_obj.language))
+        domain_obj.domain_metadata = metadata
+        domain_obj.title = metadata.get("title", domain_obj.title)
+        domain_obj.description = metadata.get("description", domain_obj.description)
+        domain_obj.favicon_url = metadata.get("favicon_url", domain_obj.favicon_url)
+        domain_obj.logo_url = metadata.get("logo_url", domain_obj.logo_url)
+        domain_obj.language = metadata.get("language", domain_obj.language)
 
-        setattr(domain_obj, 'is_wordpress', metadata.get("is_wordpress", domain_obj.is_wordpress))
-        setattr(domain_obj, 'wordpress_version', metadata.get("wordpress_version", domain_obj.wordpress_version))
-        setattr(domain_obj, 'has_elementor', metadata.get("has_elementor", domain_obj.has_elementor))
-        setattr(domain_obj, 'tech_stack', metadata.get("tech_stack", domain_obj.tech_stack))
+        domain_obj.is_wordpress = metadata.get("is_wordpress", domain_obj.is_wordpress)
+        domain_obj.wordpress_version = metadata.get(
+            "wordpress_version", domain_obj.wordpress_version
+        )
+        domain_obj.has_elementor = metadata.get(
+            "has_elementor", domain_obj.has_elementor
+        )
+        domain_obj.tech_stack = metadata.get("tech_stack", domain_obj.tech_stack)
 
         # Use empty lists as defaults to avoid None values
-        setattr(domain_obj, 'email_addresses', contact_info.get("email", domain_obj.email_addresses) or [])
-        setattr(domain_obj, 'phone_numbers', contact_info.get("phone", domain_obj.phone_numbers) or [])
+        domain_obj.email_addresses = (
+            contact_info.get("email", domain_obj.email_addresses) or []
+        )
+        domain_obj.phone_numbers = (
+            contact_info.get("phone", domain_obj.phone_numbers) or []
+        )
 
-        setattr(domain_obj, 'facebook_url', social_links.get("facebook", domain_obj.facebook_url))
-        setattr(domain_obj, 'twitter_url', social_links.get("twitter", domain_obj.twitter_url))
-        setattr(domain_obj, 'linkedin_url', social_links.get("linkedin", domain_obj.linkedin_url))
-        setattr(domain_obj, 'instagram_url', social_links.get("instagram", domain_obj.instagram_url))
-        setattr(domain_obj, 'youtube_url', social_links.get("youtube", domain_obj.youtube_url))
+        domain_obj.facebook_url = social_links.get("facebook", domain_obj.facebook_url)
+        domain_obj.twitter_url = social_links.get("twitter", domain_obj.twitter_url)
+        domain_obj.linkedin_url = social_links.get("linkedin", domain_obj.linkedin_url)
+        domain_obj.instagram_url = social_links.get(
+            "instagram", domain_obj.instagram_url
+        )
+        domain_obj.youtube_url = social_links.get("youtube", domain_obj.youtube_url)
 
-        setattr(domain_obj, 'sitemap_urls', metadata.get("total_urls", domain_obj.sitemap_urls))
-        setattr(domain_obj, 'total_sitemaps', metadata.get("total_sitemaps", domain_obj.total_sitemaps))
-        setattr(domain_obj, 'last_scan', func.now())
-        setattr(domain_obj, 'status', 'scanned')  # Update status to show successful scan
+        domain_obj.sitemap_urls = metadata.get("total_urls", domain_obj.sitemap_urls)
+        domain_obj.total_sitemaps = metadata.get(
+            "total_sitemaps", domain_obj.total_sitemaps
+        )
+        domain_obj.last_scan = func.now()
+        domain_obj.status = "scanned"  # Update status to show successful scan
 
         # Add to session
         session.add(domain_obj)
@@ -360,7 +416,9 @@ class Domain(Base, BaseModel):
         return domain_obj
 
     @classmethod
-    async def get_by_id(cls, session, domain_id: Union[str, uuid.UUID]) -> Optional["Domain"]:
+    async def get_by_id(
+        cls, session, domain_id: Union[str, uuid.UUID]
+    ) -> Optional["Domain"]:
         """
         Get domain by ID.
 

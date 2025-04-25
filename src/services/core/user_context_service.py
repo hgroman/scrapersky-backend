@@ -9,10 +9,11 @@ providing a consistent interface for all modules that need user information.
 import logging
 import os
 import uuid
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
 
 class UserContextService:
     """
@@ -36,7 +37,9 @@ class UserContextService:
 
     def _log_configuration(self):
         """Log the current configuration for debugging."""
-        logger.info(f"UserContextService initialized with environment: {self._environment}")
+        logger.info(
+            f"UserContextService initialized with environment: {self._environment}"
+        )
         logger.info(f"Development user ID available: {self._dev_user_id is not None}")
         logger.info(f"System user ID available: {self._system_user_id is not None}")
 
@@ -59,9 +62,11 @@ class UserContextService:
         except (ValueError, AttributeError, TypeError):
             return False
 
-    def get_valid_user_id(self,
-                         user_id: Optional[str] = None,
-                         current_user: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    def get_valid_user_id(
+        self,
+        user_id: Optional[str] = None,
+        current_user: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
         """
         Get a valid user ID for database operations.
 
@@ -89,18 +94,24 @@ class UserContextService:
                 # Special case for API key authentication
                 system_id = self._system_user_id or self._dev_user_id
                 if system_id and self.is_valid_uuid(system_id):
-                    logger.debug(f"Using system user ID for API key authentication: {system_id}")
+                    logger.debug(
+                        f"Using system user ID for API key authentication: {system_id}"
+                    )
                     return str(uuid.UUID(system_id))
 
         # Try current_user from JWT authentication
-        if current_user and current_user.get('id'):
-            user_id_from_jwt = current_user.get('id')
+        if current_user and current_user.get("id"):
+            user_id_from_jwt = current_user.get("id")
             if self.is_valid_uuid(user_id_from_jwt):
                 logger.debug(f"Using user ID from JWT: {user_id_from_jwt}")
                 return str(uuid.UUID(user_id_from_jwt))
 
         # Fallback to environment-specific defaults
-        if self._environment == "development" and self._dev_user_id and self.is_valid_uuid(self._dev_user_id):
+        if (
+            self._environment == "development"
+            and self._dev_user_id
+            and self.is_valid_uuid(self._dev_user_id)
+        ):
             logger.debug(f"Using development user ID: {self._dev_user_id}")
             return str(uuid.UUID(self._dev_user_id))
 
@@ -112,9 +123,11 @@ class UserContextService:
         logger.error("No valid user ID available")
         return None
 
-    def get_user_name(self,
-                     user_name: Optional[str] = None,
-                     current_user: Optional[Dict[str, Any]] = None) -> str:
+    def get_user_name(
+        self,
+        user_name: Optional[str] = None,
+        current_user: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """
         Get a user name for attribution.
 
@@ -128,12 +141,14 @@ class UserContextService:
         if user_name:
             return user_name
 
-        if current_user and current_user.get('name'):
-            return current_user.get('name') or "System"
+        if current_user and current_user.get("name"):
+            return current_user.get("name") or "System"
 
         return "System"
 
-    def get_tenant_id(self, current_user: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    def get_tenant_id(
+        self, current_user: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
         """
         Get the tenant ID from the current user context.
 
@@ -150,15 +165,16 @@ class UserContextService:
         tenant_id = None
 
         # Try different possible locations in the user object
-        if current_user.get('tenant_id'):
-            tenant_id = current_user.get('tenant_id')
-        elif current_user.get('app_metadata', {}).get('tenant_id'):
-            tenant_id = current_user.get('app_metadata', {}).get('tenant_id')
-        elif current_user.get('user_metadata', {}).get('tenant_id'):
-            tenant_id = current_user.get('user_metadata', {}).get('tenant_id')
+        if current_user.get("tenant_id"):
+            tenant_id = current_user.get("tenant_id")
+        elif current_user.get("app_metadata", {}).get("tenant_id"):
+            tenant_id = current_user.get("app_metadata", {}).get("tenant_id")
+        elif current_user.get("user_metadata", {}).get("tenant_id"):
+            tenant_id = current_user.get("user_metadata", {}).get("tenant_id")
 
         # Return the tenant ID if found, None otherwise
         return tenant_id
+
 
 # Create a singleton instance
 user_context_service = UserContextService()

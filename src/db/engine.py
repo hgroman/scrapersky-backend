@@ -13,9 +13,8 @@ These parameters are non-negotiable and mandatory for all deployments.
 """
 
 import logging
-import os
 import uuid
-from urllib.parse import parse_qs, quote_plus, urlparse
+from urllib.parse import quote_plus
 
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -33,10 +32,10 @@ class DatabaseConfig:
             raise ValueError("SUPABASE_URL environment variable is not set")
 
         # Handle URL format with or without protocol
-        if '//' in self.supabase_url:
-            self.project_ref = self.supabase_url.split('//')[1].split('.')[0]
+        if "//" in self.supabase_url:
+            self.project_ref = self.supabase_url.split("//")[1].split(".")[0]
         else:
-            self.project_ref = self.supabase_url.split('.')[0]
+            self.project_ref = self.supabase_url.split(".")[0]
 
         # Database connection parameters - use settings where available
         self.user = f"postgres.{self.project_ref}"
@@ -85,7 +84,7 @@ class DatabaseConfig:
         logging.info(f"Generating DIRECT sync connection string to {self.host}")
         return (
             f"postgresql://{self.user}:{quote_plus(str(self.password))}"
-            f"@{self.host}:{self.port}/{self.dbname}" # Use self.host, self.port, self.user
+            f"@{self.host}:{self.port}/{self.dbname}"  # Use self.host, self.port, self.user
             f"?sslmode=require"
         )
 
@@ -93,6 +92,7 @@ class DatabaseConfig:
     def pooler_mode(self) -> bool:
         """Check if pooler connection details are configured in settings."""
         return all([self.pooler_host, self.pooler_port, self.pooler_user])
+
 
 def get_supavisor_ready_url(db_url: str) -> str:
     """
@@ -114,11 +114,13 @@ def get_supavisor_ready_url(db_url: str) -> str:
     else:
         return f"{db_url}?statement_cache_size=0"
 
+
 # Initialize database configuration
 db_config = DatabaseConfig()
 
 # Check if SQL echo is available in settings or use a default
-sql_echo = getattr(settings, 'sql_echo', False)
+sql_echo = getattr(settings, "sql_echo", False)
+
 
 # Configure connect_args differently depending on connection type
 def get_compatible_connect_args(is_async=True):
@@ -136,21 +138,19 @@ def get_compatible_connect_args(is_async=True):
         base_args = {
             "server_settings": {
                 "search_path": "public",
-                "application_name": "scraper_sky"
+                "application_name": "scraper_sky",
             },
             "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
             "ssl": "require",
             "command_timeout": settings.db_connection_timeout,
             "statement_cache_size": 0,
             "raw_sql": True,
-            "no_prepare": True
+            "no_prepare": True,
         }
 
         # When using connection pooler, add compatibility options
         if db_config.pooler_mode:
-            base_args["server_settings"].update({
-                "options": "-c search_path=public"
-            })
+            base_args["server_settings"].update({"options": "-c search_path=public"})
     else:
         # psycopg2 specific parameters
         base_args = {
@@ -158,6 +158,7 @@ def get_compatible_connect_args(is_async=True):
         }
 
     return base_args
+
 
 # Async connection arguments
 connect_args = get_compatible_connect_args(is_async=True)
@@ -175,21 +176,26 @@ engine = create_async_engine(
     execution_options={
         "isolation_level": "READ COMMITTED",
         "raw_sql": True,
-        "no_prepare": True
-    }
+        "no_prepare": True,
+    },
 )
 
 # Log successful engine creation with info about Supavisor parameters
-logging.info(f"SQLAlchemy async engine created with Supavisor connection pooling parameters")
+logging.info(
+    "SQLAlchemy async engine created with Supavisor connection pooling parameters"
+)
 logging.info(f"Connected to: {db_config.host or db_config.pooler_host}")
+
 
 # Function to get SQLAlchemy URL for Alembic migrations (sync)
 def get_sync_url():
     """Get the synchronous SQLAlchemy URL for migrations."""
     return db_config.sync_connection_string
 
+
 # Create a sync engine for direct database operations
 _sync_engine = None
+
 
 def get_sync_engine():
     """
@@ -203,8 +209,6 @@ def get_sync_engine():
     """
     global _sync_engine
     if _sync_engine is None:
-        import uuid
-
         from sqlalchemy import create_engine
 
         # Use compatible connect args for synchronous connections
@@ -216,7 +220,7 @@ def get_sync_engine():
             pool_pre_ping=True,
             pool_size=5,
             max_overflow=10,
-            connect_args=sync_connect_args
+            connect_args=sync_connect_args,
         )
         logging.info("Created synchronous SQLAlchemy engine")
     return _sync_engine

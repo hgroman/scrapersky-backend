@@ -3,12 +3,14 @@ Database Health Check
 
 This module provides health check functions for database connections.
 """
+
 import logging
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
+
 
 async def check_database_connection(session: AsyncSession) -> bool:
     """

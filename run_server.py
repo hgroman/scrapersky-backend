@@ -15,16 +15,20 @@ if __name__ == "__main__":
     enable_tracing = os.getenv("ENABLE_IMPORT_TRACING", "false").lower() == "true"
 
     # Disable reload if tracing is enabled, otherwise use standard logic
-    reload_enabled = (not enable_tracing) and (os.getenv("ENVIRONMENT", "development") == "development")
+    reload_enabled = (not enable_tracing) and (
+        os.getenv("ENVIRONMENT", "development") == "development"
+    )
 
     if enable_tracing:
         print("INFO: ENABLE_IMPORT_TRACING=true, Uvicorn reload DISABLED.")
     else:
-        print(f"INFO: ENABLE_IMPORT_TRACING=false/unset, Uvicorn reload={'ENABLED' if reload_enabled else 'DISABLED'}.")
+        print(
+            f"INFO: ENABLE_IMPORT_TRACING=false/unset, Uvicorn reload={'ENABLED' if reload_enabled else 'DISABLED'}."
+        )
 
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",
         port=port,
-        reload=reload_enabled # Use the calculated reload status
+        reload=reload_enabled,  # Use the calculated reload status
     )

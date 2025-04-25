@@ -3,8 +3,9 @@ Profile Router
 
 This module provides API endpoints for managing user profiles.
 """
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.jwt_auth import get_current_user
 from ..core.response import standard_response
-from ..models.profile import ProfileCreate, ProfileResponse, ProfileUpdate
+from ..models.profile import ProfileCreate, ProfileUpdate
 from ..models.tenant import DEFAULT_TENANT_ID
 from ..services.profile_service import ProfileService
 from ..session.async_session import get_session_dependency
@@ -25,10 +26,8 @@ logger = logging.getLogger(__name__)
 profile_service = ProfileService()
 
 # Create router
-router = APIRouter(
-    prefix="/api/v3/profiles",
-    tags=["profiles"]
-)
+router = APIRouter(prefix="/api/v3/profiles", tags=["profiles"])
+
 
 @router.get("", response_model=dict)
 async def get_profiles(
@@ -36,7 +35,7 @@ async def get_profiles(
     current_user: dict = Depends(get_current_user),
     db_params: Dict[str, Any] = Depends(get_db_params),
     limit: int = Query(100, ge=1, le=1000),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
 ):
     """
     Get a list of profiles.
@@ -58,10 +57,7 @@ async def get_profiles(
         # Get profiles with proper transaction context
         async with session.begin():
             profiles = await profile_service.get_profiles(
-                session=session,
-                tenant_id=DEFAULT_TENANT_ID,
-                limit=limit,
-                offset=offset
+                session=session, tenant_id=DEFAULT_TENANT_ID, limit=limit, offset=offset
             )
 
         return standard_response(profiles)
@@ -69,16 +65,14 @@ async def get_profiles(
         logger.error(f"Error getting profiles: {str(e)}")
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error getting profiles: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting profiles: {str(e)}")
+
 
 @router.get("/{profile_id}", response_model=dict)
 async def get_profile(
     profile_id: UUID,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Get a single profile by ID.
@@ -98,9 +92,7 @@ async def get_profile(
         # Get profile with proper transaction context
         async with session.begin():
             profile = await profile_service.get_profile(
-                session=session,
-                profile_id=profile_id,
-                tenant_id=DEFAULT_TENANT_ID
+                session=session, profile_id=profile_id, tenant_id=DEFAULT_TENANT_ID
             )
 
         return standard_response(profile)
@@ -108,16 +100,14 @@ async def get_profile(
         logger.error(f"Error getting profile: {str(e)}")
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error getting profile: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error getting profile: {str(e)}")
+
 
 @router.post("", response_model=dict)
 async def create_profile(
     profile: ProfileCreate,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Create a new profile.
@@ -140,7 +130,7 @@ async def create_profile(
                 session=session,
                 tenant_id=DEFAULT_TENANT_ID,
                 profile=profile,
-                created_by=current_user.get("user_id", "unknown")
+                created_by=current_user.get("user_id", "unknown"),
             )
 
         return standard_response(new_profile)
@@ -148,17 +138,15 @@ async def create_profile(
         logger.error(f"Error creating profile: {str(e)}")
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error creating profile: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error creating profile: {str(e)}")
+
 
 @router.put("/{profile_id}", response_model=dict)
 async def update_profile(
     profile_id: UUID,
     profile: ProfileUpdate,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Update an existing profile.
@@ -182,7 +170,7 @@ async def update_profile(
                 session=session,
                 profile_id=profile_id,
                 tenant_id=DEFAULT_TENANT_ID,
-                profile=profile
+                profile=profile,
             )
 
         return standard_response(updated_profile)
@@ -190,16 +178,14 @@ async def update_profile(
         logger.error(f"Error updating profile: {str(e)}")
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error updating profile: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
+
 
 @router.delete("/{profile_id}", response_model=dict)
 async def delete_profile(
     profile_id: UUID,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Delete a profile.
@@ -219,9 +205,7 @@ async def delete_profile(
         # Delete profile with proper transaction context
         async with session.begin():
             result = await profile_service.delete_profile(
-                session=session,
-                profile_id=profile_id,
-                tenant_id=DEFAULT_TENANT_ID
+                session=session, profile_id=profile_id, tenant_id=DEFAULT_TENANT_ID
             )
 
         return standard_response({"deleted": result})
@@ -229,7 +213,4 @@ async def delete_profile(
         logger.error(f"Error deleting profile: {str(e)}")
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error deleting profile: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error deleting profile: {str(e)}")

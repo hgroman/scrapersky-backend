@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 # Chat Models - REMOVED
+
 
 # Scraping Models
 class ScrapingRequest(BaseModel):
@@ -13,11 +14,13 @@ class ScrapingRequest(BaseModel):
     selectors: Optional[List[str]] = None
     max_depth: Optional[int] = 1
 
+
 class ScrapingResponse(BaseModel):
     url: str
     content: str
     title: Optional[str] = None
     timestamp: str
+
 
 # Sitemap Models
 class SocialLinks(BaseModel):
@@ -28,6 +31,7 @@ class SocialLinks(BaseModel):
     instagram: Optional[str] = None
     youtube: Optional[str] = None
 
+
 class ContactInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     email: Optional[str] = None
@@ -35,34 +39,37 @@ class ContactInfo(BaseModel):
     address: Optional[str] = None
     contact_page_url: Optional[str] = None
 
+
 class TechnologyStack(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     cms: Optional[str] = None
     analytics: Optional[str] = None
     frameworks: List[str] = []
 
+
 class TaskStatus(str, Enum):
-    QUEUED = 'queued'
-    IN_PROGRESS = 'in_progress'
-    COMPLETE = 'complete'
-    ERROR = 'error'
-    MANUAL_REVIEW = 'manual_review'
-    CANCELLED = 'cancelled'
-    PAUSED = 'paused'
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    COMPLETE = "complete"
+    ERROR = "error"
+    MANUAL_REVIEW = "manual_review"
+    CANCELLED = "cancelled"
+    PAUSED = "paused"
+
 
 class SiteMetadata(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     # Core Identification
     url: HttpUrl
-    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id: str = Field(default="550e8400-e29b-41d4-a716-446655440000")
     lead_source: Optional[str] = None
 
     # Basic Info
     title: Optional[str] = None
     description: Optional[str] = None
     is_active: bool = True
-    status: str = 'active'
+    status: str = "active"
 
     # Task Status Tracking
     content_scrape_status: TaskStatus = TaskStatus.QUEUED
@@ -132,27 +139,34 @@ class SiteMetadata(BaseModel):
     sitemap_url: Optional[str] = None
     tech_stack: Optional[Dict[str, Any]] = None
 
+
 class SitemapScrapingRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     base_url: str
-    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id: str = Field(default="550e8400-e29b-41d4-a716-446655440000")
     max_pages: int = Field(default=1000)
+
 
 class SitemapScrapingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     job_id: str
     status_url: str
 
+
 class BatchRequest(BaseModel):
     """Request model for batch domain scanning."""
+
     domains: List[str]
-    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id: str = Field(default="550e8400-e29b-41d4-a716-446655440000")
+
 
 class BatchResponse(BaseModel):
     """Response model for batch scan operations."""
+
     batch_id: str
     status_url: str
     job_count: int
+
 
 class PageType(str, Enum):
     HTML = "text/html"
@@ -160,11 +174,13 @@ class PageType(str, Enum):
     PDF = "application/pdf"
     OTHER = "other"
 
+
 class BatchJobStatus(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     status: str
     progress: float
     error: Optional[str] = None
+
 
 class BatchSitemapRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -172,6 +188,7 @@ class BatchSitemapRequest(BaseModel):
     concurrency: int = Field(default=5, ge=1, le=10)
     depth_limit: int = Field(default=3, ge=1, le=5)
     priority: int = Field(default=1, ge=1, le=3)
+
 
 class SitemapStats(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -181,6 +198,7 @@ class SitemapStats(BaseModel):
     avg_response_time: float
     tech_stack_counts: Dict[str, int]
 
+
 # Places Scraper Models
 class PlacesSearchRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -189,7 +207,8 @@ class PlacesSearchRequest(BaseModel):
     business_type: str  # Type of business to search (e.g., "ophthalmology")
     radius_km: int = Field(default=10, ge=1, le=50)
     max_results: int = Field(default=20, ge=1, le=100)
-    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id: str = Field(default="550e8400-e29b-41d4-a716-446655440000")
+
 
 class PlacesSearchResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -197,6 +216,7 @@ class PlacesSearchResponse(BaseModel):
     job_id: str
     status: str = "started"
     status_url: str
+
 
 class PlacesStatusResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -213,6 +233,7 @@ class PlacesStatusResponse(BaseModel):
     user_name: Optional[str] = None
     error: Optional[str] = None
 
+
 # Sitemap Analyzer Models
 class SitemapType(str, Enum):
     INDEX = "index"
@@ -221,6 +242,7 @@ class SitemapType(str, Enum):
     VIDEO = "video"
     NEWS = "news"
 
+
 class DiscoveryMethod(str, Enum):
     ROBOTS_TXT = "robots_txt"
     COMMON_PATH = "common_path"
@@ -228,11 +250,12 @@ class DiscoveryMethod(str, Enum):
     HTML_LINK = "html_link"
     MANUAL = "manual"
 
+
 class SitemapAnalyzerRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     domain: str
-    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id: str = Field(default="550e8400-e29b-41d4-a716-446655440000")
     user_id: Optional[str] = None
     user_name: Optional[str] = None
     lead_source: Optional[str] = None
@@ -246,9 +269,10 @@ class SitemapAnalyzerRequest(BaseModel):
     @property
     def domain_url(self) -> str:
         """Format domain as URL with https prefix if not already present."""
-        if self.domain.startswith(('http://', 'https://')):
+        if self.domain.startswith(("http://", "https://")):
             return self.domain
         return f"https://{self.domain}"
+
 
 class SitemapAnalyzerResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -258,11 +282,12 @@ class SitemapAnalyzerResponse(BaseModel):
     status_url: str
     domain: str
 
+
 class SitemapAnalyzerBatchRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     domains: List[str]
-    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    tenant_id: str = Field(default="550e8400-e29b-41d4-a716-446655440000")
     user_id: Optional[str] = None
     user_name: Optional[str] = None
     lead_source: Optional[str] = None
@@ -274,6 +299,7 @@ class SitemapAnalyzerBatchRequest(BaseModel):
     tags: Optional[List[str]] = None
     notes: Optional[str] = None
 
+
 class SitemapAnalyzerBatchResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -281,6 +307,7 @@ class SitemapAnalyzerBatchResponse(BaseModel):
     status_url: str
     job_count: int
     domains: List[str]
+
 
 class SitemapStatusResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -300,6 +327,7 @@ class SitemapStatusResponse(BaseModel):
     sitemaps: List[Dict[str, Any]] = Field(default_factory=list)
     sitemaps_url: Optional[str] = None
 
+
 class SitemapBatchStatusResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -313,6 +341,7 @@ class SitemapBatchStatusResponse(BaseModel):
     completed_at: Optional[datetime] = None
     progress: float = 0.0
     job_statuses: Dict[str, str] = Field(default_factory=dict)
+
 
 class SitemapFileResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -330,6 +359,7 @@ class SitemapFileResponse(BaseModel):
     last_modified: Optional[datetime] = None
     created_at: datetime
     status: str
+
 
 class SitemapUrlsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

@@ -9,5 +9,5 @@ from .router.places_router import router as places_router
 
 # Export available routers
 __all__ = [
-    'places_router',
+    "places_router",
 ]

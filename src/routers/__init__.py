@@ -16,13 +16,13 @@ from .profile import router as profile_router
 
 # Export all routers
 __all__ = [
-    'google_maps_router',
-    'modernized_sitemap_router',
-    'batch_page_scraper_router',
-    'modernized_page_scraper_router',
-    'dev_tools_router',
-    'db_portal_router',
-    'profile_router',
-    'batch_sitemap_router',
-    'places_staging_router'
+    "google_maps_router",
+    "modernized_sitemap_router",
+    "batch_page_scraper_router",
+    "modernized_page_scraper_router",
+    "dev_tools_router",
+    "db_portal_router",
+    "profile_router",
+    "batch_sitemap_router",
+    "places_staging_router",
 ]

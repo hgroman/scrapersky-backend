@@ -5,7 +5,7 @@ Provides utilities for standardizing database operations and parameters
 across the application, particularly for Supavisor connection pooling.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import Query
 
@@ -13,7 +13,7 @@ from fastapi import Query
 def get_db_params(
     raw_sql: bool = Query(True, description="Use raw SQL for complex operations"),
     no_prepare: bool = Query(True, description="Disable prepared statements"),
-    statement_cache_size: int = Query(0, description="Set statement cache size")
+    statement_cache_size: int = Query(0, description="Set statement cache size"),
 ) -> Dict[str, Any]:
     """
     Get standardized database parameters for endpoints.
@@ -27,6 +27,7 @@ def get_db_params(
     # Log that parameters were received
     # Return empty dict for now to avoid passing to database session
     return {}
+
 
 def enhance_database_url(db_url: str) -> str:
     """

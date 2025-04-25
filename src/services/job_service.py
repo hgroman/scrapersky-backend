@@ -6,23 +6,23 @@ This service is transaction-aware, meaning it checks if it's being called within
 transaction and behaves accordingly. It follows the "routers own transaction boundaries,
 services do not" pattern.
 """
-import json
+
 import logging
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import select, text, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..db.session import get_session
 from ..models import BatchJob, Job
 from ..models.tenant import DEFAULT_TENANT_ID
 
 # NOTE: Removing managed_transaction import as part of transaction boundary standardization
 
 logger = logging.getLogger(__name__)
+
 
 class JobService:
     """
@@ -43,7 +43,7 @@ class JobService:
         self,
         session: AsyncSession,
         job_id: Union[str, uuid.UUID, int],
-        load_relationships: bool = False
+        load_relationships: bool = False,
     ) -> Optional[Job]:
         """
         Get a job by ID with optional relationship loading.
@@ -69,10 +69,7 @@ class JobService:
 
             # Add eager loading if requested
             if load_relationships:
-                query = query.options(
-                    selectinload(Job.domain),
-                    selectinload(Job.batch)
-                )
+                query = query.options(selectinload(Job.domain), selectinload(Job.batch))
 
             # Handle different job_id types
             if isinstance(job_id, int):
@@ -85,7 +82,9 @@ class JobService:
                     try:
                         numeric_id = int(job_id)
                         query = query.where(Job.id == numeric_id)
-                        logger.debug(f"Looking up job by numeric string: {job_id} -> {numeric_id}")
+                        logger.debug(
+                            f"Looking up job by numeric string: {job_id} -> {numeric_id}"
+                        )
                     except ValueError:
                         # It's not a numeric ID, so handle as UUID
                         try:
@@ -95,12 +94,16 @@ class JobService:
 
                             # Use string comparison to avoid type errors
                             query = select(Job).where(Job.job_id == job_uuid_str)
-                            logger.debug(f"Looking up job by UUID string: {job_uuid_str}")
+                            logger.debug(
+                                f"Looking up job by UUID string: {job_uuid_str}"
+                            )
                         except ValueError:
                             logger.warning(f"Invalid UUID format for job_id: {job_id}")
                             # Try direct string comparison
                             query = select(Job).where(Job.job_id == str(job_id))
-                            logger.debug(f"Looking up job by direct string match: {job_id}")
+                            logger.debug(
+                                f"Looking up job by direct string match: {job_id}"
+                            )
                 else:
                     # It's already a UUID, convert to string to avoid type errors
                     job_uuid_str = str(job_id)
@@ -115,8 +118,8 @@ class JobService:
                 query,
                 execution_options={
                     "no_parameters": True,  # Disable prepared statements for Supavisor
-                    "statement_cache_size": 0  # Disable statement caching
-                }
+                    "statement_cache_size": 0,  # Disable statement caching
+                },
             )
             job = result.scalars().first()
 
@@ -133,10 +136,7 @@ class JobService:
             raise
 
     async def get_recent_jobs(
-        self,
-        session: AsyncSession,
-        job_type: Optional[str] = None,
-        limit: int = 10
+        self, session: AsyncSession, job_type: Optional[str] = None, limit: int = 10
     ) -> List[Job]:
         """
         Get recent jobs.
@@ -165,8 +165,8 @@ class JobService:
                 query,
                 execution_options={
                     "no_parameters": True,  # Disable prepared statements for Supavisor
-                    "statement_cache_size": 0  # Disable statement caching
-                }
+                    "statement_cache_size": 0,  # Disable statement caching
+                },
             )
             return list(result.scalars().all())
 
@@ -175,10 +175,7 @@ class JobService:
             return []
 
     async def get_pending_jobs(
-        self,
-        session: AsyncSession,
-        job_type: Optional[str] = None,
-        limit: int = 10
+        self, session: AsyncSession, job_type: Optional[str] = None, limit: int = 10
     ) -> List[Job]:
         """
         Get pending jobs for processing.
@@ -197,7 +194,9 @@ class JobService:
         try:
             # Check if the session is already in a transaction
             in_transaction = session.in_transaction()
-            logger.debug(f"Session transaction state in get_pending_jobs: {in_transaction}")
+            logger.debug(
+                f"Session transaction state in get_pending_jobs: {in_transaction}"
+            )
 
             # Build query
             query = select(Job).where(Job.status == self.STATUS_PENDING)
@@ -214,11 +213,13 @@ class JobService:
                 query,
                 execution_options={
                     "no_parameters": True,  # Disable prepared statements for Supavisor
-                    "statement_cache_size": 0  # Disable statement caching
-                }
+                    "statement_cache_size": 0,  # Disable statement caching
+                },
             )
             pending_jobs = list(result.scalars().all())
-            logger.debug(f"Found {len(pending_jobs)} pending jobs of type {job_type or 'any'}")
+            logger.debug(
+                f"Found {len(pending_jobs)} pending jobs of type {job_type or 'any'}"
+            )
             return pending_jobs
 
         except Exception as e:
@@ -227,10 +228,7 @@ class JobService:
             raise
 
     async def create(
-        self,
-        session: AsyncSession,
-        job_data: Dict[str, Any],
-        **db_params: Any
+        self, session: AsyncSession, job_data: Dict[str, Any], **db_params: Any
     ) -> Optional[Job]:
         """
         Create a new job record in the database.
@@ -279,7 +277,7 @@ class JobService:
                 result_data=job_data.get("result_data"),
                 error=job_data.get("error"),
                 job_metadata=job_data.get("job_metadata", {}),
-                job_id=job_data.get("job_id")
+                job_id=job_data.get("job_id"),
             )
 
             # Add to session and flush changes
@@ -300,7 +298,7 @@ class JobService:
         session: AsyncSession,
         job_type: str,
         domain_id: Optional[str] = None,
-        created_by: Optional[str] = None
+        created_by: Optional[str] = None,
     ) -> Job:
         """
         Create a new job for a domain.
@@ -317,7 +315,9 @@ class JobService:
         try:
             # Check if in transaction
             in_transaction = session.in_transaction()
-            logger.debug(f"Session transaction state in create_for_domain: {in_transaction}")
+            logger.debug(
+                f"Session transaction state in create_for_domain: {in_transaction}"
+            )
 
             # Create job data dictionary
             job_data = {
@@ -325,7 +325,7 @@ class JobService:
                 "domain_id": domain_id,
                 "created_by": created_by,
                 "status": "pending",
-                "progress": 0.0
+                "progress": 0.0,
             }
 
             # Create new job
@@ -347,7 +347,7 @@ class JobService:
         progress: Optional[float] = None,
         result_data: Optional[Dict[str, Any]] = None,
         error: Optional[str] = None,
-        tenant_id: Optional[str] = None
+        tenant_id: Optional[str] = None,
     ) -> Optional[Job]:
         """
         Update job status and related fields.
@@ -371,16 +371,22 @@ class JobService:
         try:
             # Check if the session is already in a transaction
             in_transaction = session.in_transaction()
-            logger.debug(f"Session transaction state in update_status: {in_transaction}")
+            logger.debug(
+                f"Session transaction state in update_status: {in_transaction}"
+            )
 
             # Try to convert job_id to UUID if it's a string to ensure type compatibility
             job_id_for_query = job_id
             if isinstance(job_id, str):
                 try:
                     job_id_for_query = uuid.UUID(job_id)
-                    logger.debug(f"Converted job_id string to UUID: {job_id} -> {job_id_for_query}")
+                    logger.debug(
+                        f"Converted job_id string to UUID: {job_id} -> {job_id_for_query}"
+                    )
                 except ValueError:
-                    logger.warning(f"Invalid UUID format for job_id: {job_id}, will try string comparison")
+                    logger.warning(
+                        f"Invalid UUID format for job_id: {job_id}, will try string comparison"
+                    )
 
             # Get job
             job = await self.get_by_id(session, job_id_for_query)
@@ -398,12 +404,12 @@ class JobService:
             # Update result data if provided
             if result_data is not None:
                 # Use setattr to avoid linter errors with direct Column assignment
-                setattr(job, "result_data", result_data)
+                job.result_data = result_data
 
             # Update error if provided
             if error is not None:
                 # Use setattr to avoid linter errors with direct Column assignment
-                setattr(job, "error", error)
+                job.error = error
                 # Set status to failed if an error is provided and status isn't explicitly set
                 if status != self.STATUS_FAILED:
                     job.status = self.STATUS_FAILED
@@ -424,7 +430,7 @@ class JobService:
         session: AsyncSession,
         job_id: Union[str, uuid.UUID, int],
         job_data: Dict[str, Any],
-        tenant_id: Optional[str] = None
+        tenant_id: Optional[str] = None,
     ) -> Optional[Job]:
         """
         Update a job with multiple fields.
@@ -465,7 +471,7 @@ class JobService:
         session: AsyncSession,
         batch_id: str,
         tenant_id: Optional[str] = None,
-        load_relationships: bool = False
+        load_relationships: bool = False,
     ) -> Optional[BatchJob]:
         """
         Get batch job by batch ID.
@@ -487,8 +493,7 @@ class JobService:
 
                 # Add eager loading if requested
                 query = query.options(
-                    selectinload(BatchJob.jobs),
-                    selectinload(BatchJob.domains)
+                    selectinload(BatchJob.jobs), selectinload(BatchJob.domains)
                 )
 
                 # Execute query
@@ -496,8 +501,8 @@ class JobService:
                     query,
                     execution_options={
                         "no_parameters": True,  # Disable prepared statements for Supavisor
-                        "statement_cache_size": 0  # Disable statement caching
-                    }
+                        "statement_cache_size": 0,  # Disable statement caching
+                    },
                 )
                 return result.scalars().first()
             else:
@@ -514,7 +519,7 @@ class JobService:
         session: AsyncSession,
         domain_id: Union[str, uuid.UUID],
         tenant_id: Optional[str] = None,
-        load_relationships: bool = False
+        load_relationships: bool = False,
     ) -> List[Job]:
         """
         Get all jobs for a specific domain.
@@ -532,7 +537,11 @@ class JobService:
             # Convert domain_id to UUID if it's a string
             domain_id_uuid = None
             try:
-                domain_id_uuid = domain_id if isinstance(domain_id, uuid.UUID) else uuid.UUID(str(domain_id))
+                domain_id_uuid = (
+                    domain_id
+                    if isinstance(domain_id, uuid.UUID)
+                    else uuid.UUID(str(domain_id))
+                )
             except ValueError:
                 logger.warning(f"Invalid UUID format for domain_id: {domain_id}")
                 return []
@@ -542,9 +551,7 @@ class JobService:
 
             # Add eager loading if requested
             if load_relationships:
-                query = query.options(
-                    selectinload(Job.batch)
-                )
+                query = query.options(selectinload(Job.batch))
 
             # REMOVED tenant filtering as per architectural mandate
             # JWT authentication happens ONLY at API gateway endpoints
@@ -555,8 +562,8 @@ class JobService:
                 query,
                 execution_options={
                     "no_parameters": True,  # Disable prepared statements for Supavisor
-                    "statement_cache_size": 0  # Disable statement caching
-                }
+                    "statement_cache_size": 0,  # Disable statement caching
+                },
             )
             return list(result.scalars().all())
 
@@ -569,7 +576,7 @@ class JobService:
         session: AsyncSession,
         job_id: int,
         tenant_id: Optional[str] = None,
-        load_relationships: bool = False
+        load_relationships: bool = False,
     ) -> Optional[Job]:
         """
         Get a job specifically by numeric ID (primary key).
@@ -590,18 +597,12 @@ class JobService:
 
             # Add eager loading if requested
             if load_relationships:
-                query = query.options(
-                    selectinload(Job.domain),
-                    selectinload(Job.batch)
-                )
+                query = query.options(selectinload(Job.domain), selectinload(Job.batch))
 
             # Execute query with compatibility options for Supavisor
             result = await session.execute(
                 query,
-                execution_options={
-                    "no_parameters": True,
-                    "statement_cache_size": 0
-                }
+                execution_options={"no_parameters": True, "statement_cache_size": 0},
             )
             job = result.scalars().first()
 
@@ -617,10 +618,7 @@ class JobService:
             raise
 
     async def get_by_uuid(
-        self,
-        session: AsyncSession,
-        job_uuid: str,
-        tenant_id: Optional[str] = None
+        self, session: AsyncSession, job_uuid: str, tenant_id: Optional[str] = None
     ) -> Optional[Job]:
         """
         Get a job specifically by UUID using raw SQL to avoid prepared statement issues.
@@ -649,10 +647,7 @@ class JobService:
             result = await session.execute(
                 query_text,
                 {"job_uuid": job_uuid},
-                execution_options={
-                    "no_parameters": True,
-                    "statement_cache_size": 0
-                }
+                execution_options={"no_parameters": True, "statement_cache_size": 0},
             )
 
             # Convert raw result to Job model
@@ -685,7 +680,7 @@ class JobService:
         total_domains: int,
         created_by: Optional[str] = None,
         options: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Optional[BatchJob]:
         """
         Create a new batch job using default tenant ID.
@@ -719,11 +714,13 @@ class JobService:
                 total_domains=total_domains,
                 created_by=created_by,
                 options=options,
-                metadata=metadata
+                metadata=metadata,
             )
 
             await session.flush()
-            logger.debug(f"Created batch job with ID {batch_job.id} and batch ID {batch_job.batch_id}")
+            logger.debug(
+                f"Created batch job with ID {batch_job.id} and batch ID {batch_job.batch_id}"
+            )
             return batch_job
 
         except Exception as e:
@@ -737,7 +734,7 @@ class JobService:
         batch_id: str,
         completed: Optional[int] = None,
         failed: Optional[int] = None,
-        tenant_id: Optional[str] = None  # Deprecated, ignored
+        tenant_id: Optional[str] = None,  # Deprecated, ignored
     ) -> Optional[BatchJob]:
         """
         Update batch job progress.
@@ -774,10 +771,7 @@ class JobService:
             raise
 
     async def get_recent_batches(
-        self,
-        session: AsyncSession,
-        limit: int = 10,
-        load_relationships: bool = False
+        self, session: AsyncSession, limit: int = 10, load_relationships: bool = False
     ) -> List[BatchJob]:
         """
         Get recent batch jobs using default tenant ID.
@@ -799,9 +793,7 @@ class JobService:
                 )
 
                 # Add eager loading
-                query = query.options(
-                    selectinload(BatchJob.jobs)
-                )
+                query = query.options(selectinload(BatchJob.jobs))
 
                 # Add ordering and limit
                 query = query.order_by(BatchJob.created_at.desc()).limit(limit)
@@ -811,8 +803,8 @@ class JobService:
                     query,
                     execution_options={
                         "no_parameters": True,  # Disable prepared statements for Supavisor
-                        "statement_cache_size": 0  # Disable statement caching
-                    }
+                        "statement_cache_size": 0,  # Disable statement caching
+                    },
                 )
                 return list(result.scalars().all())
             else:
@@ -828,7 +820,7 @@ class JobService:
         self,
         session: AsyncSession,
         batch_id: str,
-        result_data: Optional[Dict[str, Any]] = None
+        result_data: Optional[Dict[str, Any]] = None,
     ) -> Optional[BatchJob]:
         """
         Mark a batch job as complete.
@@ -850,13 +842,13 @@ class JobService:
 
             # Update status
             batch_job.status = self.STATUS_COMPLETE
-            setattr(batch_job, "progress", 1.0)
+            batch_job.progress = 1.0
             # Use setattr to avoid linter errors
-            setattr(batch_job, "end_time", datetime.now())
+            batch_job.end_time = datetime.now()
 
             # Update result data if provided
             if result_data is not None:
-                setattr(batch_job, "result_data", result_data)
+                batch_job.result_data = result_data
 
             # Add to session and flush changes
             session.add(batch_job)
@@ -870,10 +862,7 @@ class JobService:
             raise
 
     async def fail_batch(
-        self,
-        session: AsyncSession,
-        batch_id: str,
-        error: str
+        self, session: AsyncSession, batch_id: str, error: str
     ) -> Optional[BatchJob]:
         """
         Mark a batch job as failed.
@@ -896,8 +885,8 @@ class JobService:
             # Update status
             batch_job.status = self.STATUS_FAILED
             # Use setattr to avoid linter errors
-            setattr(batch_job, "error", error)
-            setattr(batch_job, "end_time", datetime.now())
+            batch_job.error = error
+            batch_job.end_time = datetime.now()
 
             # Add to session and flush changes
             session.add(batch_job)
@@ -915,7 +904,7 @@ class JobService:
         session: AsyncSession,
         batch_id: str,
         tenant_id: Optional[str] = None,  # Deprecated, ignored
-        load_relationships: bool = False
+        load_relationships: bool = False,
     ) -> Optional[BatchJob]:
         """
         Get batch job by batch ID.
@@ -937,8 +926,7 @@ class JobService:
 
                 # Add eager loading if requested
                 query = query.options(
-                    selectinload(BatchJob.jobs),
-                    selectinload(BatchJob.domains)
+                    selectinload(BatchJob.jobs), selectinload(BatchJob.domains)
                 )
 
                 # Execute query
@@ -946,8 +934,8 @@ class JobService:
                     query,
                     execution_options={
                         "no_parameters": True,  # Disable prepared statements for Supavisor
-                        "statement_cache_size": 0  # Disable statement caching
-                    }
+                        "statement_cache_size": 0,  # Disable statement caching
+                    },
                 )
                 return result.scalars().first()
             else:
@@ -958,6 +946,7 @@ class JobService:
             logger.error(f"Error retrieving batch job by ID: {str(e)}")
             # Propagate exception to caller for proper transaction handling
             raise
+
 
 # Create singleton instance
 job_service = JobService()

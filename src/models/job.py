@@ -3,24 +3,21 @@ Job SQLAlchemy Model
 
 Represents background processing jobs in ScraperSky.
 """
+
 import uuid
 from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import (
-    JSON,
     UUID,
     Column,
-    DateTime,
     Float,
     ForeignKey,
     Integer,
     String,
-    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import foreign, relationship
-from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel, model_to_dict
 from .tenant import DEFAULT_TENANT_ID
@@ -43,6 +40,7 @@ class Job(Base, BaseModel):
         job_metadata: Additional job metadata
         batch_id: Optional batch ID if part of batch processing
     """
+
     __tablename__ = "jobs"
 
     # Override the id column to use an Integer primary key
@@ -54,7 +52,9 @@ class Job(Base, BaseModel):
     # Core fields
     job_type = Column(String, nullable=False)
     tenant_id = Column(String, nullable=False, default=DEFAULT_TENANT_ID)
-    tenant_id_uuid = Column(PGUUID, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID))
+    tenant_id_uuid = Column(
+        PGUUID, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID)
+    )
 
     # Status and metadata
     created_by = Column(PGUUID)
@@ -66,7 +66,9 @@ class Job(Base, BaseModel):
     job_metadata = Column(JSONB)
 
     # Batch processing field
-    batch_id = Column(String, ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"), index=True)
+    batch_id = Column(
+        String, ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"), index=True
+    )
 
     # Relationships
     domain = relationship("Domain", back_populates="jobs")
@@ -76,7 +78,9 @@ class Job(Base, BaseModel):
         """Convert job to dictionary with proper serialization."""
         return model_to_dict(self)
 
-    def update_progress(self, progress_value: float, status: Optional[str] = None) -> None:
+    def update_progress(
+        self, progress_value: float, status: Optional[str] = None
+    ) -> None:
         """
         Update job progress and optionally status.
 
@@ -99,7 +103,7 @@ class Job(Base, BaseModel):
         domain_id: Optional[uuid.UUID] = None,
         created_by: Optional[uuid.UUID] = None,
         batch_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> "Job":
         """
         Create a new job for domain processing using default tenant ID.
@@ -124,14 +128,16 @@ class Job(Base, BaseModel):
             domain_id=domain_id,
             progress=0.0,
             job_metadata=metadata or {},
-            batch_id=batch_id
+            batch_id=batch_id,
         )
 
         session.add(job)
         return job
 
     @classmethod
-    async def get_by_id(cls, session, job_id: Union[int, uuid.UUID, str]) -> Optional["Job"]:
+    async def get_by_id(
+        cls, session, job_id: Union[int, uuid.UUID, str]
+    ) -> Optional["Job"]:
         """Get a job by its integer ID without tenant filtering.
 
         Args:
@@ -144,7 +150,7 @@ class Job(Base, BaseModel):
         from sqlalchemy import select
 
         # Ensure we are querying by the integer primary key 'id'
-        query = select(cls).where(cls.id == int(job_id)) # Convert to int just in case
+        query = select(cls).where(cls.id == int(job_id))  # Convert to int just in case
         result = await session.execute(query)
         return result.scalars().first()
 
@@ -211,7 +217,9 @@ class Job(Base, BaseModel):
         return result.scalars().all()
 
     @classmethod
-    async def get_by_domain_id(cls, session, domain_id: Union[str, uuid.UUID]) -> List["Job"]:
+    async def get_by_domain_id(
+        cls, session, domain_id: Union[str, uuid.UUID]
+    ) -> List["Job"]:
         """
         Get all jobs for a specific domain without tenant filtering.
 

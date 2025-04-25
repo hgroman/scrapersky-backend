@@ -4,6 +4,7 @@ JWT Authentication Module
 This module provides JWT authentication for the application.
 All tenant isolation, RBAC, and feature flag functionality has been removed.
 """
+
 import logging
 import os
 from datetime import datetime, timedelta
@@ -23,14 +24,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "30"))
 
 # Default tenant for development/testing
-DEFAULT_TENANT_ID = os.getenv("DEFAULT_TENANT_ID", "550e8400-e29b-41d4-a716-446655440000")
+DEFAULT_TENANT_ID = os.getenv(
+    "DEFAULT_TENANT_ID", "550e8400-e29b-41d4-a716-446655440000"
+)
 
 # OAuth2 scheme for Swagger UI authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
+
 def create_access_token(
-    data: Dict[str, Any],
-    expires_delta: Optional[timedelta] = None
+    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
 ) -> str:
     """
     Create a JWT access token.
@@ -45,6 +48,7 @@ def create_access_token(
     to_encode.update({"exp": expire})
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def decode_token(token: str) -> Dict[str, Any]:
     """
@@ -61,6 +65,7 @@ def decode_token(token: str) -> Dict[str, Any]:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
     """
     Get the current user from JWT token.
@@ -70,7 +75,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
         token = token[7:]  # Remove "Bearer " prefix
 
     # Special case for development with hardcoded token
-    if token == "scraper_sky_2024" and settings.environment.lower() in ["development", "dev"]:
+    if token == "scraper_sky_2024" and settings.environment.lower() in [
+        "development",
+        "dev",
+    ]:
         logger.info("Using development token for authentication")
 
         # --- DEVELOPMENT TOKEN USER ID CHANGE (2025-04-11) ---
@@ -83,12 +91,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
         # foreign key reference can succeed in the development environment.
         # -------------------------------------------------------
 
-        dev_user_uuid = "5905e9fe-6c61-4694-b09a-6602017b000a" # From 10-TEST_USER_INFORMATION.md
+        dev_user_uuid = (
+            "5905e9fe-6c61-4694-b09a-6602017b000a"  # From 10-TEST_USER_INFORMATION.md
+        )
         return {
             "user_id": dev_user_uuid,
             "id": dev_user_uuid,
             "tenant_id": DEFAULT_TENANT_ID,
-            "exp": datetime.utcnow() + timedelta(days=30)
+            "exp": datetime.utcnow() + timedelta(days=30),
         }
 
     payload = decode_token(token)
@@ -106,13 +116,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
         "user_id": user_id,
         "id": user_id,
         "tenant_id": DEFAULT_TENANT_ID,
-        "exp": payload.get("exp")
+        "exp": payload.get("exp"),
     }
 
     return user
 
+
 async def get_current_active_user(
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get the current active user.

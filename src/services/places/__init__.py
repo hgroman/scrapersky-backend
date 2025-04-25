@@ -9,8 +9,4 @@ from .places_search_service import PlacesSearchService
 from .places_service import PlacesService
 from .places_storage_service import PlacesStorageService
 
-__all__ = [
-    'PlacesService',
-    'PlacesSearchService',
-    'PlacesStorageService'
-]
+__all__ = ["PlacesService", "PlacesSearchService", "PlacesStorageService"]

@@ -1,33 +1,27 @@
 import asyncio
 import inspect
-import json
 import logging
 import os
-import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_db_session
 from src.models.domain import Domain
 from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
-from src.session.async_session import get_background_session
 
 from ..auth.jwt_auth import get_current_user
 
 # --- Corrected Imports --- #
 from ..config.settings import settings  # Import settings
 from ..db.sitemap_handler import SitemapDBHandler
-from ..models.domain import SitemapAnalysisStatusEnum
-from ..models.user import User  # Import User model
 
 # Import the shared scheduler instance
 from ..scheduler_instance import scheduler
@@ -35,7 +29,6 @@ from ..scheduler_instance import scheduler
 # RBAC imports removed
 # from ..utils.permissions import require_permission, require_feature_enabled, require_role_level
 # from ..constants.rbac import ROLE_HIERARCHY
-from ..services.business_to_domain_service import LocalBusinessToDomainService
 from ..services.core.user_context_service import user_context_service
 
 # Replace the old import with SQLAlchemy session
@@ -47,7 +40,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/api/v3/dev-tools",
     tags=["dev-tools"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 # Get the absolute path to the static directory
@@ -56,30 +49,33 @@ STATIC_DIR = Path(__file__).parent.parent.parent / "static"
 # Container status tracking
 container_operations = {}
 
+
 # Define require_dev_mode dependency function BEFORE its first use
 async def require_dev_mode():
     # This function now only checks the environment setting.
     # Authentication is handled by the router's dependency on get_current_user.
     # Check the correct environment setting name
     if settings.environment.lower() not in ["development", "dev"]:
-         raise HTTPException(status_code=403, detail="Developer tools require dev mode to be enabled.")
+        raise HTTPException(
+            status_code=403, detail="Developer tools require dev mode to be enabled."
+        )
     # The rest of the original comments are no longer relevant
     pass
+
 
 async def run_command(cmd: str) -> Dict[str, Any]:
     """Run a shell command and return its output."""
     process = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
 
     return {
         "exit_code": process.returncode,
         "stdout": stdout.decode() if stdout else "",
-        "stderr": stderr.decode() if stderr else ""
+        "stderr": stderr.decode() if stderr else "",
     }
+
 
 @router.post("/container/rebuild")
 async def rebuild_container() -> Dict[str, Any]:
@@ -89,7 +85,7 @@ async def rebuild_container() -> Dict[str, Any]:
         "type": "rebuild",
         "status": "running",
         "started_at": datetime.utcnow().isoformat(),
-        "steps": []
+        "steps": [],
     }
 
     try:
@@ -97,43 +93,61 @@ async def rebuild_container() -> Dict[str, Any]:
         container_operations[operation_id]["steps"].append("Stopping containers...")
         result = await run_command("docker-compose down")
         if result["exit_code"] != 0:
-            raise HTTPException(status_code=500, detail=f"Failed to stop containers: {result['stderr']}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to stop containers: {result['stderr']}"
+            )
 
         # Rebuild without cache
-        container_operations[operation_id]["steps"].append("Rebuilding without cache...")
+        container_operations[operation_id]["steps"].append(
+            "Rebuilding without cache..."
+        )
         result = await run_command("docker-compose build --no-cache")
         if result["exit_code"] != 0:
-            raise HTTPException(status_code=500, detail=f"Failed to rebuild: {result['stderr']}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to rebuild: {result['stderr']}"
+            )
 
         # Start containers
         container_operations[operation_id]["steps"].append("Starting containers...")
         result = await run_command("docker-compose up -d")
         if result["exit_code"] != 0:
-            raise HTTPException(status_code=500, detail=f"Failed to start containers: {result['stderr']}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to start containers: {result['stderr']}",
+            )
 
         # Wait for health check
-        container_operations[operation_id]["steps"].append("Waiting for health check...")
+        container_operations[operation_id]["steps"].append(
+            "Waiting for health check..."
+        )
         await asyncio.sleep(5)  # Give the container time to start
 
         # Check container health
         result = await run_command("docker-compose ps")
         if "Up" not in result["stdout"]:
-            raise HTTPException(status_code=500, detail="Container failed to start properly")
+            raise HTTPException(
+                status_code=500, detail="Container failed to start properly"
+            )
 
         container_operations[operation_id]["status"] = "complete"
-        container_operations[operation_id]["completed_at"] = datetime.utcnow().isoformat()
+        container_operations[operation_id]["completed_at"] = (
+            datetime.utcnow().isoformat()
+        )
 
         return {
             "status": "success",
             "operation_id": operation_id,
-            "message": "Container rebuilt successfully"
+            "message": "Container rebuilt successfully",
         }
 
     except Exception as e:
         container_operations[operation_id]["status"] = "error"
         container_operations[operation_id]["error"] = str(e)
-        container_operations[operation_id]["completed_at"] = datetime.utcnow().isoformat()
+        container_operations[operation_id]["completed_at"] = (
+            datetime.utcnow().isoformat()
+        )
         raise
+
 
 @router.post("/container/restart")
 async def restart_container() -> Dict[str, Any]:
@@ -143,7 +157,7 @@ async def restart_container() -> Dict[str, Any]:
         "type": "restart",
         "status": "running",
         "started_at": datetime.utcnow().isoformat(),
-        "steps": []
+        "steps": [],
     }
 
     try:
@@ -151,31 +165,43 @@ async def restart_container() -> Dict[str, Any]:
         container_operations[operation_id]["steps"].append("Restarting containers...")
         result = await run_command("docker-compose restart")
         if result["exit_code"] != 0:
-            raise HTTPException(status_code=500, detail=f"Failed to restart containers: {result['stderr']}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to restart containers: {result['stderr']}",
+            )
 
         # Wait for health check
-        container_operations[operation_id]["steps"].append("Waiting for health check...")
+        container_operations[operation_id]["steps"].append(
+            "Waiting for health check..."
+        )
         await asyncio.sleep(5)  # Give the container time to start
 
         # Check container health
         result = await run_command("docker-compose ps")
         if "Up" not in result["stdout"]:
-            raise HTTPException(status_code=500, detail="Container failed to start properly")
+            raise HTTPException(
+                status_code=500, detail="Container failed to start properly"
+            )
 
         container_operations[operation_id]["status"] = "complete"
-        container_operations[operation_id]["completed_at"] = datetime.utcnow().isoformat()
+        container_operations[operation_id]["completed_at"] = (
+            datetime.utcnow().isoformat()
+        )
 
         return {
             "status": "success",
             "operation_id": operation_id,
-            "message": "Container restarted successfully"
+            "message": "Container restarted successfully",
         }
 
     except Exception as e:
         container_operations[operation_id]["status"] = "error"
         container_operations[operation_id]["error"] = str(e)
-        container_operations[operation_id]["completed_at"] = datetime.utcnow().isoformat()
+        container_operations[operation_id]["completed_at"] = (
+            datetime.utcnow().isoformat()
+        )
         raise
+
 
 @router.get("/container/health")
 async def check_container_health() -> Dict[str, Any]:
@@ -188,17 +214,20 @@ async def check_container_health() -> Dict[str, Any]:
         logs = await run_command("docker-compose logs --tail=10")
 
         # Get container stats
-        stats = await run_command("docker stats --no-stream --format '{{.Container}}: CPU: {{.CPUPerc}}, Memory: {{.MemUsage}}'")
+        stats = await run_command(
+            "docker stats --no-stream --format '{{.Container}}: CPU: {{.CPUPerc}}, Memory: {{.MemUsage}}'"
+        )
 
         return {
             "status": "Up" if "Up" in result["stdout"] else "Down",
             "details": result["stdout"],
             "logs": logs["stdout"],
-            "stats": stats["stdout"]
+            "stats": stats["stdout"],
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/container/status")
 async def get_container_status(operation_id: str) -> Dict[str, Any]:
@@ -207,6 +236,7 @@ async def get_container_status(operation_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="Operation not found")
 
     return container_operations[operation_id]
+
 
 @router.get("/server/status")
 async def get_server_status(request: Request) -> Dict[str, Any]:
@@ -221,34 +251,39 @@ async def get_server_status(request: Request) -> Dict[str, Any]:
             "HOST": os.getenv("HOST", "0.0.0.0"),
             "PORT": os.getenv("PORT", "8000"),
             "WORKERS": os.getenv("WORKERS", "4"),
-            "LOG_LEVEL": os.getenv("LOG_LEVEL", "INFO")
+            "LOG_LEVEL": os.getenv("LOG_LEVEL", "INFO"),
         }
 
         # Get routes info
         routes_info = []
         for route in request.app.routes:
             if hasattr(route, "endpoint"):
-                routes_info.append({
-                    "path": route.path,
-                    "methods": list(route.methods) if hasattr(route, "methods") else [],
-                    "name": route.name
-                })
+                routes_info.append(
+                    {
+                        "path": route.path,
+                        "methods": list(route.methods)
+                        if hasattr(route, "methods")
+                        else [],
+                        "name": route.name,
+                    }
+                )
 
         return {
             "status": "running",
             "process_info": result["stdout"],
             "environment": env_vars,
             "routes_count": len(routes_info),
-            "routes": routes_info[:10]  # Show first 10 routes
+            "routes": routes_info[:10],  # Show first 10 routes
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/logs")
 async def get_logs(
     level: str = Query("INFO", regex="^(INFO|ERROR|DEBUG|WARNING)$"),
-    lines: int = Query(50, ge=1, le=1000)
+    lines: int = Query(50, ge=1, le=1000),
 ) -> Dict[str, Any]:
     """Get server logs filtered by level."""
     try:
@@ -257,19 +292,17 @@ async def get_logs(
 
         # Filter logs by level
         logs = result["stdout"].split("\n")
-        filtered_logs = [
-            log for log in logs
-            if level in log
-        ]
+        filtered_logs = [log for log in logs if level in log]
 
         return {
             "level": level,
             "total_lines": len(filtered_logs),
-            "logs": "\n".join(filtered_logs)
+            "logs": "\n".join(filtered_logs),
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/", response_class=HTMLResponse)
 async def get_dev_tools_page():
@@ -280,10 +313,11 @@ async def get_dev_tools_page():
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Dev tools page not found")
 
+
 @router.get("/schema")
 async def get_database_schema(
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get detailed database schema information including:
@@ -297,7 +331,9 @@ async def get_database_schema(
         tenant_id = user_context_service.get_tenant_id(current_user)
 
         # RBAC checks removed
-        logger.info(f"RBAC removed: Using JWT validation only for get_database_schema endpoint, tenant: {tenant_id}")
+        logger.info(
+            f"RBAC removed: Using JWT validation only for get_database_schema endpoint, tenant: {tenant_id}"
+        )
 
         # Router owns transaction boundaries - wrap DB operations in transaction
         try:
@@ -333,18 +369,17 @@ async def get_database_schema(
                 for row in result:
                     row_dict = dict(row) if row else {}
                     table_info = {
-                        "name": row_dict.get('table_name', ''),
-                        "description": row_dict.get('description', ''),
-                        "columns": row_dict.get('columns', 0),
-                        "used_by_routes": await get_routes_using_table(row_dict.get('table_name', ''), session)
+                        "name": row_dict.get("table_name", ""),
+                        "description": row_dict.get("description", ""),
+                        "columns": row_dict.get("columns", 0),
+                        "used_by_routes": await get_routes_using_table(
+                            row_dict.get("table_name", ""), session
+                        ),
                     }
                     tables.append(table_info)
 
             # Return after transaction is complete
-            return {
-                "status": "ok",
-                "tables": tables
-            }
+            return {"status": "ok", "tables": tables}
         except HTTPException:
             # Propagate HTTP exceptions directly
             raise
@@ -359,6 +394,7 @@ async def get_database_schema(
         # Handle unexpected errors
         logger.error(f"Error in get_database_schema: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
 
 @router.get("/routes")
 async def get_route_information(request: Request) -> Dict[str, Any]:
@@ -386,9 +422,10 @@ async def get_route_information(request: Request) -> Dict[str, Any]:
                     # Get required fields from function parameters
                     params = inspect.signature(handler).parameters
                     required_fields = [
-                        name for name, param in params.items()
+                        name
+                        for name, param in params.items()
                         if param.default == inspect.Parameter.empty
-                        and name not in ['self', 'cls']
+                        and name not in ["self", "cls"]
                     ]
 
                     # Safely get description
@@ -400,33 +437,35 @@ async def get_route_information(request: Request) -> Dict[str, Any]:
 
                     route_info = {
                         "path": route.path,
-                        "methods": list(route.methods) if hasattr(route, "methods") else [],
+                        "methods": list(route.methods)
+                        if hasattr(route, "methods")
+                        else [],
                         "description": description,
                         "tables_used": list(tables_used),
                         "required_fields": required_fields,
-                        "auth_required": "get_current_user" in source or "verify_token" in source
+                        "auth_required": "get_current_user" in source
+                        or "verify_token" in source,
                     }
                     routes_info.append(route_info)
                 except Exception as route_error:
                     # If we can't analyze a route, include basic info
-                    routes_info.append({
-                        "path": route.path,
-                        "methods": list(route.methods) if hasattr(route, "methods") else [],
-                        "description": "Error analyzing route",
-                        "error": str(route_error)
-                    })
+                    routes_info.append(
+                        {
+                            "path": route.path,
+                            "methods": list(route.methods)
+                            if hasattr(route, "methods")
+                            else [],
+                            "description": "Error analyzing route",
+                            "error": str(route_error),
+                        }
+                    )
 
-        return {
-            "status": "ok",
-            "routes": routes_info
-        }
+        return {"status": "ok", "routes": routes_info}
 
     except Exception as e:
         logger.error(f"Error getting route information: {str(e)}")
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+        return {"status": "error", "error": str(e)}
+
 
 async def get_routes_using_table(table_name: str, session: AsyncSession) -> List[str]:
     """
@@ -445,12 +484,19 @@ async def get_routes_using_table(table_name: str, session: AsyncSession) -> List
     # This avoids the circular import issue
     return routes
 
+
 def extract_tables_from_source(source: str) -> set:
     """Extract table names from SQL queries in source code."""
     # Common table names in our application
     common_tables = {
-        'jobs', 'domains', 'sitemap_files', 'sitemap_urls',
-        'users', 'roles', 'permissions', 'features'
+        "jobs",
+        "domains",
+        "sitemap_files",
+        "sitemap_urls",
+        "users",
+        "roles",
+        "permissions",
+        "features",
     }
 
     found_tables = set()
@@ -463,10 +509,10 @@ def extract_tables_from_source(source: str) -> set:
 
     return found_tables
 
+
 @router.get("/system-status")
 async def get_system_status(
-    request: Request,
-    session: AsyncSession = Depends(get_session_dependency)
+    request: Request, session: AsyncSession = Depends(get_session_dependency)
 ) -> Dict[str, Any]:
     """Get the status of all system components"""
     sitemap_handler = SitemapDBHandler()
@@ -490,7 +536,9 @@ async def get_system_status(
             "type": "postgres",
             "host": os.getenv("POSTGRES_HOST", "Not configured"),
             "database": os.getenv("POSTGRES_DB", "Not configured"),
-            "tables": await sitemap_handler.get_table_info(session) if db_status else []
+            "tables": await sitemap_handler.get_table_info(session)
+            if db_status
+            else [],
         }
 
         # Get environment info
@@ -500,18 +548,22 @@ async def get_system_status(
             "POSTGRES_HOST": bool(os.getenv("POSTGRES_HOST")),
             "POSTGRES_DB": bool(os.getenv("POSTGRES_DB")),
             "POSTGRES_USER": bool(os.getenv("POSTGRES_USER")),
-            "POSTGRES_PASSWORD": bool(os.getenv("POSTGRES_PASSWORD"))
+            "POSTGRES_PASSWORD": bool(os.getenv("POSTGRES_PASSWORD")),
         }
 
         # Get routes info
         routes_info = []
         for route in request.app.routes:
             if hasattr(route, "endpoint"):
-                routes_info.append({
-                    "path": route.path,
-                    "methods": list(route.methods) if hasattr(route, "methods") else [],
-                    "name": route.name
-                })
+                routes_info.append(
+                    {
+                        "path": route.path,
+                        "methods": list(route.methods)
+                        if hasattr(route, "methods")
+                        else [],
+                        "name": route.name,
+                    }
+                )
 
         return {
             "status": "ok",
@@ -520,19 +572,16 @@ async def get_system_status(
             "api_version": "v1",
             "routes_count": len(routes_info),
             "routes": routes_info[:10],  # Show first 10 routes
-            "timestamp": current_time
+            "timestamp": current_time,
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "timestamp": current_time
-        }
+        return {"status": "error", "error": str(e), "timestamp": current_time}
+
 
 @router.get("/database/tables")
 async def get_database_tables(
-    session: AsyncSession = Depends(get_session_dependency)
+    session: AsyncSession = Depends(get_session_dependency),
 ) -> Dict[str, Any]:
     """Get information about database tables"""
     try:
@@ -542,22 +591,17 @@ async def get_database_tables(
         async with session.begin():
             tables = await sitemap_handler.get_table_info(session)
 
-        return {
-            "status": "ok",
-            "tables": tables
-        }
+        return {"status": "ok", "tables": tables}
     except Exception as e:
         logger.error(f"Error getting database tables: {str(e)}")
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+        return {"status": "error", "error": str(e)}
+
 
 @router.get("/database/table/{table_name}")
 async def get_table_fields(
     table_name: str,
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get fields and sample data for a specific database table
@@ -567,16 +611,30 @@ async def get_table_fields(
         tenant_id = user_context_service.get_tenant_id(current_user)
 
         # RBAC checks removed
-        logger.info(f"RBAC removed: Using JWT validation only for get_table_fields endpoint, tenant: {tenant_id}")
+        logger.info(
+            f"RBAC removed: Using JWT validation only for get_table_fields endpoint, tenant: {tenant_id}"
+        )
 
         try:
             # Validate table name to prevent SQL injection
-            valid_tables = ['jobs', 'domains', 'sitemap_files', 'sitemap_urls',
-                            'profiles', 'feature_flags', 'tenant_features',
-                            'sidebar_features', 'permissions', 'roles', 'role_permissions']
+            valid_tables = [
+                "jobs",
+                "domains",
+                "sitemap_files",
+                "sitemap_urls",
+                "profiles",
+                "feature_flags",
+                "tenant_features",
+                "sidebar_features",
+                "permissions",
+                "roles",
+                "role_permissions",
+            ]
 
             if table_name not in valid_tables:
-                raise HTTPException(status_code=400, detail=f"Invalid table name: {table_name}")
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid table name: {table_name}"
+                )
 
             # Router owns transaction boundaries
             async with session.begin():
@@ -587,7 +645,9 @@ async def get_table_fields(
                     WHERE table_schema = 'public' AND table_name = :table_name
                     ORDER BY ordinal_position
                 """)
-                columns = await session.execute(column_query, {"table_name": table_name})
+                columns = await session.execute(
+                    column_query, {"table_name": table_name}
+                )
 
                 # Get sample data (first 10 rows)
                 sample_query = text(f"SELECT * FROM {table_name} LIMIT 10")
@@ -596,10 +656,11 @@ async def get_table_fields(
                 # Process results inside transaction
                 columns_result = [
                     {
-                        "name": dict(col).get('column_name', ''),
-                        "type": dict(col).get('data_type', ''),
-                        "nullable": dict(col).get('is_nullable', '') == "YES"
-                    } for col in columns.fetchall()
+                        "name": dict(col).get("column_name", ""),
+                        "type": dict(col).get("data_type", ""),
+                        "nullable": dict(col).get("is_nullable", "") == "YES",
+                    }
+                    for col in columns.fetchall()
                 ]
 
                 sample_data_result = [dict(row) for row in sample_data.fetchall()]
@@ -609,7 +670,7 @@ async def get_table_fields(
                 "status": "ok",
                 "table_name": table_name,
                 "columns": columns_result,
-                "sample_data": sample_data_result
+                "sample_data": sample_data_result,
             }
         except HTTPException:
             raise
@@ -622,10 +683,11 @@ async def get_table_fields(
         logger.error(f"Error in get_table_fields: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
+
 @router.get("/db-tables", response_class=JSONResponse)
 async def get_db_tables(
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get a list of all database tables.
@@ -635,17 +697,21 @@ async def get_db_tables(
         tenant_id = user_context_service.get_tenant_id(current_user)
 
         # RBAC checks removed
-        logger.info(f"RBAC removed: Using JWT validation only for get_db_tables endpoint, tenant: {tenant_id}")
+        logger.info(
+            f"RBAC removed: Using JWT validation only for get_db_tables endpoint, tenant: {tenant_id}"
+        )
 
         try:
             # Router owns transaction boundaries
             async with session.begin():
-                result = await session.execute(text("""
+                result = await session.execute(
+                    text("""
                     SELECT table_name
                     FROM information_schema.tables
                     WHERE table_schema = 'public'
                     ORDER BY table_name
-                """))
+                """)
+                )
                 tables = [row[0] for row in result.fetchall()]
 
             # Return after transaction completes
@@ -660,6 +726,7 @@ async def get_db_tables(
     except Exception as e:
         logger.error(f"Error in get_db_tables: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
 
 # SQL statements for sidebar feature setup
 ADD_COLUMN_SQL = """
@@ -742,10 +809,11 @@ VERIFY_SQL = """
 SELECT group_name, COUNT(*) FROM sidebar_features GROUP BY group_name;
 """
 
+
 @router.post("/setup-sidebar", response_class=JSONResponse)
 async def setup_sidebar(
     session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Set up sidebar features table with grouped items.
@@ -756,11 +824,15 @@ async def setup_sidebar(
         tenant_id = user_context_service.get_tenant_id(current_user)
 
         # RBAC checks removed
-        logger.info(f"RBAC removed: Using JWT validation only for setup_sidebar endpoint, tenant: {tenant_id}")
+        logger.info(
+            f"RBAC removed: Using JWT validation only for setup_sidebar endpoint, tenant: {tenant_id}"
+        )
 
         # Router owns transaction boundaries - wrap all DB operations in transaction
         try:
-            logger.info("Setting up sidebar features with standardized transaction handling")
+            logger.info(
+                "Setting up sidebar features with standardized transaction handling"
+            )
             async with session.begin():
                 # Step 1: Add group_name column
                 logger.info("Adding group_name column...")
@@ -794,7 +866,7 @@ async def setup_sidebar(
             return {
                 "success": True,
                 "message": "Sidebar setup completed successfully",
-                "counts": counts
+                "counts": counts,
             }
         except HTTPException:
             # Propagate HTTP exceptions directly
@@ -811,6 +883,7 @@ async def setup_sidebar(
         logger.error(f"Error in setup_sidebar: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
+
 @router.get("/process-pending-domains")
 async def process_pending_domains_endpoint(limit: int = 5):
     """
@@ -825,10 +898,15 @@ async def process_pending_domains_endpoint(limit: int = 5):
 
     return {
         "status": "success",
-        "message": f"Manually triggered processing of up to {limit} pending domains"
+        "message": f"Manually triggered processing of up to {limit} pending domains",
     }
 
-@router.get("/scheduler_status", summary="Get Scheduler Status", dependencies=[Depends(require_dev_mode)])
+
+@router.get(
+    "/scheduler_status",
+    summary="Get Scheduler Status",
+    dependencies=[Depends(require_dev_mode)],
+)
 async def check_scheduler_status():
     """
     Returns the current status and list of jobs for the shared APScheduler instance.
@@ -839,24 +917,35 @@ async def check_scheduler_status():
         status = "running" if scheduler.running else "stopped"
         jobs_info = []
         for job in scheduler.get_jobs():
-            jobs_info.append({
-                "id": job.id,
-                "name": job.name,
-                "trigger": str(job.trigger),
-                "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
-                "pending": job.pending # Check if job is due but waiting for executor
-            })
+            jobs_info.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "trigger": str(job.trigger),
+                    "next_run_time": job.next_run_time.isoformat()
+                    if job.next_run_time
+                    else None,
+                    "pending": job.pending,  # Check if job is due but waiting for executor
+                }
+            )
         return {
             "status": status,
             "jobs": jobs_info,
             "total_jobs": len(jobs_info),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error retrieving scheduler status: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve scheduler status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve scheduler status: {str(e)}"
+        )
 
-@router.get("/trigger_domain_processing", summary="Trigger Domain Processing Job", dependencies=[Depends(require_dev_mode)])
+
+@router.get(
+    "/trigger_domain_processing",
+    summary="Trigger Domain Processing Job",
+    dependencies=[Depends(require_dev_mode)],
+)
 async def trigger_domain_processing_endpoint():
     """
     Manually triggers the 'process_pending_domains' job to run immediately.
@@ -875,50 +964,80 @@ async def trigger_domain_processing_endpoint():
             raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
     except Exception as e:
         logger.error(f"Error triggering job '{job_id}': {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to trigger job '{job_id}': {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to trigger job '{job_id}': {str(e)}"
+        )
+
 
 # --- Test Endpoint for Domain Sitemap Submission Adapter ---
-@router.post("/test-sitemap-adapter/{domain_id}", summary="Test Domain Sitemap Submission Adapter", dependencies=[Depends(require_dev_mode)])
-async def test_domain_sitemap_submission(domain_id: UUID, session = Depends(get_db_session)):
+@router.post(
+    "/test-sitemap-adapter/{domain_id}",
+    summary="Test Domain Sitemap Submission Adapter",
+    dependencies=[Depends(require_dev_mode)],
+)
+async def test_domain_sitemap_submission(
+    domain_id: UUID, session=Depends(get_db_session)
+):
     """
     Manually triggers the DomainToSitemapAdapterService for a specific domain ID.
     Requires dev mode.
     """
-    logger.info(f"Received request to test sitemap submission for domain ID: {domain_id}")
+    logger.info(
+        f"Received request to test sitemap submission for domain ID: {domain_id}"
+    )
     adapter_service = DomainToSitemapAdapterService()
     try:
         # Fetch the domain first to ensure it exists
         domain = await session.get(Domain, domain_id)
         if not domain:
-            raise HTTPException(status_code=404, detail=f"Domain with ID {domain_id} not found.")
+            raise HTTPException(
+                status_code=404, detail=f"Domain with ID {domain_id} not found."
+            )
 
         logger.info(f"Attempting submission for domain: {domain.domain}")
         # Use a separate transaction for the test submission to mimic scheduler behavior
-        async with session.begin_nested(): # Or begin() if you want full rollback on failure here
+        async with (
+            session.begin_nested()
+        ):  # Or begin() if you want full rollback on failure here
             # Optionally mark as processing first if the service expects it
             # setattr(domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.processing)
             # await session.flush()
 
             success = await adapter_service.submit_domain_to_legacy_sitemap(
-                domain_id=domain_id,
-                session=session
+                domain_id=domain_id, session=session
             )
 
             # Read the status set by the adapter
-            final_status = getattr(domain, 'sitemap_analysis_status', 'Unknown')
-            error_message = getattr(domain, 'sitemap_analysis_error', None)
+            final_status = getattr(domain, "sitemap_analysis_status", "Unknown")
+            error_message = getattr(domain, "sitemap_analysis_error", None)
 
         if success:
-            logger.info(f"Test submission for domain {domain_id} successful. Final status: {final_status}")
-            return {"message": f"Test submission for domain {domain_id} successful.", "status": final_status}
+            logger.info(
+                f"Test submission for domain {domain_id} successful. Final status: {final_status}"
+            )
+            return {
+                "message": f"Test submission for domain {domain_id} successful.",
+                "status": final_status,
+            }
         else:
-            logger.warning(f"Test submission for domain {domain_id} failed. Final status: {final_status}, Error: {error_message}")
-            raise HTTPException(status_code=500, detail=f"Test submission failed. Status: {final_status}. Error: {error_message}")
+            logger.warning(
+                f"Test submission for domain {domain_id} failed. Final status: {final_status}, Error: {error_message}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Test submission failed. Status: {final_status}. Error: {error_message}",
+            )
 
     except HTTPException as http_exc:
-        raise http_exc # Re-raise HTTP exceptions
+        raise http_exc  # Re-raise HTTP exceptions
     except Exception as e:
-        logger.error(f"Error during test sitemap submission for domain {domain_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error during test submission: {str(e)}")
+        logger.error(
+            f"Error during test sitemap submission for domain {domain_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error during test submission: {str(e)}"
+        )
+
 
 # --- End Test Endpoint ---

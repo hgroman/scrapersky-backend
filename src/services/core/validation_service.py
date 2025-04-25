@@ -4,6 +4,7 @@ Validation Service
 This module provides validation utilities for common data types
 and domain-specific validation logic.
 """
+
 import logging
 import re
 import uuid
@@ -14,6 +15,7 @@ import validators
 
 logger = logging.getLogger(__name__)
 
+
 class ValidationService:
     """
     Service for validating input data.
@@ -23,15 +25,15 @@ class ValidationService:
 
     # URL validation regex
     URL_REGEX = re.compile(
-        r'^(http|https)://'  # scheme
-        r'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?'  # domain
-        r'(/[a-zA-Z0-9_\-./~!*\'();:@&=+$,?%]*)?'  # path
-        r'(\?[a-zA-Z0-9_\-./~!*\'();:@&=+$,%?]*)?'  # query string
-        r'(#[a-zA-Z0-9_\-./~!*\'();:@&=+$,%?]*)?$'  # fragment
+        r"^(http|https)://"  # scheme
+        r"([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?"  # domain
+        r"(/[a-zA-Z0-9_\-./~!*\'();:@&=+$,?%]*)?"  # path
+        r"(\?[a-zA-Z0-9_\-./~!*\'();:@&=+$,%?]*)?"  # query string
+        r"(#[a-zA-Z0-9_\-./~!*\'();:@&=+$,%?]*)?$"  # fragment
     )
 
     # Email validation regex
-    EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     def validate_url(self, url: str) -> bool:
         """
@@ -79,7 +81,7 @@ class ValidationService:
 
         # Remove protocol if present
         if domain.startswith(("http://", "https://")):
-            domain = re.sub(r'^https?://', '', domain)
+            domain = re.sub(r"^https?://", "", domain)
 
         # Remove path if present
         domain = domain.split("/")[0]
@@ -156,7 +158,9 @@ class ValidationService:
         except ValueError:
             raise ValueError(f"Invalid date format. Expected {format_str}: {date_str}")
 
-    def validate_required_fields(self, data: Dict[str, Any], required_fields: List[str]) -> bool:
+    def validate_required_fields(
+        self, data: Dict[str, Any], required_fields: List[str]
+    ) -> bool:
         """
         Validate that all required fields are present in the data.
 
@@ -170,7 +174,11 @@ class ValidationService:
         Raises:
             ValueError: If any required fields are missing
         """
-        missing_fields = [field for field in required_fields if field not in data or data[field] is None]
+        missing_fields = [
+            field
+            for field in required_fields
+            if field not in data or data[field] is None
+        ]
 
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
@@ -182,7 +190,7 @@ class ValidationService:
         value: str,
         field_name: str,
         min_length: Optional[int] = None,
-        max_length: Optional[int] = None
+        max_length: Optional[int] = None,
     ) -> bool:
         """
         Validate a string's length.
@@ -218,7 +226,7 @@ class ValidationService:
         value: Union[int, float],
         field_name: str,
         min_value: Optional[Union[int, float]] = None,
-        max_value: Optional[Union[int, float]] = None
+        max_value: Optional[Union[int, float]] = None,
     ) -> bool:
         """
         Validate a numeric value's range.

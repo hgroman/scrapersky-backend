@@ -14,10 +14,10 @@ from .exceptions import (
 )
 
 __all__ = [
-    'BaseError',
-    'NotFoundError',
-    'ValidationError',
-    'AuthenticationError',
-    'AuthorizationError',
-    'DatabaseError'
+    "BaseError",
+    "NotFoundError",
+    "ValidationError",
+    "AuthenticationError",
+    "AuthorizationError",
+    "DatabaseError",
 ]

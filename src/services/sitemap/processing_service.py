@@ -4,10 +4,11 @@ Sitemap Processing Service
 This module provides services for handling sitemap scanning, processing, and domain metadata extraction.
 It leverages the SitemapAnalyzer class for the actual sitemap discovery and processing.
 """
+
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional
 
 from fastapi import BackgroundTasks, HTTPException
 
@@ -15,9 +16,7 @@ from fastapi import BackgroundTasks, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...scraper.domain_utils import standardize_domain
 from ...scraper.sitemap_analyzer import SitemapAnalyzer  # Import the SitemapAnalyzer
-from ..core.db_service import db_service
 from ..core.validation_service import validation_service
 
 # Configure logger
@@ -30,16 +29,19 @@ logger = logging.getLogger(__name__)
 # In-memory job status tracking
 _job_statuses: Dict[str, Dict[str, Any]] = {}
 
+
 # Define simplified models for this service
 class SitemapScrapingRequest(BaseModel):
     base_url: str
     max_pages: int = 1000
     # tenant_id removed from request model
 
+
 class SitemapScrapingResponse(BaseModel):
     job_id: str
     status: str
     status_url: str
+
 
 class JobStatusResponse(BaseModel):
     status: str
@@ -55,6 +57,7 @@ class JobStatusResponse(BaseModel):
     error: Optional[str] = None
     created_at: Optional[str] = None
     completed_at: Optional[str] = None
+
 
 class SitemapProcessingService:
     """
@@ -105,7 +108,9 @@ class SitemapProcessingService:
         """
         # Check if the session is already in a transaction
         in_transaction = session.in_transaction()
-        logger.debug(f"Session transaction state in initiate_domain_scan: {in_transaction}")
+        logger.debug(
+            f"Session transaction state in initiate_domain_scan: {in_transaction}"
+        )
 
         # Validate request parameters
         self._validate_scan_request(request)
@@ -122,9 +127,7 @@ class SitemapProcessingService:
             "started_at": datetime.now().isoformat(),
             "created_at": datetime.now().isoformat(),
             "progress": 0.0,
-            "metadata": {
-                "sitemaps": []
-            }
+            "metadata": {"sitemaps": []},
         }
 
         # Store in memory tracking
@@ -140,9 +143,7 @@ class SitemapProcessingService:
             "status": "running",
             "domain_id": None,
             "progress": 0.0,
-            "job_metadata": {
-                "domain": request.base_url
-            }
+            "job_metadata": {"domain": request.base_url},
         }
 
         try:
@@ -153,26 +154,26 @@ class SitemapProcessingService:
                 job_id=job_id,
                 domain=request.base_url,
                 user_id=current_user.get("user_id") if current_user else None,
-                max_urls=request.max_pages
+                max_urls=request.max_pages,
             )
 
             # Return immediate response with job ID
             status_url = f"/api/v3/sitemap/status/{job_id}"
             return SitemapScrapingResponse(
-                job_id=job_id,
-                status="started",
-                status_url=status_url
+                job_id=job_id, status="started", status_url=status_url
             )
 
         except Exception as e:
             logger.error(f"Failed to initiate scan: {str(e)}")
             # Update job status on error
             if job_id in _job_statuses:
-                _job_statuses[job_id]['status'] = 'failed'
-                _job_statuses[job_id]['error'] = str(e)
-                _job_statuses[job_id]['completed_at'] = datetime.utcnow().isoformat()
+                _job_statuses[job_id]["status"] = "failed"
+                _job_statuses[job_id]["error"] = str(e)
+                _job_statuses[job_id]["completed_at"] = datetime.utcnow().isoformat()
 
-            raise HTTPException(status_code=500, detail=f"Failed to initiate scan: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to initiate scan: {str(e)}"
+            )
 
     def _validate_scan_request(self, request: SitemapScrapingRequest) -> None:
         """
@@ -207,10 +208,10 @@ class SitemapProcessingService:
             error_msg: Error message to store
         """
         if job_id in _job_statuses:
-            _job_statuses[job_id]['status'] = 'failed'
-            _job_statuses[job_id]['error'] = error_msg
-            _job_statuses[job_id]['completed_at'] = datetime.utcnow().isoformat()
-            _job_statuses[job_id]['progress'] = 0.0
+            _job_statuses[job_id]["status"] = "failed"
+            _job_statuses[job_id]["error"] = error_msg
+            _job_statuses[job_id]["completed_at"] = datetime.utcnow().isoformat()
+            _job_statuses[job_id]["progress"] = 0.0
 
     # _process_domain method removed - it was non-compliant with database connection standards
     # All background processing should use process_domain_with_own_session which follows
@@ -241,17 +242,19 @@ class SitemapProcessingService:
             # Try to get the job from in-memory cache first
             if job_id in _job_statuses:
                 job_data = _job_statuses[job_id]
-                logger.debug(f"Found job in memory: {job_id}, status: {job_data.get('status')}")
+                logger.debug(
+                    f"Found job in memory: {job_id}, status: {job_data.get('status')}"
+                )
 
                 # Create response using in-memory data
                 return JobStatusResponse(
                     job_id=job_id,
-                    status=job_data.get('status', 'unknown'),
-                    domain=job_data.get('domain'),
-                    progress=job_data.get('progress', 0.0),
-                    created_at=job_data.get('created_at'),
-                    metadata=job_data.get('metadata', {}),
-                    error=job_data.get('error')
+                    status=job_data.get("status", "unknown"),
+                    domain=job_data.get("domain"),
+                    progress=job_data.get("progress", 0.0),
+                    created_at=job_data.get("created_at"),
+                    metadata=job_data.get("metadata", {}),
+                    error=job_data.get("error"),
                 )
 
             # If not in memory, try to get from database
@@ -260,27 +263,37 @@ class SitemapProcessingService:
                 from sqlalchemy import select
 
                 from ...models.job import Job
+
                 # REMOVED: tenant_id filter to prevent tenant-related errors
                 query = select(Job).where(Job.job_id == job_id)
 
-                result = await session.execute(query, execution_options={
-                    "no_parameters": True,
-                    "statement_cache_size": 0
-                })
+                result = await session.execute(
+                    query,
+                    execution_options={
+                        "no_parameters": True,
+                        "statement_cache_size": 0,
+                    },
+                )
                 job = result.scalar_one_or_none()
 
                 if job:
-                    logger.debug(f"Found job in database: {job_id}, status: {job.status}")
+                    logger.debug(
+                        f"Found job in database: {job_id}, status: {job.status}"
+                    )
 
                     # Create response using database data
                     return JobStatusResponse(
                         job_id=str(job.job_id),
                         status=str(job.status),
-                        domain=job.metadata.get('domain') if job.metadata else None,
-                        progress=0.0 if job.progress is None else float(str(job.progress)),
-                        created_at=job.created_at.isoformat() if job.created_at else None,
+                        domain=job.metadata.get("domain") if job.metadata else None,
+                        progress=0.0
+                        if job.progress is None
+                        else float(str(job.progress)),
+                        created_at=job.created_at.isoformat()
+                        if job.created_at
+                        else None,
                         metadata=job.metadata or {},
-                        error=None if job.error is None else str(job.error)
+                        error=None if job.error is None else str(job.error),
                     )
             except Exception as db_error:
                 logger.error(f"Error getting job from database: {str(db_error)}")
@@ -291,17 +304,21 @@ class SitemapProcessingService:
                 job_id=job_id,
                 status="not_found",
                 message=f"Job {job_id} not found",
-                progress=0.0  # Ensure progress is always a valid float
+                progress=0.0,  # Ensure progress is always a valid float
             )
 
         except Exception as e:
             logger.error(f"Error retrieving job status: {str(e)}")
             raise ValueError(f"Error retrieving job status: {str(e)}")
 
+
 # Singleton instance
 sitemap_processing_service = SitemapProcessingService()
 
-async def _update_job_failure(session: AsyncSession, job_id: str, error_message: str) -> None:
+
+async def _update_job_failure(
+    session: AsyncSession, job_id: str, error_message: str
+) -> None:
     """
     Update job status to failed with the given error message.
     This is a helper function used in background tasks.
@@ -313,10 +330,10 @@ async def _update_job_failure(session: AsyncSession, job_id: str, error_message:
     """
     # Memory-based status update
     if job_id in _job_statuses:
-        _job_statuses[job_id]['status'] = 'failed'
-        _job_statuses[job_id]['error'] = error_message
-        _job_statuses[job_id]['completed_at'] = datetime.utcnow().isoformat()
-        _job_statuses[job_id]['progress'] = 0.0
+        _job_statuses[job_id]["status"] = "failed"
+        _job_statuses[job_id]["error"] = error_message
+        _job_statuses[job_id]["completed_at"] = datetime.utcnow().isoformat()
+        _job_statuses[job_id]["progress"] = 0.0
 
     # Add ORM-based job status update here if needed
     # This would update the jobs table directly
@@ -330,22 +347,22 @@ async def _update_job_failure(session: AsyncSession, job_id: str, error_message:
             update(Job)
             .where(Job.job_id == job_id)
             .values(
-                status='failed',
+                status="failed",
                 error=error_message,
                 progress=0.0,
-                updated_at=datetime.utcnow()
+                updated_at=datetime.utcnow(),
             ),
-            execution_options={
-                "no_parameters": True,
-                "statement_cache_size": 0
-            }
+            execution_options={"no_parameters": True, "statement_cache_size": 0},
         )
         await session.flush()
         logger.debug(f"Updated job {job_id} status to failed in database")
     except Exception as e:
         logger.error(f"Failed to update job status in database: {str(e)}")
 
-async def process_domain_with_own_session(job_id: str, domain: str, user_id: Optional[str] = None, max_urls: int = 100):
+
+async def process_domain_with_own_session(
+    job_id: str, domain: str, user_id: Optional[str] = None, max_urls: int = 100
+):
     """
     Process domain with its own dedicated session for background task reliability.
 
@@ -362,14 +379,16 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
         max_urls: Maximum number of URLs to process per sitemap
     """
     # Import the proper session factory that works with Supabase - this is the ONE AND ONLY ONE acceptable method
-    from sqlalchemy import select, text, update
+    from sqlalchemy import select, update
 
     from ...models.domain import Domain
     from ...models.sitemap import SitemapFile, SitemapUrl
     from ...scraper.domain_utils import standardize_domain
     from ...session.async_session import get_background_session
 
-    logger.info(f"Starting dedicated background processing for domain: {domain}, job_id: {job_id}")
+    logger.info(
+        f"Starting dedicated background processing for domain: {domain}, job_id: {job_id}"
+    )
 
     # Add critical debug logging
     logger.info(f"Job parameters: user_id={user_id}")
@@ -383,9 +402,9 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
 
     # Update job status to running - in memory only, no transaction needed
     if job_id in _job_statuses:
-        _job_statuses[job_id]['status'] = 'running'
-        _job_statuses[job_id]['started_at'] = datetime.utcnow().isoformat()
-        _job_statuses[job_id]['progress'] = 0.1
+        _job_statuses[job_id]["status"] = "running"
+        _job_statuses[job_id]["started_at"] = datetime.utcnow().isoformat()
+        _job_statuses[job_id]["progress"] = 0.1
 
     # Initialize analyzer outside the session scope to manage its resources properly
     analyzer = SitemapAnalyzer()
@@ -398,8 +417,8 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
 
     try:
         # Standardize domain - ensure URL has http/https prefix
-        if not domain.startswith(('http://', 'https://')):
-            domain = 'https://' + domain
+        if not domain.startswith(("http://", "https://")):
+            domain = "https://" + domain
 
         clean_domain = standardize_domain(domain)
         logger.info(f"Standardized domain: {clean_domain}")
@@ -424,20 +443,22 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
             domain=clean_domain,
             follow_robots_txt=True,
             extract_urls=True,
-            max_urls_per_sitemap=max_urls
+            max_urls_per_sitemap=max_urls,
         )
 
         # Get discovered sitemaps
-        sitemaps = result.get('sitemaps', [])
+        sitemaps = result.get("sitemaps", [])
         logger.info(f"Found {len(sitemaps)} sitemaps for domain: {clean_domain}")
 
         # ADDITIONAL DEBUG LOGGING
         if len(sitemaps) == 0:
             logger.warning(f"No sitemaps found for domain: {clean_domain}")
-            discovery_methods = result.get('discovery_methods', {})
-            sitemap_types = result.get('sitemap_types', {})
-            error = result.get('error', 'No error specified')
-            logger.warning(f"Discovery methods: {discovery_methods}, Sitemap types: {sitemap_types}, Error: {error}")
+            discovery_methods = result.get("discovery_methods", {})
+            sitemap_types = result.get("sitemap_types", {})
+            error = result.get("error", "No error specified")
+            logger.warning(
+                f"Discovery methods: {discovery_methods}, Sitemap types: {sitemap_types}, Error: {error}"
+            )
 
             # Let's directly try the most common sitemap URL
             direct_url = f"https://{clean_domain}/sitemap.xml"
@@ -446,29 +467,37 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
             # Test the direct sitemap URL
             try:
                 is_valid, meta = await analyzer._validate_sitemap_url(direct_url)
-                logger.warning(f"Direct sitemap test result: is_valid={is_valid}, metadata={meta}")
+                logger.warning(
+                    f"Direct sitemap test result: is_valid={is_valid}, metadata={meta}"
+                )
 
                 if is_valid:
-                    logger.warning(f"Sitemap is valid but wasn't discovered in the normal process! Adding it manually.")
-                    sitemaps.append({
-                        'url': direct_url,
-                        'discovery_method': 'manual_test',
-                        'domain': clean_domain,
-                        **meta
-                    })
+                    logger.warning(
+                        "Sitemap is valid but wasn't discovered in the normal process! Adding it manually."
+                    )
+                    sitemaps.append(
+                        {
+                            "url": direct_url,
+                            "discovery_method": "manual_test",
+                            "domain": clean_domain,
+                            **meta,
+                        }
+                    )
             except Exception as e:
                 logger.error(f"Error testing direct sitemap URL: {e}")
         else:
             # Log details about discovered sitemaps
             for i, sitemap in enumerate(sitemaps):
-                logger.info(f"Sitemap #{i+1}: URL={sitemap.get('url')}, type={sitemap.get('sitemap_type')}, method={sitemap.get('discovery_method')}")
+                logger.info(
+                    f"Sitemap #{i+1}: URL={sitemap.get('url')}, type={sitemap.get('sitemap_type')}, method={sitemap.get('discovery_method')}"
+                )
 
         # STEP 1: Check or create domain record with dedicated session
         domain_obj = None
         try:
             async with get_background_session() as session:
                 async with session.begin():
-                    logger.info(f"Started transaction for domain lookup/creation")
+                    logger.info("Started transaction for domain lookup/creation")
 
                     # Check if domain exists or create it
                     domain_query = select(Domain).where(Domain.domain == clean_domain)
@@ -478,16 +507,16 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                     if not domain_obj:
                         logger.debug(f"Creating new domain record for: {clean_domain}")
                         domain_obj = Domain(
-                            domain=clean_domain,
-                            created_by=user_uuid,
-                            status="active"
+                            domain=clean_domain, created_by=user_uuid, status="active"
                         )
                         session.add(domain_obj)
                         # Explicitly flush to get the domain ID
                         await session.flush()
                         logger.debug(f"Created domain record with ID: {domain_obj.id}")
                     else:
-                        logger.debug(f"Found existing domain record with ID: {domain_obj.id}")
+                        logger.debug(
+                            f"Found existing domain record with ID: {domain_obj.id}"
+                        )
                         # Update the domain user
                         await session.execute(
                             update(Domain)
@@ -495,7 +524,7 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                             .values(created_by=user_uuid)
                         )
                         await session.flush()
-                        logger.debug(f"Updated existing domain record user")
+                        logger.debug("Updated existing domain record user")
         except Exception as domain_error:
             logger.error(f"Error in domain lookup/creation: {str(domain_error)}")
             error_message = f"Failed to process domain record: {str(domain_error)}"
@@ -521,12 +550,14 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                             .values(
                                 total_sitemaps=0,
                                 sitemap_urls=0,
-                                last_scan=datetime.utcnow()
+                                last_scan=datetime.utcnow(),
                             )
                         )
-                        logger.info(f"Updated domain with zero sitemap counts")
+                        logger.info("Updated domain with zero sitemap counts")
             except Exception as update_error:
-                logger.error(f"Error updating domain with zero counts: {str(update_error)}")
+                logger.error(
+                    f"Error updating domain with zero counts: {str(update_error)}"
+                )
                 error_message = f"Error updating domain: {str(update_error)}"
                 # Continue anyway since this is not critical
 
@@ -542,27 +573,35 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
             try:
                 async with get_background_session() as session:
                     async with session.begin():
-                        sitemap_url = sitemap.get('url', '')
-                        sitemap_type = sitemap.get('sitemap_type', 'standard')
-                        discovery_method = sitemap.get('discovery_method', 'unknown')
-                        url_count = sitemap.get('url_count', 0)
-                        sitemap_size = sitemap.get('size_bytes', 0)
-                        sitemap_urls = sitemap.get('urls', [])
+                        sitemap_url = sitemap.get("url", "")
+                        sitemap_type = sitemap.get("sitemap_type", "standard")
+                        discovery_method = sitemap.get("discovery_method", "unknown")
+                        url_count = sitemap.get("url_count", 0)
+                        sitemap_size = sitemap.get("size_bytes", 0)
+                        sitemap_urls = sitemap.get("urls", [])
 
                         # Update the total URL count
                         total_url_count += url_count
 
                         # Check for metadata flags
-                        has_lastmod = any(url.get('lastmod') for url in sitemap_urls if url)
-                        has_priority = any(url.get('priority') for url in sitemap_urls if url)
-                        has_changefreq = any(url.get('changefreq') for url in sitemap_urls if url)
+                        has_lastmod = any(
+                            url.get("lastmod") for url in sitemap_urls if url
+                        )
+                        has_priority = any(
+                            url.get("priority") for url in sitemap_urls if url
+                        )
+                        has_changefreq = any(
+                            url.get("changefreq") for url in sitemap_urls if url
+                        )
 
                         logger.info(f"Creating sitemap record for URL: {sitemap_url}")
 
                         # Make sure URL isn't too long for the database
                         if sitemap_url and len(sitemap_url) > 2000:
                             sitemap_url = sitemap_url[:2000]
-                            logger.warning(f"Truncated sitemap URL to 2000 chars: {sitemap_url[:50]}...")
+                            logger.warning(
+                                f"Truncated sitemap URL to 2000 chars: {sitemap_url[:50]}..."
+                            )
 
                         # Create the sitemap record
                         sitemap_obj = SitemapFile(
@@ -575,10 +614,12 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                             has_priority=has_priority,
                             has_changefreq=has_changefreq,
                             created_by=user_uuid,
-                            job_id=uuid.UUID(job_id) if isinstance(job_id, str) else job_id,
+                            job_id=uuid.UUID(job_id)
+                            if isinstance(job_id, str)
+                            else job_id,
                             url_count=url_count,
                             tenant_id=uuid.UUID(DEFAULT_TENANT_ID),
-                            status='Completed'
+                            status="Completed",
                         )
                         session.add(sitemap_obj)
                         # Explicitly flush to get the sitemap ID
@@ -586,22 +627,26 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                         logger.info(f"Created sitemap record with ID: {sitemap_obj.id}")
 
                         # Track successfully stored sitemaps
-                        stored_sitemaps.append({
-                            "id": str(sitemap_obj.id),
-                            "url": sitemap_url,
-                            "type": sitemap_type,
-                            "url_count": url_count
-                        })
+                        stored_sitemaps.append(
+                            {
+                                "id": str(sitemap_obj.id),
+                                "url": sitemap_url,
+                                "type": sitemap_type,
+                                "url_count": url_count,
+                            }
+                        )
 
                         # Process URLs in batches
                         if sitemap_urls:
                             batch_size = 100
                             total_urls = len(sitemap_urls)
-                            logger.info(f"Processing {total_urls} URLs in batches of {batch_size}")
+                            logger.info(
+                                f"Processing {total_urls} URLs in batches of {batch_size}"
+                            )
 
                             for i in range(0, total_urls, batch_size):
                                 try:
-                                    batch_urls = sitemap_urls[i:i+batch_size]
+                                    batch_urls = sitemap_urls[i : i + batch_size]
                                     url_batch = []
 
                                     for url_data in batch_urls:
@@ -611,18 +656,18 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
 
                                             # Handle both 'url' and 'loc' fields from sitemap
                                             url_value = None
-                                            if 'loc' in url_data and url_data['loc']:
-                                                url_value = url_data['loc']
-                                            elif 'url' in url_data and url_data['url']:
-                                                url_value = url_data['url']
+                                            if "loc" in url_data and url_data["loc"]:
+                                                url_value = url_data["loc"]
+                                            elif "url" in url_data and url_data["url"]:
+                                                url_value = url_data["url"]
 
                                             if not url_value:
                                                 continue
 
                                             # Extract metadata
-                                            lastmod = url_data.get('lastmod')
-                                            changefreq = url_data.get('changefreq')
-                                            priority = url_data.get('priority')
+                                            lastmod = url_data.get("lastmod")
+                                            changefreq = url_data.get("changefreq")
+                                            priority = url_data.get("priority")
 
                                             # Create URL record
                                             url_obj = SitemapUrl(
@@ -632,12 +677,14 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                                                 changefreq=changefreq,
                                                 priority=priority,
                                                 tenant_id=uuid.UUID(DEFAULT_TENANT_ID),
-                                                created_by=user_uuid
+                                                created_by=user_uuid,
                                             )
                                             url_batch.append(url_obj)
 
                                         except Exception as url_error:
-                                            logger.error(f"Error processing URL data: {str(url_error)}")
+                                            logger.error(
+                                                f"Error processing URL data: {str(url_error)}"
+                                            )
                                             # Continue with next URL
                                             continue
 
@@ -646,10 +693,14 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                                         session.add_all(url_batch)
                                         # Flush after each batch for better performance
                                         await session.flush()
-                                        logger.debug(f"Added batch of {len(url_batch)} URLs")
+                                        logger.debug(
+                                            f"Added batch of {len(url_batch)} URLs"
+                                        )
 
                                 except Exception as batch_error:
-                                    logger.error(f"Error processing URL batch: {str(batch_error)}")
+                                    logger.error(
+                                        f"Error processing URL batch: {str(batch_error)}"
+                                    )
                                     # Continue with next batch
                                     continue
             except Exception as sitemap_error:
@@ -668,18 +719,24 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                             .values(
                                 total_sitemaps=len(stored_sitemaps),
                                 sitemap_urls=total_url_count,
-                                last_scan=datetime.utcnow()
+                                last_scan=datetime.utcnow(),
                             )
                         )
-                        logger.info(f"Updated domain with sitemap counts: {len(stored_sitemaps)} sitemaps, {total_url_count} URLs")
+                        logger.info(
+                            f"Updated domain with sitemap counts: {len(stored_sitemaps)} sitemaps, {total_url_count} URLs"
+                        )
         except Exception as update_error:
-            logger.error(f"Error updating domain with final counts: {str(update_error)}")
+            logger.error(
+                f"Error updating domain with final counts: {str(update_error)}"
+            )
             error_message = f"Error updating domain: {str(update_error)}"
             # Continue anyway since this is not critical
 
         # Mark as completed if we got here
         job_completed = True
-        logger.info(f"Sitemap processing completed successfully, stored {len(stored_sitemaps)} sitemaps")
+        logger.info(
+            f"Sitemap processing completed successfully, stored {len(stored_sitemaps)} sitemaps"
+        )
 
     except Exception as e:
         error_message = str(e)
@@ -695,15 +752,21 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
         try:
             if job_id in _job_statuses:
                 if job_completed:
-                    _job_statuses[job_id]['status'] = 'complete'
-                    _job_statuses[job_id]['progress'] = 1.0
-                    _job_statuses[job_id]['completed_at'] = datetime.utcnow().isoformat()
-                    _job_statuses[job_id]['metadata'] = {'sitemaps': stored_sitemaps}
-                    logger.info(f"Updated job status to complete, stored {len(stored_sitemaps)} sitemaps")
+                    _job_statuses[job_id]["status"] = "complete"
+                    _job_statuses[job_id]["progress"] = 1.0
+                    _job_statuses[job_id]["completed_at"] = (
+                        datetime.utcnow().isoformat()
+                    )
+                    _job_statuses[job_id]["metadata"] = {"sitemaps": stored_sitemaps}
+                    logger.info(
+                        f"Updated job status to complete, stored {len(stored_sitemaps)} sitemaps"
+                    )
                 else:
-                    _job_statuses[job_id]['status'] = 'failed'
-                    _job_statuses[job_id]['error'] = error_message
-                    _job_statuses[job_id]['completed_at'] = datetime.utcnow().isoformat()
+                    _job_statuses[job_id]["status"] = "failed"
+                    _job_statuses[job_id]["error"] = error_message
+                    _job_statuses[job_id]["completed_at"] = (
+                        datetime.utcnow().isoformat()
+                    )
                     logger.error(f"Updated job status to failed: {error_message}")
 
                 # Also update the job status in the database
@@ -724,28 +787,36 @@ async def process_domain_with_own_session(job_id: str, domain: str, user_id: Opt
                             if job_record:
                                 # Get the job ID from the record's dictionary representation
                                 job_dict = job_record.to_dict()
-                                db_job_id = job_dict['id']
+                                db_job_id = job_dict["id"]
 
                                 if job_completed:
                                     await job_service.update_status(
                                         db_session,
                                         job_id=db_job_id,
-                                        status='complete',
+                                        status="complete",
                                         progress=1.0,
-                                        result_data={'sitemaps': stored_sitemaps}
+                                        result_data={"sitemaps": stored_sitemaps},
                                     )
-                                    logger.info(f"Updated job {db_job_id} status to 'complete' in database")
+                                    logger.info(
+                                        f"Updated job {db_job_id} status to 'complete' in database"
+                                    )
                                 else:
                                     await job_service.update_status(
                                         db_session,
                                         job_id=db_job_id,
-                                        status='failed',
-                                        error=error_message
+                                        status="failed",
+                                        error=error_message,
                                     )
-                                    logger.info(f"Updated job {db_job_id} status to 'failed' in database")
+                                    logger.info(
+                                        f"Updated job {db_job_id} status to 'failed' in database"
+                                    )
                             else:
-                                logger.warning(f"Could not find job with UUID {job_id} in database for status update")
+                                logger.warning(
+                                    f"Could not find job with UUID {job_id} in database for status update"
+                                )
                 except Exception as db_update_error:
-                    logger.error(f"Error updating job status in database: {str(db_update_error)}")
+                    logger.error(
+                        f"Error updating job status in database: {str(db_update_error)}"
+                    )
         except Exception as status_error:
             logger.error(f"Error updating job status: {str(status_error)}")

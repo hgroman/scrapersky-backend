@@ -3,19 +3,20 @@ Places Storage Service
 
 This module provides storage operations for Place entities.
 """
+
 import logging
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, or_, select, text, update
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...models.place import Place, PlaceStatusEnum
-from ...models.place_search import PlaceSearch
 from .places_service import PlacesService
 
 logger = logging.getLogger(__name__)
+
 
 class PlacesStorageService:
     """
@@ -31,7 +32,7 @@ class PlacesStorageService:
         places: List[Dict[str, Any]],
         search_id: str,
         tenant_id: str,
-        user_id: str
+        user_id: str,
     ) -> Tuple[int, List[Dict[str, Any]]]:
         """
         Store places from Google Maps API.
@@ -60,10 +61,18 @@ class PlacesStorageService:
             # Try to convert tenant_id to UUID
             if tenant_id and tenant_id != "default":
                 try:
-                    tenant_uuid = uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+                    tenant_uuid = (
+                        uuid.UUID(tenant_id)
+                        if isinstance(tenant_id, str)
+                        else tenant_id
+                    )
                 except ValueError:
-                    logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}, using default UUID")
-                    tenant_uuid = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")  # Default UUID
+                    logger.warning(
+                        f"Invalid UUID format for tenant_id: {tenant_id}, using default UUID"
+                    )
+                    tenant_uuid = uuid.UUID(
+                        "550e8400-e29b-41d4-a716-446655440000"
+                    )  # Default UUID
             else:
                 # Use default tenant ID if not provided or is "default"
                 tenant_uuid = uuid.UUID("550e8400-e29b-41d4-a716-446655440000")
@@ -72,27 +81,45 @@ class PlacesStorageService:
             # Try to convert user_id to UUID
             if user_id:
                 try:
-                    user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+                    user_uuid = (
+                        uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+                    )
                 except ValueError:
-                    logger.warning(f"Invalid UUID format for user_id: {user_id}, using default UUID")
-                    user_uuid = uuid.UUID("00000000-0000-0000-0000-000000000000")  # Default UUID
+                    logger.warning(
+                        f"Invalid UUID format for user_id: {user_id}, using default UUID"
+                    )
+                    user_uuid = uuid.UUID(
+                        "00000000-0000-0000-0000-000000000000"
+                    )  # Default UUID
             else:
-                user_uuid = uuid.UUID("00000000-0000-0000-0000-000000000000")  # Default UUID
+                user_uuid = uuid.UUID(
+                    "00000000-0000-0000-0000-000000000000"
+                )  # Default UUID
                 logger.info("Using default user UUID")
 
             # Try to convert search_id to UUID
             if search_id:
                 try:
-                    search_uuid = uuid.UUID(search_id) if isinstance(search_id, str) else search_id
+                    search_uuid = (
+                        uuid.UUID(search_id)
+                        if isinstance(search_id, str)
+                        else search_id
+                    )
                 except ValueError:
-                    logger.warning(f"Invalid UUID format for search_id: {search_id}, generating new UUID")
+                    logger.warning(
+                        f"Invalid UUID format for search_id: {search_id}, generating new UUID"
+                    )
                     search_uuid = uuid.uuid4()  # Generate a new UUID as fallback
             else:
-                search_uuid = uuid.uuid4()  # Generate a new UUID if search_id is not provided
+                search_uuid = (
+                    uuid.uuid4()
+                )  # Generate a new UUID if search_id is not provided
                 logger.info(f"Generated new search_uuid: {search_uuid}")
 
             # Log the UUID conversions for debugging
-            logger.info(f"Using tenant_uuid: {tenant_uuid}, user_uuid: {user_uuid}, search_uuid: {search_uuid}")
+            logger.info(
+                f"Using tenant_uuid: {tenant_uuid}, user_uuid: {user_uuid}, search_uuid: {search_uuid}"
+            )
 
         except Exception as e:
             logger.error(f"Error processing UUID conversions: {e}")
@@ -103,11 +130,15 @@ class PlacesStorageService:
 
         # First, get all existing place IDs to avoid duplicates
         try:
-            place_ids = [place.get("place_id") for place in places if place.get("place_id")]
+            place_ids = [
+                place.get("place_id") for place in places if place.get("place_id")
+            ]
             query = select(Place.place_id).where(Place.place_id.in_(place_ids))
             result = await session.execute(query)
             existing_place_ids = {row[0] for row in result.fetchall()}
-            logger.info(f"Found {len(existing_place_ids)} existing places that will be updated")
+            logger.info(
+                f"Found {len(existing_place_ids)} existing places that will be updated"
+            )
         except Exception as e:
             logger.error(f"Error checking existing places: {e}")
             existing_place_ids = set()
@@ -124,35 +155,59 @@ class PlacesStorageService:
                 if place_id in existing_place_ids:
                     # Get existing place
                     existing_place = await PlacesService.get_by_id(
-                        session,
-                        place_id,
-                        str(tenant_uuid) if tenant_uuid else None
+                        session, place_id, str(tenant_uuid) if tenant_uuid else None
                     )
 
                     if existing_place:
                         # Update existing place
-                        existing_place.name = place_data.get("name", existing_place.name)
-                        existing_place.formatted_address = place_data.get("formatted_address", existing_place.formatted_address)
-                        existing_place.business_type = place_data.get("business_type", existing_place.business_type)
-                        existing_place.latitude = place_data.get("latitude", existing_place.latitude)
-                        existing_place.longitude = place_data.get("longitude", existing_place.longitude)
-                        existing_place.vicinity = place_data.get("vicinity", existing_place.vicinity)
-                        existing_place.rating = place_data.get("rating", existing_place.rating)
-                        existing_place.user_ratings_total = place_data.get("user_ratings_total", existing_place.user_ratings_total)
-                        existing_place.price_level = place_data.get("price_level", existing_place.price_level)
+                        existing_place.name = place_data.get(
+                            "name", existing_place.name
+                        )
+                        existing_place.formatted_address = place_data.get(
+                            "formatted_address", existing_place.formatted_address
+                        )
+                        existing_place.business_type = place_data.get(
+                            "business_type", existing_place.business_type
+                        )
+                        existing_place.latitude = place_data.get(
+                            "latitude", existing_place.latitude
+                        )
+                        existing_place.longitude = place_data.get(
+                            "longitude", existing_place.longitude
+                        )
+                        existing_place.vicinity = place_data.get(
+                            "vicinity", existing_place.vicinity
+                        )
+                        existing_place.rating = place_data.get(
+                            "rating", existing_place.rating
+                        )
+                        existing_place.user_ratings_total = place_data.get(
+                            "user_ratings_total", existing_place.user_ratings_total
+                        )
+                        existing_place.price_level = place_data.get(
+                            "price_level", existing_place.price_level
+                        )
                         # For SQLAlchemy columns, we need to use setattr for Column values
-                        setattr(existing_place, "search_job_id", search_uuid)
-                        existing_place.search_query = place_data.get("search_query", existing_place.search_query)
-                        existing_place.search_location = place_data.get("search_location", existing_place.search_location)
+                        existing_place.search_job_id = search_uuid
+                        existing_place.search_query = place_data.get(
+                            "search_query", existing_place.search_query
+                        )
+                        existing_place.search_location = place_data.get(
+                            "search_location", existing_place.search_location
+                        )
                         # For datetime fields, set with setattr for SQLAlchemy Columns
-                        setattr(existing_place, "search_time", datetime.utcnow())
-                        existing_place.raw_data = place_data.get("raw_data", existing_place.raw_data)
-                        setattr(existing_place, "updated_at", datetime.utcnow())
+                        existing_place.search_time = datetime.utcnow()
+                        existing_place.raw_data = place_data.get(
+                            "raw_data", existing_place.raw_data
+                        )
+                        existing_place.updated_at = datetime.utcnow()
 
                         # No need to add to session since it's already tracked
                         success_count += 1
                     else:
-                        logger.warning(f"Place ID {place_id} was found in database but get_by_id failed")
+                        logger.warning(
+                            f"Place ID {place_id} was found in database but get_by_id failed"
+                        )
                         failed_places.append(place_data)
                 else:
                     # Create new place
@@ -180,9 +235,12 @@ class PlacesStorageService:
                         if isinstance(raw_data, str):
                             try:
                                 import json
+
                                 new_place_data["raw_data"] = json.loads(raw_data)
                             except json.JSONDecodeError:
-                                logger.warning(f"Could not parse raw_data as JSON for place {place_id}")
+                                logger.warning(
+                                    f"Could not parse raw_data as JSON for place {place_id}"
+                                )
 
                         # Ensure tenant_id is a valid UUID
                         new_place_data["tenant_id"] = tenant_uuid
@@ -224,7 +282,9 @@ class PlacesStorageService:
             logger.error(f"Error flushing session: {e}")
             # Don't rethrow the exception - we want to return what we have
 
-        logger.info(f"Successfully stored {success_count} places, {len(failed_places)} failed")
+        logger.info(
+            f"Successfully stored {success_count} places, {len(failed_places)} failed"
+        )
         return success_count, failed_places
 
     @staticmethod
@@ -233,7 +293,7 @@ class PlacesStorageService:
         job_id: str,
         tenant_id: str,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> Tuple[List[Place], int]:
         """
         Get places associated with a specific job.
@@ -250,27 +310,30 @@ class PlacesStorageService:
         """
         try:
             job_uuid = uuid.UUID(job_id) if isinstance(job_id, str) else job_id
-            tenant_uuid = uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+            tenant_uuid = (
+                uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+            )
         except ValueError as e:
             logger.error(f"Invalid UUID format: {e}")
             return [], 0
 
         # Build query
-        query = select(Place).where(
-            and_(
-                Place.search_job_id == job_uuid,
-                Place.tenant_id == tenant_uuid
+        query = (
+            select(Place)
+            .where(
+                and_(Place.search_job_id == job_uuid, Place.tenant_id == tenant_uuid)
             )
-        ).limit(limit).offset(offset)
+            .limit(limit)
+            .offset(offset)
+        )
 
         # Get total count
         count_query = select(func.count()).select_from(
-            select(Place).where(
-                and_(
-                    Place.search_job_id == job_uuid,
-                    Place.tenant_id == tenant_uuid
-                )
-            ).subquery()
+            select(Place)
+            .where(
+                and_(Place.search_job_id == job_uuid, Place.tenant_id == tenant_uuid)
+            )
+            .subquery()
         )
         count_result = await session.scalar(count_query)
         total_count = 0 if count_result is None else count_result
@@ -289,7 +352,7 @@ class PlacesStorageService:
         business_type: Optional[str] = None,
         location: Optional[str] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> Tuple[List[Place], int]:
         """
         Get places from the staging table with filtering capabilities.
@@ -309,7 +372,9 @@ class PlacesStorageService:
         """
         try:
             # Convert tenant_id to UUID
-            tenant_uuid = uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+            tenant_uuid = (
+                uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+            )
 
             # Build base query for places
             query = select(Place).where(Place.tenant_id == tenant_uuid)
@@ -334,7 +399,7 @@ class PlacesStorageService:
                 # Search in both search_location and formatted_address fields
                 location_filter = or_(
                     Place.search_location.ilike(f"%{location}%"),
-                    Place.formatted_address.ilike(f"%{location}%")
+                    Place.formatted_address.ilike(f"%{location}%"),
                 )
                 query = query.where(location_filter)
 
@@ -342,9 +407,7 @@ class PlacesStorageService:
             query = query.order_by(Place.search_time.desc())
 
             # Get total count for pagination
-            count_query = select(func.count()).select_from(
-                query.subquery()
-            )
+            count_query = select(func.count()).select_from(query.subquery())
             count_result = await session.scalar(count_query)
             total_count = 0 if count_result is None else count_result
 
@@ -368,7 +431,7 @@ class PlacesStorageService:
         place_id: str,
         status: str,
         tenant_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> bool:
         """
         Update the status of a place in the staging table.
@@ -387,7 +450,9 @@ class PlacesStorageService:
             # Validate status value
             valid_statuses = ["New", "Selected", "Maybe", "Not a Fit", "Archived"]
             if status not in valid_statuses:
-                logger.warning(f"Invalid status value: {status}. Must be one of {valid_statuses}")
+                logger.warning(
+                    f"Invalid status value: {status}. Must be one of {valid_statuses}"
+                )
                 return False
 
             # First check if the place exists
@@ -396,7 +461,11 @@ class PlacesStorageService:
             # Add tenant filter if provided
             if tenant_id:
                 try:
-                    tenant_uuid = uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+                    tenant_uuid = (
+                        uuid.UUID(tenant_id)
+                        if isinstance(tenant_id, str)
+                        else tenant_id
+                    )
                     query = query.where(Place.tenant_id == tenant_uuid)
                 except ValueError:
                     logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
@@ -417,7 +486,9 @@ class PlacesStorageService:
             # Add user_id for attribution if provided
             if user_id:
                 try:
-                    user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+                    user_uuid = (
+                        uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+                    )
                     place.user_id = user_uuid
                     place.updated_by = str(user_uuid)
                 except ValueError:
@@ -438,7 +509,7 @@ class PlacesStorageService:
         place_ids: List[str],
         status: str,
         tenant_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> int:
         """
         Update the status of multiple places in batch.
@@ -462,7 +533,9 @@ class PlacesStorageService:
             # Validate status value
             valid_statuses = ["New", "Selected", "Maybe", "Not a Fit", "Archived"]
             if status not in valid_statuses:
-                logger.warning(f"Invalid status value: {status}. Must be one of {valid_statuses}")
+                logger.warning(
+                    f"Invalid status value: {status}. Must be one of {valid_statuses}"
+                )
                 return 0
 
             # For batch updates, we'll query for all matching places and update them individually
@@ -472,7 +545,11 @@ class PlacesStorageService:
             # Add tenant filter if provided
             if tenant_id:
                 try:
-                    tenant_uuid = uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+                    tenant_uuid = (
+                        uuid.UUID(tenant_id)
+                        if isinstance(tenant_id, str)
+                        else tenant_id
+                    )
                     query = query.where(Place.tenant_id == tenant_uuid)
                 except ValueError:
                     logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
@@ -490,7 +567,9 @@ class PlacesStorageService:
             user_id_str = None
             if user_id:
                 try:
-                    user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+                    user_uuid = (
+                        uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+                    )
                     user_id_str = str(user_uuid)
                 except ValueError:
                     logger.warning(f"Invalid UUID format for user_id: {user_id}")

@@ -3,10 +3,11 @@ BatchJob SQLAlchemy Model
 
 Represents batch processing jobs in ScraperSky.
 """
+
 import uuid
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import JSON, UUID, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import UUID, Column, DateTime, Float, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
@@ -46,17 +47,22 @@ class BatchJob(Base, BaseModel):
         end_time: When the batch processing completed
         processing_time: Total processing time in seconds
     """
+
     __tablename__ = "batch_jobs"
 
     # Override id with Integer primary key
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     # UUID identifier (missing column that's causing the error)
-    id_uuid = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False, unique=True)
+    id_uuid = Column(
+        UUID(as_uuid=True), default=uuid.uuid4, nullable=False, unique=True
+    )
 
     # Core identifiers - Updated batch_id to UUID type
     batch_id = Column(UUID(as_uuid=True), nullable=False, index=True, unique=True)
-    tenant_id = Column(PGUUID, nullable=False, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID))
+    tenant_id = Column(
+        PGUUID, nullable=False, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID)
+    )
     processor_type = Column(String, nullable=False)
     status = Column(String, nullable=False, default="pending")
     created_by = Column(PGUUID)
@@ -88,7 +94,7 @@ class BatchJob(Base, BaseModel):
         data = model_to_dict(self)
         # Convert UUID to string for serialization
         if self.batch_id and isinstance(self.batch_id, uuid.UUID):
-            data['batch_id'] = str(self.batch_id)
+            data["batch_id"] = str(self.batch_id)
         return data
 
     def calculate_progress(self) -> float:
@@ -97,7 +103,9 @@ class BatchJob(Base, BaseModel):
             return 0.0
         return (self.completed_domains + self.failed_domains) / self.total_domains
 
-    def update_progress(self, completed: Optional[int] = None, failed: Optional[int] = None) -> None:
+    def update_progress(
+        self, completed: Optional[int] = None, failed: Optional[int] = None
+    ) -> None:
         """
         Update progress tracking fields.
 
@@ -139,7 +147,7 @@ class BatchJob(Base, BaseModel):
         total_domains: int,
         created_by: Optional[str] = None,
         options: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> "BatchJob":
         """
         Create a new batch job using default tenant ID.
@@ -180,14 +188,16 @@ class BatchJob(Base, BaseModel):
             progress=0.0,
             batch_metadata=metadata or {},
             options=options or {},
-            start_time=func.now()
+            start_time=func.now(),
         )
 
         session.add(batch_job)
         return batch_job
 
     @classmethod
-    async def get_by_batch_id(cls, session, batch_id: Union[str, uuid.UUID]) -> Optional["BatchJob"]:
+    async def get_by_batch_id(
+        cls, session, batch_id: Union[str, uuid.UUID]
+    ) -> Optional["BatchJob"]:
         """
         Get batch job by batch ID using default tenant ID.
 
@@ -209,8 +219,7 @@ class BatchJob(Base, BaseModel):
 
         # Build query with default tenant ID
         query = select(cls).where(
-            cls.batch_id == batch_id,
-            cls.tenant_id == uuid.UUID(DEFAULT_TENANT_ID)
+            cls.batch_id == batch_id, cls.tenant_id == uuid.UUID(DEFAULT_TENANT_ID)
         )
 
         result = await session.execute(query)
@@ -231,9 +240,12 @@ class BatchJob(Base, BaseModel):
         from sqlalchemy import select
 
         # Build query with default tenant ID
-        query = select(cls).where(
-            cls.tenant_id == uuid.UUID(DEFAULT_TENANT_ID)
-        ).order_by(cls.created_at.desc()).limit(limit)
+        query = (
+            select(cls)
+            .where(cls.tenant_id == uuid.UUID(DEFAULT_TENANT_ID))
+            .order_by(cls.created_at.desc())
+            .limit(limit)
+        )
 
         result = await session.execute(query)
         return result.scalars().all()

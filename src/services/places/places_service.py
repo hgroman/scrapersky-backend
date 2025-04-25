@@ -3,6 +3,7 @@ Places Service
 
 This module provides database operations for places data.
 """
+
 import logging
 import uuid
 from datetime import datetime
@@ -16,6 +17,7 @@ from ...models.place_search import PlaceSearch
 
 logger = logging.getLogger(__name__)
 
+
 class PlacesService:
     """
     Service for handling Place database operations.
@@ -26,9 +28,7 @@ class PlacesService:
 
     @staticmethod
     async def get_by_id(
-        session: AsyncSession,
-        place_id: str,
-        tenant_id: Optional[str] = None
+        session: AsyncSession, place_id: str, tenant_id: Optional[str] = None
     ) -> Optional[Place]:
         """
         Get a place by its place_id.
@@ -46,11 +46,13 @@ class PlacesService:
         if tenant_id:
             try:
                 # Try to convert tenant_id to UUID for filtering
-                tenant_uuid = uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+                tenant_uuid = (
+                    uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
+                )
                 # Use raw SQL with explicit text casting to avoid type issues
-                query = query.where(
-                    text("tenant_id::text = :tenant_uuid")
-                ).params(tenant_uuid=str(tenant_uuid))
+                query = query.where(text("tenant_id::text = :tenant_uuid")).params(
+                    tenant_uuid=str(tenant_uuid)
+                )
             except ValueError:
                 # If not a UUID, log a warning
                 logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
@@ -65,7 +67,7 @@ class PlacesService:
         tenant_id: str,
         status: Optional[str] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> Tuple[List[Place], int]:
         """
         Get places with filtering options.
@@ -83,25 +85,19 @@ class PlacesService:
         # REMOVED tenant filtering as per architectural mandate
         # JWT authentication happens ONLY at API gateway endpoints
         # Database operations should NEVER handle JWT or tenant authentication
-        
+
         query = select(Place)
-        
+
         if status:
             query = query.where(Place.status == status)
 
         # Get total count for pagination
-        count_query = select(func.count()).select_from(
-            query.order_by(None).subquery()
-        )
+        count_query = select(func.count()).select_from(query.order_by(None).subquery())
         count_result = await session.scalar(count_query)
         total_count = 0 if count_result is None else count_result
 
         # Apply pagination
-        query = (
-            query.order_by(Place.search_time.desc())
-            .offset(offset)
-            .limit(limit)
-        )
+        query = query.order_by(Place.search_time.desc()).offset(offset).limit(limit)
 
         result = await session.execute(query)
         places = result.scalars().all()
@@ -114,7 +110,7 @@ class PlacesService:
         place_id: str,
         status: str,
         tenant_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> bool:
         """
         Update the status of a place.
@@ -132,10 +128,7 @@ class PlacesService:
         stmt = (
             update(Place)
             .where(Place.place_id == place_id)
-            .values(
-                status=status,
-                updated_at=datetime.utcnow()
-            )
+            .values(status=status, updated_at=datetime.utcnow())
         )
 
         if tenant_id:
@@ -143,9 +136,11 @@ class PlacesService:
             # JWT authentication happens ONLY at API gateway endpoints
             # Database operations should NEVER handle JWT or tenant authentication
             pass
-            
+
         if user_id:
-            user_uuid = user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(user_id)
+            user_uuid = (
+                user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(user_id)
+            )
             stmt = stmt.values(user_id=user_uuid)
 
         result = await session.execute(stmt)
@@ -158,7 +153,7 @@ class PlacesService:
         user_id: str,
         location: str,
         business_type: str,
-        params: Dict[str, Any]
+        params: Dict[str, Any],
     ) -> PlaceSearch:
         """
         Create a place search record.
@@ -175,7 +170,9 @@ class PlacesService:
             Created PlaceSearch object
         """
         # Convert IDs to UUID if they're strings
-        tenant_uuid = tenant_id if isinstance(tenant_id, uuid.UUID) else uuid.UUID(tenant_id)
+        tenant_uuid = (
+            tenant_id if isinstance(tenant_id, uuid.UUID) else uuid.UUID(tenant_id)
+        )
         user_uuid = user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(user_id)
 
         search = PlaceSearch(
@@ -183,7 +180,7 @@ class PlacesService:
             user_id=user_uuid,
             location=location,
             business_type=business_type,
-            params=params
+            params=params,
         )
 
         session.add(search)
@@ -193,10 +190,7 @@ class PlacesService:
 
     @staticmethod
     async def batch_update_status(
-        session: AsyncSession,
-        place_ids: List[str],
-        status: str,
-        tenant_id: str
+        session: AsyncSession, place_ids: List[str], status: str, tenant_id: str
     ) -> int:
         """
         Update the status of multiple places in batch.
@@ -217,10 +211,7 @@ class PlacesService:
         stmt = (
             update(Place)
             .where(Place.place_id.in_(place_ids))
-            .values(
-                status=status,
-                updated_at=datetime.utcnow()
-            )
+            .values(status=status, updated_at=datetime.utcnow())
         )
 
         result = await session.execute(stmt)

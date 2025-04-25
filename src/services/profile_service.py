@@ -3,17 +3,19 @@ Profile Service
 
 This module provides services for managing user profiles.
 """
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import UUID
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core import NotFoundError
-from ..models.profile import Profile, ProfileCreate, ProfileUpdate
+from ..models.profile import Profile, ProfileUpdate
 
 logger = logging.getLogger(__name__)
+
 
 class ProfileService:
     """Service for managing user profiles."""
@@ -26,7 +28,7 @@ class ProfileService:
         offset: int = 0,
         raw_sql: bool = True,
         no_prepare: bool = True,
-        statement_cache_size: int = 0
+        statement_cache_size: int = 0,
     ) -> List[Dict[str, Any]]:
         """
         Get a list of profiles.
@@ -59,21 +61,23 @@ class ProfileService:
                     query = query.execution_options(postgresql_expert_mode=True)
 
                 result = await session.execute(
-                    query,
-                    {"tenant_id": tenant_id, "limit": limit, "offset": offset}
+                    query, {"tenant_id": tenant_id, "limit": limit, "offset": offset}
                 )
                 profiles = result.fetchall()
-                return [dict(
-                    id=row.id,
-                    name=row.name,
-                    email=row.email,
-                    role=row.role,
-                    bio=row.bio,
-                    tenant_id=row.tenant_id,
-                    active=row.active,
-                    created_at=row.created_at,
-                    updated_at=row.updated_at
-                ) for row in profiles]
+                return [
+                    dict(
+                        id=row.id,
+                        name=row.name,
+                        email=row.email,
+                        role=row.role,
+                        bio=row.bio,
+                        tenant_id=row.tenant_id,
+                        active=row.active,
+                        created_at=row.created_at,
+                        updated_at=row.updated_at,
+                    )
+                    for row in profiles
+                ]
             else:
                 # Use ORM if explicitly requested
                 # REMOVED tenant filtering as per architectural mandate
@@ -82,26 +86,26 @@ class ProfileService:
                 stmt = select(Profile).limit(limit).offset(offset)
                 result = await session.execute(stmt)
                 profiles = result.scalars().all()
-                return [dict(
-                    id=profile.id,
-                    name=profile.name,
-                    email=profile.email,
-                    role=profile.role,
-                    bio=profile.bio,
-                    tenant_id=profile.tenant_id,
-                    active=profile.active,
-                    created_at=profile.created_at,
-                    updated_at=profile.updated_at
-                ) for profile in profiles]
+                return [
+                    dict(
+                        id=profile.id,
+                        name=profile.name,
+                        email=profile.email,
+                        role=profile.role,
+                        bio=profile.bio,
+                        tenant_id=profile.tenant_id,
+                        active=profile.active,
+                        created_at=profile.created_at,
+                        updated_at=profile.updated_at,
+                    )
+                    for profile in profiles
+                ]
         except Exception as e:
             logger.error(f"Error fetching profiles: {str(e)}")
             raise
 
     async def get_profile(
-        self,
-        session: AsyncSession,
-        profile_id: UUID,
-        tenant_id: str
+        self, session: AsyncSession, profile_id: UUID, tenant_id: str
     ) -> Dict[str, Any]:
         """
         Get a single profile by ID.
@@ -136,7 +140,7 @@ class ProfileService:
             tenant_id=profile.tenant_id,
             active=profile.active,
             created_at=profile.created_at,
-            updated_at=profile.updated_at
+            updated_at=profile.updated_at,
         )
 
     async def update_profile(
@@ -144,7 +148,7 @@ class ProfileService:
         session: AsyncSession,
         profile_id: UUID,
         tenant_id: str,
-        profile: ProfileUpdate
+        profile: ProfileUpdate,
     ) -> Dict[str, Any]:
         """
         Update an existing profile.
@@ -186,5 +190,5 @@ class ProfileService:
             tenant_id=db_profile.tenant_id,
             active=db_profile.active,
             created_at=db_profile.created_at,
-            updated_at=db_profile.updated_at
+            updated_at=db_profile.updated_at,
         )

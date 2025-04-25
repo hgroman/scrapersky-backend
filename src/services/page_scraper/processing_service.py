@@ -13,21 +13,20 @@ Transaction boundaries are managed by the router.
 """
 
 import logging
-import traceback
 import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models import BatchJob, Domain, Job
+from ...models import BatchJob, Domain
 from ...scraper.domain_utils import get_domain_url, standardize_domain
-from ...scraper.metadata_extractor import detect_site_metadata
 from ...services.core.validation_service import validation_service
 from ...services.job_service import job_service
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
 
 class PageProcessingService:
     """
@@ -63,10 +62,7 @@ class PageProcessingService:
 
             # Create domain object IN MEMORY ONLY (not persisted to DB)
             # This will be used later to either look up or create the domain
-            domain = Domain(
-                domain=domain_url,
-                status="pending"
-            )
+            domain = Domain(domain=domain_url, status="pending")
 
             return True, "Domain validated successfully", domain
 
@@ -82,7 +78,7 @@ class PageProcessingService:
         max_pages: int = 10,
         raw_sql: bool = True,
         no_prepare: bool = True,
-        statement_cache_size: int = 0
+        statement_cache_size: int = 0,
     ) -> Dict[str, Any]:
         """
         Initiate a domain scan process.
@@ -107,16 +103,20 @@ class PageProcessingService:
         logger.debug(f"initiate_domain_scan transaction state: {in_transaction}")
 
         if not in_transaction:
-            logger.warning("initiate_domain_scan called without an active transaction; the router should handle transactions")
+            logger.warning(
+                "initiate_domain_scan called without an active transaction; the router should handle transactions"
+            )
 
         try:
             # Apply Supavisor compatibility options to the session
-            logger.debug(f"Using Supavisor compatibility: no_prepare={no_prepare}, statement_cache_size={statement_cache_size}")
+            logger.debug(
+                f"Using Supavisor compatibility: no_prepare={no_prepare}, statement_cache_size={statement_cache_size}"
+            )
 
             # Ensure session has proper execution options for Supavisor compatibility
             execution_options = {
                 "no_parameters": no_prepare,  # Disable prepared statements for Supavisor
-                "statement_cache_size": statement_cache_size  # Disable statement caching
+                "statement_cache_size": statement_cache_size,  # Disable statement caching
             }
 
             # Validate domain
@@ -140,8 +140,8 @@ class PageProcessingService:
                 {"domain_url": domain_url},
                 execution_options={
                     "no_parameters": no_prepare,
-                    "statement_cache_size": statement_cache_size
-                }
+                    "statement_cache_size": statement_cache_size,
+                },
             )
 
             # Get first row if any
@@ -152,10 +152,12 @@ class PageProcessingService:
                 for key, value in row._mapping.items():
                     if hasattr(existing_domain, key):
                         setattr(existing_domain, key, value)
-                logger.info(f"Domain {domain_url} already exists, using existing record")
+                logger.info(
+                    f"Domain {domain_url} already exists, using existing record"
+                )
                 domain = existing_domain
                 # Update status to pending for the new scan
-                setattr(domain, 'status', "pending")
+                domain.status = "pending"
             else:
                 logger.info(f"Creating new domain record for {domain_url}")
                 domain = domain_obj
@@ -170,11 +172,11 @@ class PageProcessingService:
                 session=session,
                 job_type=self.RESOURCE_TYPE,
                 domain_id=domain.id if domain else None,
-                created_by=user_id
+                created_by=user_id,
             )
 
             # Extract job UUID - ONLY use job_id (UUID), never the numeric ID
-            job_uuid = str(job.job_id) if job and hasattr(job, 'job_id') else None
+            job_uuid = str(job.job_id) if job and hasattr(job, "job_id") else None
 
             if not job_uuid:
                 raise ValueError("Failed to generate valid job UUID")
@@ -185,7 +187,7 @@ class PageProcessingService:
             # The actual domain processing will be handled by a background task in the router
             return {
                 "job_id": job_uuid,
-                "status_url": f"/api/v3/batch_page_scraper/status/{job_uuid}"
+                "status_url": f"/api/v3/batch_page_scraper/status/{job_uuid}",
             }
         except Exception as e:
             logger.error(f"Error processing domain scan: {str(e)}")
@@ -201,7 +203,7 @@ class PageProcessingService:
         batch_id: Optional[str] = None,
         raw_sql: bool = True,
         no_prepare: bool = True,
-        statement_cache_size: int = 0
+        statement_cache_size: int = 0,
     ) -> Dict[str, Any]:
         """
         Initiate a batch scan process.
@@ -227,7 +229,9 @@ class PageProcessingService:
         logger.debug(f"initiate_batch_scan transaction state: {in_transaction}")
 
         if not in_transaction:
-            logger.warning("initiate_batch_scan called without an active transaction; the router should handle transactions")
+            logger.warning(
+                "initiate_batch_scan called without an active transaction; the router should handle transactions"
+            )
 
         try:
             # Validate domains
@@ -257,7 +261,7 @@ class PageProcessingService:
                 total_domains=len(valid_domains),
                 created_by=str(user_id),
                 options={"max_concurrent": 5},
-                metadata={"domain_count": len(valid_domains)}
+                metadata={"domain_count": len(valid_domains)},
             )
 
             await session.flush()
@@ -267,7 +271,7 @@ class PageProcessingService:
                 "batch_id": str(batch_id),
                 "status_url": f"/api/v3/batch_page_scraper/batch/{batch_id}/status",
                 "domains": valid_domains,
-                "total_domains": len(valid_domains)
+                "total_domains": len(valid_domains),
             }
 
         except Exception as e:
@@ -276,9 +280,7 @@ class PageProcessingService:
             raise
 
     async def get_job_status(
-        self,
-        session: AsyncSession,
-        job_id: Union[str, uuid.UUID, int]
+        self, session: AsyncSession, job_id: Union[str, uuid.UUID, int]
     ) -> Dict[str, Any]:
         """
         Get the status of a job.
@@ -295,42 +297,36 @@ class PageProcessingService:
         logger.debug(f"get_job_status transaction state: {in_transaction}")
 
         if not in_transaction:
-            logger.warning("get_job_status called without an active transaction; the router should handle transactions")
+            logger.warning(
+                "get_job_status called without an active transaction; the router should handle transactions"
+            )
 
         try:
             # Validate job ID
             try:
                 if isinstance(job_id, str):
                     validation_service.validate_string_length(
-                        job_id,
-                        field_name="job_id",
-                        min_length=1,
-                        max_length=64
+                        job_id, field_name="job_id", min_length=1, max_length=64
                     )
             except ValueError as e:
                 raise ValueError(str(e))
 
             # Get job status from job service
-            if isinstance(job_id, int) or (isinstance(job_id, str) and job_id.isdigit()):
+            if isinstance(job_id, int) or (
+                isinstance(job_id, str) and job_id.isdigit()
+            ):
                 # Handle numeric job IDs with the direct numeric lookup
                 numeric_id = int(job_id) if isinstance(job_id, str) else job_id
                 job = await job_service.get_by_numeric_id(
-                    session=session,
-                    job_id=numeric_id,
-                    load_relationships=True
+                    session=session, job_id=numeric_id, load_relationships=True
                 )
-            elif isinstance(job_id, str) and len(job_id) >= 32 and '-' in job_id:
+            elif isinstance(job_id, str) and len(job_id) >= 32 and "-" in job_id:
                 # Looks like a UUID string, use the specialized UUID lookup
-                job = await job_service.get_by_uuid(
-                    session=session,
-                    job_uuid=job_id
-                )
+                job = await job_service.get_by_uuid(session=session, job_uuid=job_id)
             else:
                 # Handle UUID or string job IDs with the regular lookup
                 job = await job_service.get_by_id(
-                    session=session,
-                    job_id=job_id,
-                    load_relationships=True
+                    session=session, job_id=job_id, load_relationships=True
                 )
 
             if not job:
@@ -338,17 +334,19 @@ class PageProcessingService:
 
             # Convert job object to dictionary
             progress_value = 0.0
-            if hasattr(job, 'progress') and job.progress is not None:
+            if hasattr(job, "progress") and job.progress is not None:
                 try:
                     # Convert progress to string first to handle Column types
                     progress_str = str(job.progress)
                     progress_value = float(progress_str)
                 except (ValueError, TypeError):
-                    logger.warning(f"Could not convert progress value to float: {job.progress}")
+                    logger.warning(
+                        f"Could not convert progress value to float: {job.progress}"
+                    )
 
             # Handle metadata - ensure it's a dictionary
             metadata = {}
-            if hasattr(job, 'metadata') and job.metadata:
+            if hasattr(job, "metadata") and job.metadata:
                 if isinstance(job.metadata, dict):
                     metadata = job.metadata
                 else:
@@ -356,19 +354,23 @@ class PageProcessingService:
                         # Try converting to dict if it's a MetaData object or similar
                         metadata = dict(job.metadata)
                     except (TypeError, ValueError):
-                        logger.warning(f"Could not convert metadata to dictionary: {type(job.metadata)}")
+                        logger.warning(
+                            f"Could not convert metadata to dictionary: {type(job.metadata)}"
+                        )
                         metadata = {"original_type": str(type(job.metadata))}
 
             status = {
                 "job_id": str(job.id),
                 "status": job.status,
-                "domain": job.domain.domain if hasattr(job, 'domain') and job.domain else None,
+                "domain": job.domain.domain
+                if hasattr(job, "domain") and job.domain
+                else None,
                 "progress": progress_value,
                 "created_at": job.created_at.isoformat() if job.created_at else None,
                 "updated_at": job.updated_at.isoformat() if job.updated_at else None,
-                "result": job.result if hasattr(job, 'result') else None,
-                "error": job.error if hasattr(job, 'error') else None,
-                "metadata": metadata
+                "result": job.result if hasattr(job, "result") else None,
+                "error": job.error if hasattr(job, "error") else None,
+                "metadata": metadata,
             }
 
             return status
@@ -387,7 +389,7 @@ class PageProcessingService:
         batch_id: str,
         raw_sql: bool = True,
         no_prepare: bool = True,
-        statement_cache_size: int = 0
+        statement_cache_size: int = 0,
     ) -> Dict[str, Any]:
         """
         Get batch status.
@@ -410,7 +412,9 @@ class PageProcessingService:
         logger.debug(f"get_batch_status transaction state: {in_transaction}")
 
         if not in_transaction:
-            logger.warning("get_batch_status called without an active transaction; the router should handle transactions")
+            logger.warning(
+                "get_batch_status called without an active transaction; the router should handle transactions"
+            )
 
         try:
             # Convert batch_id to UUID
@@ -423,7 +427,7 @@ class PageProcessingService:
                     return {
                         "batch_id": str(batch_id),
                         "status": "error",
-                        "error": f"Invalid UUID format: {batch_id}"
+                        "error": f"Invalid UUID format: {batch_id}",
                     }
 
             # Get batch using BatchJob class method instead of batch_functions.get_batch_status
@@ -434,7 +438,7 @@ class PageProcessingService:
                 return {
                     "batch_id": str(batch_id),
                     "status": "unknown",
-                    "error": "Batch not found"
+                    "error": "Batch not found",
                 }
 
             # Convert batch to dictionary
@@ -448,16 +452,13 @@ class PageProcessingService:
                 "failed_domains": batch_dict["failed_domains"],
                 "created_at": batch_dict.get("created_at"),
                 "updated_at": batch_dict.get("updated_at"),
-                "error": batch_dict.get("error")
+                "error": batch_dict.get("error"),
             }
 
         except Exception as e:
             logger.error(f"Error getting batch status: {str(e)}")
-            return {
-                "batch_id": str(batch_id),
-                "status": "error",
-                "error": str(e)
-            }
+            return {"batch_id": str(batch_id), "status": "error", "error": str(e)}
+
 
 # Initialize the service
 page_processing_service = PageProcessingService()

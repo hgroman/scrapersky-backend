@@ -5,10 +5,11 @@ This module provides a transaction-aware handler for domain-related database ope
 It follows the standardized pattern where it accepts a session parameter and does not
 create, commit, or rollback transactions itself.
 """
+
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
@@ -20,7 +21,9 @@ class DomainDBHandler:
     """Handles all database operations for the domains table."""
 
     @staticmethod
-    async def insert_domain_data(session: AsyncSession, domain_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def insert_domain_data(
+        session: AsyncSession, domain_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Insert new domain data into the domains table.
 
@@ -35,32 +38,35 @@ class DomainDBHandler:
             ValueError: If the insert fails or no row is returned
         """
         # Convert dict fields to JSON strings
-        if isinstance(domain_data.get('tech_stack'), dict):
-            domain_data['tech_stack'] = json.dumps(domain_data['tech_stack'])
-        if isinstance(domain_data.get('meta_json'), dict):
-            domain_data['meta_json'] = json.dumps(domain_data['meta_json'])
+        if isinstance(domain_data.get("tech_stack"), dict):
+            domain_data["tech_stack"] = json.dumps(domain_data["tech_stack"])
+        if isinstance(domain_data.get("meta_json"), dict):
+            domain_data["meta_json"] = json.dumps(domain_data["meta_json"])
 
         # Use the standardized db_service for the insert
         try:
-            result = await db_service.create_record("domains", {
-                "domain": domain_data.get('domain'),
-                "tenant_id": domain_data.get('tenant_id'),
-                "created_by": domain_data.get('created_by'),
-                "status": domain_data.get('status', 'pending'),
-                "title": domain_data.get('title'),
-                "description": domain_data.get('description'),
-                "is_wordpress": domain_data.get('is_wordpress'),
-                "tech_stack": domain_data.get('tech_stack'),
-                "contact_email": domain_data.get('contact_email'),
-                "contact_phone": domain_data.get('contact_phone'),
-                "facebook_url": domain_data.get('facebook_url'),
-                "twitter_url": domain_data.get('twitter_url'),
-                "linkedin_url": domain_data.get('linkedin_url'),
-                "instagram_url": domain_data.get('instagram_url'),
-                "meta_json": domain_data.get('meta_json'),
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            })
+            result = await db_service.create_record(
+                "domains",
+                {
+                    "domain": domain_data.get("domain"),
+                    "tenant_id": domain_data.get("tenant_id"),
+                    "created_by": domain_data.get("created_by"),
+                    "status": domain_data.get("status", "pending"),
+                    "title": domain_data.get("title"),
+                    "description": domain_data.get("description"),
+                    "is_wordpress": domain_data.get("is_wordpress"),
+                    "tech_stack": domain_data.get("tech_stack"),
+                    "contact_email": domain_data.get("contact_email"),
+                    "contact_phone": domain_data.get("contact_phone"),
+                    "facebook_url": domain_data.get("facebook_url"),
+                    "twitter_url": domain_data.get("twitter_url"),
+                    "linkedin_url": domain_data.get("linkedin_url"),
+                    "instagram_url": domain_data.get("instagram_url"),
+                    "meta_json": domain_data.get("meta_json"),
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow(),
+                },
+            )
 
             if not result:
                 raise ValueError("Failed to insert domain data - no row returned")
@@ -70,7 +76,9 @@ class DomainDBHandler:
             raise
 
     @staticmethod
-    async def update_domain_data(session: AsyncSession, domain: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_domain_data(
+        session: AsyncSession, domain: str, update_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Update existing domain data.
 
@@ -86,19 +94,25 @@ class DomainDBHandler:
             ValueError: If the domain is not found or update fails
         """
         # Log the update operation
-        logging.info(f"Updating domain {domain} with fields: {', '.join(update_data.keys())}")
+        logging.info(
+            f"Updating domain {domain} with fields: {', '.join(update_data.keys())}"
+        )
 
         # Ensure updated_at is part of the update data
         update_data["updated_at"] = datetime.utcnow()
 
         try:
             # Use SQLAlchemy's execute method with a parameterized query
-            query = text("""
+            query = text(
+                """
                 UPDATE domains
-                SET """ + ", ".join([f"{key} = :{key}" for key in update_data.keys()]) + """
+                SET """
+                + ", ".join([f"{key} = :{key}" for key in update_data.keys()])
+                + """
                 WHERE domain = :domain
                 RETURNING *
-            """)
+            """
+            )
 
             # Add domain to the parameters
             params = {**update_data, "domain": domain}
@@ -137,8 +151,7 @@ class DomainDBHandler:
         try:
             # Use db_service's fetch_one method for standardization
             result = await session.execute(
-                text("SELECT * FROM domains WHERE domain = :domain"),
-                {"domain": domain}
+                text("SELECT * FROM domains WHERE domain = :domain"), {"domain": domain}
             )
             row = result.fetchone()
             if not row:
@@ -170,19 +183,24 @@ class DomainDBHandler:
 
         try:
             row = await session.execute(
-                text(query),
-                {"domain": domain, "tenant_id": tenant_id}
+                text(query), {"domain": domain, "tenant_id": tenant_id}
             )
             result = row.fetchone()
             # Convert to dict and check if 'exists' key is present
             result_dict = dict(result) if result else {}
-            return result_dict.get('exists', False)
+            return result_dict.get("exists", False)
         except Exception as e:
             logging.error(f"Error checking if domain exists: {str(e)}")
             return False
 
     @staticmethod
-    async def update_domain_status(session: AsyncSession, domain: str, tenant_id: str, status: str, updated_at: datetime) -> bool:
+    async def update_domain_status(
+        session: AsyncSession,
+        domain: str,
+        tenant_id: str,
+        status: str,
+        updated_at: datetime,
+    ) -> bool:
         """
         Update the status of a domain.
 
@@ -209,8 +227,8 @@ class DomainDBHandler:
                     "domain": domain,
                     "tenant_id": tenant_id,
                     "status": status,
-                    "updated_at": updated_at
-                }
+                    "updated_at": updated_at,
+                },
             )
             # No commit or rollback - the router owns the transaction
             return True
@@ -220,7 +238,9 @@ class DomainDBHandler:
             return False
 
     @staticmethod
-    async def mark_domain_completed(session: AsyncSession, domain: str, tenant_id: str) -> bool:
+    async def mark_domain_completed(
+        session: AsyncSession, domain: str, tenant_id: str
+    ) -> bool:
         """
         Mark a domain as completed.
 
@@ -233,9 +253,13 @@ class DomainDBHandler:
             True if update was successful, False otherwise
         """
         now = datetime.utcnow()
-        return await DomainDBHandler.update_domain_status(session, domain, tenant_id, "completed", now)
+        return await DomainDBHandler.update_domain_status(
+            session, domain, tenant_id, "completed", now
+        )
 
-    async def insert_domain(self, session: AsyncSession, domain: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    async def insert_domain(
+        self, session: AsyncSession, domain: str, metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Insert a new domain with metadata."""
         try:
             # Convert metadata to database format
@@ -252,9 +276,9 @@ class DomainDBHandler:
                 {
                     "domain": domain,
                     "meta_json": json.dumps(metadata),
-                    "status": 'completed',
-                    "timestamp": datetime.utcnow()
-                }
+                    "status": "completed",
+                    "timestamp": datetime.utcnow(),
+                },
             )
             row = result.fetchone()
             return dict(row) if row else {}
@@ -262,7 +286,9 @@ class DomainDBHandler:
             logging.error(f"Error inserting domain {domain}: {str(e)}")
             raise
 
-    async def update_domain(self, session: AsyncSession, domain: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_domain(
+        self, session: AsyncSession, domain: str, metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update existing domain metadata."""
         try:
             # Convert metadata to database format
@@ -281,9 +307,9 @@ class DomainDBHandler:
                 {
                     "domain": domain,
                     "meta_json": json.dumps(metadata),
-                    "status": 'completed',
-                    "timestamp": datetime.utcnow()
-                }
+                    "status": "completed",
+                    "timestamp": datetime.utcnow(),
+                },
             )
             row = result.fetchone()
             return dict(row) if row else {}
@@ -291,12 +317,14 @@ class DomainDBHandler:
             logging.error(f"Error updating domain {domain}: {str(e)}")
             raise
 
-    def _prepare_domain_data(self, domain: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_domain_data(
+        self, domain: str, metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Prepare domain data for database insertion/update."""
         return {
             "domain": domain,
             "meta_json": metadata,
             "status": "completed",
             "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
+            "updated_at": datetime.utcnow(),
         }

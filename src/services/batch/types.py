@@ -12,14 +12,17 @@ from uuid import UUID
 
 class BatchOptions(TypedDict, total=False):
     """Options for batch processing."""
+
     max_concurrent: int
     max_pages: int  # Added to support page limit per domain
     test_mode: bool
     timeout: int
     retry_count: int
 
+
 class BatchStatus(TypedDict):
     """Status information for a batch job."""
+
     batch_id: str
     status: str
     total_domains: int
@@ -35,8 +38,10 @@ class BatchStatus(TypedDict):
     error: Optional[str]
     metadata: Optional[Dict[str, Any]]
 
+
 class DomainResult(TypedDict):
     """Result of processing a single domain."""
+
     domain: str
     status: str
     error: Optional[str]
@@ -45,8 +50,10 @@ class DomainResult(TypedDict):
     pages_found: Optional[int]
     pages_processed: Optional[int]
 
+
 class BatchResult(TypedDict):
     """Result of batch processing operation."""
+
     batch_id: str
     status: str
     total_domains: int
@@ -54,6 +61,7 @@ class BatchResult(TypedDict):
     failed_domains: int
     results: List[DomainResult]
     error: Optional[str]
+
 
 # Constants
 BATCH_STATUS_PENDING = "pending"

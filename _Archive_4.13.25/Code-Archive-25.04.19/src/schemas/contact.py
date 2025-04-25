@@ -34,12 +34,15 @@ class ContactBase(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ContactCreate(ContactBase):
     website_id: int
     page_id: int
 
+
 class ContactUpdate(ContactBase):
     pass
+
 
 class ContactResponse(ContactBase):
     id: int

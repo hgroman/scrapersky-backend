@@ -8,4 +8,4 @@ at the root level of the services directory.
 # Import modernized job_service from parent directory
 from ..job_service import job_service
 
-__all__ = ['job_service']
+__all__ = ["job_service"]

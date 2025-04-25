@@ -14,12 +14,17 @@ logger = logging.getLogger(__name__)
 
 # --- Event Listener Functions ---
 
+
 def job_listener(event):
     """Listens for job execution events and logs them."""
     if event.exception:
-        logger.error(f"Scheduler job '{event.job_id}' crashed: {event.exception}", exc_info=event.exception)
+        logger.error(
+            f"Scheduler job '{event.job_id}' crashed: {event.exception}",
+            exc_info=event.exception,
+        )
     else:
         logger.info(f"Scheduler job '{event.job_id}' executed successfully.")
+
 
 # --- Scheduler Initialization ---
 
@@ -35,6 +40,7 @@ logger.info("Centralized APScheduler instance created.")
 
 # --- Functions to manage the scheduler lifecycle (called from main.py lifespan) ---
 
+
 def start_scheduler():
     """Starts the shared scheduler if it's not already running."""
     try:
@@ -47,10 +53,14 @@ def start_scheduler():
         logger.error(f"Failed to start shared APScheduler: {e}", exc_info=True)
         # Attempt shutdown if start failed partially
         if scheduler.running:
-             try:
-                 scheduler.shutdown()
-             except Exception as shutdown_e:
-                 logger.error(f"Error shutting down scheduler after failed start: {shutdown_e}", exc_info=True)
+            try:
+                scheduler.shutdown()
+            except Exception as shutdown_e:
+                logger.error(
+                    f"Error shutting down scheduler after failed start: {shutdown_e}",
+                    exc_info=True,
+                )
+
 
 def shutdown_scheduler():
     """Shuts down the shared scheduler."""

@@ -10,17 +10,14 @@ import asyncio
 import json
 import logging
 import traceback
-import uuid
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
-
-from ..core.auth_service import auth_service
 
 # Import other services
 from ..core.db_service import db_service
 
 logger = logging.getLogger(__name__)
+
 
 class StorageService:
     """
@@ -35,11 +32,7 @@ class StorageService:
 
     @classmethod
     async def store_domain_metadata(
-        cls,
-        domain: str,
-        metadata: Dict[str, Any],
-        tenant_id: str,
-        user_id: str
+        cls, domain: str, metadata: Dict[str, Any], tenant_id: str, user_id: str
     ) -> Dict[str, Any]:
         """
         Store domain metadata.
@@ -75,10 +68,10 @@ class StorageService:
 
             # Prepare parameters
             params = {
-                'domain': domain,
-                'tenant_id': tenant_id,
-                'metadata': json.dumps(metadata),
-                'user_id': user_id
+                "domain": domain,
+                "tenant_id": tenant_id,
+                "metadata": json.dumps(metadata),
+                "user_id": user_id,
             }
 
             # Execute query
@@ -86,7 +79,7 @@ class StorageService:
 
             # Update domain ID cache
             if result:
-                domain_id = result.get('id')
+                domain_id = result.get("id")
                 if domain_id:
                     if tenant_id not in cls._domain_id_cache:
                         cls._domain_id_cache[tenant_id] = {}
@@ -102,10 +95,10 @@ class StorageService:
 
             # Return partial result with error
             return {
-                'domain': domain,
-                'tenant_id': tenant_id,
-                'error': str(e),
-                'success': False
+                "domain": domain,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "success": False,
             }
 
     @classmethod
@@ -116,7 +109,7 @@ class StorageService:
         sitemap_data: Dict[str, Any],
         urls: Optional[List[Dict[str, Any]]] = None,
         tenant_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Store sitemap data.
@@ -164,56 +157,64 @@ class StorageService:
             """
 
             sitemap_params = {
-                'domain_id': domain_id,
-                'tenant_id': tenant_id,
-                'url': sitemap_url,
-                'total_urls': sitemap_data.get('total_urls', 0),
-                'is_index': sitemap_data.get('is_index', False),
-                'metadata': json.dumps(sitemap_data)
+                "domain_id": domain_id,
+                "tenant_id": tenant_id,
+                "url": sitemap_url,
+                "total_urls": sitemap_data.get("total_urls", 0),
+                "is_index": sitemap_data.get("is_index", False),
+                "metadata": json.dumps(sitemap_data),
             }
 
-            sitemap_result = await db_service.execute_returning(sitemap_query, sitemap_params)
+            sitemap_result = await db_service.execute_returning(
+                sitemap_query, sitemap_params
+            )
 
             # If we have sitemap URLs, store them (in batches)
             stored_urls = 0
-            if urls and sitemap_result and sitemap_result.get('id'):
-                sitemap_id = sitemap_result.get('id')
+            if urls and sitemap_result and sitemap_result.get("id"):
+                sitemap_id = sitemap_result.get("id")
 
                 # Make sure sitemap_id is a string
                 if sitemap_id is not None:
                     # Process in batches of 100
                     batch_size = 100
                     for i in range(0, len(urls), batch_size):
-                        batch = urls[i:i+batch_size]
-                        await cls._batch_insert_sitemap_urls(str(sitemap_id), tenant_id, batch)
+                        batch = urls[i : i + batch_size]
+                        await cls._batch_insert_sitemap_urls(
+                            str(sitemap_id), tenant_id, batch
+                        )
                         stored_urls += len(batch)
 
             # Prepare response
             sitemap_response = {
-                'domain': domain,
-                'domain_id': domain_id,
-                'sitemap_url': sitemap_url,
-                'sitemap_id': sitemap_result.get('id') if sitemap_result else None,
-                'total_urls': sitemap_data.get('total_urls', 0),
-                'stored_urls': stored_urls,
-                'success': True
+                "domain": domain,
+                "domain_id": domain_id,
+                "sitemap_url": sitemap_url,
+                "sitemap_id": sitemap_result.get("id") if sitemap_result else None,
+                "total_urls": sitemap_data.get("total_urls", 0),
+                "stored_urls": stored_urls,
+                "success": True,
             }
 
-            logger.info(f"Stored sitemap {sitemap_url} with {stored_urls} URLs for domain {domain} (tenant: {tenant_id})")
+            logger.info(
+                f"Stored sitemap {sitemap_url} with {stored_urls} URLs for domain {domain} (tenant: {tenant_id})"
+            )
 
             return sitemap_response
 
         except Exception as e:
-            logger.error(f"Error storing sitemap data for {domain}, {sitemap_url}: {str(e)}")
+            logger.error(
+                f"Error storing sitemap data for {domain}, {sitemap_url}: {str(e)}"
+            )
             logger.error(traceback.format_exc())
 
             # Return partial result with error
             return {
-                'domain': domain,
-                'sitemap_url': sitemap_url,
-                'tenant_id': tenant_id,
-                'error': str(e),
-                'success': False
+                "domain": domain,
+                "sitemap_url": sitemap_url,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "success": False,
             }
 
     @classmethod
@@ -222,7 +223,7 @@ class StorageService:
         places: List[Dict[str, Any]],
         search_params: Dict[str, Any],
         tenant_id: str,
-        user_id: str
+        user_id: str,
     ) -> Dict[str, Any]:
         """
         Store Google Places data.
@@ -243,15 +244,15 @@ class StorageService:
             # If no places, return early
             if not places:
                 return {
-                    'success': True,
-                    'tenant_id': tenant_id,
-                    'message': 'No places to store',
-                    'stored_count': 0
+                    "success": True,
+                    "tenant_id": tenant_id,
+                    "message": "No places to store",
+                    "stored_count": 0,
                 }
 
             # Get key search parameters
-            location = search_params.get('location', 'unknown')
-            business_type = search_params.get('business_type', 'unknown')
+            location = search_params.get("location", "unknown")
+            business_type = search_params.get("business_type", "unknown")
 
             # Create a search record first
             search_query = """
@@ -263,15 +264,17 @@ class StorageService:
             """
 
             search_params = {
-                'tenant_id': tenant_id,
-                'user_id': user_id,
-                'location': location,
-                'business_type': business_type,
-                'params': json.dumps(search_params)
+                "tenant_id": tenant_id,
+                "user_id": user_id,
+                "location": location,
+                "business_type": business_type,
+                "params": json.dumps(search_params),
             }
 
-            search_result = await db_service.execute_returning(search_query, search_params)
-            search_id = search_result.get('id') if search_result else None
+            search_result = await db_service.execute_returning(
+                search_query, search_params
+            )
+            search_id = search_result.get("id") if search_result else None
 
             if not search_id:
                 raise ValueError("Failed to create search record")
@@ -283,26 +286,32 @@ class StorageService:
             # Process in batches of 50
             batch_size = 50
             for i in range(0, len(places), batch_size):
-                batch = places[i:i+batch_size]
-                stored, failed = await cls._batch_insert_places(batch, search_id, tenant_id, user_id)
+                batch = places[i : i + batch_size]
+                stored, failed = await cls._batch_insert_places(
+                    batch, search_id, tenant_id, user_id
+                )
                 stored_count += stored
                 failed_places.extend(failed)
 
             # Return result
             result = {
-                'success': len(failed_places) == 0,
-                'tenant_id': tenant_id,
-                'search_id': search_id,
-                'total_places': len(places),
-                'stored_count': stored_count,
-                'failed_count': len(failed_places),
-                'message': f"Stored {stored_count} of {len(places)} places"
+                "success": len(failed_places) == 0,
+                "tenant_id": tenant_id,
+                "search_id": search_id,
+                "total_places": len(places),
+                "stored_count": stored_count,
+                "failed_count": len(failed_places),
+                "message": f"Stored {stored_count} of {len(places)} places",
             }
 
             if failed_places:
-                result['failed_places'] = failed_places[:10]  # Include first 10 failures
+                result["failed_places"] = failed_places[
+                    :10
+                ]  # Include first 10 failures
 
-            logger.info(f"Stored {stored_count} places for search {search_id} (tenant: {tenant_id})")
+            logger.info(
+                f"Stored {stored_count} places for search {search_id} (tenant: {tenant_id})"
+            )
 
             return result
 
@@ -312,20 +321,16 @@ class StorageService:
 
             # Return error result
             return {
-                'success': False,
-                'tenant_id': tenant_id,
-                'error': str(e),
-                'total_places': len(places),
-                'stored_count': 0
+                "success": False,
+                "tenant_id": tenant_id,
+                "error": str(e),
+                "total_places": len(places),
+                "stored_count": 0,
             }
 
     @classmethod
     async def store_contact_data(
-        cls,
-        domain: str,
-        contacts: Dict[str, Any],
-        tenant_id: str,
-        user_id: str
+        cls, domain: str, contacts: Dict[str, Any], tenant_id: str, user_id: str
     ) -> Dict[str, Any]:
         """
         Store contact information for a domain.
@@ -353,19 +358,25 @@ class StorageService:
                 raise ValueError(f"Failed to create domain record for {domain}")
 
             # Extract contact components
-            emails = contacts.get('emails', [])
-            phones = contacts.get('phones', [])
-            social_media = contacts.get('social_media', {})
-            source_url = contacts.get('url', f"https://{domain}")
+            emails = contacts.get("emails", [])
+            phones = contacts.get("phones", [])
+            social_media = contacts.get("social_media", {})
+            source_url = contacts.get("url", f"https://{domain}")
 
             # Store emails
-            stored_emails = await cls._store_domain_emails(domain_id, emails, source_url, tenant_id, user_id)
+            stored_emails = await cls._store_domain_emails(
+                domain_id, emails, source_url, tenant_id, user_id
+            )
 
             # Store phones
-            stored_phones = await cls._store_domain_phones(domain_id, phones, source_url, tenant_id, user_id)
+            stored_phones = await cls._store_domain_phones(
+                domain_id, phones, source_url, tenant_id, user_id
+            )
 
             # Store social media
-            stored_social = await cls._store_domain_social_media(domain_id, social_media, tenant_id, user_id)
+            stored_social = await cls._store_domain_social_media(
+                domain_id, social_media, tenant_id, user_id
+            )
 
             # Update domain record with contact scan time
             update_query = """
@@ -377,24 +388,25 @@ class StorageService:
                 WHERE id = %(domain_id)s
             """
 
-            await db_service.execute(update_query, {
-                'domain_id': domain_id,
-                'user_id': user_id
-            })
+            await db_service.execute(
+                update_query, {"domain_id": domain_id, "user_id": user_id}
+            )
 
             # Prepare response
             result = {
-                'success': True,
-                'domain': domain,
-                'domain_id': domain_id,
-                'tenant_id': tenant_id,
-                'stored_emails': stored_emails,
-                'stored_phones': stored_phones,
-                'stored_social': stored_social,
-                'message': f"Stored {stored_emails} emails, {stored_phones} phones, and {stored_social} social media links"
+                "success": True,
+                "domain": domain,
+                "domain_id": domain_id,
+                "tenant_id": tenant_id,
+                "stored_emails": stored_emails,
+                "stored_phones": stored_phones,
+                "stored_social": stored_social,
+                "message": f"Stored {stored_emails} emails, {stored_phones} phones, and {stored_social} social media links",
             }
 
-            logger.info(f"Stored contact data for domain {domain} (tenant: {tenant_id})")
+            logger.info(
+                f"Stored contact data for domain {domain} (tenant: {tenant_id})"
+            )
 
             return result
 
@@ -404,10 +416,10 @@ class StorageService:
 
             # Return error result
             return {
-                'success': False,
-                'domain': domain,
-                'tenant_id': tenant_id,
-                'error': str(e)
+                "success": False,
+                "domain": domain,
+                "tenant_id": tenant_id,
+                "error": str(e),
             }
 
     @classmethod
@@ -416,7 +428,7 @@ class StorageService:
         domain: str,
         tenant_id: str,
         include_sitemaps: bool = False,
-        include_contacts: bool = False
+        include_contacts: bool = False,
     ) -> Dict[str, Any]:
         """
         Get all data for a domain.
@@ -443,51 +455,48 @@ class StorageService:
                 WHERE domain = %(domain)s AND tenant_id = %(tenant_id)s
             """
 
-            params = {
-                'domain': domain,
-                'tenant_id': tenant_id
-            }
+            params = {"domain": domain, "tenant_id": tenant_id}
 
             domain_data = await db_service.fetch_one(query, params)
 
             if not domain_data:
                 return {
-                    'success': False,
-                    'domain': domain,
-                    'tenant_id': tenant_id,
-                    'message': 'Domain not found'
+                    "success": False,
+                    "domain": domain,
+                    "tenant_id": tenant_id,
+                    "message": "Domain not found",
                 }
 
             # Convert metadata to object if it's JSON string
-            metadata = domain_data.get('metadata')
+            metadata = domain_data.get("metadata")
             if metadata and isinstance(metadata, str):
                 try:
                     metadata = json.loads(metadata)
-                    domain_data['metadata'] = metadata
+                    domain_data["metadata"] = metadata
                 except (json.JSONDecodeError, TypeError):
                     pass
 
             # Format result
             result = {
-                'success': True,
-                'domain': domain,
-                'tenant_id': tenant_id,
-                'domain_data': domain_data
+                "success": True,
+                "domain": domain,
+                "tenant_id": tenant_id,
+                "domain_data": domain_data,
             }
 
             # Include sitemaps if requested
             if include_sitemaps:
-                domain_id = domain_data.get('id')
+                domain_id = domain_data.get("id")
                 if domain_id:
                     sitemaps = await cls._get_domain_sitemaps(domain_id, tenant_id)
-                    result['sitemaps'] = sitemaps
+                    result["sitemaps"] = sitemaps
 
             # Include contacts if requested
             if include_contacts:
-                domain_id = domain_data.get('id')
+                domain_id = domain_data.get("id")
                 if domain_id:
                     contacts = await cls._get_domain_contacts(domain_id, tenant_id)
-                    result['contacts'] = contacts
+                    result["contacts"] = contacts
 
             return result
 
@@ -497,10 +506,10 @@ class StorageService:
 
             # Return error result
             return {
-                'success': False,
-                'domain': domain,
-                'tenant_id': tenant_id,
-                'error': str(e)
+                "success": False,
+                "domain": domain,
+                "tenant_id": tenant_id,
+                "error": str(e),
             }
 
     # Helper methods
@@ -519,21 +528,21 @@ class StorageService:
             return ""
 
         # Remove protocol
-        if domain.startswith(('http://', 'https://')):
+        if domain.startswith(("http://", "https://")):
             domain = urlparse(domain).netloc
 
         # Remove www prefix
-        if domain.startswith('www.'):
+        if domain.startswith("www."):
             domain = domain[4:]
 
         # Remove trailing slash
-        if domain.endswith('/'):
+        if domain.endswith("/"):
             domain = domain[:-1]
 
         # Remove path and query parameters
-        domain = domain.split('/')[0]
-        domain = domain.split('?')[0]
-        domain = domain.split('#')[0]
+        domain = domain.split("/")[0]
+        domain = domain.split("?")[0]
+        domain = domain.split("#")[0]
 
         return domain.lower()
 
@@ -552,10 +561,7 @@ class StorageService:
 
     @classmethod
     async def _get_or_create_domain_id(
-        cls,
-        domain: str,
-        tenant_id: str,
-        user_id: str
+        cls, domain: str, tenant_id: str, user_id: str
     ) -> Optional[str]:
         """
         Get or create a domain record and return its ID.
@@ -569,7 +575,10 @@ class StorageService:
             Domain ID or None if failed
         """
         # Check cache first
-        if tenant_id in cls._domain_id_cache and domain in cls._domain_id_cache[tenant_id]:
+        if (
+            tenant_id in cls._domain_id_cache
+            and domain in cls._domain_id_cache[tenant_id]
+        ):
             return cls._domain_id_cache[tenant_id][domain]
 
         # Query domain record
@@ -578,15 +587,12 @@ class StorageService:
             WHERE domain = %(domain)s AND tenant_id = %(tenant_id)s
         """
 
-        params = {
-            'domain': domain,
-            'tenant_id': tenant_id
-        }
+        params = {"domain": domain, "tenant_id": tenant_id}
 
         domain_data = await db_service.fetch_one(query, params)
 
-        if domain_data and domain_data.get('id'):
-            domain_id = domain_data.get('id')
+        if domain_data and domain_data.get("id"):
+            domain_id = domain_data.get("id")
 
             # Update cache
             if tenant_id not in cls._domain_id_cache:
@@ -604,17 +610,13 @@ class StorageService:
             ) RETURNING id
         """
 
-        create_params = {
-            'domain': domain,
-            'tenant_id': tenant_id,
-            'user_id': user_id
-        }
+        create_params = {"domain": domain, "tenant_id": tenant_id, "user_id": user_id}
 
         try:
             result = await db_service.execute_returning(create_query, create_params)
 
-            if result and result.get('id'):
-                domain_id = result.get('id')
+            if result and result.get("id"):
+                domain_id = result.get("id")
 
                 # Update cache
                 if tenant_id not in cls._domain_id_cache:
@@ -631,10 +633,7 @@ class StorageService:
 
     @classmethod
     async def _batch_insert_sitemap_urls(
-        cls,
-        sitemap_id: str,
-        tenant_id: str,
-        urls: List[Dict[str, Any]]
+        cls, sitemap_id: str, tenant_id: str, urls: List[Dict[str, Any]]
     ) -> int:
         """
         Insert a batch of sitemap URLs.
@@ -653,10 +652,10 @@ class StorageService:
         try:
             # Prepare values and parameters
             value_parts = []
-            params = {'sitemap_id': sitemap_id, 'tenant_id': tenant_id}
+            params = {"sitemap_id": sitemap_id, "tenant_id": tenant_id}
 
             for i, url_data in enumerate(urls):
-                url = url_data.get('url')
+                url = url_data.get("url")
                 if not url:
                     continue
 
@@ -666,20 +665,24 @@ class StorageService:
                 priority_param = f"{param_prefix}_priority"
                 changefreq_param = f"{param_prefix}_changefreq"
 
-                value_parts.append(f"(%({url_param})s, %(sitemap_id)s, %(tenant_id)s, %({lastmod_param})s, %({priority_param})s, %({changefreq_param})s)")
+                value_parts.append(
+                    f"(%({url_param})s, %(sitemap_id)s, %(tenant_id)s, %({lastmod_param})s, %({priority_param})s, %({changefreq_param})s)"
+                )
 
                 # Add parameters with proper type handling
                 params[url_param] = str(url)
 
                 # Handle potentially None values
-                lastmod = url_data.get('lastmod')
-                priority = url_data.get('priority')
-                changefreq = url_data.get('changefreq')
+                lastmod = url_data.get("lastmod")
+                priority = url_data.get("priority")
+                changefreq = url_data.get("changefreq")
 
                 # Use empty string instead of None for database parameters
-                params[lastmod_param] = str(lastmod) if lastmod is not None else ''
-                params[priority_param] = str(priority) if priority is not None else ''
-                params[changefreq_param] = str(changefreq) if changefreq is not None else ''
+                params[lastmod_param] = str(lastmod) if lastmod is not None else ""
+                params[priority_param] = str(priority) if priority is not None else ""
+                params[changefreq_param] = (
+                    str(changefreq) if changefreq is not None else ""
+                )
 
             if not value_parts:
                 return 0
@@ -707,11 +710,7 @@ class StorageService:
 
     @classmethod
     async def _batch_insert_places(
-        cls,
-        places: List[Dict[str, Any]],
-        search_id: str,
-        tenant_id: str,
-        user_id: str
+        cls, places: List[Dict[str, Any]], search_id: str, tenant_id: str, user_id: str
     ) -> Tuple[int, List[Dict[str, Any]]]:
         """
         Insert a batch of places.
@@ -734,16 +733,18 @@ class StorageService:
         # Process each place individually for better error handling
         for place in places:
             try:
-                place_id = place.get('place_id')
+                place_id = place.get("place_id")
                 if not place_id:
-                    failed_places.append({
-                        'place': place.get('name', 'Unknown'),
-                        'error': 'Missing place_id'
-                    })
+                    failed_places.append(
+                        {
+                            "place": place.get("name", "Unknown"),
+                            "error": "Missing place_id",
+                        }
+                    )
                     continue
 
                 # Prepare raw_data as JSON if it's not already
-                raw_data = place.get('raw_data')
+                raw_data = place.get("raw_data")
                 if raw_data and not isinstance(raw_data, str):
                     raw_data = json.dumps(raw_data)
                 elif not raw_data:
@@ -782,22 +783,22 @@ class StorageService:
                 """
 
                 params = {
-                    'place_id': place_id,
-                    'name': place.get('name', ''),
-                    'formatted_address': place.get('formatted_address', ''),
-                    'business_type': place.get('business_type', ''),
-                    'latitude': place.get('latitude'),
-                    'longitude': place.get('longitude'),
-                    'vicinity': place.get('vicinity', ''),
-                    'rating': place.get('rating'),
-                    'user_ratings_total': place.get('user_ratings_total'),
-                    'price_level': place.get('price_level'),
-                    'tenant_id': tenant_id,
-                    'user_id': user_id,
-                    'search_id': search_id,
-                    'search_query': place.get('search_query', ''),
-                    'search_location': place.get('search_location', ''),
-                    'raw_data': raw_data
+                    "place_id": place_id,
+                    "name": place.get("name", ""),
+                    "formatted_address": place.get("formatted_address", ""),
+                    "business_type": place.get("business_type", ""),
+                    "latitude": place.get("latitude"),
+                    "longitude": place.get("longitude"),
+                    "vicinity": place.get("vicinity", ""),
+                    "rating": place.get("rating"),
+                    "user_ratings_total": place.get("user_ratings_total"),
+                    "price_level": place.get("price_level"),
+                    "tenant_id": tenant_id,
+                    "user_id": user_id,
+                    "search_id": search_id,
+                    "search_query": place.get("search_query", ""),
+                    "search_location": place.get("search_location", ""),
+                    "raw_data": raw_data,
                 }
 
                 result = await db_service.execute_returning(query, params)
@@ -805,17 +806,20 @@ class StorageService:
                 if result:
                     stored_count += 1
                 else:
-                    failed_places.append({
-                        'place': place.get('name', 'Unknown'),
-                        'error': 'Insert returned no result'
-                    })
+                    failed_places.append(
+                        {
+                            "place": place.get("name", "Unknown"),
+                            "error": "Insert returned no result",
+                        }
+                    )
 
             except Exception as e:
-                logger.error(f"Error inserting place {place.get('name', 'Unknown')}: {str(e)}")
-                failed_places.append({
-                    'place': place.get('name', 'Unknown'),
-                    'error': str(e)
-                })
+                logger.error(
+                    f"Error inserting place {place.get('name', 'Unknown')}: {str(e)}"
+                )
+                failed_places.append(
+                    {"place": place.get("name", "Unknown"), "error": str(e)}
+                )
 
         return stored_count, failed_places
 
@@ -826,7 +830,7 @@ class StorageService:
         emails: List[str],
         source_url: str,
         tenant_id: str,
-        user_id: str
+        user_id: str,
     ) -> int:
         """
         Store emails for a domain.
@@ -863,11 +867,11 @@ class StorageService:
                 """
 
                 params = {
-                    'domain_id': domain_id,
-                    'tenant_id': tenant_id,
-                    'email': email,
-                    'source_url': source_url,
-                    'user_id': user_id
+                    "domain_id": domain_id,
+                    "tenant_id": tenant_id,
+                    "email": email,
+                    "source_url": source_url,
+                    "user_id": user_id,
                 }
 
                 result = await db_service.execute_returning(query, params)
@@ -876,7 +880,9 @@ class StorageService:
                     stored_count += 1
 
             except Exception as e:
-                logger.error(f"Error storing email {email} for domain {domain_id}: {str(e)}")
+                logger.error(
+                    f"Error storing email {email} for domain {domain_id}: {str(e)}"
+                )
 
         return stored_count
 
@@ -887,7 +893,7 @@ class StorageService:
         phones: List[str],
         source_url: str,
         tenant_id: str,
-        user_id: str
+        user_id: str,
     ) -> int:
         """
         Store phone numbers for a domain.
@@ -924,11 +930,11 @@ class StorageService:
                 """
 
                 params = {
-                    'domain_id': domain_id,
-                    'tenant_id': tenant_id,
-                    'phone_number': phone,
-                    'source_url': source_url,
-                    'user_id': user_id
+                    "domain_id": domain_id,
+                    "tenant_id": tenant_id,
+                    "phone_number": phone,
+                    "source_url": source_url,
+                    "user_id": user_id,
                 }
 
                 result = await db_service.execute_returning(query, params)
@@ -937,17 +943,15 @@ class StorageService:
                     stored_count += 1
 
             except Exception as e:
-                logger.error(f"Error storing phone {phone} for domain {domain_id}: {str(e)}")
+                logger.error(
+                    f"Error storing phone {phone} for domain {domain_id}: {str(e)}"
+                )
 
         return stored_count
 
     @classmethod
     async def _store_domain_social_media(
-        cls,
-        domain_id: str,
-        social_media: Dict[str, str],
-        tenant_id: str,
-        user_id: str
+        cls, domain_id: str, social_media: Dict[str, str], tenant_id: str, user_id: str
     ) -> int:
         """
         Store social media links for a domain.
@@ -983,11 +987,11 @@ class StorageService:
                 """
 
                 params = {
-                    'domain_id': domain_id,
-                    'tenant_id': tenant_id,
-                    'platform': platform,
-                    'url': url,
-                    'user_id': user_id
+                    "domain_id": domain_id,
+                    "tenant_id": tenant_id,
+                    "platform": platform,
+                    "url": url,
+                    "user_id": user_id,
                 }
 
                 result = await db_service.execute_returning(query, params)
@@ -996,15 +1000,15 @@ class StorageService:
                     stored_count += 1
 
             except Exception as e:
-                logger.error(f"Error storing social media {platform} for domain {domain_id}: {str(e)}")
+                logger.error(
+                    f"Error storing social media {platform} for domain {domain_id}: {str(e)}"
+                )
 
         return stored_count
 
     @classmethod
     async def _get_domain_sitemaps(
-        cls,
-        domain_id: str,
-        tenant_id: str
+        cls, domain_id: str, tenant_id: str
     ) -> List[Dict[str, Any]]:
         """
         Get sitemaps for a domain.
@@ -1025,19 +1029,17 @@ class StorageService:
                 LIMIT 1
             """
 
-            params = {
-                'domain_id': domain_id
-            }
+            params = {"domain_id": domain_id}
 
             sitemaps = await db_service.fetch_all(query, params)
 
             # Convert metadata to objects if they're JSON strings
             for sitemap in sitemaps:
-                metadata = sitemap.get('metadata')
+                metadata = sitemap.get("metadata")
                 if metadata and isinstance(metadata, str):
                     try:
                         metadata = json.loads(metadata)
-                        sitemap['metadata'] = metadata
+                        sitemap["metadata"] = metadata
                     except (json.JSONDecodeError, TypeError):
                         pass
 
@@ -1049,9 +1051,7 @@ class StorageService:
 
     @classmethod
     async def _get_domain_contacts(
-        cls,
-        domain_id: str,
-        tenant_id: str
+        cls, domain_id: str, tenant_id: str
     ) -> Dict[str, Any]:
         """
         Get all contact information for a domain.
@@ -1085,10 +1085,7 @@ class StorageService:
                 ORDER BY discovered_at DESC
             """
 
-            params = {
-                'domain_id': domain_id,
-                'tenant_id': tenant_id
-            }
+            params = {"domain_id": domain_id, "tenant_id": tenant_id}
 
             # Execute all queries concurrently
             emails_future = db_service.fetch_all(email_query, params)
@@ -1096,32 +1093,23 @@ class StorageService:
             social_future = db_service.fetch_all(social_query, params)
 
             emails, phones, social = await asyncio.gather(
-                emails_future,
-                phones_future,
-                social_future
+                emails_future, phones_future, social_future
             )
 
             # Organize social media by platform
             social_media = {}
             for item in social:
-                platform = item.get('platform')
-                url = item.get('url')
+                platform = item.get("platform")
+                url = item.get("url")
                 if platform and url:
                     social_media[platform] = url
 
-            return {
-                'emails': emails,
-                'phones': phones,
-                'social_media': social_media
-            }
+            return {"emails": emails, "phones": phones, "social_media": social_media}
 
         except Exception as e:
             logger.error(f"Error getting contacts for domain {domain_id}: {str(e)}")
-            return {
-                'emails': [],
-                'phones': [],
-                'social_media': {}
-            }
+            return {"emails": [], "phones": [], "social_media": {}}
+
 
 # Create singleton instance
 storage_service = StorageService()

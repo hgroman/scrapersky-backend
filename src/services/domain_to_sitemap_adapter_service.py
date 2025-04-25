@@ -4,6 +4,7 @@ Service to adapt the Domain Curation workflow to the legacy Sitemap Job system.
 Fetches domains marked for sitemap analysis and submits them via HTTP POST
 to the existing internal /api/v3/sitemap/scan endpoint.
 """
+
 import logging
 from typing import Optional
 from uuid import UUID
@@ -23,7 +24,10 @@ logger = logging.getLogger(__name__)
 
 # Define the base URL for the internal API call
 # TODO: Consider moving this to settings or making it more robust (e.g., env var)
-INTERNAL_API_BASE_URL = "http://localhost:8000" # Or appropriate service name in Docker network
+INTERNAL_API_BASE_URL = (
+    "http://localhost:8000"  # Or appropriate service name in Docker network
+)
+
 
 class DomainToSitemapAdapterService:
     """
@@ -33,9 +37,7 @@ class DomainToSitemapAdapterService:
     """
 
     async def submit_domain_to_legacy_sitemap(
-        self,
-        domain_id: UUID,
-        session: AsyncSession
+        self, domain_id: UUID, session: AsyncSession
     ) -> bool:
         """
         Fetches a Domain, calls the legacy POST /api/v3/sitemap/scan endpoint,
@@ -50,7 +52,9 @@ class DomainToSitemapAdapterService:
             True if the domain submission API call was accepted (HTTP 202),
             False otherwise (domain not found, validation error, API call failed).
         """
-        logger.info(f"Adapter Service: Processing domain {domain_id} for sitemap submission.")
+        logger.info(
+            f"Adapter Service: Processing domain {domain_id} for sitemap submission."
+        )
         domain: Optional[Domain] = None
         try:
             # 1. Fetch the Domain record
@@ -62,10 +66,14 @@ class DomainToSitemapAdapterService:
                 logger.error(f"Adapter Service: Domain not found for id: {domain_id}")
                 return False
 
-            if not domain.domain: # type: ignore
-                logger.error(f"Adapter Service: Domain record {domain_id} has no domain name.")
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed # type: ignore
-                domain.sitemap_analysis_error = "Domain record is missing the domain name." # type: ignore
+            if not domain.domain:  # type: ignore
+                logger.error(
+                    f"Adapter Service: Domain record {domain_id} has no domain name."
+                )
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
+                domain.sitemap_analysis_error = (
+                    "Domain record is missing the domain name."  # type: ignore
+                )
                 return False
 
             # 2. Prepare payload
@@ -78,26 +86,34 @@ class DomainToSitemapAdapterService:
             # 3. Make HTTP POST request
             api_key = settings.DEV_TOKEN
             if not api_key:
-                 logger.error("Adapter Service: DEV_TOKEN not found in settings.")
-                 domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed # type: ignore
-                 domain.sitemap_analysis_error = "Configuration Error: DEV_TOKEN missing." # type: ignore
-                 return False
+                logger.error("Adapter Service: DEV_TOKEN not found in settings.")
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
+                domain.sitemap_analysis_error = (
+                    "Configuration Error: DEV_TOKEN missing."  # type: ignore
+                )
+                return False
 
             headers = {
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
             }
             scan_endpoint = f"{INTERNAL_API_BASE_URL}/api/v3/sitemap/scan"
 
             async with httpx.AsyncClient() as client:
-                logger.info(f"Adapter Service: Calling {scan_endpoint} for domain {domain.domain} ({domain_id})")
-                response = await client.post(scan_endpoint, json=scan_payload, headers=headers, timeout=30.0)
+                logger.info(
+                    f"Adapter Service: Calling {scan_endpoint} for domain {domain.domain} ({domain_id})"
+                )
+                response = await client.post(
+                    scan_endpoint, json=scan_payload, headers=headers, timeout=30.0
+                )
 
             # 4. Check response and update status IN MEMORY
             if response.status_code == 202:
-                logger.info(f"Adapter Service: Successfully submitted domain {domain.domain} ({domain_id}). Status code: {response.status_code}")
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Completed # type: ignore
-                domain.sitemap_analysis_error = None # type: ignore
+                logger.info(
+                    f"Adapter Service: Successfully submitted domain {domain.domain} ({domain_id}). Status code: {response.status_code}"
+                )
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Completed  # type: ignore
+                domain.sitemap_analysis_error = None  # type: ignore
                 return True
             else:
                 error_detail = "Unknown error"
@@ -105,20 +121,32 @@ class DomainToSitemapAdapterService:
                     error_detail = response.json().get("detail", response.text)
                 except Exception:
                     error_detail = response.text
-                logger.error(f"Adapter Service: Failed to submit domain {domain.domain} ({domain_id}). Status code: {response.status_code}. Response: {error_detail}")
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error # type: ignore
-                domain.sitemap_analysis_error = f"API Call Failed. Status: {response.status_code}. Detail: {error_detail[:500]}" # type: ignore
+                logger.error(
+                    f"Adapter Service: Failed to submit domain {domain.domain} ({domain_id}). Status code: {response.status_code}. Response: {error_detail}"
+                )
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error  # type: ignore
+                domain.sitemap_analysis_error = f"API Call Failed. Status: {response.status_code}. Detail: {error_detail[:500]}"  # type: ignore
                 return False
 
         except httpx.RequestError as http_err:
-            logger.error(f"Adapter Service: HTTP request error submitting domain {domain.domain if domain else domain_id}: {http_err}", exc_info=True)
+            logger.error(
+                f"Adapter Service: HTTP request error submitting domain {domain.domain if domain else domain_id}: {http_err}",
+                exc_info=True,
+            )
             if domain:
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error # type: ignore
-                domain.sitemap_analysis_error = f"HTTP Request Error: {str(http_err)[:500]}" # type: ignore
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error  # type: ignore
+                domain.sitemap_analysis_error = (
+                    f"HTTP Request Error: {str(http_err)[:500]}"  # type: ignore
+                )
             return False
         except Exception as e:
-            logger.error(f"Adapter Service: Unexpected error processing domain {domain.domain if domain else domain_id}: {e}", exc_info=True)
+            logger.error(
+                f"Adapter Service: Unexpected error processing domain {domain.domain if domain else domain_id}: {e}",
+                exc_info=True,
+            )
             if domain:
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error # type: ignore
-                domain.sitemap_analysis_error = f"Unexpected Adapter Error: {str(e)[:500]}" # type: ignore
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error  # type: ignore
+                domain.sitemap_analysis_error = (
+                    f"Unexpected Adapter Error: {str(e)[:500]}"  # type: ignore
+                )
             return False

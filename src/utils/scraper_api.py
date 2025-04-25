@@ -1,19 +1,18 @@
 """ScraperAPI integration utilities with async HTTP support."""
+
 import asyncio
 import logging
 from os import getenv
-from typing import Optional, Union
+from typing import Optional
 from urllib.parse import urlencode
 
 import aiohttp
 from scraperapi_sdk import ScraperAPIClient as BaseScraperAPIClient
-from scraperapi_sdk.exceptions import ScraperAPIException
-
-from ..config.settings import Settings
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 class ScraperAPIClient:
     """Async ScraperAPI client using aiohttp with SDK fallback."""
@@ -23,7 +22,7 @@ class ScraperAPIClient:
 
         If no API key is provided, it will be loaded from settings.
         """
-        self.api_key = api_key or getenv('SCRAPER_API_KEY')
+        self.api_key = api_key or getenv("SCRAPER_API_KEY")
         if not self.api_key:
             raise ValueError("SCRAPER_API_KEY environment variable is required")
 
@@ -53,12 +52,7 @@ class ScraperAPIClient:
             await self._session.close()
             self._session = None
 
-    async def fetch(
-        self,
-        url: str,
-        render_js: bool = False,
-        retries: int = 3
-    ) -> str:
+    async def fetch(self, url: str, render_js: bool = False, retries: int = 3) -> str:
         """Fetch a URL through ScraperAPI with retries and enhanced parameters.
 
         Args:
@@ -74,8 +68,8 @@ class ScraperAPIClient:
             Exception: If all retry attempts fail.
         """
         if not isinstance(url, str):
-            logger.error(f'Invalid URL type: {type(url)}')
-            raise ValueError(f'URL must be string, got {type(url)}')
+            logger.error(f"Invalid URL type: {type(url)}")
+            raise ValueError(f"URL must be string, got {type(url)}")
 
         # Try async HTTP first
         try:
@@ -86,17 +80,14 @@ class ScraperAPIClient:
             return await self._fetch_with_sdk(url, render_js, retries)
 
     async def _fetch_with_aiohttp(
-        self,
-        url: str,
-        render_js: bool = False,
-        retries: int = 3
+        self, url: str, render_js: bool = False, retries: int = 3
     ) -> str:
         """Fetch using aiohttp."""
         # Construct ScraperAPI URL with parameters
         params = {
-            'api_key': self.api_key,
-            'url': url,
-            'render': 'true' if render_js else 'false'
+            "api_key": self.api_key,
+            "url": url,
+            "render": "true" if render_js else "false",
         }
         api_url = f"{self.base_url}?{urlencode(params)}"
 
@@ -115,11 +106,15 @@ class ScraperAPIClient:
                         content = await response.text()
                         if not content:
                             raise ValueError("Empty response received")
-                        logger.info(f"ScraperAPI request successful for {url} (Length: {len(content)} chars)")
+                        logger.info(
+                            f"ScraperAPI request successful for {url} (Length: {len(content)} chars)"
+                        )
                         return content
                     elif response.status == 429:  # Rate limit
-                        logger.warning(f"ScraperAPI rate limit hit (429) on attempt {attempt+1}, applying backoff")
-                        await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                        logger.warning(
+                            f"ScraperAPI rate limit hit (429) on attempt {attempt+1}, applying backoff"
+                        )
+                        await asyncio.sleep(2**attempt)  # Exponential backoff
                         continue
                     else:
                         error_text = await response.text()
@@ -131,45 +126,48 @@ class ScraperAPIClient:
                 last_error = f"Attempt {attempt + 1} failed: {str(e)}"
                 logger.error(last_error)
                 if attempt == retries - 1:
-                    raise Exception(f"All {retries} attempts failed. Last error: {last_error}")
+                    raise Exception(
+                        f"All {retries} attempts failed. Last error: {last_error}"
+                    )
                 await asyncio.sleep(1)  # Brief pause before retry
 
         raise Exception(f"All {retries} attempts failed without error details")
 
     async def _fetch_with_sdk(
-        self,
-        url: str,
-        render_js: bool = False,
-        retries: int = 3
+        self, url: str, render_js: bool = False, retries: int = 3
     ) -> str:
         """Fetch using the SDK as fallback."""
-        params = {
-            'render_js': render_js
-        }
+        params = {"render_js": render_js}
 
         logger.debug(f"ScraperAPI SDK request params: url={url}, render_js={render_js}")
 
         # Include parameters in URL for SDK
         api_url = f"{url}"
-        if '?' in url:
+        if "?" in url:
             api_url += f"&{urlencode(params)}"
         else:
             api_url += f"?{urlencode(params)}"
 
         for attempt in range(retries):
             try:
-                logger.info(f"ScraperAPI SDK attempt {attempt+1}/{retries} for URL: {url}")
+                logger.info(
+                    f"ScraperAPI SDK attempt {attempt+1}/{retries} for URL: {url}"
+                )
                 response = self._sdk_client.get(url=api_url)
                 if not response:
                     raise ValueError("Empty response from SDK")
-                logger.info(f"ScraperAPI SDK request successful for {url} (Length: {len(response)} chars)")
+                logger.info(
+                    f"ScraperAPI SDK request successful for {url} (Length: {len(response)} chars)"
+                )
                 return str(response)
 
             except Exception as e:
                 last_error = f"SDK Attempt {attempt + 1} failed: {str(e)}"
                 logger.error(last_error)
                 if attempt == retries - 1:
-                    raise Exception(f"All SDK {retries} attempts failed. Last error: {last_error}")
+                    raise Exception(
+                        f"All SDK {retries} attempts failed. Last error: {last_error}"
+                    )
                 await asyncio.sleep(1)  # Brief pause before retry
 
         raise Exception(f"All SDK {retries} attempts failed without error details")
