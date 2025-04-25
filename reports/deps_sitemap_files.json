@@ -1,0 +1,12 @@
+[
+  "src/auth/jwt_auth.py",
+  "src/config/settings.py",
+  "src/db/session.py",
+  "src/models/base.py",
+  "src/models/domain.py",
+  "src/models/sitemap.py",
+  "src/models/tenant.py",
+  "src/routers/sitemap_files.py",
+  "src/schemas/sitemap_file.py",
+  "src/services/sitemap_files_service.py"
+]

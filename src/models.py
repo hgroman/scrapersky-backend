@@ -1,15 +1,11 @@
-from pydantic import BaseModel, HttpUrl, Field, ConfigDict
-from typing import List, Optional, Dict, Any
-from enum import Enum
+import uuid
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-# Chat Models
-class ChatRequest(BaseModel):
-    message: str
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-class ChatResponse(BaseModel):
-    response: str
-    model_used: str
+# Chat Models - REMOVED
 
 # Scraping Models
 class ScrapingRequest(BaseModel):
@@ -147,6 +143,17 @@ class SitemapScrapingResponse(BaseModel):
     job_id: str
     status_url: str
 
+class BatchRequest(BaseModel):
+    """Request model for batch domain scanning."""
+    domains: List[str]
+    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+
+class BatchResponse(BaseModel):
+    """Response model for batch scan operations."""
+    batch_id: str
+    status_url: str
+    job_count: int
+
 class PageType(str, Enum):
     HTML = "text/html"
     XML = "application/xml"
@@ -174,7 +181,7 @@ class SitemapStats(BaseModel):
     avg_response_time: float
     tech_stack_counts: Dict[str, int]
 
-# Add to existing models.py file
+# Places Scraper Models
 class PlacesSearchRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -190,6 +197,7 @@ class PlacesSearchResponse(BaseModel):
     job_id: str
     status: str = "started"
     status_url: str
+
 class PlacesStatusResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -204,3 +212,130 @@ class PlacesStatusResponse(BaseModel):
     user_id: Optional[str] = None
     user_name: Optional[str] = None
     error: Optional[str] = None
+
+# Sitemap Analyzer Models
+class SitemapType(str, Enum):
+    INDEX = "index"
+    STANDARD = "standard"
+    IMAGE = "image"
+    VIDEO = "video"
+    NEWS = "news"
+
+class DiscoveryMethod(str, Enum):
+    ROBOTS_TXT = "robots_txt"
+    COMMON_PATH = "common_path"
+    SITEMAP_INDEX = "sitemap_index"
+    HTML_LINK = "html_link"
+    MANUAL = "manual"
+
+class SitemapAnalyzerRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    domain: str
+    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    lead_source: Optional[str] = None
+    follow_robots_txt: bool = True
+    extract_urls: bool = True
+    max_urls_per_sitemap: int = Field(default=10000, ge=1, le=50000)
+    priority: int = Field(default=5, ge=1, le=10)
+    tags: Optional[List[str]] = None
+    notes: Optional[str] = None
+
+    @property
+    def domain_url(self) -> str:
+        """Format domain as URL with https prefix if not already present."""
+        if self.domain.startswith(('http://', 'https://')):
+            return self.domain
+        return f"https://{self.domain}"
+
+class SitemapAnalyzerResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    job_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    status: str = "started"
+    status_url: str
+    domain: str
+
+class SitemapAnalyzerBatchRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    domains: List[str]
+    tenant_id: str = Field(default='550e8400-e29b-41d4-a716-446655440000')
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    lead_source: Optional[str] = None
+    follow_robots_txt: bool = True
+    extract_urls: bool = True
+    max_urls_per_sitemap: int = Field(default=10000, ge=1, le=50000)
+    max_concurrent_jobs: int = Field(default=5, ge=1, le=10)
+    priority: int = Field(default=5, ge=1, le=10)
+    tags: Optional[List[str]] = None
+    notes: Optional[str] = None
+
+class SitemapAnalyzerBatchResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    status_url: str
+    job_count: int
+    domains: List[str]
+
+class SitemapStatusResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    job_id: str
+    domain: str
+    status: str  # "pending", "running", "completed", "failed"
+    total_sitemaps: int = 0
+    total_urls: int = 0
+    discovery_methods: Dict[str, int] = Field(default_factory=dict)
+    sitemap_types: Dict[str, int] = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    error: Optional[str] = None
+    progress: Optional[float] = None
+    sitemaps: List[Dict[str, Any]] = Field(default_factory=list)
+    sitemaps_url: Optional[str] = None
+
+class SitemapBatchStatusResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str
+    status: str  # "pending", "in_progress", "completed", "failed", "partial"
+    total_domains: int
+    completed_domains: int = 0
+    failed_domains: int = 0
+    created_at: Optional[datetime] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    progress: float = 0.0
+    job_statuses: Dict[str, str] = Field(default_factory=dict)
+
+class SitemapFileResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    domain_id: str
+    url: str
+    sitemap_type: str
+    discovery_method: str
+    page_count: Optional[int] = None
+    size_bytes: Optional[int] = None
+    has_lastmod: Optional[bool] = None
+    has_priority: Optional[bool] = None
+    has_changefreq: Optional[bool] = None
+    last_modified: Optional[datetime] = None
+    created_at: datetime
+    status: str
+
+class SitemapUrlsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    urls: List[Dict[str, Any]]
+    total_count: int
+    page: int
+    page_size: int
+    has_more: bool

@@ -4,22 +4,36 @@ Domain Scheduler Service
 This module provides a scheduling service that periodically processes domains
 with 'pending' status in the database.
 """
+import asyncio
+import json
 import logging
 import os
-from datetime import datetime
+import sys
 import traceback
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+# from apscheduler.schedulers.asyncio import AsyncIOScheduler # Remove local scheduler import
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import text
-import asyncio
-import sys
-import json
-from typing import List, Dict, Any
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
-from ..session.async_session import get_background_session
+from ..config.settings import settings
+from ..models.domain import Domain  # Import the Domain model
+from ..models.enums import DomainStatusEnum # Import the new Enum
+
+# Import the shared scheduler instance
+from ..scheduler_instance import scheduler
+from ..scraper.domain_utils import get_domain_url, standardize_domain
 from ..scraper.metadata_extractor import detect_site_metadata
-from ..scraper.domain_utils import standardize_domain, get_domain_url
-from ..config.settings import Settings
+from ..session.async_session import get_background_session
+
+# Load settings
+if not os.environ.get("PYTHONPATH"):
+    os.environ["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+    sys.path.insert(0, os.environ["PYTHONPATH"])
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -30,11 +44,8 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
-# Initialize scheduler
-scheduler = AsyncIOScheduler()
-
 # Create settings instance
-settings = Settings()
+# settings = Settings()
 
 # Create diagnostic directory from settings
 DIAGNOSTIC_DIR = settings.DIAGNOSTIC_DIR
@@ -54,343 +65,191 @@ def log_diagnostic_info(message):
 
 async def process_pending_domains(limit: int = 10):
     """
-    Process pending domains that have been queued for processing.
+    Process pending domains using a single transaction for the batch.
+    Fetches domains, updates status to processing, extracts metadata,
+    and updates final status (completed/error) in memory.
+    The entire batch is committed or rolled back atomically.
 
     Args:
         limit: Maximum number of domains to process in one batch
     """
-    job_id = f"domain_batch_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+    job_id = f"domain_batch_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
     logger.debug("--------------------------------------------------")
     logger.debug(f"STARTING DOMAIN PROCESSING JOB {job_id} ({limit} domains max)")
     logger.debug("--------------------------------------------------")
 
+    domains_found = 0
     domains_processed = 0
     domains_successful = 0
+    domains_failed = 0
 
-    # Log the current time to verify this function is actually being called by the scheduler
-    now = datetime.utcnow()
-    logger.info(f"*** DOMAIN PROCESSOR EXECUTING AT {now.isoformat()} ***")
-    logger.info(f"*** SCHEDULER STATE: Running={scheduler.running}, Jobs={len(scheduler.get_jobs())} ***")
-
-    for job in scheduler.get_jobs():
-        logger.info(f"*** REGISTERED JOB: {job.id}, Next run: {job.next_run_time} ***")
-
-    # Step 1: Fetch pending domains
-    pending_domains = []
     try:
-        # Use background session with appropriate async settings for fetching domains
-        async with get_background_session() as fetch_session:
-            logger.debug(f"Got session for fetching pending domains: {fetch_session}")
+        # CORRECT: Use a single session and transaction for the entire batch
+        async with get_background_session() as session:
+            logger.debug(f"Acquired session for batch: {session}")
 
+            # Step 1: Fetch pending domains using ORM
+            stmt = (
+                select(Domain)
+                .where(Domain.status == DomainStatusEnum.pending) # Use Enum member
+                .order_by(Domain.updated_at.asc())
+                .limit(limit)
+                .with_for_update(skip_locked=True)
+                # .options(selectinload(Domain.some_relationship)) # Optional: Eager load relationships if needed
+            )
+            result = await session.execute(stmt)
+            # --- DEBUG LOGGING ---
+            raw_peek_results = []
             try:
-                # Set the supavisor options for this session
-                logger.debug("Setting session options for Supavisor compatibility")
+                # Peek at first few rows without consuming the whole result yet
+                # Need to handle the raw Row objects returned
+                peek_limit = 5 # Increase peek limit slightly
+                # Use result.partitions() which returns an iterable without consuming
+                # or simply re-execute and fetchmany
+                temp_result = await session.execute(stmt) # Re-execute for peeking
+                raw_rows = temp_result.fetchmany(peek_limit)
+                if raw_rows:
+                    logger.debug(f"Peeked {len(raw_rows)} raw rows before scalars().all()")
+                    for row_num, row in enumerate(raw_rows):
+                        # Log basic info about the row object
+                        logger.debug(f"  Raw Row {row_num}: Type={type(row)}, Content={str(row)[:200]}...")
+                        try:
+                            # Try accessing common attributes if it's an ORM object
+                            logger.debug(f"    -> ID: {getattr(row, 'id', 'N/A')}, Domain: {getattr(row, 'domain', 'N/A')}, Status: {getattr(row, 'status', 'N/A')}")
+                        except Exception:
+                            pass # Ignore errors if it's not an ORM object
+                else:
+                    logger.debug("Peeking with fetchmany() returned no rows.")
+                # No need to re-execute again, result is still valid for scalars()
+            except Exception as dbg_err:
+                logger.error(f"Debug logging error: {dbg_err}", exc_info=True)
+            # --- END DEBUG LOGGING ---
+            # Explicitly convert Sequence to List and handle potential None from getattr
+            domains_to_process = list(result.scalars().all())
+            domains_found = len(domains_to_process)
+            logger.info(f"Found {domains_found} pending domain(s).")
 
-                # Required Supavisor parameters
-                options = [
-                    ("SET statement_timeout = 90000", "90 seconds timeout"),
-                    ("SET idle_in_transaction_session_timeout = 120000", "120 seconds idle timeout"),
-                    ("SET statement_cache_size = 0", "Required for Supavisor compatibility")
-                ]
+            if not domains_to_process:
+                logger.info("No domains to process in this batch.")
+                return # Context manager handles commit/close
 
-                for sql, description in options:
-                    set_option = text(sql)
-                    set_option = set_option.execution_options(prepared=False)
-                    await fetch_session.execute(set_option)
-                    logger.debug(f"Set session option: {description}")
-            except Exception as e:
-                logger.error(f"Error setting session options: {str(e)}")
-                logger.debug(traceback.format_exc())
+            # Step 2: Process each domain
+            for domain in domains_to_process:
+                domain_id = domain.id
+                # Use getattr to ensure we get the string value, not the Column object
+                url = getattr(domain, 'domain', None)
+                domains_processed += 1
+                logger.debug(f"Processing domain {domain_id} ({url})")
 
-            try:
-                # Query for pending domains with proper execution options
-                logger.debug(f"Querying for up to {limit} pending domains...")
-                query = text("""
-                SELECT * FROM domains
-                WHERE status = 'pending'
-                ORDER BY updated_at ASC
-                LIMIT :limit
-                """)
-                # Apply Supavisor-compatible execution options
-                query = query.execution_options(prepared=False)
-                result = await fetch_session.execute(query.bindparams(limit=limit))
-
-                for row in result.mappings():
-                    domain_dict = dict(row)
-                    domain_id = domain_dict.get('id')
-                    url = domain_dict.get('domain')
-                    logger.debug(f"Found pending domain: ID={domain_id}, URL={url}")
-                    pending_domains.append(domain_dict)
-
-                logger.debug(f"Found {len(pending_domains)} pending domain(s)")
-            except Exception as query_error:
-                logger.error(f"Error querying pending domains: {str(query_error)}")
-                logger.debug(traceback.format_exc())
-                return  # Exit if we can't fetch domains
-
-    except Exception as session_error:
-        logger.error(f"Error getting session for fetching domains: {str(session_error)}")
-        logger.debug(traceback.format_exc())
-        return  # Exit if session creation fails
-
-    # Step 2: Process each domain individually
-    for domain_dict in pending_domains:
-        domain_id = domain_dict.get('id')
-        url = domain_dict.get('domain')
-        domains_processed += 1
-
-        # Step 2.1: Update domain to processing status
-        try:
-            async with get_background_session() as update_session:
-                # Set Supavisor options
                 try:
-                    logger.debug("Setting session options for update session")
+                    # Step 2.1: Update status to 'processing' IN MEMORY using setattr
+                    setattr(domain, 'status', DomainStatusEnum.processing) # Use Enum member
+                    setattr(domain, 'last_error', None) # Clear previous error
+                    setattr(domain, 'updated_at', datetime.utcnow()) # Keep updated_at fresh
+                    logger.debug(f"Domain {domain_id} status set to '{DomainStatusEnum.processing.value}' in memory.")
+                    # NO COMMIT here
 
-                    # Required Supavisor parameters
-                    options = [
-                        ("SET statement_timeout = 90000", "90 seconds timeout"),
-                        ("SET idle_in_transaction_session_timeout = 120000", "120 seconds idle timeout"),
-                        ("SET statement_cache_size = 0", "Required for Supavisor compatibility")
-                    ]
+                    # Step 2.2: Extract metadata
+                    if not url:
+                         raise ValueError(f"Domain record {domain_id} has no domain/url value.")
 
-                    for sql, description in options:
-                        set_option = text(sql)
-                        set_option = set_option.execution_options(prepared=False)
-                        await update_session.execute(set_option)
-                        logger.debug(f"Set session option: {description}")
-                except Exception as e:
-                    logger.error(f"Error setting session options for update session: {str(e)}")
-                    logger.debug(traceback.format_exc())
+                    std_domain = standardize_domain(url) # url is now guaranteed to be str or None (handled above)
+                    if not std_domain:
+                        raise ValueError(f"Invalid domain format: {url}")
 
-                async with update_session.begin():
-                    logger.debug(f"Updating domain {domain_id} status to 'processing'")
-                    update_query = text("""
-                    UPDATE domains
-                    SET status = 'processing', updated_at = NOW()
-                    WHERE id = :id
-                    """)
-                    update_query = update_query.execution_options(prepared=False)
-                    await update_session.execute(update_query.bindparams(id=domain_id))
-                    logger.debug(f"Updated domain {domain_id} status to 'processing'")
-        except Exception as status_error:
-            logger.error(f"Error updating domain {domain_id} to processing status: {str(status_error)}")
-            logger.debug(traceback.format_exc())
-            continue  # Skip to next domain if we can't update status
+                    domain_url = get_domain_url(std_domain)
+                    logger.debug(f"Extracting metadata for: {domain_url}")
+                    metadata = await detect_site_metadata(domain_url, max_retries=3)
+                    logger.debug(f"Metadata extraction complete for {std_domain}")
 
-        # Step 2.2: Extract metadata - SEPARATE TRY/EXCEPT BLOCK
-        metadata = None
-        try:
-            # Process the domain using metadata extractor
-            logger.debug(f"Standardizing domain: {url}")
-            std_domain = standardize_domain(url)
+                    if metadata is None:
+                        raise ValueError(f"Failed to extract metadata from {std_domain}")
 
-            if not std_domain:
-                raise ValueError(f"Invalid domain format: {url}")
+                    # Step 2.3: Update domain with results IN MEMORY using ORM method
+                    # Assuming Domain model has an update_from_metadata method
+                    # that takes metadata dict and updates relevant fields IN MEMORY
+                    await Domain.update_from_metadata(session, domain, metadata)
+                    setattr(domain, 'status', DomainStatusEnum.completed) # Use Enum member
+                    setattr(domain, 'updated_at', datetime.utcnow())
 
-            # Convert domain to proper URL for scraping
-            domain_url = get_domain_url(std_domain)
-            logger.debug(f"Converted domain to URL for scraping: {domain_url}")
-
-            logger.debug(f"Extracting metadata for domain: {std_domain}")
-            metadata = await detect_site_metadata(domain_url, max_retries=3)
-            logger.debug(f"Metadata extraction complete for {std_domain}")
-
-            if metadata is None:
-                raise ValueError(f"Failed to extract metadata from {std_domain}")
-
-        except Exception as extraction_error:
-            # Handle metadata extraction errors separately
-            error_message = str(extraction_error)
-            logger.error(f"Error extracting metadata for domain {domain_id}: {error_message}")
-            logger.debug(traceback.format_exc())
-            await handle_domain_error(domain_id, error_message)
-            continue  # Skip to next domain
-
-        # Step 2.3: Update domain with results - SEPARATE TRY/EXCEPT BLOCK
-        try:
-            async with get_background_session() as result_session:
-                # Set Supavisor options
-                try:
-                    # Set the supavisor options for this session
-                    logger.debug("Setting session options for result session")
-
-                    # Required Supavisor parameters
-                    options = [
-                        ("SET statement_timeout = 90000", "90 seconds timeout"),
-                        ("SET idle_in_transaction_session_timeout = 120000", "120 seconds idle timeout"),
-                        ("SET statement_cache_size = 0", "Required for Supavisor compatibility")
-                    ]
-
-                    for sql, description in options:
-                        set_option = text(sql)
-                        set_option = set_option.execution_options(prepared=False)
-                        await result_session.execute(set_option)
-                        logger.debug(f"Set session option: {description}")
-                except Exception as e:
-                    logger.error(f"Error setting session options for result session: {str(e)}")
-                    logger.debug(traceback.format_exc())
-
-                async with result_session.begin():
-                    logger.debug(f"Updating domain {domain_id} with extracted metadata")
-
-                    # Prepare metadata for storage
-                    metadata_json = json.dumps(metadata)
-                    tech_stack = metadata.get('tech_stack', {})
-
-                    # Update all relevant fields
-                    update_query = text("""
-                    UPDATE domains
-                    SET
-                        status = 'completed',
-                        updated_at = NOW(),
-                        title = :title,
-                        description = :description,
-                        favicon_url = :favicon_url,
-                        logo_url = :logo_url,
-                        language = :language,
-                        email_addresses = :email_addresses,
-                        phone_numbers = :phone_numbers,
-                        facebook_url = :facebook_url,
-                        twitter_url = :twitter_url,
-                        linkedin_url = :linkedin_url,
-                        instagram_url = :instagram_url,
-                        youtube_url = :youtube_url,
-                        domain_metadata = :metadata,
-                        tech_stack = :tech_stack,
-                        is_wordpress = :is_wordpress,
-                        wordpress_version = :wordpress_version,
-                        has_elementor = :has_elementor
-                    WHERE id = :id
-                    """)
-
-                    # Apply Supavisor-compatible execution options
-                    update_query = update_query.execution_options(prepared=False)
-
-                    # Extract values from metadata with proper fallbacks
-                    contact_info = metadata.get('contact_info', {})
-                    social_links = metadata.get('social_links', {})
-
-                    # Execute the update with all parameters
-                    await result_session.execute(update_query.bindparams(
-                        id=domain_id,
-                        title=metadata.get('title', ''),
-                        description=metadata.get('description', ''),
-                        favicon_url=metadata.get('favicon_url', ''),
-                        logo_url=metadata.get('logo_url', ''),
-                        language=metadata.get('language', ''),
-                        email_addresses=contact_info.get('email', []),
-                        phone_numbers=contact_info.get('phone', []),
-                        facebook_url=social_links.get('facebook', ''),
-                        twitter_url=social_links.get('twitter', ''),
-                        linkedin_url=social_links.get('linkedin', ''),
-                        instagram_url=social_links.get('instagram', ''),
-                        youtube_url=social_links.get('youtube', ''),
-                        metadata=metadata_json,
-                        tech_stack=json.dumps(tech_stack),
-                        is_wordpress=metadata.get('is_wordpress', False),
-                        wordpress_version=metadata.get('wordpress_version', None),
-                        has_elementor=metadata.get('has_elementor', False)
-                    ))
-
-                    logger.debug(f"Successfully updated domain {domain_id} with metadata and status 'completed'")
                     domains_successful += 1
+                    logger.info(f"Successfully processed and marked domain {domain_id} as '{DomainStatusEnum.completed.value}' in memory.")
 
-        except Exception as db_error:
-            # Handle database update errors
-            error_message = str(db_error)
-            logger.error(f"Error updating domain {domain_id} with metadata: {error_message}")
-            logger.debug(traceback.format_exc())
-            await handle_domain_error(domain_id, error_message)
+                except Exception as processing_error:
+                    error_message = str(processing_error)
+                    logger.error(f"Error processing domain {domain_id}: {error_message}", exc_info=True)
+                    domains_failed += 1
+                    # Update status to 'error' IN MEMORY using setattr
+                    try:
+                        setattr(domain, 'status', DomainStatusEnum.error) # Use Enum member
+                        setattr(domain, 'last_error', error_message[:1024]) # Truncate if necessary
+                        setattr(domain, 'updated_at', datetime.utcnow())
+                        logger.warning(f"Marked domain {domain_id} as '{DomainStatusEnum.error.value}' in memory.")
+                    except AttributeError:
+                         logger.error(f"Could not access domain object for {domain_id} after error to mark as failed.")
+                    # Do NOT re-raise here if we want the batch to continue and commit successes/failures
+                    # If batch atomicity is strict (all fail if one fails), uncomment the next line:
+                    # raise
 
-    # Log completion statistics
-    logger.debug("--------------------------------------------------")
-    logger.debug(f"DOMAIN PROCESSING JOB {job_id} COMPLETE")
-    logger.debug(f"Processed: {domains_processed} domains, Successful: {domains_successful}")
-    logger.debug("--------------------------------------------------")
+            # Step 3: Commit (or rollback if error occurred and wasn't caught/handled above)
+            # The context manager handles this automatically based on whether an exception exited the block.
+            logger.info(f"Batch loop finished. Session context manager will now commit/rollback.")
 
-async def handle_domain_error(domain_id, error_message):
-    """
-    Helper function to update domain status to error.
-    Uses a separate session to ensure error updates succeed even if main processing fails.
-    """
-    try:
-        async with get_background_session() as error_session:
-            # Set Supavisor options
-            try:
-                logger.debug("Setting session options for error handling session")
+        # End of async with session block
 
-                # Required Supavisor parameters
-                options = [
-                    ("SET statement_timeout = 90000", "90 seconds timeout"),
-                    ("SET idle_in_transaction_session_timeout = 120000", "120 seconds idle timeout"),
-                    ("SET statement_cache_size = 0", "Required for Supavisor compatibility")
-                ]
+    except Exception as outer_error:
+        logger.error(f"Outer error during domain processing job {job_id}: {outer_error}", exc_info=True)
+        # Session context manager ensures rollback occurred
 
-                for sql, description in options:
-                    set_option = text(sql)
-                    set_option = set_option.execution_options(prepared=False)
-                    await error_session.execute(set_option)
-                    logger.debug(f"Set session option: {description}")
-            except Exception as e:
-                logger.error(f"Error setting session options for error handling: {str(e)}")
-                logger.debug(traceback.format_exc())
-
-            async with error_session.begin():
-                error_query = text("""
-                    UPDATE domains
-                    SET status = 'error',
-                        last_error = :error,
-                        updated_at = NOW()
-                    WHERE id = :domain_id
-                """)
-
-                error_query = error_query.execution_options(prepared=False)
-
-                await error_session.execute(
-                    error_query.bindparams(domain_id=domain_id, error=error_message)
-                )
-
-                logger.info(f"Updated domain {domain_id} status to 'error' with message: {error_message}")
-    except Exception as e:
-        logger.error(f"Failed to update domain status after error: {str(e)}")
-        logger.debug(traceback.format_exc())
+    finally:
+        # Log completion statistics
+        logger.debug("--------------------------------------------------")
+        logger.debug(f"DOMAIN PROCESSING JOB {job_id} COMPLETE")
+        logger.debug(f"Found: {domains_found}, Processed: {domains_processed}, Successful: {domains_successful}, Failed: {domains_failed}")
+        logger.debug("--------------------------------------------------")
 
 def setup_domain_scheduler():
-    """Set up the scheduler with the domain processing job"""
-    logger.info("Setting up domain processing scheduler")
+    """Sets up the domain processing scheduler job using the shared scheduler."""
+    try:
+        interval_minutes = settings.DOMAIN_SCHEDULER_INTERVAL_MINUTES
+        batch_size = settings.DOMAIN_SCHEDULER_BATCH_SIZE
+        max_instances = settings.DOMAIN_SCHEDULER_MAX_INSTANCES
 
-    # Debug scheduler state before setup
-    logger.info(f"Scheduler state before setup: Running={scheduler.running}, Jobs={len(scheduler.get_jobs())}")
+        job_id = "process_pending_domains"
 
-    # Add job to process pending domains every 1 minute
-    job = scheduler.add_job(
-        process_pending_domains,
-        IntervalTrigger(minutes=settings.SCHEDULER_INTERVAL_MINUTES),
-        id="process_pending_domains",
-        replace_existing=True,
-        kwargs={"limit": settings.SCHEDULER_BATCH_SIZE}  # Use batch size from settings
-    )
+        logger.info(f"Setting up Domain scheduler job on shared scheduler (Interval: {interval_minutes}m, Batch: {batch_size}, Max Instances: {max_instances})")
 
-    logger.info(f"Added job with ID: {job.id}, interval: {settings.SCHEDULER_INTERVAL_MINUTES} minute(s), batch size: {settings.SCHEDULER_BATCH_SIZE}")
+        # Remove existing job from the shared scheduler if it exists
+        if scheduler.get_job(job_id):
+            scheduler.remove_job(job_id)
+            logger.info(f"Removed existing job '{job_id}' from shared scheduler.")
 
-    # Start the scheduler if it's not running
-    if not scheduler.running:
-        scheduler.start()
-        logger.info("Domain processing scheduler started")
+        # Add job to the shared scheduler instance
+        scheduler.add_job(
+            process_pending_domains,
+            trigger=IntervalTrigger(minutes=interval_minutes),
+            id=job_id,
+            name="Process Pending Domains",
+            replace_existing=True,
+            max_instances=max_instances,
+            coalesce=True,
+            misfire_grace_time=60,
+            kwargs={'limit': batch_size} # Pass batch_size as limit
+        )
 
-    # Debug scheduler state after setup - only AFTER the scheduler is started
-    logger.info(f"Scheduler state after setup: Running={scheduler.running}, Jobs={len(scheduler.get_jobs())}")
-    for job in scheduler.get_jobs():
-        logger.info(f"Job {job.id} scheduled, Next run: {job.next_run_time}")
+        logger.info(f"Added/Updated job '{job_id}' on shared scheduler.")
+        current_job = scheduler.get_job(job_id)
+        if current_job:
+             logger.info(f"Job '{job_id}' next run time: {current_job.next_run_time}")
+        else:
+             logger.error(f"Failed to verify job '{job_id}' after adding to shared scheduler.")
 
-    logger.info("Domain processing scheduler set up successfully")
-    return scheduler
+        # No need to return the scheduler instance anymore
+        # return scheduler
 
-def shutdown_domain_scheduler():
-    """Shutdown the scheduler gracefully"""
-    logger.info("Shutting down domain processing scheduler")
-    if scheduler.running:
-        scheduler.shutdown()
-        logger.info("Domain processing scheduler shut down successfully")
-    else:
-        logger.info("Domain processing scheduler was not running")
+    except Exception as e:
+        logger.error(f"Error setting up domain scheduler job: {e}", exc_info=True)
+        # No need to manage scheduler start/stop here; main.py handles it.
+        # if scheduler.running:
+        #     scheduler.shutdown()
+        # return None

@@ -1,0 +1,59 @@
+<div class="card">
+    <h2>System Status</h2>
+    <div class="grid">
+        <div>
+            <h3>Component Status</h3>
+            <div id="status-indicators">
+                <p><span class="status-indicator status-yellow"></span> Database Connection: <span id="db-status">Checking...</span></p>
+                <p><span class="status-indicator status-yellow"></span> Supabase API: <span id="supabase-status">Checking...</span></p>
+                <p><span class="status-indicator status-yellow"></span> Auth Service: <span id="auth-status">Checking...</span></p>
+                <p><span class="status-indicator status-yellow"></span> Container Health: <span id="container-status">Checking...</span></p>
+            </div>
+        </div>
+        <div>
+            <h3>Environment Configuration</h3>
+            <div id="server-info">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>System Architecture</h2>
+    <p>ScraperSky is a FastAPI application running in a Docker container that provides web scraping, data extraction, and analysis capabilities.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h3>Core Technologies:</h3>
+            <ul>
+                <li><strong>Backend:</strong> FastAPI (Python web framework)</li>
+                <li><strong>Database:</strong> PostgreSQL via Supabase</li>
+                <li><strong>Authentication:</strong> JWT with Supabase integration</li>
+                <li><strong>Containerization:</strong> Docker & Docker Compose</li>
+                <li><strong>Deployment:</strong> Kubernetes or Render</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h3>Service Architecture:</h3>
+            <ul>
+                <li><strong>Auth Service:</strong> JWT token validation, user context</li>
+                <li><strong>DB Service:</strong> Database connection management</li>
+                <li><strong>Error Service:</strong> Centralized error handling</li>
+                <li><strong>Job Manager:</strong> Background task orchestration</li>
+                <li><strong>Tenant Isolation:</strong> Multi-tenant data separation</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>API Overview</h2>
+    <p>The ScraperSky API provides endpoints for web scraping, metadata extraction, and data analysis.</p>
+    <h3>Core Services:</h3>
+    <ul>
+        <li><strong>Sitemap Analyzer:</strong> Extract and analyze website sitemaps</li>
+        <li><strong>Email Scanner:</strong> Extract email addresses from websites</li>
+        <li><strong>Places Scraper:</strong> Extract location data</li>
+        <li><strong>Contact Manager:</strong> Organize and manage extracted contacts</li>
+        <li><strong>Sitemap Analyzer:</strong> Visualize and analyze website structure</li>
+    </ul>
+</div>

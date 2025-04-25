@@ -1,0 +1,16 @@
+[
+  "src/auth/jwt_auth.py",
+  "src/config/settings.py",
+  "src/db/session.py",
+  "src/models.py",
+  "src/models/base.py",
+  "src/models/place.py",
+  "src/models/place_search.py",
+  "src/models/tenant.py",
+  "src/routers/google_maps_api.py",
+  "src/services/job_service.py",
+  "src/services/places/places_search_service.py",
+  "src/services/places/places_service.py",
+  "src/services/places/places_storage_service.py",
+  "src/session/async_session.py"
+]

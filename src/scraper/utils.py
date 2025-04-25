@@ -1,15 +1,16 @@
 """Utility functions for the scraper module."""
 import uuid
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
+
 
 def generate_job_id(prefix: str = "scan") -> str:
     """
     Generate a unique job ID using UUID.
-    
+
     Args:
         prefix: Optional prefix for the job ID
-        
+
     Returns:
         A unique job ID string
     """
@@ -18,10 +19,10 @@ def generate_job_id(prefix: str = "scan") -> str:
 def validate_url(url: str) -> bool:
     """
     Validate that a URL starts with http:// or https://.
-    
+
     Args:
         url: URL to validate
-        
+
     Returns:
         True if URL is valid, False otherwise
     """
@@ -30,13 +31,13 @@ def validate_url(url: str) -> bool:
 def format_batch_job_status(job_id: str, total: int, processed: int, errors: int) -> Dict[str, Any]:
     """
     Format batch job status information.
-    
+
     Args:
         job_id: Unique job identifier
         total: Total number of URLs to process
         processed: Number of URLs processed
         errors: Number of errors encountered
-        
+
     Returns:
         Dictionary containing job status information
     """

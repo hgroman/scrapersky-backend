@@ -2,12 +2,10 @@
 <footer class="footer">
     <div class="container">
         <div class="footer-links">
+            <a href="/static/admin-dashboard.html">Admin</a>
+            <a href="/static/dev-tools.html">Dev Tools</a>
             <a href="/docs">API Docs</a>
-            <a href="/static/single-domain-scanner.html">Single Domain</a>
-            <a href="/static/batch-domain-scanner.html">Batch Scanner</a>
-            <a href="/static/website-grid.html">Website Grid</a>
-            <a href="/static/sitemap-viewer.html">Sitemap Scanner</a>
-            <a href="/static/sitemap-data-viewer.html">Data Viewer</a>
+            <a href="/static/rbac-management.html">RBAC</a>
         </div>
         <div class="copyright">
             &copy; 2025 ScraperSky. All rights reserved.
@@ -25,20 +23,30 @@
     }
 
     .footer-links a {
-        color: #b0b0b0;
-        margin: 0 1rem;
+        color: #ffffff;
+        margin: 0 2rem;
         text-decoration: none;
         transition: color 0.3s ease;
+        font-weight: 600;
+        font-size: 1.1rem;
     }
 
     .footer-links a:hover {
         color: var(--primary);
     }
 
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
     .copyright {
-        color: #707070;
+        color: #ffffff;
         font-size: 0.9rem;
         margin-top: 1rem;
+        opacity: 0.8;
     }
 </style>
 

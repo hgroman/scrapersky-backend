@@ -1,0 +1,931 @@
+{
+    "fastapi": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.datastructures",
+            "fastapi.dependencies.models",
+            "fastapi.dependencies.utils",
+            "fastapi.encoders",
+            "fastapi.openapi.docs",
+            "fastapi.openapi.models",
+            "fastapi.openapi.utils",
+            "fastapi.param_functions",
+            "fastapi.params",
+            "fastapi.routing",
+            "fastapi.utils",
+            "main.py"
+        ],
+        "imports": [
+            "fastapi.applications",
+            "fastapi.background",
+            "fastapi.datastructures",
+            "fastapi.exceptions",
+            "fastapi.param_functions",
+            "fastapi.requests",
+            "fastapi.responses",
+            "fastapi.routing",
+            "fastapi.websockets",
+            "starlette",
+            "starlette.status"
+        ],
+        "name": "fastapi",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/__init__.py"
+    },
+    "fastapi._compat": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.datastructures",
+            "fastapi.dependencies.models",
+            "fastapi.dependencies.utils",
+            "fastapi.encoders",
+            "fastapi.openapi.models",
+            "fastapi.openapi.utils",
+            "fastapi.param_functions",
+            "fastapi.params",
+            "fastapi.routing",
+            "fastapi.utils"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi.exceptions",
+            "fastapi.openapi",
+            "fastapi.openapi.constants",
+            "fastapi.params",
+            "fastapi.types",
+            "pydantic",
+            "starlette",
+            "starlette.datastructures",
+            "typing_extensions"
+        ],
+        "name": "fastapi._compat",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/_compat.py"
+    },
+    "fastapi.applications": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi.datastructures",
+            "fastapi.exceptions",
+            "fastapi.openapi",
+            "fastapi.openapi.docs",
+            "fastapi.openapi.utils",
+            "fastapi.params",
+            "fastapi.routing",
+            "fastapi.types",
+            "fastapi.utils",
+            "starlette",
+            "starlette.datastructures",
+            "starlette.exceptions",
+            "starlette.middleware",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.routing",
+            "starlette.types",
+            "typing_extensions"
+        ],
+        "name": "fastapi.applications",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/applications.py"
+    },
+    "fastapi.background": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi",
+            "fastapi.dependencies.utils"
+        ],
+        "imports": [
+            "starlette",
+            "typing_extensions"
+        ],
+        "name": "fastapi.background",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/background.py"
+    },
+    "fastapi.datastructures": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi",
+            "fastapi.applications",
+            "fastapi.openapi.utils",
+            "fastapi.routing",
+            "fastapi.utils"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "starlette",
+            "starlette.datastructures",
+            "typing_extensions"
+        ],
+        "name": "fastapi.datastructures",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/datastructures.py"
+    },
+    "fastapi.dependencies": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.dependencies.utils",
+            "fastapi.openapi.utils",
+            "fastapi.routing"
+        ],
+        "name": "fastapi.dependencies",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/dependencies/__init__.py"
+    },
+    "fastapi.dependencies.models": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.dependencies.utils",
+            "fastapi.openapi.utils",
+            "fastapi.routing"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat"
+        ],
+        "name": "fastapi.dependencies.models",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/dependencies/models.py"
+    },
+    "fastapi.dependencies.utils": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.openapi.utils",
+            "fastapi.routing"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.background",
+            "fastapi.dependencies",
+            "fastapi.dependencies.models",
+            "fastapi.params",
+            "fastapi.utils",
+            "pydantic",
+            "starlette",
+            "starlette.concurrency",
+            "starlette.datastructures",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.websockets",
+            "typing_extensions"
+        ],
+        "name": "fastapi.dependencies.utils",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/dependencies/utils.py"
+    },
+    "fastapi.encoders": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.openapi.docs",
+            "fastapi.openapi.utils",
+            "fastapi.routing"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.types",
+            "pydantic",
+            "typing_extensions"
+        ],
+        "name": "fastapi.encoders",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/encoders.py"
+    },
+    "fastapi.exceptions": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.routing",
+            "main.py"
+        ],
+        "imports": [
+            "pydantic",
+            "starlette",
+            "starlette.exceptions",
+            "typing_extensions"
+        ],
+        "name": "fastapi.exceptions",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/exceptions.py"
+    },
+    "fastapi.middleware": {
+        "bacon": 1,
+        "imported_by": [
+            "main.py"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.middleware"
+        ],
+        "name": "fastapi.middleware",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/middleware/__init__.py"
+    },
+    "fastapi.middleware.cors": {
+        "bacon": 1,
+        "imported_by": [
+            "main.py"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.middleware",
+            "starlette.middleware.cors"
+        ],
+        "name": "fastapi.middleware.cors",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/middleware/cors.py"
+    },
+    "fastapi.openapi": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.openapi.utils",
+            "fastapi.param_functions",
+            "fastapi.params",
+            "main.py"
+        ],
+        "name": "fastapi.openapi",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/openapi/__init__.py"
+    },
+    "fastapi.openapi.constants": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.openapi.utils"
+        ],
+        "name": "fastapi.openapi.constants",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/openapi/constants.py"
+    },
+    "fastapi.openapi.docs": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi.applications",
+            "main.py"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi.encoders",
+            "starlette",
+            "starlette.responses",
+            "typing_extensions"
+        ],
+        "name": "fastapi.openapi.docs",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/openapi/docs.py"
+    },
+    "fastapi.openapi.models": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.openapi.utils",
+            "fastapi.param_functions",
+            "fastapi.params"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "pydantic",
+            "typing_extensions"
+        ],
+        "name": "fastapi.openapi.models",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/openapi/models.py"
+    },
+    "fastapi.openapi.utils": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi.applications",
+            "main.py"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.datastructures",
+            "fastapi.dependencies",
+            "fastapi.dependencies.models",
+            "fastapi.dependencies.utils",
+            "fastapi.encoders",
+            "fastapi.openapi",
+            "fastapi.openapi.constants",
+            "fastapi.openapi.models",
+            "fastapi.params",
+            "fastapi.responses",
+            "fastapi.routing",
+            "fastapi.types",
+            "fastapi.utils",
+            "starlette",
+            "starlette.responses",
+            "starlette.routing",
+            "starlette.status",
+            "typing_extensions"
+        ],
+        "name": "fastapi.openapi.utils",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/openapi/utils.py"
+    },
+    "fastapi.param_functions": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.openapi",
+            "fastapi.openapi.models",
+            "fastapi.params",
+            "typing_extensions"
+        ],
+        "name": "fastapi.param_functions",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/param_functions.py"
+    },
+    "fastapi.params": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.dependencies.utils",
+            "fastapi.openapi.utils",
+            "fastapi.param_functions",
+            "fastapi.routing"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.openapi",
+            "fastapi.openapi.models",
+            "pydantic",
+            "typing_extensions"
+        ],
+        "name": "fastapi.params",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/params.py"
+    },
+    "fastapi.requests": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.requests"
+        ],
+        "name": "fastapi.requests",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/requests.py"
+    },
+    "fastapi.responses": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi",
+            "fastapi.openapi.utils",
+            "main.py"
+        ],
+        "imports": [
+            "orjson",
+            "starlette",
+            "starlette.responses"
+        ],
+        "name": "fastapi.responses",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/responses.py"
+    },
+    "fastapi.routing": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi",
+            "fastapi.applications",
+            "fastapi.openapi.utils",
+            "fastapi.utils",
+            "main.py"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.datastructures",
+            "fastapi.dependencies",
+            "fastapi.dependencies.models",
+            "fastapi.dependencies.utils",
+            "fastapi.encoders",
+            "fastapi.exceptions",
+            "fastapi.params",
+            "fastapi.types",
+            "fastapi.utils",
+            "pydantic",
+            "starlette",
+            "starlette.concurrency",
+            "starlette.exceptions",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.routing",
+            "starlette.types",
+            "starlette.websockets",
+            "typing_extensions"
+        ],
+        "name": "fastapi.routing",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/routing.py"
+    },
+    "fastapi.staticfiles": {
+        "bacon": 1,
+        "imported_by": [
+            "main.py"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.staticfiles"
+        ],
+        "name": "fastapi.staticfiles",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/staticfiles.py"
+    },
+    "fastapi.types": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.encoders",
+            "fastapi.openapi.utils",
+            "fastapi.routing"
+        ],
+        "imports": [
+            "pydantic"
+        ],
+        "name": "fastapi.types",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/types.py"
+    },
+    "fastapi.utils": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.dependencies.utils",
+            "fastapi.openapi.utils",
+            "fastapi.routing"
+        ],
+        "imports": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.datastructures",
+            "fastapi.routing",
+            "pydantic",
+            "typing_extensions"
+        ],
+        "name": "fastapi.utils",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/utils.py"
+    },
+    "fastapi.websockets": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.websockets"
+        ],
+        "name": "fastapi.websockets",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/fastapi/websockets.py"
+    },
+    "main.py": {
+        "bacon": 0,
+        "imports": [
+            "fastapi",
+            "fastapi.exceptions",
+            "fastapi.middleware",
+            "fastapi.middleware.cors",
+            "fastapi.openapi",
+            "fastapi.openapi.docs",
+            "fastapi.openapi.utils",
+            "fastapi.responses",
+            "fastapi.routing",
+            "fastapi.staticfiles",
+            "src",
+            "starlette",
+            "starlette.exceptions",
+            "starlette.routing",
+            "uvicorn"
+        ],
+        "name": "main.py",
+        "path": null
+    },
+    "orjson": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.responses"
+        ],
+        "name": "orjson",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/orjson/__init__.py"
+    },
+    "pydantic": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.dependencies.utils",
+            "fastapi.encoders",
+            "fastapi.exceptions",
+            "fastapi.openapi.models",
+            "fastapi.params",
+            "fastapi.routing",
+            "fastapi.types",
+            "fastapi.utils",
+            "pydantic"
+        ],
+        "imports": [
+            "pydantic"
+        ],
+        "name": "pydantic",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/pydantic/__init__.py"
+    },
+    "src": {
+        "bacon": 1,
+        "imported_by": [
+            "main.py"
+        ],
+        "name": "src",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/__init__.py"
+    },
+    "starlette": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi",
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.background",
+            "fastapi.datastructures",
+            "fastapi.dependencies.utils",
+            "fastapi.exceptions",
+            "fastapi.middleware",
+            "fastapi.middleware.cors",
+            "fastapi.openapi.docs",
+            "fastapi.openapi.utils",
+            "fastapi.requests",
+            "fastapi.responses",
+            "fastapi.routing",
+            "fastapi.staticfiles",
+            "fastapi.websockets",
+            "main.py",
+            "starlette._exception_handler",
+            "starlette._utils",
+            "starlette.datastructures",
+            "starlette.exceptions",
+            "starlette.middleware",
+            "starlette.middleware.cors",
+            "starlette.middleware.exceptions",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.routing",
+            "starlette.staticfiles",
+            "starlette.types",
+            "starlette.websockets"
+        ],
+        "name": "starlette",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/__init__.py"
+    },
+    "starlette._exception_handler": {
+        "bacon": 2,
+        "imported_by": [
+            "starlette.middleware.exceptions",
+            "starlette.routing"
+        ],
+        "imports": [
+            "starlette",
+            "starlette._utils",
+            "starlette.concurrency",
+            "starlette.exceptions",
+            "starlette.requests",
+            "starlette.types",
+            "starlette.websockets"
+        ],
+        "name": "starlette._exception_handler",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/_exception_handler.py"
+    },
+    "starlette._utils": {
+        "bacon": 2,
+        "imported_by": [
+            "starlette._exception_handler",
+            "starlette.requests",
+            "starlette.routing",
+            "starlette.staticfiles"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.types",
+            "typing_extensions"
+        ],
+        "name": "starlette._utils",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/_utils.py"
+    },
+    "starlette.concurrency": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.dependencies.utils",
+            "fastapi.routing",
+            "starlette._exception_handler",
+            "starlette.datastructures",
+            "starlette.responses",
+            "starlette.routing"
+        ],
+        "imports": [
+            "typing_extensions"
+        ],
+        "name": "starlette.concurrency",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/concurrency.py"
+    },
+    "starlette.convertors": {
+        "bacon": 2,
+        "imported_by": [
+            "starlette.routing"
+        ],
+        "name": "starlette.convertors",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/convertors.py"
+    },
+    "starlette.datastructures": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.datastructures",
+            "fastapi.dependencies.utils",
+            "starlette.middleware.cors",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.routing",
+            "starlette.staticfiles"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.concurrency",
+            "starlette.types"
+        ],
+        "name": "starlette.datastructures",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/datastructures.py"
+    },
+    "starlette.exceptions": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.exceptions",
+            "fastapi.routing",
+            "main.py",
+            "starlette._exception_handler",
+            "starlette.middleware.exceptions",
+            "starlette.requests",
+            "starlette.routing",
+            "starlette.staticfiles"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.middleware",
+            "starlette.middleware.exceptions"
+        ],
+        "name": "starlette.exceptions",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/exceptions.py"
+    },
+    "starlette.middleware": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.middleware",
+            "fastapi.middleware.cors",
+            "starlette.exceptions",
+            "starlette.routing"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.types",
+            "typing_extensions"
+        ],
+        "name": "starlette.middleware",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/middleware/__init__.py"
+    },
+    "starlette.middleware.cors": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.middleware.cors"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.datastructures",
+            "starlette.responses",
+            "starlette.types"
+        ],
+        "name": "starlette.middleware.cors",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/middleware/cors.py"
+    },
+    "starlette.middleware.exceptions": {
+        "bacon": 2,
+        "imported_by": [
+            "starlette.exceptions"
+        ],
+        "imports": [
+            "starlette",
+            "starlette._exception_handler",
+            "starlette.exceptions",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.types",
+            "starlette.websockets"
+        ],
+        "name": "starlette.middleware.exceptions",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py"
+    },
+    "starlette.requests": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.dependencies.utils",
+            "fastapi.requests",
+            "fastapi.routing",
+            "starlette._exception_handler",
+            "starlette.middleware.exceptions",
+            "starlette.routing",
+            "starlette.types",
+            "starlette.websockets"
+        ],
+        "imports": [
+            "starlette",
+            "starlette._utils",
+            "starlette.datastructures",
+            "starlette.exceptions",
+            "starlette.routing",
+            "starlette.types"
+        ],
+        "name": "starlette.requests",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/requests.py"
+    },
+    "starlette.responses": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.dependencies.utils",
+            "fastapi.openapi.docs",
+            "fastapi.openapi.utils",
+            "fastapi.responses",
+            "fastapi.routing",
+            "starlette.middleware.cors",
+            "starlette.middleware.exceptions",
+            "starlette.routing",
+            "starlette.staticfiles",
+            "starlette.types",
+            "starlette.websockets"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.concurrency",
+            "starlette.datastructures",
+            "starlette.types"
+        ],
+        "name": "starlette.responses",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/responses.py"
+    },
+    "starlette.routing": {
+        "bacon": 1,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.openapi.utils",
+            "fastapi.routing",
+            "main.py",
+            "starlette.requests"
+        ],
+        "imports": [
+            "starlette",
+            "starlette._exception_handler",
+            "starlette._utils",
+            "starlette.concurrency",
+            "starlette.convertors",
+            "starlette.datastructures",
+            "starlette.exceptions",
+            "starlette.middleware",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.types",
+            "starlette.websockets"
+        ],
+        "name": "starlette.routing",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/routing.py"
+    },
+    "starlette.staticfiles": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.staticfiles"
+        ],
+        "imports": [
+            "starlette",
+            "starlette._utils",
+            "starlette.datastructures",
+            "starlette.exceptions",
+            "starlette.responses",
+            "starlette.types"
+        ],
+        "name": "starlette.staticfiles",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/staticfiles.py"
+    },
+    "starlette.status": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi",
+            "fastapi.openapi.utils"
+        ],
+        "name": "starlette.status",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/status.py"
+    },
+    "starlette.types": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.applications",
+            "fastapi.routing",
+            "starlette._exception_handler",
+            "starlette._utils",
+            "starlette.datastructures",
+            "starlette.middleware",
+            "starlette.middleware.cors",
+            "starlette.middleware.exceptions",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.routing",
+            "starlette.staticfiles",
+            "starlette.websockets"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.websockets"
+        ],
+        "name": "starlette.types",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/types.py"
+    },
+    "starlette.websockets": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi.dependencies.utils",
+            "fastapi.routing",
+            "fastapi.websockets",
+            "starlette._exception_handler",
+            "starlette.middleware.exceptions",
+            "starlette.routing",
+            "starlette.types"
+        ],
+        "imports": [
+            "starlette",
+            "starlette.requests",
+            "starlette.responses",
+            "starlette.types"
+        ],
+        "name": "starlette.websockets",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/starlette/websockets.py"
+    },
+    "typing_extensions": {
+        "bacon": 2,
+        "imported_by": [
+            "fastapi._compat",
+            "fastapi.applications",
+            "fastapi.background",
+            "fastapi.datastructures",
+            "fastapi.dependencies.utils",
+            "fastapi.encoders",
+            "fastapi.exceptions",
+            "fastapi.openapi.docs",
+            "fastapi.openapi.models",
+            "fastapi.openapi.utils",
+            "fastapi.param_functions",
+            "fastapi.params",
+            "fastapi.routing",
+            "fastapi.utils",
+            "starlette._utils",
+            "starlette.concurrency",
+            "starlette.middleware"
+        ],
+        "name": "typing_extensions",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/typing_extensions.py"
+    },
+    "uvicorn": {
+        "bacon": 1,
+        "imported_by": [
+            "main.py",
+            "uvicorn",
+            "uvicorn.config",
+            "uvicorn.main"
+        ],
+        "imports": [
+            "uvicorn",
+            "uvicorn.config",
+            "uvicorn.main"
+        ],
+        "name": "uvicorn",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/uvicorn/__init__.py"
+    },
+    "uvicorn.config": {
+        "bacon": 2,
+        "imported_by": [
+            "uvicorn",
+            "uvicorn.main"
+        ],
+        "imports": [
+            "uvicorn"
+        ],
+        "name": "uvicorn.config",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/uvicorn/config.py"
+    },
+    "uvicorn.main": {
+        "bacon": 2,
+        "imported_by": [
+            "uvicorn"
+        ],
+        "imports": [
+            "uvicorn",
+            "uvicorn.config"
+        ],
+        "name": "uvicorn.main",
+        "path": "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/venv/lib/python3.13/site-packages/uvicorn/main.py"
+    }
+}

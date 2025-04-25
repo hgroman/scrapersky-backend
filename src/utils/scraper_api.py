@@ -1,13 +1,15 @@
 """ScraperAPI integration utilities with async HTTP support."""
+import asyncio
 import logging
-import aiohttp
+from os import getenv
 from typing import Optional, Union
 from urllib.parse import urlencode
+
+import aiohttp
 from scraperapi_sdk import ScraperAPIClient as BaseScraperAPIClient
 from scraperapi_sdk.exceptions import ScraperAPIException
+
 from ..config.settings import Settings
-from os import getenv
-import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -42,7 +44,7 @@ class ScraperAPIClient:
         """Ensure aiohttp session exists."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=60)  # 60 second timeout
+                timeout=aiohttp.ClientTimeout(total=15)  # Reduced timeout to 15 seconds
             )
 
     async def close(self) -> None:
@@ -98,6 +100,8 @@ class ScraperAPIClient:
         }
         api_url = f"{self.base_url}?{urlencode(params)}"
 
+        logger.debug(f"ScraperAPI request URL params: url={url}, render_js={render_js}")
+
         await self._ensure_session()
         if not self._session:
             raise RuntimeError("Failed to create HTTP session")
@@ -105,18 +109,23 @@ class ScraperAPIClient:
         last_error = None
         for attempt in range(retries):
             try:
+                logger.info(f"ScraperAPI attempt {attempt+1}/{retries} for URL: {url}")
                 async with self._session.get(api_url) as response:
                     if response.status == 200:
                         content = await response.text()
                         if not content:
                             raise ValueError("Empty response received")
+                        logger.info(f"ScraperAPI request successful for {url} (Length: {len(content)} chars)")
                         return content
                     elif response.status == 429:  # Rate limit
+                        logger.warning(f"ScraperAPI rate limit hit (429) on attempt {attempt+1}, applying backoff")
                         await asyncio.sleep(2 ** attempt)  # Exponential backoff
                         continue
                     else:
                         error_text = await response.text()
-                        raise ValueError(f"HTTP {response.status}: {error_text}")
+                        error_msg = f"HTTP {response.status}: {error_text}"
+                        logger.error(f"ScraperAPI request failed: {error_msg}")
+                        raise ValueError(error_msg)
 
             except Exception as e:
                 last_error = f"Attempt {attempt + 1} failed: {str(e)}"
@@ -134,14 +143,26 @@ class ScraperAPIClient:
         retries: int = 3
     ) -> str:
         """Fetch using the SDK as fallback."""
-        params = {'render_js': render_js}
-        api_url = f"{url}?{urlencode(params)}"
+        params = {
+            'render_js': render_js
+        }
+
+        logger.debug(f"ScraperAPI SDK request params: url={url}, render_js={render_js}")
+
+        # Include parameters in URL for SDK
+        api_url = f"{url}"
+        if '?' in url:
+            api_url += f"&{urlencode(params)}"
+        else:
+            api_url += f"?{urlencode(params)}"
 
         for attempt in range(retries):
             try:
+                logger.info(f"ScraperAPI SDK attempt {attempt+1}/{retries} for URL: {url}")
                 response = self._sdk_client.get(url=api_url)
                 if not response:
                     raise ValueError("Empty response from SDK")
+                logger.info(f"ScraperAPI SDK request successful for {url} (Length: {len(response)} chars)")
                 return str(response)
 
             except Exception as e:

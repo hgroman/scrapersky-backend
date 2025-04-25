@@ -1,0 +1,23 @@
+[
+  "src/api/models/places.py",
+  "src/auth/auth_service.py",
+  "src/db/direct_migration.py",
+  "src/db/direct_session.py",
+  "src/db/domain_handler.py",
+  "src/models/feature_flag.py",
+  "src/models/sidebar.py",
+  "src/schemas/contact.py",
+  "src/scraper/data_formatter.py",
+  "src/services/batch/task_debugger.py",
+  "src/services/core/auth_service.py",
+  "src/services/domain_service.py",
+  "src/services/scraping/scrape_executor_service.py",
+  "src/services/sitemap/analyzer_service.py",
+  "src/services/sitemap/background_service.py",
+  "src/services/sitemap/sitemap_service.py",
+  "src/services/sitemap_service.py",
+  "src/services/storage/storage_service.py",
+  "src/utils/db_schema_helper.py",
+  "src/utils/db_utils.py",
+  "src/utils/sidebar.py"
+]

@@ -1,89 +1,173 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, status
 from pydantic import BaseModel
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 import logging
+import uuid
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 
-from ..db.sb_connection import db  # Supabase connection from sb_connection.py
-from ..tasks.email_scraper import scan_website_for_emails  # Ensure this function works with Supabase
+# from ..db.sb_connection import db  # Supabase connection from sb_connection.py
+from src.session.async_session import get_session_dependency # Correct function name
+from src.auth.jwt_auth import get_current_user # Import user dependency
+from ..tasks.email_scraper import scan_website_for_emails
+from ..models import Domain, Contact # Import models
+from src.models import TaskStatus  # Import TaskStatus
+from src.models.job import Job  # Import Job model
+from src.models.tenant import DEFAULT_TENANT_ID # <-- Add this import
+# Import Schemas
+from src.schemas.email_scan import EmailScanRequest # Correct path
+from src.schemas.job import JobSubmissionResponse, JobStatusResponse # Correct path
 
-router = APIRouter(prefix="/email-scanner", tags=["email-scanner"])
+router = APIRouter()
 logger = logging.getLogger(__name__)
 
 class EmailScanningResponse(BaseModel):
-    domain_id: int
+    domain_id: uuid.UUID
     domain: str
-    total_pages: int
+    total_pages: int = 100 # Keep placeholder logic for now
     pages_scanned: int = 0
     contacts_found: int = 0
     scan_timestamp: str
-    status: str = "running"
+    status: str = "pending" # Default status
+    progress: float = 0.0 # Add progress
+    error: Optional[str] = None # Add error field
+    result: Optional[Dict[str, Any]] = None # Add result field
 
 # Temporary in-memory storage for scan statuses (MVP solution)
-scan_jobs: Dict[int, EmailScanningResponse] = {}
+# scan_jobs: Dict[uuid.UUID, EmailScanningResponse] = {}
 
-@router.get("/domains", response_model=List[Dict[str, Any]])
-def get_available_domains():
-    """Retrieve a list of domains available for scanning using Supabase."""
+@router.post("/scan/website", response_model=JobSubmissionResponse, status_code=status.HTTP_202_ACCEPTED)
+async def scan_website_for_emails_api(
+    scan_request: EmailScanRequest, # Use the new request schema
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Initiate an email scan for a given domain ID, creating a Job record.
+
+    Checks for existing PENDING or RUNNING jobs for the same domain.
+    If found, returns the existing job ID.
+    Otherwise, creates a new job, queues the background task, and returns the new job ID.
+    """
+    domain_id = scan_request.domain_id
+    user_id_str = current_user.get("id") # Get the ID string from the token payload
+    user_id: Optional[uuid.UUID] = None
+
+    # Validate and convert user ID string to UUID object
+    if user_id_str:
+        try:
+            user_id = uuid.UUID(user_id_str)
+        except (ValueError, TypeError):
+            logger.error(f"Could not convert user ID '{user_id_str}' to UUID. User info: {current_user}")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user ID format in token.")
+
+    if not user_id:
+        logger.error(f"Could not get valid user ID from current_user. User info: {current_user}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user context.")
+
+    # Requirement #6: Check for existing PENDING or RUNNING jobs for this domain
     try:
-        with db.get_cursor() as cur:
-            cur.execute("SELECT id, domain FROM domains")
-            rows = cur.fetchall()
-            domains = [{"id": row["id"], "domain": row["domain"], "pages": 0} for row in rows]
-            return domains
-    except Exception as e:
-        logger.error(f"Error retrieving domains: {e}")
-        raise HTTPException(status_code=500, detail="Unable to retrieve domains")
+        # Query for jobs associated with the domain_id and in specific states
+        stmt = (
+            select(Job)
+            .where(Job.domain_id == domain_id)
+            .where(Job.status.in_([TaskStatus.PENDING.value, TaskStatus.RUNNING.value]))
+            .order_by(Job.created_at.desc()) # Get the most recent one if multiple somehow exist
+        )
+        result = await session.execute(stmt)
+        existing_job = result.scalars().first()
 
-@router.post("/scan/{domain_id}", response_model=EmailScanningResponse)
-def scan_domain(domain_id: int, background_tasks: BackgroundTasks):
-    """Initiate scanning for email addresses on a given domain using Supabase."""
-    if domain_id in scan_jobs:
-        return scan_jobs[domain_id]
-    
+        if existing_job:
+            logger.info(f"Active scan job ({existing_job.job_id}) already exists for domain {domain_id}. Returning existing job ID.")
+            return JobSubmissionResponse(job_id=existing_job.job_id)
+
+    except Exception as e:
+        logger.error(f"Database error checking for existing jobs for domain {domain_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error checking for existing jobs.")
+
+    # Verify domain exists (optional but good practice)
+    domain_obj = await session.get(Domain, domain_id)
+    if not domain_obj:
+         logger.error(f"Domain with ID {domain_id} not found.")
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Domain not found.")
+
+    # Requirement #5: Create a new Job record
     try:
-        with db.get_cursor() as cur:
-            cur.execute("SELECT id, domain FROM domains WHERE id = %s", (domain_id,))
-            domain = cur.fetchone()
-            if not domain:
-                raise HTTPException(status_code=404, detail="Domain not found")
+        # Use the Job model's class method to create the job instance
+        job = Job(
+            job_type="email_scan",
+            status=TaskStatus.PENDING.value,
+            created_by=user_id,
+            domain_id=domain_id,
+            tenant_id_uuid=uuid.UUID(DEFAULT_TENANT_ID) # Ensure UUID tenant is set
+            # job_id is generated by default by the model
+        )
+        session.add(job)
+        await session.flush() # Flush to get the generated job.job_id
+        await session.commit() # Commit the new job record
+        logger.info(f"Created new email scan job {job.job_id} for domain {domain_id} by user {user_id}")
+
+        # Extract the generated UUID job_id AFTER flush/commit
+        new_job_id = job.job_id
+
     except Exception as e:
-        logger.error(f"Error fetching domain {domain_id}: {e}")
-        raise HTTPException(status_code=500, detail="Error retrieving domain information")
-    
-    # Initialize scan status
-    scan_status = EmailScanningResponse(
-        domain_id=domain_id,
-        domain=domain["domain"],
-        total_pages=100,  # Limit to 100 pages for now
-        scan_timestamp=datetime.utcnow().isoformat(),
-        status="pending"
-    )
-    scan_jobs[domain_id] = scan_status
+        logger.error(f"Database error creating job for domain {domain_id}: {e}", exc_info=True)
+        await session.rollback() # Rollback on error
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating scan job record.")
 
-    # Queue the email scanning task as a background task.
-    # Ensure that scan_website_for_emails is updated to use the Supabase connection.
-    background_tasks.add_task(scan_website_for_emails, domain_id, client=db)
-    logger.info(f"Email scan initiated for domain_id {domain_id}")
+    # Add the background task, passing the new job's UUID
+    # Ensure the task function signature matches (job_id, user_id)
+    background_tasks.add_task(scan_website_for_emails, job_id=new_job_id, user_id=user_id)
+    logger.info(f"Queued background task scan_website_for_emails for job {new_job_id}")
 
-    return scan_status
+    return JobSubmissionResponse(job_id=new_job_id)
 
-@router.get("/scan/{domain_id}/status", response_model=EmailScanningResponse)
-def get_scan_status(domain_id: int):
-    """Retrieve the current scan status for a domain using Supabase."""
-    if domain_id not in scan_jobs:
-        logger.warning(f"Scan job not found for domain_id {domain_id}")
-        raise HTTPException(status_code=404, detail="Scan job not found")
-    
+@router.get("/scan/status/{job_id}", response_model=JobStatusResponse)
+async def get_scan_status_api(
+    job_id: uuid.UUID, # Use UUID type hint for path parameter
+    session: AsyncSession = Depends(get_session_dependency),
+    # current_user: Dict[str, Any] = Depends(get_current_user) # Auth usually needed here too
+):
+    """Retrieve the status and results of a specific email scan job by its UUID."""
+    # Add authentication check if needed based on requirements
+    # user_id = current_user.get("id")
+    # if not user_id: ... raise HTTPException ...
+
     try:
-        with db.get_cursor() as cur:
-            # Ensure that your contacts table has a column `domain_id` that references domains.id
-            cur.execute("SELECT COUNT(*) as contact_count FROM contacts WHERE domain_id = %s", (domain_id,))
-            result = cur.fetchone()
-            contacts_count = result["contact_count"] if result else 0
-            scan_jobs[domain_id].contacts_found = contacts_count
+        # Fetch the job using the new get_by_job_id method
+        job = await Job.get_by_job_id(session, job_id)
+
+        if not job:
+            logger.warning(f"Job with ID {job_id} not found.")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan job not found")
+
+        # Optional: Add authorization check - e.g., does this user own this job?
+        # if job.created_by != user_id:
+        #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this job")
+
+        # Return the job details using the Pydantic model
+        # The model should handle converting Job model fields (like status string)
+        # to the appropriate response schema types (like TaskStatus enum member).
+        # Ensure JobStatusResponse uses `from_attributes = True` in its Config.
+        return JobStatusResponse.model_validate(job) # Use model_validate for Pydantic v2
+
+    except HTTPException:
+         raise # Re-raise HTTPExceptions directly
     except Exception as e:
-        logger.error(f"Error updating scan status for domain_id {domain_id}: {e}")
-        raise HTTPException(status_code=500, detail="Error retrieving scan status")
-    
-    return scan_jobs[domain_id]
+        logger.error(f"Error retrieving status for job {job_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error retrieving job status.")
+
+# --- Remove or Comment Out Old Endpoints ---
+
+# @router.get("/api/v3/email-scanner/domains", ...)
+# async def get_available_domains(...): ... # Keep if needed, otherwise remove
+
+# @router.post("/api/v3/email-scanner/scan/{domain_id}", ...)
+# async def scan_domain(...): ... # Remove old endpoint
+
+# @router.get("/api/v3/email-scanner/scan/{domain_id}/status", ...)
+# async def get_scan_status(...): ... # Remove old endpoint
+
+# --- End Removal ---

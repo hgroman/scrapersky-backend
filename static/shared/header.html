@@ -1,12 +1,15 @@
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
-        <a class="navbar-brand" href="/">SCRAPER<span>SKY</span></a>
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/static/index.html">SCRAPER<span>SKY</span></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/static/scraper-sky-mvp.html">ScraperSky MVP</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/static/single-domain-scanner.html">Single Domain</a>
                 </li>
@@ -14,22 +17,7 @@
                     <a class="nav-link" href="/static/batch-domain-scanner.html">Batch Scanner</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/static/website-grid.html">Website Grid</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/static/sitemap-viewer.html">Sitemap Scanner</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/static/sitemap-data-viewer.html">Data Viewer</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/static/contact-viewer.html">Contact Manager</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/static/email-scanner.html">Email Scanner</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/static/chat.html">AI Chat</a>
+                    <a class="nav-link" href="/static/contentmap.html">ContentMap</a>
                 </li>
             </ul>
         </div>
@@ -44,7 +32,7 @@
         --secondary: #0a1929;
         --dark: #050d18;
         --light: #f8f9fa;
-        --text: #e0e0e0;
+        --text: #ffffff;
     }
 
     body {
@@ -54,6 +42,8 @@
         background-color: var(--secondary);
         color: var(--text);
         min-height: 100vh;
+        font-size: 16px;
+        line-height: 1.6;
     }
 
     .navbar {
@@ -73,9 +63,10 @@
     }
 
     .nav-link {
-        color: rgba(255, 255, 255, 0.8) !important;
+        color: rgba(255, 255, 255, 1) !important;
         margin: 0 0.5rem;
         transition: all 0.3s ease;
+        font-weight: 500;
     }
 
     .nav-link:hover {
@@ -137,7 +128,17 @@
     }
 
     .card-text {
-        color: #b0b0b0;
+        color: #ffffff;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    p, li, td, th, label, .form-text {
+        color: #ffffff;
     }
 
     /* Add Font Awesome if not already included in the page */

@@ -1,0 +1,66 @@
+<div class="card">
+    <h2>Authentication Methods</h2>
+    <div class="auth-methods">
+        <div class="auth-method">
+            <h3>JWT Authentication</h3>
+            <p>The primary authentication method using JSON Web Tokens with Supabase.</p>
+            <h4>Implementation:</h4>
+            <ul>
+                <li>JWT tokens must be included in the Authorization header</li>
+                <li>Format: <code>Bearer [token]</code></li>
+                <li>Tokens are validated against the SUPABASE_JWT_SECRET</li>
+                <li>User profiles are fetched from the database</li>
+            </ul>
+            <div class="code-block">
+                <pre><code class="language-python">
+# Example JWT Authentication
+headers = {
+    "Authorization": f"Bearer {jwt_token}",
+    "Content-Type": "application/json"
+}
+response = requests.post(url, json=data, headers=headers)
+                </code></pre>
+            </div>
+        </div>
+        <div class="auth-method">
+            <h3>API Key Authentication</h3>
+            <p>Fallback authentication method using API keys.</p>
+            <h4>Implementation:</h4>
+            <ul>
+                <li>API key can be included in the Authorization header</li>
+                <li>Format: <code>Bearer [key]</code></li>
+                <li>Default API key: <code>scraper_sky_2024</code> (for development)</li>
+                <li>Production API key is set via SCRAPER_API_KEY env variable</li>
+            </ul>
+            <div class="code-block">
+                <pre><code class="language-python">
+# Example API Key Authentication
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
+response = requests.post(url, json=data, headers=headers)
+                </code></pre>
+            </div>
+        </div>
+    </div>
+    <h3>Tenant ID Management</h3>
+    <p>Tenant IDs are used for multi-tenancy support and data isolation:</p>
+    <ul>
+        <li>Tenant ID can be provided in the X-Tenant-Id header</li>
+        <li>If not provided, the user's tenant_id from their profile is used</li>
+        <li>Tenant IDs must be valid UUID strings</li>
+        <li>Invalid tenant IDs fall back to the DEFAULT_TENANT_ID</li>
+    </ul>
+    <div class="code-block">
+        <pre><code class="language-python">
+# Example with Tenant ID
+headers = {
+    "Authorization": f"Bearer {jwt_token}",
+    "X-Tenant-Id": "550e8400-e29b-41d4-a716-446655440000",
+    "Content-Type": "application/json"
+}
+response = requests.post(url, json=data, headers=headers)
+        </code></pre>
+    </div>
+</div>

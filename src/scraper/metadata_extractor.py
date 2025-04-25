@@ -1,12 +1,15 @@
 """Website metadata extraction module."""
+import asyncio
 import logging
 import re
-from typing import Dict, Any, Optional, List, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from urllib.parse import urljoin
+
 import aiohttp
 from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString, PageElement
-from urllib.parse import urljoin
-import asyncio
+
+from ..utils.scraper_api import ScraperAPIClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,63 +37,143 @@ class SessionManager:
 
 session_manager = SessionManager()
 
-async def detect_site_metadata(url: str, max_retries: int = 3) -> Optional[Dict[str, Any]]:
-    """Extract metadata from a website with retry logic."""
-    retry_count = 0
-    last_error = None
+async def detect_site_metadata(domain: str, max_retries: int = 3, use_test_html: bool = False, test_html_content: Optional[str] = None):
+    """
+    Detect metadata from a website, including CMS, emails, and social media links.
 
-    while retry_count < max_retries:
+    Args:
+        domain: The domain to scan (without http/https)
+        max_retries: Number of retries for network requests
+        use_test_html: Whether to use provided test HTML instead of making network requests
+        test_html_content: HTML content to use for testing (only used if use_test_html is True)
+
+    Returns:
+        Dictionary with metadata
+    """
+    logger.info(f"Starting metadata extraction for {domain}")
+
+    metadata = {
+        "title": None,
+        "description": None,
+        "language": None,
+        "is_wordpress": False,
+        "wordpress_version": None,
+        "wordpress_theme": None,
+        "has_elementor": False,
+        "elementor_version": None,
+        "has_divi": False,
+        "has_woocommerce": False,
+        "has_contact_form7": False,
+        "has_yoast_seo": False,
+        "has_wpforms": False,
+        "favicon_url": None,
+        "logo_url": None,
+        "contact_info": {
+            "email": [],
+            "phone": []
+        },
+        "social_links": {}
+    }
+
+    # Skip network requests if we're using test HTML
+    if use_test_html and test_html_content:
+        logger.info(f"Using provided test HTML content instead of making network requests")
+        html_content = test_html_content
+    else:
+        # Try to get the page content using ScraperAPI
         try:
-            session = await session_manager.get_session()
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                if response.status != 200:
-                    logger.error(f"Failed to fetch {url}: HTTP {response.status}")
-                    if response.status >= 500:  # Server errors might be temporary
-                        retry_count += 1
-                        await asyncio.sleep(1 * retry_count)  # Exponential backoff
-                        continue
-                    return None
+            logger.info(f"Using ScraperAPI to fetch content for {domain}")
+            scraper_api = ScraperAPIClient()
 
-                html = await response.text()
-                soup = BeautifulSoup(html, 'html.parser')
+            # Ensure all connections use HTTPS for security
+            if domain.startswith('http://'):
+                # Convert HTTP to HTTPS
+                url = 'https://' + domain[7:]
+                logger.info(f"Upgrading HTTP to HTTPS: {domain} → {url}")
+            elif domain.startswith('https://'):
+                # Already HTTPS, use as-is
+                url = domain
+            else:
+                # No protocol specified, add HTTPS
+                url = f"https://{domain}"
 
-                metadata = {
-                    "title": _extract_title(soup),
-                    "description": _extract_description(soup),
-                    "language": _extract_language(soup),
-                    "is_wordpress": _detect_wordpress(soup, html),
-                    "wordpress_version": _extract_wordpress_version(html) if _detect_wordpress(soup, html) else None,
-                    "has_elementor": _detect_elementor(soup, html),
-                    "favicon_url": _extract_favicon(soup, url),
-                    "logo_url": _extract_logo(soup, url),
-                    "contact_info": _extract_contact_info(soup, html),
-                    "social_links": _extract_social_links(soup),
-                    "tech_stack": _detect_tech_stack(soup, html),
-                    "performance": _analyze_performance(soup)
-                }
-
-                return metadata
-
-        except aiohttp.ClientError as e:
-            last_error = e
-            logger.error(f"Network error fetching {url} (attempt {retry_count+1}/{max_retries}): {str(e)}")
-            retry_count += 1
-            if retry_count < max_retries:
-                await asyncio.sleep(1 * retry_count)  # Exponential backoff
+            logger.info(f"Fetching URL: {url}")
+            html_content = await scraper_api.fetch(url, render_js=True, retries=max_retries)
+            logger.info(f"Successfully fetched content for {domain} using ScraperAPI")
+            await scraper_api.close()
         except Exception as e:
-            logger.error(f"Error extracting metadata from {url}: {str(e)}")
+            logger.error(f"ScraperAPI error fetching {domain}: {str(e)}")
             return None
 
-    # All retries failed
-    if last_error:
-        logger.error(f"All {max_retries} attempts failed for {url}: {str(last_error)}")
-    return None
+    # Get title and description
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # Extract title
+    title_tag = soup.find('title')
+    if title_tag and isinstance(title_tag, Tag):
+        title_content = title_tag.get_text() if hasattr(title_tag, 'get_text') else None
+        if title_content:
+            metadata["title"] = title_content.strip()
+
+    # Extract description
+    description_meta = soup.find('meta', {'name': 'description'}) or soup.find('meta', {'property': 'og:description'})
+    if description_meta and isinstance(description_meta, Tag) and description_meta.get('content'):
+        metadata["description"] = str(description_meta.get('content', '')).strip()
+
+    # Extract language
+    lang_attr = soup.html.get('lang') if soup.html else None
+    if lang_attr:
+        metadata["language"] = str(lang_attr)
+
+    # Detect WordPress
+    is_wordpress = _detect_wordpress(soup, html_content)
+    if is_wordpress:
+        metadata["is_wordpress"] = True
+
+        # Get WordPress version
+        wp_version = _extract_wordpress_version(html_content)
+        if wp_version:
+            metadata["wordpress_version"] = wp_version
+
+        # Detect Elementor
+        has_elementor = _detect_elementor(soup, html_content)
+        if has_elementor:
+            metadata["has_elementor"] = True
+
+    # Extract favicon
+    favicon = _extract_favicon(soup, domain)
+    if favicon:
+        metadata["favicon_url"] = favicon
+
+    # Extract logo
+    logo = _extract_logo(soup, domain)
+    if logo:
+        metadata["logo_url"] = logo
+
+    # Extract emails
+    emails = _extract_contact_info(soup, html_content)["email"]
+    if emails:
+        metadata["contact_info"]["email"] = emails
+
+    # Extract phone numbers
+    phones = _extract_contact_info(soup, html_content)["phone"]
+    if phones:
+        metadata["contact_info"]["phone"] = phones
+
+    # Extract social media links
+    social_links = _extract_social_links(soup)
+    if social_links:
+        metadata["social_links"] = social_links
+
+    return metadata
 
 def _extract_title(soup: BeautifulSoup) -> Optional[str]:
     """Extract page title."""
     title_tag = soup.find('title')
-    if title_tag and title_tag.string:
-        return cast(str, title_tag.string).strip()
+    if title_tag and isinstance(title_tag, Tag):
+        title_content = title_tag.get_text() if hasattr(title_tag, 'get_text') else None
+        if title_content:
+            return title_content.strip()
     return None
 
 def _extract_description(soup: BeautifulSoup) -> Optional[str]:
@@ -141,8 +224,11 @@ def _extract_favicon(soup: BeautifulSoup, base_url: str) -> Optional[str]:
     """Extract favicon URL."""
     favicon_links = soup.find_all('link', rel=['icon', 'shortcut icon'])
     if favicon_links:
-        favicon_href = favicon_links[0].get('href')
-        return urljoin(base_url, favicon_href) if favicon_href else None
+        # Use cast to tell type checker this is a Tag
+        favicon = cast(Tag, favicon_links[0])
+        favicon_href = favicon.get('href')
+        if favicon_href:
+            return urljoin(base_url, str(favicon_href))
     return None
 
 def _extract_logo(soup: BeautifulSoup, base_url: str) -> Optional[str]:
@@ -155,9 +241,14 @@ def _extract_logo(soup: BeautifulSoup, base_url: str) -> Optional[str]:
     ]
 
     for selector in logo_selectors:
-        if logo := soup.find('img', **selector):
-            logo_src = logo.get('src')
-            return urljoin(base_url, logo_src) if logo_src else None
+        # Use find with proper typing
+        logo = soup.find('img', attrs=cast(Dict[str, Any], selector))
+        if logo:
+            # Use cast to tell type checker this is a Tag
+            logo_tag = cast(Tag, logo)
+            logo_src = logo_tag.get('src')
+            if logo_src:
+                return urljoin(base_url, str(logo_src))
     return None
 
 def _extract_contact_info(soup: BeautifulSoup, html: str) -> Dict[str, List[str]]:
@@ -187,8 +278,12 @@ def _extract_social_links(soup: BeautifulSoup) -> Dict[str, Optional[str]]:
 
     social_links = {}
     for platform, pattern in social_patterns.items():
-        if link := soup.find('a', href=re.compile(pattern)):
-            social_links[platform] = link.get('href')
+        link = soup.find('a', href=re.compile(pattern))
+        if link:
+            # Use cast to tell type checker this is a Tag
+            link_tag = cast(Tag, link)
+            href = link_tag.get('href')
+            social_links[platform] = str(href) if href else None
         else:
             social_links[platform] = None
 

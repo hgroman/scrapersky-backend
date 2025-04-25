@@ -1,6 +1,7 @@
 # Version control
 .git
 .gitignore
+.github/
 
 # Python bytecode
 __pycache__/
@@ -16,6 +17,9 @@ env/
 # Environment and secret files
 .env
 .env.example
+.env.local
+.env.development
+.env.production
 
 # Test files
 .pytest_cache/
@@ -23,25 +27,61 @@ pytest.ini
 tests/
 test_*.py
 *.csv
+.coverage
+htmlcov/
 
 # Documentation
 docs/
+Docs/
 *.md
 !README.md
 
 # Docker files
 .docker/
 docker-compose*.yml
+.dockerignore
 
 # IDE files
 .vscode/
 .idea/
+*.sublime-*
 
 # macOS artifacts
 .DS_Store
+**/.DS_Store
 
 # Logs
 *.log
+logs/
 
 # Kubernetes
 k8s/
+
+# Build and distribution
+dist/
+build/
+*.egg-info/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Render deployment
+.render/
+render.yaml
+
+# Large directories
+archive/
+backup/
+static-archive/
+
+# Database inspection tools in root
+inspect_table.py
+
+# Project specific directories to exclude from build context
+Docs/
+project-docs/
+scripts/
+tests/

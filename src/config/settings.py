@@ -1,11 +1,12 @@
+import json
 import logging
 import os
-from typing import Optional, List
-from pathlib import Path
 import uuid
-import json
+from pathlib import Path
+from typing import List, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     """
@@ -41,10 +42,26 @@ class Settings(BaseSettings):
     # Diagnostic settings
     DIAGNOSTIC_DIR: str = "/tmp/scraper_sky_scheduler_diagnostics"
 
-    # Scheduler settings
-    SCHEDULER_INTERVAL_MINUTES: int = 1
-    SCHEDULER_BATCH_SIZE: int = 10
-    SCHEDULER_MAX_INSTANCES: int = 1
+    # Domain Scheduler settings
+    # How often the scheduler runs (in minutes)
+    DOMAIN_SCHEDULER_INTERVAL_MINUTES: int = 1
+    # Number of domains processed in each batch
+    DOMAIN_SCHEDULER_BATCH_SIZE: int = 10
+    # Maximum concurrent instances of the scheduler
+    DOMAIN_SCHEDULER_MAX_INSTANCES: int = 1
+
+    # Sitemap Scheduler settings
+    # How often the scheduler runs (in minutes)
+    SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = 5
+    # Number of sitemaps processed in each batch
+    SITEMAP_SCHEDULER_BATCH_SIZE: int = 5
+    # Maximum concurrent instances of the scheduler
+    SITEMAP_SCHEDULER_MAX_INSTANCES: int = 1
+
+    # Domain Sitemap Submission Scheduler settings (New)
+    DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = 1 # Default interval changed to 1 minute
+    DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE: int = 10 # Default batch size
+    # DOMAIN_SITEMAP_SCHEDULER_MAX_INSTANCES: int = 1 # Add if needed, defaults to 1 in setup logic usually
 
     # External API Keys
     # openai_api_key: Optional[str] = None  # Removed OpenAI API key
@@ -82,6 +99,7 @@ class Settings(BaseSettings):
     system_user_id: str = "00000000-0000-0000-0000-000000000000"
     default_tenant_id: str = "550e8400-e29b-41d4-a716-446655440000"
     dev_user_id: Optional[str] = None
+    DEV_TOKEN: Optional[str] = None # Token for internal/dev API calls
 
     # Path settings
     base_dir: Optional[Path] = None

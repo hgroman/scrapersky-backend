@@ -1,0 +1,8 @@
+[
+  "src/config/settings.py",
+  "src/db/engine.py",
+  "src/routers/db_portal.py",
+  "src/services/core/db_service.py",
+  "src/services/db_inspector.py",
+  "src/session/async_session.py"
+]

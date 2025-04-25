@@ -1,0 +1,10 @@
+[
+  "src/auth/jwt_auth.py",
+  "src/config/settings.py",
+  "src/db/session.py",
+  "src/models/api_models.py",
+  "src/models/base.py",
+  "src/models/domain.py",
+  "src/models/tenant.py",
+  "src/routers/domains.py"
+]

@@ -2,14 +2,12 @@ services:
   - type: web
     name: scrapersky
     env: docker
-    region: oregon  # Choose your preferred region
+    region: oregon # Choose your preferred region
     plan: starter
     healthCheckPath: /health
     envVars:
       - key: UVICORN_RELOAD
         value: false
-      - key: OPENAI_API_KEY
-        sync: false  # Indicates this should be set in Render dashboard
       - key: SCRAPER_API_KEY
         sync: false
       - key: SUPABASE_URL
@@ -19,5 +17,5 @@ services:
       - key: SUPABASE_DB_PASSWORD
         sync: false
     autoDeploy: true
-    numInstances: 1  # Adjust based on your needs
+    numInstances: 1 # Adjust based on your needs
     dockerfile: ./Dockerfile

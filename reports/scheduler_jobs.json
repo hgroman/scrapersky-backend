@@ -1,0 +1,17 @@
+[
+  {
+    "file": "src/services/domain_sitemap_submission_scheduler.py",
+    "lineno": 184,
+    "target_function": "process_pending_domain_sitemap_submissions"
+  },
+  {
+    "file": "src/services/domain_scheduler.py",
+    "lineno": 228,
+    "target_function": "process_pending_domains"
+  },
+  {
+    "file": "src/services/sitemap_scheduler.py",
+    "lineno": 350,
+    "target_function": "process_pending_jobs"
+  }
+]

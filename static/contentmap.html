@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScraperSky - Sitemap Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00e5ff;
+            --primary-dark: #00b8cc;
+            --secondary: #0a1929;
+            --dark: #050d18;
+            --light: #f8f9fa;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            padding: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHJlY3QgaWQ9InBhdHRlcm4tYmFja2dyb3VuZCIgd2lkdGg9IjQwMCUiIGhlaWdodD0iNDAwJSIgZmlsbD0idHJhbnNwYXJlbnQiPjwvcmVjdD48Y2lyY2xlIGZpbGw9IiMwMGU1ZmYwNSIgY3g9IjIwIiBjeT0iMjAiIHI9IjEiPjwvY2lyY2xlPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNwYXR0ZXJuKSIgaGVpZ2h0PSIxMDAlIiB3aWR0aD0iMTAwJSI+PC9yZWN0Pjwvc3ZnPg==');
+            opacity: 0.3;
+        }
+
+        .navbar {
+            background-color: var(--dark);
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-brand span {
+            color: var(--primary);
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary) !important;
+            transform: translateY(-2px);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .page-title span {
+            color: var(--primary);
+        }
+
+        .page-description {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            color: #b0b0b0;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .result-card {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        input, select, textarea, .form-control, .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 10px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        input:hover, select:hover, textarea:hover, .form-control:hover, .form-select:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input:focus, select:focus, textarea:focus, .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            outline: none;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.25);
+            border-right: 3px solid var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(0, 229, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+            }
+        }
+
+        /* Input group styling with blue border */
+        .input-group .form-control,
+        .input-group input {
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .input-group .form-control:focus,
+        .input-group input:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: none;
+            border-right: 3px solid var(--primary);
+            border-top: 1px solid var(--primary);
+            border-bottom: 1px solid var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        .input-group-text {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border-radius: 10px 0 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:hover .input-group-text {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .input-group:hover .form-control,
+        .input-group:hover input {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-label {
+            color: #b0b0b0;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-text {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: var(--dark);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            color: var(--dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .loader .spinner-border {
+            color: var(--primary);
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .progress {
+            height: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar {
+            background-color: var(--primary);
+        }
+
+        .results-table {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .results-table th {
+            color: #b0b0b0;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+        }
+
+        .results-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .results-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+            border-radius: 50px;
+        }
+
+        .badge-primary {
+            background-color: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-success {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #20c997;
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #f77;
+        }
+
+        .stats-box {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            height: 100%;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        .stats-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .footer {
+            background-color: var(--dark);
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-links a {
+            color: #b0b0b0;
+            margin: 0 1rem;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            color: #707070;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: #b0b0b0 !important;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1rem;
+            margin-right: 1rem;
+            background-color: transparent;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: white !important;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary) !important;
+            background-color: transparent;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            padding-top: 1rem;
+        }
+
+        /* Custom styles for sitemap analyzer */
+        .sitemap-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .sitemap-card:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .sitemap-type {
+            font-size: 0.8rem;
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50px;
+            margin-right: 0.5rem;
+        }
+
+        .sitemap-index {
+            background-color: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .sitemap-standard {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #20c997;
+        }
+
+        .sitemap-image {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .sitemap-video {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .sitemap-news {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .discovery-method {
+            font-size: 0.8rem;
+            color: #b0b0b0;
+        }
+
+        .url-count {
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+        }
+
+        .status-completed {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #20c997;
+        }
+
+        .status-pending {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status-failed {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .status-processing {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .stats-section {
+            margin-bottom: 2rem;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        p, li, td, th, label, .form-text {
+            color: #ffffff;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Shared Header -->
+    <div id="header-placeholder"></div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>Sitemap Analyzer</h1>
+            <p class="lead">Discover, extract, and analyze sitemaps from any website</p>
+        </div>
+    </header>
+
+    <main class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <!-- Input Form Card -->
+                    <div class="card">
+                        <h2 class="card-title">
+                            <i class="fas fa-search me-2"></i>Sitemap Analysis
+                        </h2>
+
+                        <ul class="nav nav-tabs" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">Single Domain</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch" type="button" role="tab">Batch Analysis</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="myTabContent">
+                            <!-- Single Domain Analysis Tab -->
+                            <div class="tab-pane fade show active" id="single" role="tabpanel">
+                                <form id="sitemapAnalyzerForm">
+                                    <div class="mb-3">
+                                        <label for="domainInput" class="form-label">Domain or URL</label>
+                                        <input type="text" class="form-control" id="domainInput" placeholder="example.com or https://example.com" required>
+                                        <div class="form-text">Enter a domain name or full URL to analyze its sitemaps.</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="tenantInput" class="form-label">Tenant ID</label>
+                                                <input type="text" class="form-control" id="tenantInput" placeholder="Your tenant ID">
+                                                <div class="form-text">Leave blank to use your default tenant ID.</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3 form-check mt-4">
+                                                <input type="checkbox" class="form-check-input" id="robotsCheck" checked>
+                                                <label class="form-check-label" for="robotsCheck">Follow robots.txt directions</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="apiKeyInput" class="form-label">API Key (Optional)</label>
+                                        <input type="password" class="form-control" id="apiKeyInput" placeholder="Enter your API key" autocomplete="current-password">
+                                        <div class="form-text">Your API key for authentication, if you're not already logged in.</div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" id="resetBtn" class="btn btn-outline-primary">
+                                            <i class="fas fa-times me-2"></i>Reset
+                                        </button>
+                                        <button type="submit" id="analyzeBtn" class="btn btn-primary">
+                                            <i class="fas fa-search me-2"></i>Analyze Sitemaps
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Batch Analysis Tab -->
+                            <div class="tab-pane fade" id="batch" role="tabpanel">
+                                <form id="batchAnalyzerForm">
+                                    <div class="mb-3">
+                                        <label for="domainsInput" class="form-label">Domains List</label>
+                                        <textarea class="form-control" id="domainsInput" rows="5" placeholder="Enter one domain per line, e.g.:&#10;example.com&#10;website.org&#10;domain.net" required></textarea>
+                                        <div class="form-text">Enter up to 100 domains, one domain per line.</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="batchTenantInput" class="form-label">Tenant ID</label>
+                                                <input type="text" class="form-control" id="batchTenantInput" placeholder="Your tenant ID">
+                                                <div class="form-text">Leave blank to use your default tenant ID.</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="concurrencyInput" class="form-label">Max Concurrent Jobs</label>
+                                                <input type="number" class="form-control" id="concurrencyInput" min="1" max="10" value="5">
+                                                <div class="form-text">Number of domains to process simultaneously (1-10).</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="batchApiKeyInput" class="form-label">API Key (Optional)</label>
+                                        <input type="password" class="form-control" id="batchApiKeyInput" placeholder="Enter your API key" autocomplete="current-password">
+                                        <div class="form-text">Your API key for authentication, if you're not already logged in.</div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" id="batchResetBtn" class="btn btn-outline-primary">
+                                            <i class="fas fa-times me-2"></i>Reset
+                                        </button>
+                                        <button type="submit" id="batchAnalyzeBtn" class="btn btn-primary">
+                                            <i class="fas fa-search me-2"></i>Start Batch Analysis
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div id="loader" class="loader">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h4 class="mt-3" id="loaderText">Analyzing sitemaps...</h4>
+                        <div class="progress mt-3">
+                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <p id="statusText" class="mt-2">Discovering sitemaps...</p>
+                    </div>
+
+                    <!-- Single Domain Results -->
+                    <div id="singleResults" class="result-card">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-sitemap me-2"></i>Sitemap Analysis Results
+                                <span id="resultDomain" class="float-end badge badge-primary"></span>
+                            </h2>
+
+                            <!-- Stats Overview -->
+                            <div class="stats-section">
+                                <div class="row g-4">
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-sitemap"></i></div>
+                                            <div class="stats-number" id="totalSitemaps">0</div>
+                                            <div class="stats-label">Total Sitemaps</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-link"></i></div>
+                                            <div class="stats-number" id="totalURLs">0</div>
+                                            <div class="stats-label">Total URLs</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-calendar"></i></div>
+                                            <div class="stats-number" id="lastmodCount">0%</div>
+                                            <div class="stats-label">Has Lastmod</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-sort-amount-up"></i></div>
+                                            <div class="stats-number" id="priorityCount">0%</div>
+                                            <div class="stats-label">Has Priority</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sitemaps List -->
+                            <h3 class="mt-4 mb-3">Discovered Sitemaps</h3>
+                            <div id="sitemapsList" class="mb-4">
+                                <!-- Sitemaps will be inserted here -->
+                            </div>
+
+                            <!-- URLs Sample -->
+                            <h3 class="mt-4 mb-3">Sample URLs</h3>
+                            <div id="urlsList">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th>URL</th>
+                                            <th>Type</th>
+                                            <th>Last Modified</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="urlsTableBody">
+                                        <!-- URLs will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Results -->
+                    <div id="batchResults" class="result-card">
+                        <div class="card">
+                            <h2 class="card-title">
+                                <i class="fas fa-layer-group me-2"></i>Batch Analysis Results
+                                <span id="batchId" class="float-end badge badge-primary"></span>
+                            </h2>
+
+                            <!-- Batch Stats -->
+                            <div class="stats-section">
+                                <div class="row g-4">
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-server"></i></div>
+                                            <div class="stats-number" id="totalDomains">0</div>
+                                            <div class="stats-label">Total Domains</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-check-circle"></i></div>
+                                            <div class="stats-number" id="completedDomains">0</div>
+                                            <div class="stats-label">Completed</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-times-circle"></i></div>
+                                            <div class="stats-number" id="failedDomains">0</div>
+                                            <div class="stats-label">Failed</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stats-box">
+                                            <div class="stats-icon"><i class="fas fa-spinner"></i></div>
+                                            <div class="stats-number" id="pendingDomains">0</div>
+                                            <div class="stats-label">Pending</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Batch Progress -->
+                            <h3 class="mt-4 mb-3">Batch Progress</h3>
+                            <div class="progress mb-3" style="height: 1.5rem;">
+                                <div id="batchProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+
+                            <!-- Domains List -->
+                            <h3 class="mt-4 mb-3">Domain Status</h3>
+                            <div id="domainsList">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Domain</th>
+                                            <th>Status</th>
+                                            <th>Sitemaps</th>
+                                            <th>URLs</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="domainsTableBody">
+                                        <!-- Domains will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/static/single-domain-scanner.html">Domain Scanner</a>
+                <a href="/static/batch-domain-scanner.html">Batch Scanner</a>
+                <a href="/static/contentmap.html">ContentMap</a>
+                <a href="/static/admin-dashboard.html">Admin</a>
+                <a href="/api/docs">API Docs</a>
+            </div>
+            <div class="copyright">
+                &copy; 2025 ScraperSky. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Form elements
+            const sitemapAnalyzerForm = document.getElementById('sitemapAnalyzerForm');
+            const batchAnalyzerForm = document.getElementById('batchAnalyzerForm');
+            const resetBtn = document.getElementById('resetBtn');
+            const batchResetBtn = document.getElementById('batchResetBtn');
+
+            // Result containers
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loaderText');
+            const statusText = document.getElementById('statusText');
+            const progressBar = document.getElementById('progressBar');
+            const singleResults = document.getElementById('singleResults');
+            const batchResults = document.getElementById('batchResults');
+
+            // Default API key and tenant - using the zero UUID format for development
+            const DEFAULT_API_KEY = "scraper_sky_2024";
+            const DEFAULT_TENANT_ID = "550e8400-e29b-41d4-a716-446655440000";
+
+            // API endpoint configuration - make sure these match the backend paths
+            const API_CONFIG = {
+                // Base API URL - change this to match your environment
+                baseUrl: '/api/v3',
+                // Sitemap endpoints
+                sitemap: {
+                    scan: '/sitemap/scan',
+                    status: '/sitemap/status/'
+                },
+                // Batch endpoints
+                batch: {
+                    create: '/batch_page_scraper/batch',
+                    status: '/batch_page_scraper/batch/'
+                }
+            };
+
+            // Auto-fill the API key field with default value if empty
+            document.getElementById('apiKeyInput').value = document.getElementById('apiKeyInput').value || DEFAULT_API_KEY;
+            document.getElementById('batchApiKeyInput').value = document.getElementById('batchApiKeyInput').value || DEFAULT_API_KEY;
+
+            // Form handlers
+            sitemapAnalyzerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                startSingleAnalysis();
+            });
+
+            batchAnalyzerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                startBatchAnalysis();
+            });
+
+            resetBtn.addEventListener('click', function() {
+                sitemapAnalyzerForm.reset();
+                // Re-add default API key
+                document.getElementById('apiKeyInput').value = DEFAULT_API_KEY;
+            });
+
+            batchResetBtn.addEventListener('click', function() {
+                batchAnalyzerForm.reset();
+                // Re-add default API key
+                document.getElementById('batchApiKeyInput').value = DEFAULT_API_KEY;
+            });
+
+            // Single domain analysis
+            async function startSingleAnalysis() {
+                // Get form values
+                const domain = document.getElementById('domainInput').value.trim();
+                const followRobotsTxt = document.getElementById('robotsCheck').checked;
+                const apiKey = document.getElementById('apiKeyInput').value.trim() || DEFAULT_API_KEY;
+                const tenantId = document.getElementById('tenantInput').value.trim() || DEFAULT_TENANT_ID;
+                const maxPages = 1000; // Reasonable default
+
+                console.log("STARTING ANALYSIS FOR DOMAIN:", domain);
+
+                // Show loader
+                loader.style.display = 'block';
+                singleResults.style.display = 'none';
+                batchResults.style.display = 'none';
+                loaderText.textContent = 'Analyzing sitemaps...';
+                statusText.textContent = 'Discovering sitemaps...';
+
+                // Reset progress
+                updateProgressBar(0);
+
+                try {
+                    // Prepare the request
+                    const requestData = {
+                        base_url: domain,
+                        follow_robots_txt: followRobotsTxt,
+                        max_pages: maxPages
+                    };
+
+                    console.log('Starting sitemap scan with request:', requestData);
+
+                    // Make API call to the sitemap scan endpoint
+                    const response = await fetch(API_CONFIG.baseUrl + API_CONFIG.sitemap.scan, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    if (!response.ok) {
+                        let errorMessage = 'Failed to start analysis';
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.detail || errorData.message || errorMessage;
+                        } catch (e) {
+                            const errorText = await response.text();
+                            errorMessage = errorText || errorMessage;
+                        }
+                        throw new Error(errorMessage);
+                    }
+
+                    const responseData = await response.json();
+                    console.log('Scan response:', responseData);
+
+                    // Extract job_id from the response
+                    const jobId = responseData.job_id;
+                    console.log(`Job started with ID: ${jobId} for domain: ${domain}`);
+
+                    // Poll for status
+                    await pollAnalysisStatus(jobId, apiKey);
+
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    loader.style.display = 'none';
+                    alert(`Error: ${error.message}`);
+                }
+            }
+
+            // Poll for single analysis status
+            async function pollAnalysisStatus(jobId, apiKey) {
+                // Status check loop
+                let completed = false;
+                let attempts = 0;
+                const maxAttempts = 120; // 2 minutes at 1 second intervals
+                let lastStatusData = null;
+
+                console.log(`Starting to poll status for job ${jobId}`);
+
+                const pollInterval = setInterval(async () => {
+                    try {
+                        attempts++;
+
+                        if (attempts > maxAttempts) {
+                            clearInterval(pollInterval);
+                            if (lastStatusData) {
+                                displaySingleResults(lastStatusData);
+                            } else {
+                                throw new Error('Analysis timed out after 2 minutes');
+                            }
+                            return;
+                        }
+
+                        // Use the sitemap status endpoint
+                        const statusUrl = API_CONFIG.baseUrl + API_CONFIG.sitemap.status + jobId;
+                        console.log(`Checking status at: ${statusUrl} (attempt ${attempts})`);
+
+                        const statusResponse = await fetch(statusUrl, {
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`
+                            }
+                        });
+
+                        if (!statusResponse.ok) {
+                            console.warn(`Status check failed: ${statusResponse.status}`);
+                            if (attempts > 5) {
+                                throw new Error(`Status check failed with code ${statusResponse.status}`);
+                            }
+                            return;
+                        }
+
+                        const statusData = await statusResponse.json();
+                        lastStatusData = statusData;
+                        console.log(`Status check result:`, statusData);
+
+                        // Update progress
+                        let progress = statusData.progress || 0;
+                        updateProgressBar(progress);
+
+                        // Update status text
+                        const status = statusData.status;
+                        const error = statusData.error;
+                        statusText.textContent = getStatusMessage(status, error);
+
+                        // Check if analysis is complete
+                        if (status === 'complete' || status === 'completed') {
+                            clearInterval(pollInterval);
+                            displaySingleResults(statusData);
+                            completed = true;
+                        } else if (status === 'failed') {
+                            clearInterval(pollInterval);
+                            loader.style.display = 'none';
+                            alert(`Analysis failed: ${error || 'Unknown error'}`);
+                            completed = true;
+                        }
+                    } catch (error) {
+                        console.error('Status check error:', error);
+                        clearInterval(pollInterval);
+                        loader.style.display = 'none';
+                        alert(`Error checking status: ${error.message}`);
+                    }
+                }, 1000);
+            }
+
+            // Batch analysis
+            async function startBatchAnalysis() {
+                // Get form values
+                const domainsText = document.getElementById('domainsInput').value.trim();
+                const domains = domainsText.split('\n').map(d => d.trim()).filter(d => d);
+                const maxConcurrentJobs = parseInt(document.getElementById('concurrencyInput').value) || 5;
+                const apiKey = document.getElementById('batchApiKeyInput').value.trim() || DEFAULT_API_KEY;
+                const tenantId = document.getElementById('batchTenantInput').value.trim() || DEFAULT_TENANT_ID;
+
+                if (domains.length === 0) {
+                    alert('Please enter at least one domain.');
+                    return;
+                }
+
+                if (domains.length > 100) {
+                    alert('Maximum 100 domains allowed. Please reduce the number of domains.');
+                    return;
+                }
+
+                // Show loader
+                loader.style.display = 'block';
+                singleResults.style.display = 'none';
+                batchResults.style.display = 'none';
+                loaderText.textContent = 'Starting batch analysis...';
+                statusText.textContent = 'Preparing domains...';
+
+                try {
+                    // Prepare the request
+                    const requestData = {
+                        domains: domains,
+                        max_concurrent_jobs: maxConcurrentJobs
+                    };
+
+                    console.log('Starting batch analysis with request:', requestData);
+
+                    // Make API call to the batch endpoint
+                    const response = await fetch(API_CONFIG.baseUrl + API_CONFIG.batch.create, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    if (!response.ok) {
+                        let errorMessage = 'Failed to start batch analysis';
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.detail || errorMessage;
+                        } catch (e) {
+                            const errorText = await response.text();
+                            errorMessage = errorText || errorMessage;
+                        }
+                        throw new Error(errorMessage);
+                    }
+
+                    const responseData = await response.json();
+                    console.log('Batch response:', responseData);
+
+                    const batchId = responseData.batch_id;
+                    console.log(`Batch started with ID: ${batchId}`);
+
+                    // Poll for batch status
+                    await pollBatchStatus(batchId, apiKey);
+
+                } catch (error) {
+                    console.error('Batch analysis error:', error);
+                    loader.style.display = 'none';
+                    alert(`Error: ${error.message}`);
+                }
+            }
+
+            // Poll for batch status
+            async function pollBatchStatus(batchId, apiKey) {
+                // Status check loop
+                let completed = false;
+                let attempts = 0;
+                const maxAttempts = 600; // 10 minutes at 1 second intervals
+
+                const pollInterval = setInterval(async () => {
+                    try {
+                        attempts++;
+
+                        if (attempts > maxAttempts) {
+                            clearInterval(pollInterval);
+                            throw new Error('Batch analysis timed out after 10 minutes');
+                        }
+
+                        // Check status with batch status endpoint
+                        const statusUrl = API_CONFIG.baseUrl + API_CONFIG.batch.status + batchId + '/status';
+                        const statusResponse = await fetch(statusUrl, {
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`
+                            }
+                        });
+
+                        if (!statusResponse.ok) {
+                            throw new Error('Failed to get batch status');
+                        }
+
+                        const statusData = await statusResponse.json();
+                        console.log('Batch status:', statusData);
+
+                        // Update progress
+                        updateProgressBar(statusData.progress || 0);
+                        statusText.textContent = getBatchStatusMessage(statusData);
+
+                        // Check if batch is complete
+                        if (['completed', 'failed', 'partial'].includes(statusData.status)) {
+                            clearInterval(pollInterval);
+                            displayBatchResults(statusData);
+                            completed = true;
+                        }
+                    } catch (error) {
+                        console.error('Batch status check error:', error);
+                        clearInterval(pollInterval);
+                        loader.style.display = 'none';
+                        alert(`Error checking batch status: ${error.message}`);
+                    }
+                }, 1000);
+            }
+
+            // Helper function to update progress bar
+            function updateProgressBar(progress) {
+                const percentage = Math.min(Math.max(progress * 100, 0), 100);
+                progressBar.style.width = `${percentage}%`;
+                progressBar.setAttribute('aria-valuenow', percentage);
+            }
+
+            // Helper function to get status message
+            function getStatusMessage(status, error) {
+                switch (status) {
+                    case 'pending':
+                        return 'Waiting to start analysis...';
+                    case 'running':
+                        return 'Analyzing sitemaps...';
+                    case 'complete':
+                    case 'completed':
+                        return 'Analysis completed successfully!';
+                    case 'failed':
+                        return `Analysis failed: ${error || 'Unknown error'}`;
+                    default:
+                        return 'Processing...';
+                }
+            }
+
+            // Helper function to get batch status message
+            function getBatchStatusMessage(batchData) {
+                const completed = batchData.completed_domains || 0;
+                const total = batchData.total_domains || 0;
+                const failed = batchData.failed_domains || 0;
+
+                switch (batchData.status) {
+                    case 'pending':
+                        return 'Waiting to start batch analysis...';
+                    case 'in_progress':
+                        return `Processing domains: ${completed}/${total} completed, ${failed} failed`;
+                    case 'completed':
+                        return 'Batch analysis completed successfully!';
+                    case 'partial':
+                        return `Batch analysis completed with some failures: ${failed}/${total} domains failed`;
+                    case 'failed':
+                        return 'Batch analysis failed for all domains';
+                    default:
+                        return 'Processing batch...';
+                }
+            }
+
+            // Display single analysis results
+            function displaySingleResults(data) {
+                // Hide loader, show results
+                loader.style.display = 'none';
+                singleResults.style.display = 'block';
+
+                // Set domain - support both formats
+                const domain = data.domain || data.base_url || document.getElementById('domainInput').value.trim();
+                document.getElementById('resultDomain').textContent = domain;
+
+                console.log("Received data:", data);
+
+                // Extract sitemaps data based on the backend response structure
+                let sitemaps = [];
+
+                // Check all possible locations where sitemaps might be in the response
+                if (data.sitemaps && Array.isArray(data.sitemaps)) {
+                    sitemaps = data.sitemaps;
+                } else if (data.sitemap_files && Array.isArray(data.sitemap_files)) {
+                    sitemaps = data.sitemap_files;
+                } else if (data.metadata && data.metadata.sitemaps && Array.isArray(data.metadata.sitemaps)) {
+                    sitemaps = data.metadata.sitemaps;
+                } else if (data.metadata && Array.isArray(data.metadata)) {
+                    // Sometimes metadata itself might be an array of sitemaps
+                    sitemaps = data.metadata;
+                }
+
+                console.log("Extracted sitemaps:", sitemaps);
+
+                // Update stats - support multiple response formats
+                const totalSitemaps = sitemaps.length || data.total_sitemaps || data.sitemap_count || 0;
+                const totalUrls = data.total_urls || data.url_count ||
+                    sitemaps.reduce((sum, s) => sum + (s.url_count || s.entries || 0), 0) || 0;
+
+                document.getElementById('totalSitemaps').textContent = totalSitemaps;
+                document.getElementById('totalURLs').textContent = totalUrls;
+
+                // Calculate percentage for lastmod and priority
+                let hasLastmodCount = 0;
+                let hasPriorityCount = 0;
+                let hasChangefreqCount = 0;
+
+                if (sitemaps.length > 0) {
+                    sitemaps.forEach(sitemap => {
+                        if (sitemap.has_lastmod) hasLastmodCount++;
+                        if (sitemap.has_priority) hasPriorityCount++;
+                        if (sitemap.has_changefreq) hasChangefreqCount++;
+                    });
+
+                    const lastmodPercentage = Math.round((hasLastmodCount / sitemaps.length) * 100);
+                    const priorityPercentage = Math.round((hasPriorityCount / sitemaps.length) * 100);
+
+                    document.getElementById('lastmodCount').textContent = `${lastmodPercentage}%`;
+                    document.getElementById('priorityCount').textContent = `${priorityPercentage}%`;
+                } else {
+                    document.getElementById('lastmodCount').textContent = '0%';
+                    document.getElementById('priorityCount').textContent = '0%';
+                }
+
+                // Display sitemaps
+                const sitemapsList = document.getElementById('sitemapsList');
+                sitemapsList.innerHTML = '';
+
+                if (sitemaps.length > 0) {
+                    sitemaps.forEach(sitemap => {
+                        const sitemapDiv = document.createElement('div');
+                        sitemapDiv.className = 'sitemap-card';
+
+                        // Get sitemap type class - support multiple field names
+                        let typeClass = 'sitemap-standard';
+                        const sitemapType = sitemap.sitemap_type || sitemap.type || 'standard';
+                        if (sitemapType === 'index') typeClass = 'sitemap-index';
+                        if (sitemapType === 'image') typeClass = 'sitemap-image';
+                        if (sitemapType === 'video') typeClass = 'sitemap-video';
+                        if (sitemapType === 'news') typeClass = 'sitemap-news';
+
+                        const sitemapUrl = sitemap.url || sitemap.location || '';
+                        const urlCount = sitemap.url_count || sitemap.entries || 0;
+                        const discoveryMethod = sitemap.discovery_method || sitemap.method || 'detected';
+
+                        sitemapDiv.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="sitemap-type ${typeClass}">${sitemapType}</span>
+                                    <span class="discovery-method">${discoveryMethod}</span>
+                                </div>
+                                <div class="url-count">${urlCount} URLs</div>
+                            </div>
+                            <div class="mt-2">
+                                <a href="${sitemapUrl}" target="_blank" class="text-white">${sitemapUrl}</a>
+                            </div>
+                            <div class="mt-2 small text-muted">
+                                ${sitemap.has_lastmod ? '<span class="me-2"><i class="fas fa-calendar"></i> Has lastmod</span>' : ''}
+                                ${sitemap.has_priority ? '<span class="me-2"><i class="fas fa-sort-amount-up"></i> Has priority</span>' : ''}
+                                ${sitemap.has_changefreq ? '<span><i class="fas fa-sync"></i> Has changefreq</span>' : ''}
+                            </div>
+                        `;
+
+                        sitemapsList.appendChild(sitemapDiv);
+                    });
+                } else {
+                    sitemapsList.innerHTML = '<div class="alert alert-warning">No sitemaps found for this domain.</div>';
+                }
+
+                // Display URLs (sample) - extract URLs from different possible response formats
+                const urlsTableBody = document.getElementById('urlsTableBody');
+                urlsTableBody.innerHTML = '';
+
+                // Try to find URLs from different possible response structures
+                let urls = [];
+                if (data.urls && Array.isArray(data.urls)) {
+                    urls = data.urls;
+                } else if (data.url_entries && Array.isArray(data.url_entries)) {
+                    urls = data.url_entries;
+                } else if (data.metadata && data.metadata.urls && Array.isArray(data.metadata.urls)) {
+                    urls = data.metadata.urls;
+                } else if (sitemaps.length > 0) {
+                    // Try to extract URLs from sitemaps
+                    sitemaps.forEach(sitemap => {
+                        if (sitemap.urls && Array.isArray(sitemap.urls)) {
+                            urls = urls.concat(sitemap.urls);
+                        }
+                    });
+                }
+
+                if (urls.length > 0) {
+                    // Show up to 20 URLs as a sample
+                    const sampleUrls = urls.slice(0, 20);
+
+                    sampleUrls.forEach(url => {
+                        const row = document.createElement('tr');
+
+                        // Support multiple field names for URL data
+                        const urlLoc = url.loc || url.url || '';
+                        const pageType = url.page_type || url.type || 'page';
+                        const lastmod = url.lastmod ? new Date(url.lastmod).toLocaleDateString() : 'Not specified';
+                        const priority = url.priority || 'Not set';
+
+                        row.innerHTML = `
+                            <td><a href="${urlLoc}" target="_blank" class="text-white">${truncateUrl(urlLoc, 50)}</a></td>
+                            <td>${pageType}</td>
+                            <td>${lastmod}</td>
+                            <td>${priority}</td>
+                        `;
+
+                        urlsTableBody.appendChild(row);
+                    });
+                } else {
+                    // If no URLs available, show a message
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="4" class="text-center">No URLs available in this sample.</td>`;
+                    urlsTableBody.appendChild(row);
+                }
+            }
+
+            // Display batch results
+            function displayBatchResults(data) {
+                // Hide loader, show results
+                loader.style.display = 'none';
+                batchResults.style.display = 'block';
+
+                // Set batch ID - handle different formats
+                let displayBatchId = data.batch_id;
+                if (typeof displayBatchId === 'string' && displayBatchId.includes('_')) {
+                    displayBatchId = `Batch #${displayBatchId.split('_')[1]}`;
+                } else {
+                    displayBatchId = `Batch ${displayBatchId}`;
+                }
+                document.getElementById('batchId').textContent = displayBatchId;
+
+                // Update stats
+                document.getElementById('totalDomains').textContent = data.total_domains || 0;
+                document.getElementById('completedDomains').textContent = data.completed_domains || 0;
+                document.getElementById('failedDomains').textContent = data.failed_domains || 0;
+
+                const pendingDomains = (data.total_domains || 0) - ((data.completed_domains || 0) + (data.failed_domains || 0));
+                document.getElementById('pendingDomains').textContent = pendingDomains;
+
+                // Update batch progress bar
+                const batchPercentage = Math.min(Math.max(data.progress * 100, 0), 100);
+                const batchProgressBar = document.getElementById('batchProgressBar');
+                batchProgressBar.style.width = `${batchPercentage}%`;
+                batchProgressBar.setAttribute('aria-valuenow', batchPercentage);
+
+                // Display domains and their status
+                const domainsTableBody = document.getElementById('domainsTableBody');
+                domainsTableBody.innerHTML = '';
+
+                // Try to find job statuses from different possible response structures
+                let jobStatuses = {};
+                if (data.job_statuses && typeof data.job_statuses === 'object') {
+                    jobStatuses = data.job_statuses;
+                } else if (data.domain_statuses && typeof data.domain_statuses === 'object') {
+                    jobStatuses = data.domain_statuses;
+                } else if (data.metadata && data.metadata.job_statuses && typeof data.metadata.job_statuses === 'object') {
+                    jobStatuses = data.metadata.job_statuses;
+                }
+
+                // Create array of domain entries to display
+                const domainEntries = [];
+
+                // Add entries from job_statuses/domain_statuses
+                for (const [jobId, status] of Object.entries(jobStatuses)) {
+                    // Try to extract domain from job tracking data
+                    const domainInfo = {
+                        jobId,
+                        status: status.status || 'pending',
+                        domain: status.domain || status.url || 'Unknown',
+                        sitemapCount: status.sitemap_count || status.total_sitemaps || 0,
+                        urlCount: status.url_count || status.total_urls || 0
+                    };
+
+                    domainEntries.push(domainInfo);
+                }
+
+                // If we have domains listed directly
+                if (data.domains && Array.isArray(data.domains)) {
+                    data.domains.forEach((domain, index) => {
+                        // Check if this domain is already in our entries
+                        const existingEntry = domainEntries.find(e => e.domain === domain);
+
+                        if (!existingEntry) {
+                            domainEntries.push({
+                                domain,
+                                status: 'pending',
+                                sitemapCount: 0,
+                                urlCount: 0
+                            });
+                        }
+                    });
+                }
+
+                // Display domains
+                if (domainEntries.length > 0) {
+                    domainEntries.forEach(entry => {
+                        const row = document.createElement('tr');
+
+                        // Get status pill class
+                        let statusClass = 'status-pending';
+                        if (entry.status === 'completed' || entry.status === 'complete') statusClass = 'status-completed';
+                        if (entry.status === 'failed') statusClass = 'status-failed';
+                        if (entry.status === 'running' || entry.status === 'processing') statusClass = 'status-processing';
+
+                        row.innerHTML = `
+                            <td>${entry.domain}</td>
+                            <td><span class="status-pill ${statusClass}">${entry.status}</span></td>
+                            <td>${entry.sitemapCount}</td>
+                            <td>${entry.urlCount}</td>
+                            <td>
+                                ${entry.jobId && (entry.status === 'completed' || entry.status === 'complete') ?
+                                    `<button class="btn btn-sm btn-outline-primary view-job-btn" data-job-id="${entry.jobId}" data-domain="${entry.domain}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>` :
+                                    ''}
+                            </td>
+                        `;
+
+                        domainsTableBody.appendChild(row);
+                    });
+
+                    // Add event listeners to view buttons
+                    document.querySelectorAll('.view-job-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const jobId = this.getAttribute('data-job-id');
+                            const domain = this.getAttribute('data-domain');
+
+                            // Redirect to single domain view or show modal with job details
+                            // For now, just show an alert
+                            alert(`View details for domain: ${domain}, job: ${jobId}`);
+
+                            // Future enhancement: Fetch job details and display them
+                            // fetchJobDetails(jobId, domain);
+                        });
+                    });
+                } else {
+                    // If no domains available, show a message
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="5" class="text-center">No domain information available.</td>`;
+                    domainsTableBody.appendChild(row);
+                }
+            }
+
+            // Helper function to truncate long URLs
+            function truncateUrl(url, maxLength) {
+                if (!url) return '';
+                if (url.length <= maxLength) return url;
+
+                return url.substring(0, maxLength) + '...';
+            }
+        });
+    </script>
+
+    <!-- Shared Footer -->
+    <div id="footer-placeholder"></div>
+    <script>
+        // Load shared header
+        fetch("/static/shared/header.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("header-placeholder").innerHTML = data;
+            });
+        // Load shared footer
+        fetch("/static/shared/footer.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("footer-placeholder").innerHTML = data;
+            });
+    </script>
+
+    <!-- Debug script for troubleshooting -->
+    <script src="/static/debug.js"></script>
+</body>
+</html>

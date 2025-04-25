@@ -1,0 +1,29 @@
+<div class="card">
+    <h2>Test Scenarios</h2>
+
+    <div class="test-scenario">
+        <h3>Sitemap Analyzer Test</h3>
+        <p>Test the sitemap analyzer with a sample domain</p>
+        <div class="code-block">
+            <pre><code class="language-python">
+# Run from the project root
+python tests/test_sitemap_api.py richlineye.com
+            </code></pre>
+        </div>
+        <button id="run-sitemap-test">Run Test</button>
+        <div id="sitemap-test-result"></div>
+    </div>
+
+    <div class="test-scenario">
+        <h3>Email Scanner Test</h3>
+        <p>Test the email scanner with a sample domain</p>
+        <div class="code-block">
+            <pre><code class="language-python">
+# Run from the project root
+python tests/test_email_scanner.py example.com
+            </code></pre>
+        </div>
+        <button id="run-email-test">Run Test</button>
+        <div id="email-test-result"></div>
+    </div>
+</div>

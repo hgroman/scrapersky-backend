@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScraperSky - Admin Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom CSS - Match the existing style from index.html -->
+    <style>
+        :root {
+            --primary: #00e5ff;
+            --primary-dark: #00b8cc;
+            --secondary: #0a1929;
+            --dark: #050d18;
+            --light: #f8f9fa;
+            --text: #ffffff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        p,
+        li,
+        td,
+        th,
+        label,
+        .form-text {
+            color: #ffffff;
+        }
+
+        .form-text {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: white;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: var(--dark);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .table {
+            color: var(--text);
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 600;
+        }
+
+        .table td,
+        .table th {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #fff !important;
+        }
+
+        .dashboard-header {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-subtitle {
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin: 0.5rem;
+            min-width: 150px;
+            flex: 0 0 auto;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+        }
+
+        .badge.bg-primary {
+            background-color: var(--primary) !important;
+            color: var(--dark);
+        }
+
+        .footer {
+            background-color: var(--dark);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0 1rem;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .tab-content {
+            padding: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 10px 10px;
+        }
+
+        .nav-tabs {
+            border-bottom: none;
+        }
+
+        .nav-tabs .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-weight: 500;
+            border-radius: 10px 10px 0 0;
+            margin-right: 5px;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--primary) !important;
+            font-weight: 600;
+        }
+
+        .list-group-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .status-badge {
+            padding: 0.4em 0.8em;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-inactive {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: var(--secondary);
+        }
+
+        .status-pending {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning-color);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-details {
+            margin-left: 10px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        .user-email {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 0.25rem rgba(0, 229, 255, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        }
+
+        .form-check-input {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .alert-info {
+            background-color: rgba(23, 162, 184, 0.1);
+            border-color: rgba(23, 162, 184, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .text-muted {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        .modal-content {
+            background-color: var(--secondary);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .toast {
+            background-color: var(--dark);
+            color: white;
+        }
+
+        .toast-body {
+            color: white;
+        }
+
+        /* Fix for spinner color */
+        .spinner-border.text-primary {
+            color: var(--primary) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Shared Header -->
+    <div id="header-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Dashboard Header -->
+        <header class="dashboard-header text-center">
+            <div class="container">
+                <h1 class="dashboard-title">Admin Dashboard</h1>
+                <p class="dashboard-subtitle">Manage users, tenants, roles, and monitor system performance from a single interface.</p>
+            </div>
+        </header>
+
+        <!-- Dashboard Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="stats-container d-flex flex-wrap justify-content-around">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value" id="total-users">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="stat-value" id="active-tenants">0</div>
+                        <div class="stat-label">Active Tenants</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tag"></i>
+                        </div>
+                        <div class="stat-value" id="total-roles">0</div>
+                        <div class="stat-label">User Roles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="stat-value" id="total-places">0</div>
+                        <div class="stat-label">Indexed Places</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-value" id="active-users">0</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group" id="recent-activity-list">
+                            <li class="list-group-item">Loading recent activity...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs mt-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users"
+                    type="button" role="tab" aria-controls="users" aria-selected="true">
+                    <i class="fas fa-users me-2"></i>Users
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tenants-tab" data-bs-toggle="tab" data-bs-target="#tenants" type="button"
+                    role="tab" aria-controls="tenants" aria-selected="false">
+                    <i class="fas fa-building me-2"></i>Tenants
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button"
+                    role="tab" aria-controls="roles" aria-selected="false">
+                    <i class="fas fa-user-tag me-2"></i>Roles
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="places-tab" data-bs-toggle="tab" data-bs-target="#places" type="button"
+                    role="tab" aria-controls="places" aria-selected="false">
+                    <i class="fas fa-map-marker-alt me-2"></i>Places
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button"
+                    role="tab" aria-controls="logs" aria-selected="false">
+                    <i class="fas fa-list me-2"></i>Logs
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button"
+                    role="tab" aria-controls="settings" aria-selected="false">
+                    <i class="fas fa-cog me-2"></i>Settings
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content card" id="adminTabsContent">
+            <!-- Users Tab -->
+            <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">User Management</h4>
+                    <button class="btn btn-primary" id="add-user-btn">
+                        <i class="fas fa-plus me-2"></i>Add User
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Tenant</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- User rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3" id="users-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading users...</p>
+                </div>
+                <div class="alert alert-info mt-3" id="users-empty" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>No users found. Click "Add User" to create your first user.
+                </div>
+            </div>
+
+            <!-- Tenants Tab -->
+            <div class="tab-pane fade" id="tenants" role="tabpanel" aria-labelledby="tenants-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Tenant Management</h4>
+                    <button class="btn btn-primary" id="add-tenant-btn">
+                        <i class="fas fa-plus me-2"></i>Add Tenant
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tenants-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Users</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Tenant rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3" id="tenants-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading tenants...</p>
+                </div>
+                <div class="alert alert-info mt-3" id="tenants-empty" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>No tenants found. Click "Add Tenant" to create your first tenant.
+                </div>
+            </div>
+
+            <!-- Roles Tab -->
+            <div class="tab-pane fade" id="roles" role="tabpanel" aria-labelledby="roles-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Role Management</h4>
+                    <button class="btn btn-primary" id="add-role-btn">
+                        <i class="fas fa-plus me-2"></i>Add Role
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="roles-table">
+                        <thead>
+                            <tr>
+                                <th>Role Name</th>
+                                <th>Description</th>
+                                <th>Users</th>
+                                <th>Permissions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Role rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3" id="roles-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading roles...</p>
+                </div>
+                <div class="alert alert-info mt-3" id="roles-empty" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>No roles found. Click "Add Role" to create your first role.
+                </div>
+            </div>
+
+            <!-- Places Tab -->
+            <div class="tab-pane fade" id="places" role="tabpanel" aria-labelledby="places-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Places Management</h4>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" id="refresh-places-btn">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                        <button class="btn btn-primary" id="add-place-btn">
+                            <i class="fas fa-plus me-2"></i>Add Place
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="places-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Category</th>
+                                <th>Rating</th>
+                                <th>Tenant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Places rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3" id="places-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading places...</p>
+                </div>
+                <div class="alert alert-info mt-3" id="places-empty" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>No places found. Use the Google Maps tool to add places.
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">System Logs</h4>
+                    <div>
+                        <select class="form-select d-inline-block me-2" style="width: auto;" id="log-level-filter">
+                            <option value="all">All Levels</option>
+                            <option value="error">Error</option>
+                            <option value="warning">Warning</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                        <button class="btn btn-outline-primary" id="refresh-logs-btn">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Level</th>
+                                <th>Source</th>
+                                <th>Message</th>
+                                <th>User</th>
+                                <th>Tenant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Log rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3" id="logs-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading logs...</p>
+                </div>
+                <div class="alert alert-info mt-3" id="logs-empty" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>No logs found for the selected filter.
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                <h4 class="mb-4">System Settings</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Authentication Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="auth-settings-form">
+                                    <div class="mb-3">
+                                        <label for="jwt-expiry" class="form-label">JWT Token Expiry (minutes)</label>
+                                        <input type="number" class="form-control" id="jwt-expiry" value="60">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="api-key-expiry" class="form-label">API Key Expiry (days)</label>
+                                        <input type="number" class="form-control" id="api-key-expiry" value="30">
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="enable-2fa" checked>
+                                        <label class="form-check-label" for="enable-2fa">Enable Two-Factor Authentication</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Authentication Settings</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Database Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="db-settings-form">
+                                    <div class="mb-3">
+                                        <label for="db-pool-size" class="form-label">Connection Pool Size</label>
+                                        <input type="number" class="form-control" id="db-pool-size" value="10">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="db-timeout" class="form-label">Connection Timeout (seconds)</label>
+                                        <input type="number" class="form-control" id="db-timeout" value="30">
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="db-ssl-mode" checked>
+                                        <label class="form-check-label" for="db-ssl-mode">Enable SSL Mode</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Database Settings</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">API Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="api-settings-form">
+                                    <div class="mb-3">
+                                        <label for="rate-limit" class="form-label">Rate Limit (requests per minute)</label>
+                                        <input type="number" class="form-control" id="rate-limit" value="100">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="timeout" class="form-label">Request Timeout (seconds)</label>
+                                        <input type="number" class="form-control" id="timeout" value="30">
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="enable-cors" checked>
+                                        <label class="form-check-label" for="enable-cors">Enable CORS</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save API Settings</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">System Maintenance</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Perform system maintenance tasks and view system information.</p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" id="clear-cache-btn">
+                                        <i class="fas fa-broom me-2"></i>Clear System Cache
+                                    </button>
+                                    <button class="btn btn-outline-primary" id="backup-db-btn">
+                                        <i class="fas fa-database me-2"></i>Backup Database
+                                    </button>
+                                    <button class="btn btn-outline-danger" id="reset-system-btn">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Reset System
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shared Footer -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Load shared components -->
+    <script>
+        // Load shared header
+        fetch("/static/shared/header.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("header-placeholder").innerHTML = data;
+            });
+        // Load shared footer
+        fetch("/static/shared/footer.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("footer-placeholder").innerHTML = data;
+            });
+    </script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Authentication check
+            checkAuthentication();
+
+            // Load initial data
+            loadDashboardData();
+            loadUsers();
+            loadTenants();
+            loadRoles();
+            loadPlaces();
+            loadLogs();
+
+            // Event listeners for tab changes
+            const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabEls.forEach(tabEl => {
+                tabEl.addEventListener('shown.bs.tab', function (event) {
+                    const targetId = event.target.getAttribute('data-bs-target').substring(1);
+                    if (targetId === 'users') {
+                        loadUsers();
+                    } else if (targetId === 'tenants') {
+                        loadTenants();
+                    } else if (targetId === 'roles') {
+                        loadRoles();
+                    } else if (targetId === 'places') {
+                        loadPlaces();
+                    } else if (targetId === 'logs') {
+                        loadLogs();
+                    }
+                });
+            });
+
+            // Button event listeners
+            document.getElementById('add-user-btn').addEventListener('click', showAddUserModal);
+            document.getElementById('add-tenant-btn').addEventListener('click', showAddTenantModal);
+            document.getElementById('add-role-btn').addEventListener('click', showAddRoleModal);
+            document.getElementById('add-place-btn').addEventListener('click', showAddPlaceModal);
+            document.getElementById('refresh-places-btn').addEventListener('click', loadPlaces);
+            document.getElementById('refresh-logs-btn').addEventListener('click', loadLogs);
+            document.getElementById('clear-cache-btn').addEventListener('click', clearCache);
+            document.getElementById('backup-db-btn').addEventListener('click', backupDatabase);
+            document.getElementById('reset-system-btn').addEventListener('click', confirmSystemReset);
+
+            // Form submissions
+            document.getElementById('auth-settings-form').addEventListener('submit', saveAuthSettings);
+            document.getElementById('db-settings-form').addEventListener('submit', saveDbSettings);
+            document.getElementById('api-settings-form').addEventListener('submit', saveApiSettings);
+        });
+
+        // Authentication check
+        function checkAuthentication() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                // Show authentication modal or redirect to login
+                showAuthModal();
+            } else {
+                console.log('Using token:', token);
+                // For testing, we'll just assume the token is valid
+                updateUserInfo({ name: 'Admin', email: 'admin@example.com' });
+
+                // Load dashboard data
+                loadDashboardData();
+                loadUsers();
+                loadTenants();
+                loadRoles();
+                loadPlaces();
+                loadLogs();
+            }
+        }
+
+        // Show authentication modal
+        function showAuthModal() {
+            // Create modal if it doesn't exist
+            if (!document.getElementById('auth-modal')) {
+                const modalHtml = `
+                    <div class="modal fade" id="auth-modal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="authModalLabel">Authentication Required</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Please authenticate to access the admin dashboard.
+                                    </div>
+                                    <form id="api-key-form">
+                                        <div class="mb-3">
+                                            <label for="api-key" class="form-label">API Key</label>
+                                            <input type="text" class="form-control" id="api-key" value="scraper_sky_2024" placeholder="Enter API Key">
+                                            <div class="form-text">Default API key is pre-filled for testing.</div>
+                                        </div>
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">Authenticate</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = modalHtml;
+                document.body.appendChild(modalContainer);
+
+                // Add event listener for API key form
+                document.getElementById('api-key-form').addEventListener('submit', handleApiKeyAuth);
+            }
+
+            // Show the modal
+            const authModal = new bootstrap.Modal(document.getElementById('auth-modal'));
+            authModal.show();
+        }
+
+        // Handle API key authentication
+        function handleApiKeyAuth(event) {
+            event.preventDefault();
+
+            const apiKey = document.getElementById('api-key').value || "scraper_sky_2024"; // Default to our API key
+
+            // Show loading state
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Authenticating...';
+            submitBtn.disabled = true;
+
+            // Store API key directly (simplified for testing)
+            localStorage.setItem('auth_token', apiKey);
+            localStorage.setItem('auth_method', 'api_key');  // Set auth_method to api_key
+
+            // Close modal if it exists
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) {
+                bootstrap.Modal.getInstance(authModal).hide();
+            }
+
+            // Reload dashboard data
+            loadDashboardData();
+            loadUsers();
+            loadTenants();
+            loadRoles();
+            loadPlaces();
+            loadLogs();
+
+            // Reset button state
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        }
+
+        // Update user info in UI
+        function updateUserInfo(user) {
+            // Add user info to navbar if not already present
+            if (!document.getElementById('user-dropdown')) {
+                // Wait for the shared header to be loaded
+                setTimeout(() => {
+                    const navbarNav = document.querySelector('.navbar-nav.ms-auto');
+                    if (navbarNav) {
+                        const userDropdownHtml = `
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="user-dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="avatar-mini me-1">A</span>
+                                    <span class="user-name">Admin</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="user-dropdown">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i>API Keys</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                                </ul>
+                            </li>
+                        `;
+                        navbarNav.insertAdjacentHTML('beforeend', userDropdownHtml);
+
+                        // Add logout event listener
+                        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+                    }
+                }, 500); // Give time for the shared header to load
+            }
+        }
+
+        // Handle logout
+        function handleLogout(event) {
+            event.preventDefault();
+
+            // Clear token
+            localStorage.removeItem('auth_token');
+
+            // Reload page
+            window.location.reload();
+        }
+
+        // Load dashboard data
+        function loadDashboardData() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            // Fetch dashboard statistics
+            fetch('/api/v3/admin_dashboard/stats', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch dashboard stats');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dashboard stats:', data);
+                    // Update statistics cards
+                    document.getElementById('total-users').textContent = data.users_count || 0;
+                    document.getElementById('active-tenants').textContent = data.tenants_count || 0;
+                    document.getElementById('total-roles').textContent = data.roles_count || 0;
+                    document.getElementById('total-places').textContent = data.places_count || 0;
+                    document.getElementById('active-users').textContent = data.active_users_count || 0;
+
+                    // Update recent activity
+                    const recentActivityList = document.getElementById('recent-activity-list');
+                    recentActivityList.innerHTML = '';
+
+                    if (data.recent_logins && data.recent_logins.length > 0) {
+                        data.recent_logins.forEach(login => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            const timestamp = login.last_login ? new Date(login.last_login).toLocaleString() : 'Unknown';
+                            li.innerHTML = `<strong>${login.email || 'Unknown user'}</strong> logged in at ${timestamp}`;
+                            recentActivityList.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = 'No recent activity';
+                        recentActivityList.appendChild(li);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching dashboard stats:', error);
+                    // Show error message
+                    showErrorToast('Failed to load dashboard statistics. Please try again later.');
+                });
+        }
+
+        // Load users
+        function loadUsers() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            // Show loading state
+            document.getElementById('users-loading').style.display = 'block';
+            document.getElementById('users-empty').style.display = 'none';
+
+            // Clear existing rows
+            const tbody = document.querySelector('#users-table tbody');
+            tbody.innerHTML = '';
+
+            // Fetch users - use profiles endpoint instead of users
+            fetch('/api/v3/admin_dashboard/profiles', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load users');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Users data:', data);
+                    // Hide loading
+                    document.getElementById('users-loading').style.display = 'none';
+
+                    if (data.length === 0) {
+                        document.getElementById('users-empty').style.display = 'block';
+                        return;
+                    }
+
+                    // Populate table
+                    data.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>
+                            <div class="user-info">
+                                <div class="avatar">${user.name ? user.name.charAt(0).toUpperCase() : 'U'}</div>
+                                <div class="user-details">
+                                    <p class="user-name">${user.name || 'N/A'}</p>
+                                    <p class="user-email">${user.email}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${user.role || 'User'}</td>
+                        <td>${user.tenant_name || 'N/A'}</td>
+                        <td><span class="status-badge ${user.active ? 'status-active' : 'status-inactive'}">${user.active ? 'Active' : 'Inactive'}</span></td>
+                        <td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary edit-user" data-user-id="${user.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-user" data-user-id="${user.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Add event listeners
+                    document.querySelectorAll('.edit-user').forEach(btn => {
+                        btn.addEventListener('click', () => editUser(btn.getAttribute('data-user-id')));
+                    });
+
+                    document.querySelectorAll('.delete-user').forEach(btn => {
+                        btn.addEventListener('click', () => deleteUser(btn.getAttribute('data-user-id')));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                    document.getElementById('users-loading').style.display = 'none';
+                    showErrorToast('Failed to load users');
+                });
+        }
+
+        // Load tenants
+        function loadTenants() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            // Show loading state
+            document.getElementById('tenants-loading').style.display = 'block';
+            document.getElementById('tenants-empty').style.display = 'none';
+
+            // Clear existing rows
+            const tbody = document.querySelector('#tenants-table tbody');
+            tbody.innerHTML = '';
+
+            // Fetch tenants
+            fetch('/api/v3/admin_dashboard/tenants', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load tenants');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Tenants data:', data);
+                    // Hide loading
+                    document.getElementById('tenants-loading').style.display = 'none';
+
+                    if (data.length === 0) {
+                        document.getElementById('tenants-empty').style.display = 'block';
+                        return;
+                    }
+
+                    // Populate table
+                    data.forEach(tenant => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${tenant.name || 'N/A'}</td>
+                        <td>${tenant.id || 'N/A'}</td>
+                        <td>${tenant.users_count || 0}</td>
+                        <td><span class="status-badge ${tenant.status === 'active' ? 'status-active' : 'status-inactive'}">${tenant.status || 'Inactive'}</span></td>
+                        <td>${tenant.created_at ? new Date(tenant.created_at).toLocaleString() : 'Unknown'}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary edit-tenant" data-tenant-id="${tenant.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-tenant" data-tenant-id="${tenant.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Add event listeners
+                    document.querySelectorAll('.edit-tenant').forEach(btn => {
+                        btn.addEventListener('click', () => editTenant(btn.getAttribute('data-tenant-id')));
+                    });
+
+                    document.querySelectorAll('.delete-tenant').forEach(btn => {
+                        btn.addEventListener('click', () => deleteTenant(btn.getAttribute('data-tenant-id')));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading tenants:', error);
+                    document.getElementById('tenants-loading').style.display = 'none';
+                    showErrorToast('Failed to load tenants');
+                });
+        }
+
+        // Load roles
+        function loadRoles() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            // Show loading state
+            document.getElementById('roles-loading').style.display = 'block';
+            document.getElementById('roles-empty').style.display = 'none';
+
+            // Clear existing rows
+            const tbody = document.querySelector('#roles-table tbody');
+            tbody.innerHTML = '';
+
+            // Fetch roles
+            fetch('/api/v3/role_based_access_control/roles', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load roles');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Roles data:', data);
+                    // Hide loading
+                    document.getElementById('roles-loading').style.display = 'none';
+
+                    if (data.length === 0) {
+                        document.getElementById('roles-empty').style.display = 'block';
+                        return;
+                    }
+
+                    // Populate table
+                    data.forEach(role => {
+                        const row = document.createElement('tr');
+
+                        // Format permissions as badges
+                        let permissionsBadges = '';
+                        if (role.permissions && role.permissions.length > 0) {
+                            permissionsBadges = role.permissions.map(perm =>
+                                `<span class="badge bg-primary me-1">${perm}</span>`
+                            ).join('');
+                        } else {
+                            permissionsBadges = '<span class="text-muted">No permissions</span>';
+                        }
+
+                        row.innerHTML = `
+                        <td>${role.name || 'N/A'}</td>
+                        <td>${role.description || 'No description'}</td>
+                        <td>${role.users_count || 0}</td>
+                        <td>${permissionsBadges}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary edit-role" data-role-id="${role.name}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-role" data-role-id="${role.name}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Add event listeners
+                    document.querySelectorAll('.edit-role').forEach(btn => {
+                        btn.addEventListener('click', () => editRole(btn.getAttribute('data-role-id')));
+                    });
+
+                    document.querySelectorAll('.delete-role').forEach(btn => {
+                        btn.addEventListener('click', () => deleteRole(btn.getAttribute('data-role-id')));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading roles:', error);
+                    document.getElementById('roles-loading').style.display = 'none';
+                    showErrorToast('Failed to load roles');
+                });
+        }
+
+        // Load places
+        function loadPlaces() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            // Show loading state
+            document.getElementById('places-loading').style.display = 'block';
+            document.getElementById('places-empty').style.display = 'none';
+
+            // Clear existing rows
+            const tbody = document.querySelector('#places-table tbody');
+            tbody.innerHTML = '';
+
+            // For now, just show a message that places are not implemented yet
+            document.getElementById('places-loading').style.display = 'none';
+            document.getElementById('places-empty').style.display = 'block';
+            document.getElementById('places-empty').innerHTML = '<i class="fas fa-info-circle me-2"></i>Places functionality is not implemented yet.';
+        }
+
+        // Load logs
+        function loadLogs() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+
+            // Show loading state
+            document.getElementById('logs-loading').style.display = 'block';
+            document.getElementById('logs-empty').style.display = 'none';
+
+            // Clear existing rows
+            const tbody = document.querySelector('#logs-table tbody');
+            tbody.innerHTML = '';
+
+            // For now, just show a message that logs are not implemented yet
+            document.getElementById('logs-loading').style.display = 'none';
+            document.getElementById('logs-empty').style.display = 'block';
+            document.getElementById('logs-empty').innerHTML = '<i class="fas fa-info-circle me-2"></i>Logs functionality is not implemented yet.';
+        }
+
+        // Placeholder functions for entity operations
+        function editUser(userId) {
+            console.log('Edit user:', userId);
+            showErrorToast('Edit user functionality is not implemented yet.');
+        }
+
+        function deleteUser(userId) {
+            console.log('Delete user:', userId);
+            showErrorToast('Delete user functionality is not implemented yet.');
+        }
+
+        function editTenant(tenantId) {
+            console.log('Edit tenant:', tenantId);
+            showErrorToast('Edit tenant functionality is not implemented yet.');
+        }
+
+        function deleteTenant(tenantId) {
+            console.log('Delete tenant:', tenantId);
+            showErrorToast('Delete tenant functionality is not implemented yet.');
+        }
+
+        function editRole(roleId) {
+            console.log('Edit role:', roleId);
+            showErrorToast('Edit role functionality is not implemented yet.');
+        }
+
+        function deleteRole(roleId) {
+            console.log('Delete role:', roleId);
+            showErrorToast('Delete role functionality is not implemented yet.');
+        }
+
+        // Modal functions for adding/editing entities
+        function showAddUserModal() {
+            showErrorToast('Add user functionality is not implemented yet.');
+        }
+
+        function showAddTenantModal() {
+            showErrorToast('Add tenant functionality is not implemented yet.');
+        }
+
+        function showAddRoleModal() {
+            showErrorToast('Add role functionality is not implemented yet.');
+        }
+
+        function showAddPlaceModal() {
+            showErrorToast('Add place functionality is not implemented yet.');
+        }
+
+        // Settings functions
+        function saveAuthSettings(event) {
+            event.preventDefault();
+            showErrorToast('Save authentication settings functionality is not implemented yet.');
+        }
+
+        function saveDbSettings(event) {
+            event.preventDefault();
+            showErrorToast('Save database settings functionality is not implemented yet.');
+        }
+
+        function saveApiSettings(event) {
+            event.preventDefault();
+            showErrorToast('Save API settings functionality is not implemented yet.');
+        }
+
+        // Maintenance functions
+        function clearCache() {
+            showErrorToast('Clear cache functionality is not implemented yet.');
+        }
+
+        function backupDatabase() {
+            showErrorToast('Backup database functionality is not implemented yet.');
+        }
+
+        function confirmSystemReset() {
+            showErrorToast('System reset functionality is not implemented yet.');
+        }
+
+        // Helper functions
+        function showErrorToast(message) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-exclamation-circle me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+
+            // Create toast container if it doesn't exist
+            if (!document.querySelector('.toast-container')) {
+                const toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toastContainer = document.querySelector('.toast-container');
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+            const toastElement = toastContainer.querySelector('.toast:last-child');
+            const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 5000 });
+            toast.show();
+        }
+    </script>
+</body>
+
+</html>

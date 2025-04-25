@@ -1,0 +1,56 @@
+<div class="card">
+    <h2>Sitemap Analyzer</h2>
+    <p>The Sitemap Analyzer service discovers and extracts data from website sitemaps.</p>
+
+    <h3>Endpoints</h3>
+    <div class="endpoint-test">
+        <h4>POST /api/v3/sitemap-analyzer/analyze</h4>
+        <p>Analyze sitemaps for a single domain</p>
+        <button class="test-endpoint" data-endpoint="sitemap-analyzer">Test Endpoint</button>
+        <div class="example-request">
+            <h5>Example Request:</h5>
+            <div class="code-block">
+                <pre><code class="language-json">
+{
+  "domain": "example.com",
+  "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+  "options": {
+    "follow_robots_txt": true,
+    "extract_urls": true
+  }
+}
+                </code></pre>
+            </div>
+        </div>
+        <div class="example-response">
+            <h5>Example Response:</h5>
+            <div class="code-block">
+                <pre><code class="language-json">
+{
+  "job_id": "sitemap_550e8400e29b41d4a716446655440000",
+  "status": "started",
+  "status_url": "/api/v3/sitemap-analyzer/status/sitemap_550e8400e29b41d4a716446655440000"
+}
+                </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="endpoint-test">
+        <h4>POST /api/v3/sitemap-analyzer/batch</h4>
+        <p>Analyze sitemaps for multiple domains</p>
+        <button class="test-endpoint" data-endpoint="sitemap-analyzer-batch">Test Endpoint</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Email Scanner</h2>
+    <p>The Email Scanner service extracts email addresses from websites.</p>
+
+    <h3>Endpoints</h3>
+    <div class="endpoint-test">
+        <h4>POST /api/v3/email-scanner/scan</h4>
+        <p>Scan a website for email addresses</p>
+        <button class="test-endpoint" data-endpoint="email-scanner">Test Endpoint</button>
+    </div>
+</div>

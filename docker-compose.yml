@@ -1,26 +1,67 @@
-version: '3.8'
-
 services:
   scrapersky:
     build: .
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=development
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SCRAPER_API_KEY=${SCRAPER_API_KEY}
+      # --- External Database Configuration ---
+      # IMPORTANT: This service connects to an EXTERNAL Supabase database.
+      # Database connection details are configured via environment variables below
+      # (typically loaded from a .env file).
+      # This docker-compose file DOES NOT manage a local database service.
+      - DATABASE_URL=${DATABASE_URL}
       - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_POOLER_HOST=${SUPABASE_POOLER_HOST}
+      - SUPABASE_POOLER_PORT=${SUPABASE_POOLER_PORT}
+      - SUPABASE_POOLER_USER=${SUPABASE_POOLER_USER}
       - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
-      - LOG_LEVEL=DEBUG
+      # --- End External Database Configuration ---
+
+      - SCRAPER_API_KEY=${SCRAPER_API_KEY}
+      - DEV_USER_ID=${DEV_USER_ID}
+      - SYSTEM_USER_ID=${SYSTEM_USER_ID}
+      - DEV_TOKEN=${DEV_TOKEN}
+      - GOOGLE_MAPS_API_KEY=AIzaSyDjLU-N9dvnP05OMWPgcuaZZnSDb-CrKBk
+      - LOG_LEVEL=TRACE
+      - DEV_TOKEN=scraper_sky_2024
+      - SCRAPER_SKY_DEV_MODE=true
+
+      # --- Database Inspection ---
+      # To inspect the database manually, use the db_inspector.py script.
+      # Run from the project root:
+      # python -m scripts.db.db_inspector --help
+
+      # Domain Scheduler Configuration
+      # How often the scheduler runs (in minutes)
+      - DOMAIN_SCHEDULER_INTERVAL_MINUTES=${DOMAIN_SCHEDULER_INTERVAL_MINUTES:-1}
+      # Number of domains processed in each batch
+      - DOMAIN_SCHEDULER_BATCH_SIZE=${DOMAIN_SCHEDULER_BATCH_SIZE:-10}
+      # Maximum concurrent instances of the scheduler
+      - DOMAIN_SCHEDULER_MAX_INSTANCES=${DOMAIN_SCHEDULER_MAX_INSTANCES:-1}
+
+      # Sitemap Scheduler Configuration
+      # How often the scheduler runs (in minutes)
+      - SITEMAP_SCHEDULER_INTERVAL_MINUTES=${SITEMAP_SCHEDULER_INTERVAL_MINUTES:-1}
+      # Number of sitemaps processed in each batch
+      - SITEMAP_SCHEDULER_BATCH_SIZE=${SITEMAP_SCHEDULER_BATCH_SIZE:-20}
+      # Maximum concurrent instances of the scheduler
+      - SITEMAP_SCHEDULER_MAX_INSTANCES=${SITEMAP_SCHEDULER_MAX_INSTANCES:-1}
+
+      # --- Debug/Audit Settings ---
+      - ENABLE_IMPORT_TRACING=true # Set to true to disable reload and enable import logging
+      - DB_CONNECTION_TIMEOUT=60 # Increase connection/command timeout to 60s
+
     volumes:
       - ./static:/app/static:ro
       - ./src:/app/src:ro
       - ./.env:/app/.env:ro
+      - ./scripts:/app/scripts:ro
+      - ./tools:/app/tools:ro
+      - ./run_server.py:/app/run_server.py:ro
+      - ./logs:/app/logs:rw
+    command: python run_server.py
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -1,0 +1,276 @@
+<div class="card">
+    <h2>Developer Reference</h2>
+    <p>This section provides essential reference information for developers working on the ScraperSky application.</p>
+
+    <h3>Authentication Implementation</h3>
+    <div class="code-block">
+        <pre><code class="language-python">
+# IMPORTANT: Authentication Headers Format
+# The correct format for authentication headers is:
+headers = {
+    "Authorization": f"Bearer {api_key_or_jwt_token}",  # NOT "ApiKey" prefix!
+    "Content-Type": "application/json"
+}
+
+# Example with API key (for development)
+headers = {
+    "Authorization": f"Bearer scraper_sky_2024",
+    "Content-Type": "application/json"
+}
+
+# Example with JWT token (for production)
+headers = {
+    "Authorization": f"Bearer {jwt_token}",
+    "Content-Type": "application/json"
+}
+        </code></pre>
+    </div>
+
+    <h4>Authentication Implementation Details</h4>
+    <ul>
+        <li><strong>Location:</strong> <code>src/auth/jwt_auth.py</code></li>
+        <li><strong>Key Function:</strong> <code>get_current_user()</code> - Extracts user from JWT or API key</li>
+        <li><strong>API Key Fallback:</strong> Uses <code>scraper_sky_2024</code> as default development API key</li>
+        <li><strong>Header Format:</strong> Must use <code>Bearer</code> prefix, not <code>ApiKey</code></li>
+        <li><strong>JWT Secret:</strong> Configured via <code>SUPABASE_JWT_SECRET</code> environment variable</li>
+    </ul>
+
+    <div class="code-block">
+        <pre><code class="language-python">
+# From src/auth/jwt_auth.py - How authentication is implemented
+async def get_current_user(request: Request = None, authorization: str = Header(None)):
+    """
+    Get the current user from the JWT token or API key.
+    This is the main authentication function used throughout the application.
+    """
+    # Start with default user info
+    user_info = {"id": None, "email": None, "name": None, "tenant_id": None}
+
+    # Extract API key or JWT token
+    if authorization:
+        if authorization.startswith("Bearer "):
+            token = authorization.replace("Bearer ", "")
+
+            # Check if it's the API key
+            api_key = os.getenv("SCRAPER_API_KEY", "scraper_sky_2024")
+            if token == api_key:
+                # API key authentication
+                logger.info("Using API key authentication")
+                user_info["id"] = "00000000-0000-0000-0000-000000000000"
+                user_info["email"] = "api@example.com"
+                user_info["name"] = "API User"
+                user_info["tenant_id"] = "00000000-0000-0000-0000-000000000000"
+                return user_info
+
+            # Otherwise, try JWT validation
+            try:
+                # JWT token authentication
+                payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
+                # ... additional JWT validation logic ...
+                return user_info
+            except Exception as e:
+                logger.error(f"JWT validation error: {str(e)}")
+                raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
+    # No valid authentication
+    raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        </code></pre>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Database Connections</h2>
+    <h3>Database Connection Implementation</h3>
+    <div class="code-block">
+        <pre><code class="language-python">
+# IMPORTANT: Database Connection Pattern
+# The correct pattern for database connections is:
+
+# 1. Using the async_db connection pool:
+from ..db.async_sb_connection import async_db
+
+async def my_database_function():
+    try:
+        async with async_db.get_connection() as conn:
+            # Execute queries with the connection
+            result = await conn.fetchval("SELECT 1")
+            # Use parameterized queries for safety
+            data = await conn.fetch("SELECT * FROM my_table WHERE id = $1", some_id)
+            return data
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        raise
+        </code></pre>
+    </div>
+
+    <h4>Database Connection Details</h4>
+    <ul>
+        <li><strong>Connection Pool:</strong> <code>src/db/async_sb_connection.py</code> - Manages database connections</li>
+        <li><strong>Query Methods:</strong>
+            <ul>
+                <li><code>fetch()</code> - Returns multiple rows</li>
+                <li><code>fetchval()</code> - Returns a single value</li>
+                <li><code>fetchrow()</code> - Returns a single row</li>
+                <li><code>execute()</code> - Executes a query without returning results</li>
+            </ul>
+        </li>
+        <li><strong>Always use:</strong> Parameterized queries with <code>$1</code>, <code>$2</code>, etc. placeholders</li>
+        <li><strong>Always include:</strong> Proper error handling with try/except blocks</li>
+        <li><strong>Always include:</strong> Tenant isolation in queries where applicable</li>
+    </ul>
+
+    <h3>Database Schema Handler</h3>
+    <div class="code-block">
+        <pre><code class="language-python">
+# Using the SitemapDBHandler for database operations
+from ..db.sitemap_handler import SitemapDBHandler
+
+async def my_function():
+    sitemap_handler = SitemapDBHandler()
+
+    # Get table information
+    tables = await sitemap_handler.get_table_info()
+
+    # Other database operations
+    # ...
+        </code></pre>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Common Patterns</h2>
+
+    <h3>Tenant Isolation</h3>
+    <div class="code-block">
+        <pre><code class="language-python">
+# IMPORTANT: Tenant Isolation Pattern
+# Always include tenant_id in database queries for proper isolation
+
+# Example function with tenant isolation
+async def get_data_for_tenant(tenant_id: str):
+    try:
+        async with async_db.get_connection() as conn:
+            # Always include tenant_id in WHERE clause
+            data = await conn.fetch(
+                "SELECT * FROM my_table WHERE tenant_id = $1",
+                tenant_id
+            )
+            return data
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        raise
+        </code></pre>
+    </div>
+
+    <h3>Background Tasks</h3>
+    <div class="code-block">
+        <pre><code class="language-python">
+# IMPORTANT: Background Task Pattern
+# Use FastAPI's BackgroundTasks for asynchronous processing
+
+from fastapi import BackgroundTasks
+
+@router.post("/process")
+async def process_data(
+    request: MyRequest,
+    background_tasks: BackgroundTasks,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    # Create a job
+    job_id = f"job_{uuid.uuid4()}"
+
+    # Add task to background
+    background_tasks.add_task(
+        process_in_background,
+        job_id=job_id,
+        data=request.data,
+        tenant_id=current_user.get("tenant_id")
+    )
+
+    # Return job ID immediately
+    return {
+        "job_id": job_id,
+        "status": "started",
+        "status_url": f"/api/v3/my-endpoint/status/{job_id}"
+    }
+        </code></pre>
+    </div>
+
+    <h3>Error Handling</h3>
+    <div class="code-block">
+        <pre><code class="language-python">
+# IMPORTANT: Error Handling Pattern
+# Use standardized error handling throughout the application
+
+# Example with proper error handling
+try:
+    # Attempt operation
+    result = await some_function()
+    return result
+except ValueError as e:
+    # Handle specific errors
+    logger.warning(f"Invalid value: {str(e)}")
+    raise HTTPException(status_code=400, detail=f"Invalid value: {str(e)}")
+except Exception as e:
+    # Handle unexpected errors
+    logger.error(f"Unexpected error: {str(e)}")
+    raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        </code></pre>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Environment Configuration</h2>
+    <p>Key environment variables used throughout the application:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Variable</th>
+                <th>Purpose</th>
+                <th>Default</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SUPABASE_URL</td>
+                <td>Supabase API URL</td>
+                <td>None (required in production)</td>
+            </tr>
+            <tr>
+                <td>SUPABASE_KEY</td>
+                <td>Supabase API key</td>
+                <td>None (required in production)</td>
+            </tr>
+            <tr>
+                <td>SUPABASE_JWT_SECRET</td>
+                <td>JWT validation secret</td>
+                <td>None (required in production)</td>
+            </tr>
+            <tr>
+                <td>POSTGRES_HOST</td>
+                <td>Database host</td>
+                <td>"db" (Docker service name)</td>
+            </tr>
+            <tr>
+                <td>POSTGRES_DB</td>
+                <td>Database name</td>
+                <td>"postgres"</td>
+            </tr>
+            <tr>
+                <td>POSTGRES_USER</td>
+                <td>Database user</td>
+                <td>"postgres"</td>
+            </tr>
+            <tr>
+                <td>POSTGRES_PASSWORD</td>
+                <td>Database password</td>
+                <td>"postgres"</td>
+            </tr>
+            <tr>
+                <td>SCRAPER_API_KEY</td>
+                <td>API key for development</td>
+                <td>"scraper_sky_2024"</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

@@ -4,36 +4,70 @@ Main FastAPI Application
 This module is the entry point for the FastAPI application and handles
 the setup of all routes, middleware, and extensions.
 """
-import os
-import logging
 import inspect
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+import logging
+import os
+
+# --- Logging Setup (Must be first) ---
+from .config.logging_config import setup_logging
+
+setup_logging()
+
+# -------------------------------------
+
+from contextlib import asynccontextmanager
+from typing import Any, Coroutine, Dict, List
+
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.routing import APIRoute  # Import APIRoute
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.routing import Route
-from typing import Any, Dict, Coroutine, List
-from contextlib import asynccontextmanager  # Add this import
 
-# Import routers
-from .routers import (
-    # RBAC routers removed
-    google_maps_router,
-    modernized_sitemap_router,
-    batch_page_scraper_router,
-    modernized_page_scraper_router,
-    dev_tools_router,
-    db_portal_router,
-    profile_router
+from .health.db_health import check_database_connection
+from .routers.batch_page_scraper import router as batch_page_scraper_api_router
+from .routers.batch_sitemap import router as batch_sitemap_api_router
+from .routers.db_portal import router as db_portal_api_router
+from .routers.dev_tools import router as dev_tools_api_router
+from .routers.domains import (
+    router as domains_api_router,  # Added import for domains router
 )
 
-from .routers.sqlalchemy import routers as sqlalchemy_routers  # Import SQLAlchemy routers
+# Import routers - Refactored to import the router instance directly
+from .routers.google_maps_api import router as google_maps_api_router
+from .routers.local_businesses import (
+    router as local_businesses_api_router,  # Import the new router instance
+)
+from .routers.modernized_page_scraper import (
+    router as modernized_page_scraper_api_router,
+)
+from .routers.modernized_sitemap import router as modernized_sitemap_api_router
+from .routers.places_staging import router as places_staging_api_router
+from .routers.profile import router as profile_api_router
+from .routers.sitemap_files import (
+    router as sitemap_files_router,  # Import the new sitemap files router
+)
+from .routers.sqlalchemy import (
+    routers as sqlalchemy_routers,  # Import SQLAlchemy routers
+)
+from .routers.email_scanner import router as email_scanner_api_router
+
+# Import the shared scheduler instance and its lifecycle functions
+from .scheduler_instance import scheduler, shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
+# Import the runtime tracer
+from .config.runtime_tracer import start_tracing, stop_tracing, get_loaded_files
+
+# Import only the setup functions now, not shutdown
+from .services.domain_scheduler import setup_domain_scheduler
+from .services.domain_sitemap_submission_scheduler import (
+    setup_domain_sitemap_submission_scheduler,
+)
+from .services.sitemap_scheduler import setup_sitemap_scheduler
 from .session.async_session import get_session
-from .health.db_health import check_database_connection
-from .services.domain_scheduler import setup_domain_scheduler, shutdown_domain_scheduler  # Import the domain scheduler functions
 
 # Standard FastAPI error handling is used instead of custom ErrorService
 # from .services.core.error_service import ErrorService
@@ -42,39 +76,65 @@ from .services.domain_scheduler import setup_domain_scheduler, shutdown_domain_s
 # All tenant isolation code has been removed from the entire application
 # Do not re-add any tenant isolation or tenant middleware
 
-# Configure logging with maximum verbosity
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('logs/app.log')
-    ]
-)
-
 # Create logger for this module
 logger = logging.getLogger(__name__)
 
-# Replace the deprecated event handlers with the lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Lifespan context manager for FastAPI application.
-    This replaces the deprecated @app.on_event handlers.
+    Lifespan event handler for FastAPI application.
+
+    Initializes shared resources like the scheduler and adds jobs.
+    Handles shutdown of shared resources.
+    Starts and stops runtime file tracing.
     """
-    # Startup logic
-    logger.info("Starting up the ScraperSky API")
+    logger.info("Starting up the ScraperSky API - Lifespan Start")
 
-    # Start the domain processing scheduler
-    scheduler = setup_domain_scheduler()
-    logger.info("Domain processing scheduler started")
+    # Start runtime file tracing (early)
+    start_tracing()
 
-    yield  # This is where FastAPI runs and serves requests
+    # Start the shared scheduler instance
+    start_scheduler()
 
-    # Shutdown logic
-    await session_manager.close()
-    shutdown_domain_scheduler()
-    logger.info("Domain processing scheduler shut down")
+    # Add jobs from each module to the shared scheduler
+    logger.info("Adding jobs to the shared scheduler...")
+    try:
+        setup_domain_scheduler()
+    except Exception as e:
+         logger.error(f"Failed to setup Domain scheduler job: {e}", exc_info=True)
+
+    try:
+        setup_sitemap_scheduler()
+    except Exception as e:
+        logger.error(f"Failed to setup Sitemap scheduler job: {e}", exc_info=True)
+
+    try:
+        setup_domain_sitemap_submission_scheduler()
+    except Exception as e:
+        logger.error(f"Failed to setup Domain Sitemap Submission scheduler job: {e}", exc_info=True)
+
+    logger.info("Finished adding jobs to shared scheduler.")
+
+    yield # Application runs here
+
+    logger.info("Shutting down the ScraperSky API - Lifespan End")
+
+    # Stop runtime file tracing (before other shutdown tasks)
+    stop_tracing()
+    final_loaded_files = get_loaded_files()
+    logger.info(f"Total unique /app/src/*.py files loaded: {len(final_loaded_files)}")
+    for file_path in sorted(list(final_loaded_files)):
+         logger.info(f"LOADED_SRC_FILE: {file_path}")
+
+    # Shutdown the shared scheduler instance
+    shutdown_scheduler()
+
+    # Close session manager
+    try:
+        await session_manager.close()
+        logger.info("Session manager closed")
+    except Exception as e:
+        logger.error(f"Error closing session manager: {e}", exc_info=True)
 
 # Update the FastAPI app initialization to use the lifespan context manager
 app = FastAPI(
@@ -99,12 +159,13 @@ app = FastAPI(
 
 # Set up Swagger UI and ReDoc
 from fastapi.openapi.docs import (
-    get_swagger_ui_html,
     get_redoc_html,
+    get_swagger_ui_html,
 )
 
 # Explicitly expose OpenAPI schema (this ensures it's always available)
 from fastapi.openapi.utils import get_openapi
+
 
 @app.get("/api/schema.json", include_in_schema=False)
 async def get_api_schema():
@@ -588,18 +649,17 @@ logger.info("OpenAPI documentation paths should be publicly accessible:")
 for path in ["/docs", "/redoc", "/openapi.json", "/api/docs", "/api/redoc"]:
     logger.info(f"  - {path}")
 
-# Debugging middleware to trace all requests (only in development)
-if settings.environment.lower() in ["development", "dev"]:
-    @app.middleware("http")
-    async def debug_request_middleware(request: Request, call_next):
-        logger.debug(f"Request: {request.method} {request.url.path}")
-        try:
-            response = await call_next(request)
-            logger.debug(f"Response status: {response.status_code}")
-            return response
-        except Exception as e:
-            logger.error(f"Error processing request: {str(e)}")
-            raise
+# Logging middleware
+@app.middleware("http") # RE-ENABLED
+async def debug_request_middleware(request: Request, call_next):
+    logger.debug(f"Request: {request.method} {request.url.path}")
+    try:
+        response = await call_next(request)
+        logger.debug(f"Response status: {response.status_code}")
+        return response
+    except Exception as e:
+        logger.error(f"Error processing request: {str(e)}")
+        raise
 
 # Add SQLAlchemy routers with FastAPI's built-in error handling
 for router in sqlalchemy_routers:
@@ -612,26 +672,44 @@ logger.info("RBAC routers have been removed from the application")
 
 # Legacy router completely removed - using /api/v3/localminer-discoveryscan instead
 
-logger.info("Adding Google Maps router...")
-app.include_router(google_maps_router)
+logger.info("Including API routers...")
 
-logger.info("Adding Sitemap router...")
-app.include_router(modernized_sitemap_router)
+# --- IMPORTANT ROUTER PREFIX CONVENTION --- #
+# When including routers below:
+# 1. If the router DEFINES its own FULL prefix (including '/api/v3'),
+#    include it WITHOUT adding the prefix here.
+#    Example: google_maps_api_router defines '/api/v3/localminer-discoveryscan',
+#             so it's included as `app.include_router(google_maps_api_router)`.
+# 2. If the router only defines the RESOURCE-SPECIFIC part of its prefix
+#    (e.g., '/sitemap'), then include it WITH `prefix="/api/v3"` here.
+#    Example: `app.include_router(modernized_sitemap_api_router, prefix="/api/v3", ...)`
+# *** Failure to follow this causes 404 errors. Double-check prefixes! ***
+# --- END IMPORTANT ROUTER PREFIX CONVENTION --- #
 
-logger.info("Adding Modernized Page Scraper router...")
-app.include_router(modernized_page_scraper_router)
+# Include all routers - Refactored to use imported instances
+app.include_router(google_maps_api_router) # Prefix is defined within the router itself
+app.include_router(modernized_sitemap_api_router) # Correct: Assuming router defines full /api/v3/sitemap prefix
+app.include_router(batch_page_scraper_api_router, prefix="/api/v3", tags=["Batch Page Scraper"])
+app.include_router(modernized_page_scraper_api_router, prefix="/api/v3", tags=["Page Scraper"])
+app.include_router(dev_tools_api_router) # Correct: Router defines its own full prefix
+app.include_router(db_portal_api_router, prefix="/api/v3", tags=["DB Portal"])
+app.include_router(profile_api_router, prefix="/api/v3", tags=["Profile"])
+app.include_router(batch_sitemap_api_router, prefix="/api/v3", tags=["Batch Sitemap"])
+# Explicitly handle trailing slashes for places_staging router
+# app.include_router(places_staging_api_router, prefix="/api/v3", include_in_schema=False) # Original inclusion
+# app.include_router(places_staging_api_router, prefix="/api/v3/") # Include with trailing slash
+# Correct inclusion according to convention doc 23
+app.include_router(places_staging_api_router, prefix="/api/v3")
+app.include_router(local_businesses_api_router) # REMOVED prefix='/api/v3' as it's defined in the router
+app.include_router(domains_api_router, tags=["Domains"]) # Removed prefix="/api/v3"
+app.include_router(sitemap_files_router) # Add the new sitemap files router (prefix defined within it)
+app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"]) # Include the email scanner router
 
-logger.info("Adding Batch Page Scraper router...")
-app.include_router(batch_page_scraper_router)
+# Include SQLAlchemy demo routers if needed
+# for router in sqlalchemy_routers:
+#    app.include_router(router, prefix="/api/v3/sqlalchemy-examples", tags=["SQLAlchemy Examples"])
 
-logger.info("Adding Dev Tools router...")
-app.include_router(dev_tools_router)
-
-logger.info("Adding DB Portal router...")
-app.include_router(db_portal_router)
-
-logger.info("Adding Profile router...")
-app.include_router(profile_router)
+logger.info("API routers included.")
 
 # Log all registered routes
 logger.info("All registered routes:")
@@ -642,10 +720,9 @@ for route in app.routes:
 static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Add custom middleware for cache control
-@app.middleware("http")
+# Middleware to add Cache-Control header
+@app.middleware("http") # RE-ENABLED
 async def add_cache_control_header(request: Request, call_next):
-    """Add cache-control header to responses."""
     response = await call_next(request)
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
@@ -771,6 +848,31 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
             "status_code": 500
         }
     )
+
+# --- TEMPORARY DEBUG ROUTE LIST --- #
+@app.get("/debug/routes")
+def list_routes():
+    url_list = []
+    for route in app.routes:
+        route_info = {
+            "path": getattr(route, "path", "N/A"),
+            "name": getattr(route, "name", "N/A"),
+        }
+        # Check specifically for APIRoute to safely access methods
+        if isinstance(route, APIRoute):
+             route_info["methods"] = list(route.methods)
+        else:
+             route_info["methods"] = []
+        url_list.append(route_info)
+    return url_list
+# ------------------------------------ #
+
+# --- Endpoint to retrieve loaded files --- ADDED
+@app.get("/debug/loaded-src-files", tags=["Debug"], response_model=List[str])
+async def get_loaded_src_files_endpoint():
+    """Returns the list of unique /app/src/*.py files loaded during runtime."""
+    files = get_loaded_files()
+    return sorted(list(files))
 
 if __name__ == "__main__":
     import uvicorn

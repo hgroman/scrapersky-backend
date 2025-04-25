@@ -1,0 +1,19 @@
+[
+  "src/auth/jwt_auth.py",
+  "src/config/settings.py",
+  "src/db/session.py",
+  "src/models.py",
+  "src/models/base.py",
+  "src/models/tenant.py",
+  "src/routers/modernized_page_scraper.py",
+  "src/schemas/job.py",
+  "src/scraper/domain_utils.py",
+  "src/scraper/metadata_extractor.py",
+  "src/services/core/user_context_service.py",
+  "src/services/core/validation_service.py",
+  "src/services/job_service.py",
+  "src/services/page_scraper/domain_processor.py",
+  "src/services/page_scraper/processing_service.py",
+  "src/session/async_session.py",
+  "src/utils/scraper_api.py"
+]

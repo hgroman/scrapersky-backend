@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<!--
+NOTE: Only the "Single Search" tab functionality has been implemented and connected to the
+/api/v3/localminer-discoveryscan endpoints. The other tabs (Batch Search and Results Viewer)
+still need to be implemented in future work.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScraperSky MVP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00e5ff;
+            --primary-dark: #00b8cc;
+            --secondary: #0a1929;
+            --dark: #050d18;
+            --light: #f8f9fa;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        p, li, td, th, label, .form-text {
+            color: #ffffff;
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+
+        .form-col {
+            flex: 1;
+            padding: 0 10px;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 10px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            outline: none;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.25);
+            border-right: 3px solid var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: var(--dark);
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 229, 255, 0.4);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        .form-col {
+            flex: 1;
+            padding: 0 10px;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .button-secondary {
+            background-color: #2196F3;
+        }
+        .button-secondary:hover {
+            background-color: #0b7dda;
+        }
+        .button-danger {
+            background-color: #f44336;
+        }
+        .button-danger:hover {
+            background-color: #d32f2f;
+        }
+        .card {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            color: white;
+        }
+
+        .panel {
+            margin-top: 20px;
+            display: none;
+        }
+        .panel-active {
+            display: block;
+        }
+        .tabs {
+            display: flex;
+            margin-top: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            margin-right: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .tab-active {
+            background-color: rgba(0, 229, 255, 0.1);
+            color: white;
+            font-weight: 600;
+            border-color: var(--primary);
+            box-shadow: 0 -4px 15px rgba(0, 229, 255, 0.15);
+        }
+        #status, #batchStatus {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: none;
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .progress-bar {
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-top: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 0;
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        .placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin-right: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .badge-new {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 2px 8px rgba(0, 229, 255, 0.4);
+        }
+
+        .badge-selected {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+        }
+
+        .badge-maybe {
+            background: linear-gradient(135deg, #FFC107, #FFA000);
+            color: var(--dark);
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
+        }
+        .badge-not_a_fit { background-color: rgba(255, 255, 255, 0.2); }
+        .badge-archived { background-color: rgba(255, 255, 255, 0.1); }
+
+        /* Sitemap/Process Status Badges */
+        .badge-queued {
+            background: linear-gradient(135deg, #ff9800, #fb8c00); /* Orange */
+            color: var(--dark);
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+        }
+        .badge-processing {
+            background: linear-gradient(135deg, #2196F3, #1976D2); /* Blue */
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+        }
+        .badge-complete, .badge-completed { /* Allow both spellings */
+            background: linear-gradient(135deg, #4CAF50, #2E7D32); /* Green (Same as Selected) */
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+        }
+        .badge-error, .badge-failed { /* Allow both spellings */
+            background: linear-gradient(135deg, #f44336, #c62828); /* Red */
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+        }
+        .badge-pending {
+            background: linear-gradient(135deg, #607d8b, #455a64); /* Blue Grey */
+             box-shadow: 0 2px 8px rgba(96, 125, 139, 0.4);
+        }
+
+        .locations-input {
+            min-height: 100px;
+            margin-bottom: 10px;
+        }
+        .batch-location-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .batch-location-status {
+            margin-left: 10px;
+        }
+        .location-success { color: #4CAF50; }
+        .location-error { color: #f44336; }
+        .location-pending { color: #FFC107; }
+
+        .stats-box {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+            min-width: 120px;
+            margin: 0 10px 10px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: rgba(10, 25, 41, 0.95);
+            color: white;
+            text-align: left;
+            border-radius: 10px;
+            padding: 15px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 229, 255, 0.3);
+            line-height: 1.6;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: var(--primary) transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        /* Page header styling */
+        .page-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            padding: 3rem 0;
+            position: relative;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHJlY3QgaWQ9InBhdHRlcm4tYmFja2dyb3VuZCIgd2lkdGg9IjQwMCUiIGhlaWdodD0iNDAwJSIgZmlsbD0idHJhbnNwYXJlbnQiPjwvcmVjdD48Y2lyY2xlIGZpbGw9IiMwMGU1ZmYwNSIgY3g9IjIwIiBjeT0iMjAiIHI9IjEiPjwvY2lyY2xlPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNwYXR0ZXJuKSIgaGVpZ2h0PSIxMDAlIiB3aWR0aD0iMTAwJSI+PC9yZWN0Pjwvc3ZnPg==');
+            opacity: 0.3;
+        }
+
+        .page-header h1 {
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .page-header .lead {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Search history table styling */
+        #searchHistoryList .table {
+            background-color: transparent;
+            color: white;
+        }
+
+        #searchHistoryList .table tr {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        #searchHistoryList .table tr:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        #searchHistoryList .table th {
+            background-color: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
+        }
+
+        #searchHistoryList .table td {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .reuse-search, .view-results {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: rgba(0, 229, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .reuse-search:hover, .view-results:hover {
+            background-color: rgba(0, 229, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* New styles for batch update */
+        .selected-row {
+            background-color: rgba(0, 229, 255, 0.15) !important;
+            border-left: 3px solid var(--primary);
+        }
+        .selected-row:hover {
+            background-color: rgba(0, 229, 255, 0.25) !important;
+        }
+        /* Add style for the domain suggestions dropdown */
+        .suggestions-dropdown {
+            position: absolute;
+            background-color: var(--dark);
+            border: 1px solid var(--primary);
+            border-radius: 0 0 10px 10px;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 20px); /* Match input width within form-col padding */
+            margin-top: -1px; /* Align with bottom of input */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        .suggestion-item {
+            padding: 10px 15px;
+            color: var(--text);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:hover {
+            background-color: rgba(0, 229, 255, 0.1);
+        }
+
+        /* Override for Sitemap Curation table to show all rows */
+        #sitemapCurationPanel .table-container {
+            max-height: none;
+            overflow-y: visible;
+        }
+    </style>
+</head>
+<body>
+    <!-- Shared Header -->
+    <div id="header-placeholder"></div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>ScraperSky MVP</h1>
+            <p class="lead">Back End Development Environment</p>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <div class="tabs">
+            <div class="tab tab-active" data-panel="singleSearch">Single Search</div>
+            <div class="tab" data-panel="stagingEditor">Staging Editor</div>
+            <div class="tab" data-panel="localBusinessCuration">Local Business Curation</div>
+            <div class="tab" data-panel="domainCurationPanel">Domain Curation</div>
+            <div class="tab" data-panel="sitemapCurationPanel">Sitemap Curation</div>
+            <div class="tab" data-panel="batchSearchPanel">Batch Search</div>
+            <div class="tab" data-panel="resultsView">Results Viewer</div>
+        </div>
+
+        <!-- Single Search Panel -->
+        <div id="singleSearch" class="panel panel-active">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Search for Places</h2>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="businessType">Business Type:</label>
+                            <input type="text" id="businessType" placeholder="e.g., ophthalmology, dentist">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="location">Location:</label>
+                            <input type="text" id="location" placeholder="e.g., Houston, TX">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="radius">Radius (km):</label>
+                            <input type="number" id="radius" min="1" max="50" value="10">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="maxResults">Max Results:</label>
+                            <input type="number" id="maxResults" min="1" max="100" value="20">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="tenant">Tenant ID:</label>
+                            <input type="text" id="tenant" value="550e8400-e29b-41d4-a716-446655440000">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="jwt">JWT Token:</label>
+                            <input type="text" id="jwt" placeholder="Enter your JWT token" style="font-family: monospace;" value="scraper_sky_2024">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="searchBtn" class="button-primary">Search Places</button>
+            </div>
+
+            <!-- Add Recent Searches Card -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <h3>Recent Searches</h3>
+                    <button id="refreshHistoryBtn" class="button-secondary">Refresh</button>
+                </div>
+                <div id="searchHistoryList" style="max-height: 200px; overflow-y: auto;">
+                    <p class="placeholder">Loading search history...</p>
+                </div>
+            </div>
+
+            <div id="status" class="card">
+                <h3>Search Status</h3>
+                <div id="statusContent"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staging Editor Panel -->
+        <div id="stagingEditor" class="panel card">
+            <div class="card-header">
+                <h4>Staging Area Data Grid</h4>
+            </div>
+
+            <!-- Placeholder for future filter controls -->
+            <div id="stagingFilterControls" class="mb-3">
+                <!-- Filters will go here (e.g., Status dropdown, search box) -->
+                <p><small>Currently showing places with status 'New'. Filter controls TBD.</small></p>
+            </div>
+
+            <!-- Add a div for status messages -->
+            <div id="stagingStatus" class="alert mt-3" style="display: none;"></div>
+
+            <table class="table table-dark table-striped table-hover" id="stagingTable">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 5%;"><input type="checkbox" id="selectAllStagingCheckbox" title="Select/Deselect All Visible"></th>
+                        <th scope="col" data-field="name">Business Name</th>
+                        <th scope="col" data-field="formatted_address">Address</th>
+                        <th scope="col" data-field="status">Main Status</th>
+                        <th scope="col" data-field="deep_scan_status">Deep Scan Status</th>
+                        <!-- Hidden Place ID column data can be stored on the row/checkbox -->
+                    </tr>
+                </thead>
+                <tbody id="stagingTableBody">
+                    <!-- Staging data rows will be populated here by JavaScript -->
+                    <tr><td colspan="5" class="text-center">Loading staging data...</td></tr>
+                </tbody>
+            </table>
+
+            <div id="stagingPaginationControls" class="d-flex justify-content-between align-items-center mt-3">
+                <span id="stagingPaginationInfo">Page 0 of 0 (0 items)</span>
+                <div>
+                    <button id="stagingPrevBtn" class="btn btn-sm btn-outline-primary" disabled>Previous</button>
+                    <button id="stagingNextBtn" class="btn btn-sm btn-outline-primary" disabled>Next</button>
+                </div>
+            </div>
+
+            <div id="stagingBatchUpdateControls" class="mt-4 p-3 border rounded border-secondary" style="display: none; background-color: rgba(0,0,0,0.2);">
+                 <h5>Batch Update Selected Items</h5>
+                 <div class="row align-items-end">
+                    <div class="col-md-4">
+                         <label for="stagingBatchStatusUpdate">Set Status To:</label>
+                         <select id="stagingBatchStatusUpdate" class="form-select form-select-sm">
+                             <option value="">-- Select Status --</option>
+                             <option value="New">New</option>
+                             <option value="Selected">Selected</option>
+                             <option value="Maybe">Maybe</option>
+                             <option value="Not a Fit">Not a Fit</option>
+                             <option value="Archived">Archived</option>
+                         </select>
+                    </div>
+                    <div class="col-md-5">
+                         <button id="applyStagingBatchUpdate" class="btn btn-primary btn-sm">Update 0 Selected</button>
+                         <button id="clearStagingSelection" class="btn btn-secondary btn-sm ms-2">Clear Selection</button>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Local Business Curation Panel -->
+        <div id="localBusinessCuration" class="panel card">
+            <div class="card-header">
+                <h4>Local Business Curation</h4>
+            </div>
+
+            <!-- Filter controls -->
+            <div id="localBusinessFilterControls" class="mb-3">
+                <div class="row align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label for="localBusinessStatusFilter">Filter by Status:</label>
+                        <select id="localBusinessStatusFilter" class="form-select form-select-sm">
+                            <option value="">-- All Statuses --</option>
+                            <option value="New" selected>New</option>
+                            <option value="Selected">Selected</option>
+                            <option value="Maybe">Maybe</option>
+                            <option value="Not a Fit">Not a Fit</option>
+                            <option value="Archived">Archived</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="localBusinessNameFilter">Search by Business Name:</label>
+                        <input type="text" id="localBusinessNameFilter" class="form-control form-control-sm" placeholder="Enter business name...">
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Apply consistent button styling -->
+                        <div class="d-flex align-items-center justify-content-start h-100"> <!-- Use align-items-center -->
+                           <button id="applyLocalBusinessFilters" class="btn btn-sm btn-outline-primary">Apply Filters</button>
+                           <button id="resetLocalBusinessFilters" class="btn btn-sm btn-outline-secondary ms-2">Reset Filters</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status message area -->
+            <div id="localBusinessStatus" class="alert mt-3" style="display: none;"></div>
+
+            <!-- Data grid table -->
+            <table class="table table-dark table-striped table-hover" id="localBusinessTable">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 5%;"><input type="checkbox" id="selectAllLocalBusinessCheckbox" title="Select/Deselect All Visible"></th>
+                        <th scope="col" data-field="business_name">Business Name</th>
+                        <th scope="col" data-field="full_address">Address</th>
+                        <th scope="col" data-field="website_url">Website</th> <!-- Added Website Header -->
+                        <th scope="col" data-field="status">Status</th>
+                        <th scope="col" data-field="domain_extraction_status">Domain Status</th>
+                    </tr>
+                </thead>
+                <tbody id="localBusinessTableBody">
+                    <!-- Data rows will be populated here by JavaScript -->
+                    <tr><td colspan="6" class="text-center">Loading local businesses...</td></tr> <!-- Adjusted colspan -->
+                </tbody>
+            </table>
+
+            <!-- Pagination controls -->
+            <div id="localBusinessPaginationControls" class="d-flex justify-content-between align-items-center mt-3">
+                <span id="localBusinessPaginationInfo">Page 0 of 0 (0 items)</span>
+                <div>
+                    <button id="localBusinessPrevBtn" class="btn btn-sm btn-outline-primary" disabled>Previous</button>
+                    <button id="localBusinessNextBtn" class="btn btn-sm btn-outline-primary" disabled>Next</button>
+                </div>
+            </div>
+
+            <!-- Batch update controls -->
+            <div id="localBusinessBatchUpdateControls" class="mt-4 p-3 border rounded border-secondary" style="display: none; background-color: rgba(0,0,0,0.2);">
+                <h5>Batch Update Selected Businesses</h5>
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="localBusinessBatchStatusUpdate">Set Status To:</label>
+                        <select id="localBusinessBatchStatusUpdate" class="form-select form-select-sm">
+                            <option value="">-- Select Status --</option>
+                            <option value="New">New</option>
+                            <option value="Selected">Selected</option>
+                            <option value="Maybe">Maybe</option>
+                            <option value="Not a Fit">Not a Fit</option>
+                            <option value="Archived">Archived</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <button id="applyLocalBusinessBatchUpdate" class="btn btn-primary btn-sm">Update 0 Selected</button>
+                        <button id="clearLocalBusinessSelection" class="btn btn-secondary btn-sm ms-2">Clear Selection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domain Curation Panel (NEW) -->
+        <!-- Note: ID matches the data-panel attribute in the tab button -->
+        <div id="domainCurationPanel" class="panel card"> <!-- ID changed to match data-panel -->
+            <div class="card-header">
+                <h4>Domain Curation for Sitemap Analysis</h4>
+            </div>
+
+            <!-- Filter controls -->
+            <div id="domainCurationFilterControls" class="mb-3">
+                <div class="row align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label for="domainCurationStatusFilter">Filter by Sitemap Curation Status:</label>
+                        <select id="domainCurationStatusFilter" class="form-select form-select-sm">
+                            <option value="">-- All Statuses --</option>
+                            <option value="New" selected>New</option> <!-- Default filter -->
+                            <option value="Selected">Selected</option>
+                            <option value="Maybe">Maybe</option>
+                            <option value="Not a Fit">Not a Fit</option>
+                            <option value="Archived">Archived</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="domainCurationNameFilter">Search by Domain Name:</label>
+                        <input type="text" id="domainCurationNameFilter" class="form-control form-control-sm" placeholder="Enter domain name...">
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Apply consistent button styling -->
+                        <div class="d-flex align-items-center justify-content-start h-100"> <!-- Use align-items-center -->
+                           <button id="applyDomainCurationFilters" class="btn btn-sm btn-outline-primary">Apply Filters</button>
+                           <button id="resetDomainCurationFilters" class="btn btn-sm btn-outline-secondary ms-2">Reset Filters</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status message area -->
+            <div id="domainCurationStatus" class="alert mt-3" style="display: none;"></div>
+
+            <!-- Data grid table -->
+            <table class="table table-dark table-striped table-hover" id="domainCurationTable">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width: 5%;"><input type="checkbox" id="selectAllDomainCurationCheckbox" title="Select/Deselect All Visible"></th>
+                        <th scope="col" data-field="domain">Domain</th>
+                        <th scope="col" data-field="sitemap_curation_status">Sitemap Curation Status</th>
+                        <th scope="col" data-field="sitemap_analysis_status">Sitemap Analysis Status</th>
+                        <th scope="col" data-field="sitemap_analysis_error">Analysis Error</th>
+                        <th scope="col" data-field="updated_at">Updated At</th>
+                    </tr>
+                </thead>
+                <tbody id="domainCurationTableBody">
+                    <!-- Data rows will be populated here by JavaScript -->
+                    <tr><td colspan="6" class="text-center">Loading domains...</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination controls -->
+            <div id="domainCurationPaginationControls" class="d-flex justify-content-between align-items-center mt-3">
+                <span id="domainCurationPaginationInfo">Page 0 of 0 (0 items)</span>
+                <div>
+                    <button id="domainCurationPrevBtn" class="btn btn-sm btn-outline-primary" disabled>Previous</button>
+                    <button id="domainCurationNextBtn" class="btn btn-sm btn-outline-primary" disabled>Next</button>
+                </div>
+            </div>
+
+            <!-- Batch update controls -->
+            <div id="domainCurationBatchUpdateControls" class="mt-4 p-3 border rounded border-secondary" style="display: none; background-color: rgba(0,0,0,0.2);">
+                <h5>Batch Update Selected Domains (Sitemap Curation)</h5>
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="domainCurationBatchStatusUpdate">Set Status To:</label>
+                        <select id="domainCurationBatchStatusUpdate" class="form-select form-select-sm">
+                            <option value="">-- Select Status --</option>
+                            <option value="New">New</option>
+                            <option value="Selected">Selected (Queue for Sitemap)</option> <!-- Clarify action -->
+                            <option value="Maybe">Maybe</option>
+                            <option value="Not a Fit">Not a Fit</option>
+                            <option value="Archived">Archived</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <button id="applyDomainCurationBatchUpdateBtn" class="btn btn-primary btn-sm">Update 0 Selected</button>
+                        <button id="clearDomainCurationSelection" class="btn btn-secondary btn-sm ms-2">Clear Selection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END Domain Curation Panel -->
+
+        <!-- Sitemap Curation Panel -->
+        <div id="sitemapCurationPanel" class="panel card">
+            <div class="card-header">
+                <h3>Sitemap Deep Scrape Curation</h3>
+                <small>Review discovered sitemaps and select them for deep scraping.</small>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="form-row">
+                    <div class="form-col" style="position: relative;"> <!-- Added position: relative for dropdown positioning -->
+                        <label for="sitemapDomainFilter">Filter by Domain:</label>
+                        <input type="text" id="sitemapDomainFilter" placeholder="Start typing domain name...">
+                        <!-- Container for suggestions -->
+                        <div id="sitemapDomainSuggestions" class="suggestions-dropdown" style="display: none;"></div>
+                        <input type="hidden" id="sitemapDomainIdFilter"> <!-- Hidden input to store selected domain ID -->
+                        <!-- Add suggestions container if using datalist or custom JS dropdown -->
+                    </div>
+                    <div class="form-col">
+                        <label for="sitemapDeepCurationStatusFilter">Filter by Curation Status:</label>
+                        <select id="sitemapDeepCurationStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="New">New</option>
+                            <option value="Selected">Selected</option>
+                            <option value="Maybe">Maybe</option>
+                            <option value="Not a Fit">Not a Fit</option>
+                            <option value="Archived">Archived</option>
+                        </select>
+                    </div>
+                     <div class="form-col">
+                        <label for="sitemapUrlFilter">URL Contains:</label>
+                        <input type="text" id="sitemapUrlFilter" placeholder="e.g., blog, products">
+                    </div>
+                </div>
+                 <div class="form-row">
+                     <div class="form-col">
+                        <label for="sitemapTypeFilter">Sitemap Type:</label>
+                        <select id="sitemapTypeFilter">
+                            <option value="">All Types</option>
+                            <option value="standard">Standard</option>
+                            <option value="index">Index</option>
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                            <option value="news">News</option>
+                            <!-- Add other types as needed -->
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="sitemapDiscoveryMethodFilter">Discovery Method:</label>
+                        <select id="sitemapDiscoveryMethodFilter">
+                            <option value="">All Methods</option>
+                            <option value="robots_txt">Robots.txt</option>
+                            <option value="common_path">Common Path</option>
+                            <option value="manual">Manual</option>
+                            <!-- Add other methods as needed -->
+                        </select>
+                    </div>
+                    <!-- Group buttons and align them -->
+                    <div class="form-col d-flex align-items-center justify-content-start pt-3"> <!-- Use align-items-center -->
+                        <button id="sitemapApplyFiltersBtn" class="btn btn-sm btn-outline-primary">Apply Filters</button>
+                        <button id="sitemapResetFiltersBtn" class="btn btn-sm btn-outline-secondary ms-2">Reset Filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Message Area -->
+            <div id="sitemapStatusMessage" class="alert" style="display: none;"></div>
+
+            <!-- BEGIN: Sitemap Curation Table -->
+            <div class="table-container" style="margin-top: 20px;">
+                <table id="sitemapCurationTable" class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 5%;"><label for="sitemapSelectAllCheckbox" class="visually-hidden">Select All</label><input type="checkbox" id="sitemapSelectAllCheckbox" class="form-check-input" title="Select/Deselect all visible items"></th>
+                            <th scope="col" style="width: 30%;">Sitemap URL</th>
+                            <th scope="col" style="width: 20%;">Domain Name</th>
+                            <th scope="col" style="width: 12%;">Curation Status</th>
+                            <th scope="col" style="width: 12%;">Process Status</th>
+                            <th scope="col" style="width: 12%;">Original Status</th>
+                            <th scope="col" style="width: 9%;">Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sitemapCurationTableBody">
+                        <!-- Rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- END: Sitemap Curation Table -->
+
+            <!-- BEGIN: Sitemap Curation Pagination -->
+            <div id="sitemapPaginationControls" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <button id="sitemapPrevPageBtn" class="btn btn-sm btn-outline-secondary" disabled aria-label="Previous Page">Previous</button>
+                <span id="sitemapPaginationInfo" class="text-muted" aria-live="polite">Page 1 of 1 (0 items)</span>
+                <button id="sitemapNextPageBtn" class="btn btn-sm btn-outline-secondary" disabled aria-label="Next Page">Next</button>
+            </div>
+            <!-- END: Sitemap Curation Pagination -->
+
+            <!-- BEGIN: Sitemap Curation Batch Update Section -->
+            <div id="sitemapBatchUpdateSection" style="display: none; margin-top: 20px; padding: 15px; background-color: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                <label for="sitemapBatchStatusSelect" class="form-label">Set Curation Status for Selected:</label>
+                <div class="d-flex align-items-center">
+                    <select id="sitemapBatchStatusSelect" class="form-select form-select-sm me-3" style="flex-grow: 1;">
+                        <option value="">-- Select Status --</option>
+                        <option value="New">New</option>
+                        <option value="Selected">Selected</option>
+                        <option value="Maybe">Maybe</option>
+                        <option value="Not a Fit">Not a Fit</option>
+                        <option value="Archived">Archived</option>
+                    </select>
+                    <button id="sitemapBatchUpdateBtn" class="btn btn-sm btn-outline-primary me-2">Update 0 Selected</button>
+                    <button id="sitemapClearSelectionBtn" class="btn btn-sm btn-outline-secondary">Clear Selection</button>
+                </div>
+            </div>
+            <!-- END: Sitemap Curation Batch Update Section -->
+
+        </div>
+
+        <!-- Batch Search Panel -->
+        <div id="batchSearchPanel" class="panel card">
+            <div class="card-header">
+                <h2>Batch Search Multiple Locations</h2>
+            </div>
+
+            <div class="form-group">
+                <label for="batchLocations">Locations (one per line):</label>
+                <textarea id="batchLocations" class="locations-input" placeholder="e.g., Houston, TX&#10;Seattle, WA&#10;Miami, FL"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="batchBusinessType">Business Type:</label>
+                        <input type="text" id="batchBusinessType" placeholder="e.g., ophthalmology, dentist">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="batchRadius">Radius (km):</label>
+                        <input type="number" id="batchRadius" min="1" max="50" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="batchConcurrent">Max Concurrent Searches:</label>
+                        <input type="number" id="batchConcurrent" min="1" max="5" value="3">
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="form-group">
+                        <label for="batchTenant">Tenant ID:</label>
+                        <input type="text" id="batchTenant" value="550e8400-e29b-41d4-a716-446655440000">
+                    </div>
+                </div>
+            </div>
+
+            <button id="batchSearchBtn" class="button-primary">Start Batch Search</button>
+        </div>
+
+        <!-- Results Viewer Panel -->
+        <div id="resultsView" class="panel">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Places Search Results</h2>
+                    <button id="refreshResultsBtn" class="button-secondary">Refresh Results</button>
+                </div>
+
+                <div class="filter-section">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="filterStatus">Filter by Status:</label>
+                                <select id="filterStatus">
+                                    <option value="">All Statuses</option>
+                                    <option value="New">New</option>
+                                    <option value="Selected">Selected</option>
+                                    <option value="Maybe">Maybe</option>
+                                    <option value="Not a Fit">Not a Fit</option>
+                                    <option value="Archived">Archived</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="filterBusinessType">Filter by Business Type:</label>
+                                <input type="text" id="filterBusinessType" placeholder="e.g., dentist">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="filterLocation">Filter by Location:</label>
+                                <input type="text" id="filterLocation" placeholder="e.g., Seattle">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="sortBy">Sort By:</label>
+                                <select id="sortBy">
+                                    <option value="search_time">Search Time</option>
+                                    <option value="name">Name</option>
+                                    <option value="rating">Rating</option>
+                                    <option value="business_type">Business Type</option>
+                                    <option value="location">Location</option>
+                                    <option value="status">Status</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="sortDir">Sort Direction:</label>
+                                <select id="sortDir">
+                                    <option value="desc">Descending</option>
+                                    <option value="asc">Ascending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label for="resultsLimit">Limit:</label>
+                                <input type="number" id="resultsLimit" min="10" max="1000" value="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="applyFiltersBtn" class="button-primary">Apply Filters</button>
+                </div>
+
+                <div id="resultsStats" class="stats-box" style="display: none;"></div>
+
+                <div class="table-container">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Rating</th>
+                                <th>Business Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="pagination" style="margin-top: 15px; text-align: center;">
+                    <button id="prevPageBtn" class="button-secondary" disabled>Previous</button>
+                    <span id="pageInfo">Page 1</span>
+                    <button id="nextPageBtn" class="button-secondary" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div> <!-- End Main Content Container -->
+
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure common functions are loaded and available
+            console.log("Main scraper-sky-mvp.html inline script finished setup.");
+        });
+    </script>
+
+    <!-- Shared Utilities - Load BEFORE tab-specific scripts -->
+    <script src="/static/js/google-maps-common.js"></script>
+
+    <!-- Custom Tab Specific Scripts - Load AFTER main logic and common script -->
+    <script src="/static/js/single-search-tab.js"></script>
+    <script src="/static/js/staging-editor-tab.js"></script>
+    <script src="/static/js/local-business-curation-tab.js"></script>
+    <script src="/static/js/domain-curation-tab.js"></script>
+    <script src="/static/js/sitemap-curation-tab.js"></script>
+    <script src="/static/js/batch-search-tab.js"></script>
+    <script src="/static/js/results-viewer-tab.js"></script>
+    <!-- admin-tab.js - Currently no specific JS -->
+    <!-- dev-tools-tab.js - Currently no specific JS -->
+    <!-- api-docs-tab.js - Currently no specific JS -->
+
+</body>
+</html>
