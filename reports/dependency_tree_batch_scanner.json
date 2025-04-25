@@ -1,0 +1,123 @@
+{
+  "feature": "Batch Domain Scanner",
+  "entrypoint": {
+    "type": "frontend",
+    "file": "static/batch-domain-scanner.html",
+    "calls": [
+      {
+        "endpoint": "POST /api/v3/batch_page_scraper/batch",
+        "trigger": "createBatch() JS function"
+      },
+      {
+        "endpoint": "GET /api/v3/batch_page_scraper/batch/{batch_id}/status",
+        "trigger": "getBatchStatus() JS function (polled)"
+      }
+    ]
+  },
+  "backend": {
+    "router": {
+      "file": "src/routers/batch_page_scraper.py",
+      "implements": [
+        "POST /api/v3/batch_page_scraper/batch",
+        "GET /api/v3/batch_page_scraper/batch/{batch_id}/status"
+      ],
+      "dependencies": [
+        "FastAPI", "SQLAlchemy", "logging", "os", "uuid", "datetime",
+        "src.auth.jwt_auth",
+        "src.config.settings",
+        "src.models (BatchRequest, BatchResponse, BatchStatusResponse, DEFAULT_TENANT_ID)",
+        "src.schemas.job (JobStatusResponse)",
+        "src.services.batch.batch_functions",
+        "src.services.batch.batch_processor_service",
+        "src.services.batch.types",
+        "src.services.page_scraper",
+        "src.session.async_session",
+        "src.utils.db_helpers"
+      ]
+    },
+    "services": [
+      {
+        "module": "src.services.batch",
+        "files": [
+          {
+            "file": "src.services.batch.batch_processor_service",
+            "used_by": ["src.routers.batch_page_scraper"],
+            "dependencies": ["SQLAlchemy Session", "src.models.BatchJob", "src.services.batch.types", "logging", "uuid", "datetime"]
+          },
+          {
+            "file": "src.services.batch.batch_functions",
+            "used_by": ["src.routers.batch_page_scraper"],
+            "dependencies": ["src.services.page_scraper.domain_processor", "src.models.BatchJob", "src.session.async_session", "src.config.database", "logging", "asyncio"]
+          },
+          {
+            "file": "src.services.batch.types",
+            "used_by": ["batch_processor_service", "batch_functions", "batch_page_scraper"],
+            "dependencies": ["typing", "uuid", "sqlalchemy.ext.asyncio.AsyncSession"]
+          }
+        ]
+      },
+      {
+        "module": "src.services.page_scraper",
+        "files": [
+           {
+             "file": "src.services.page_scraper.domain_processor",
+             "used_by": ["src.services.batch.batch_functions"],
+             "dependencies": ["src.services.page_scraper.processing_service", "src.session.async_session", "src.config.database", "src.models.Domain", "src.models.Job", "logging", "asyncio"]
+           },
+           {
+             "file": "src.services.page_scraper.processing_service",
+             "used_by": ["domain_processor", "batch_page_scraper"],
+             "dependencies": ["src.services.core.validation_service", "src.services.storage.metadata_storage_service", "src.services.job_service", "src.scrapers.metadata_scraper", "src.models.Job", "src.models.Domain", "src.models.Page", "SQLAlchemy Session", "logging", "uuid", "datetime"]
+           }
+        ]
+       },
+       {
+         "module": "src.services.core",
+         "files": [
+           {
+             "file": "src.services.core.validation_service",
+             "used_by": ["src.services.page_scraper.processing_service"],
+             "dependencies": ["urllib.parse", "re", "uuid", "datetime"]
+           },
+           {
+             "file": "src.services.core.db_service",
+             "used_by": ["Imported via src.services.core.__init__"],
+             "dependencies": ["psycopg2", "logging"]
+           },
+           {
+             "file": "src.services.core.user_context_service",
+             "used_by": ["Imported via src.services.core.__init__"],
+             "dependencies": ["os", "uuid", "logging"]
+           }
+         ]
+       }
+    ],
+    "models": [
+      "src/models/batch_job.py",
+      "src/models/job.py",
+      "src/models/domain.py",
+      "src/models/page.py",
+      "src/models/tenant.py",
+      "src/models/api_models.py",
+      "src/schemas/job.py",
+      "src/models/base.py",
+      "src/models/__init__.py"
+    ],
+    "utils": [
+      "src/utils/db_helpers.py",
+      "src/session/async_session.py",
+      "src/auth/jwt_auth.py",
+      "src/config/settings.py",
+      "src.config.database.py"
+    ]
+  },
+  "critical_files_confirmed_needed": [
+    "src/services/batch/batch_functions.py",
+    "src/services/batch/batch_processor_service.py",
+    "src/services/batch/types.py",
+    "src/services/core/db_service.py",
+    "src/services/core/validation_service.py",
+    "src/services/core/user_context_service.py",
+    "src/utils/db_helpers.py"
+  ]
+}

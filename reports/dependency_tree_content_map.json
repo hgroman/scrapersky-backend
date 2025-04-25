@@ -1,0 +1,99 @@
+{
+  "feature": "Content Map (Sitemap Analyzer)",
+  "entrypoint": {
+    "type": "frontend",
+    "file": "static/contentmap.html",
+    "calls": [
+      {
+        "endpoint": "POST /api/v3/sitemap/scan",
+        "trigger": "startSingleAnalysis() JS function",
+        "target_router": "src/routers/modernized_sitemap.py (Likely)"
+      },
+      {
+        "endpoint": "GET /api/v3/sitemap/status/{job_id}",
+        "trigger": "pollAnalysisStatus() JS function",
+        "target_router": "src/routers/modernized_sitemap.py (Likely)"
+      },
+      {
+        "endpoint": "POST /api/v3/batch_page_scraper/batch",
+        "trigger": "startBatchAnalysis() JS function",
+        "status": "Incorrect - Targets page scraper instead of sitemap batch.",
+        "intended_target_router": "src/routers/batch_sitemap.py"
+      },
+      {
+        "endpoint": "GET /api/v3/batch_page_scraper/batch/{batch_id}/status",
+        "trigger": "pollBatchStatus() JS function",
+        "status": "Incorrect - Targets page scraper instead of sitemap batch.",
+        "intended_target_router": "src/routers/batch_sitemap.py"
+      }
+    ]
+  },
+  "backend": {
+    "routers": [
+      {
+        "file": "src/routers/modernized_sitemap.py",
+        "implements": [
+          "POST /api/v3/sitemap/scan",
+          "GET /api/v3/sitemap/status/{job_id}"
+        ],
+        "likely_dependencies": [
+          "FastAPI", "src.auth.jwt_auth", "src.config.settings", "src.models", "src.schemas.job",
+          "src.services.sitemap_service or sitemap_files_service",
+          "src.session.async_session"
+        ]
+      },
+      {
+        "file": "src/routers/batch_sitemap.py",
+        "implements": [
+          "POST /api/v3/batch_sitemap/batch (Intended)",
+          "GET /api/v3/batch_sitemap/batch/{batch_id}/status (Intended)"
+        ],
+        "likely_dependencies": [
+          "FastAPI", "src.auth.jwt_auth", "src.config.settings", "src.models",
+          "src.services.batch",
+          "src.services.sitemap_service or similar",
+          "src.session.async_session"
+        ]
+      }
+    ],
+    "services": [
+      {
+        "module": "src.services.sitemap / src.services.sitemap_files_service",
+        "purpose": "Core sitemap discovery, parsing, storage logic."
+      },
+      {
+        "module": "src.services.batch",
+        "purpose": "Potentially reused for generic batch job creation/tracking."
+      },
+      {
+        "module": "src.services.job_service",
+        "purpose": "Managing Job records."
+      },
+      {
+        "module": "src.services.core",
+        "purpose": "Potential indirect usage for validation, db, context."
+      }
+    ],
+    "models": [
+      "src/models/Job", "src/models/Domain", "src/models/BatchJob",
+      "src/models/SitemapFile", "src/models/SitemapUrl",
+      "src/models/Base", "src/models/Tenant"
+    ],
+    "utils": [
+      "src/session/async_session", "src.auth.jwt_auth", "src.config.settings", "src.config.database"
+    ]
+  },
+  "notes": [
+    "The frontend (contentmap.html) JavaScript for batch analysis needs correction to target the endpoints in batch_sitemap.py instead of batch_page_scraper.py.",
+    "The critical files identified previously (services/batch/*, services/core/*, utils/db_helpers.py) are likely NOT direct dependencies of the sitemap analysis feature itself, but are required because the frontend incorrectly calls batch_page_scraper.py."
+  ],
+  "critical_files_confirmed_needed_by_incorrect_frontend_calls": [
+    "src/services/batch/batch_functions.py",
+    "src/services/batch/batch_processor_service.py",
+    "src/services/batch/types.py",
+    "src/services/core/db_service.py",
+    "src/services/core/validation_service.py",
+    "src/services/core/user_context_service.py",
+    "src/utils/db_helpers.py"
+  ]
+}

@@ -104,7 +104,9 @@ async def scan_website_for_emails_api(
             logger.info(
                 f"Active scan job ({existing_job.job_id}) already exists for domain {domain_id}. Returning existing job ID."
             )
-            return JobSubmissionResponse(job_id=existing_job.job_id)
+            # Access the actual UUID value
+            existing_job_id_value = existing_job.job_id
+            return JobSubmissionResponse(job_id=existing_job_id_value)
 
     except Exception as e:
         logger.error(
@@ -143,7 +145,8 @@ async def scan_website_for_emails_api(
         )
 
         # Extract the generated UUID job_id AFTER flush/commit
-        new_job_id = job.job_id
+        # Access the actual UUID value from the job object
+        new_job_id_value = job.job_id
 
     except Exception as e:
         logger.error(
@@ -155,14 +158,15 @@ async def scan_website_for_emails_api(
             detail="Error creating scan job record.",
         )
 
-    # Add the background task, passing the new job's UUID
+    # Add the background task, passing the new job's UUID value
     # Ensure the task function signature matches (job_id, user_id)
     background_tasks.add_task(
-        scan_website_for_emails, job_id=new_job_id, user_id=user_id
+        scan_website_for_emails, job_id=new_job_id_value, user_id=user_id
     )
-    logger.info(f"Queued background task scan_website_for_emails for job {new_job_id}")
+    logger.info(f"Queued background task scan_website_for_emails for job {new_job_id_value}")
 
-    return JobSubmissionResponse(job_id=new_job_id)
+    # Return the actual UUID value
+    return JobSubmissionResponse(job_id=new_job_id_value)
 
 
 @router.get("/scan/status/{job_id}", response_model=JobStatusResponse)

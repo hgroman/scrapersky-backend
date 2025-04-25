@@ -39,7 +39,6 @@ from .place_search import PlaceSearch
 # Import sitemap models
 from .sitemap import SitemapFile, SitemapUrl
 from .tenant import Tenant
-from .user import User
 
 
 class SitemapType(str, Enum):
@@ -82,7 +81,6 @@ __all__ = [
     "Job",
     "Domain",
     "BatchJob",
-    "User",
     "Place",
     "PlaceSearch",
     "Tenant",
