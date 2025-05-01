@@ -15,65 +15,74 @@ setup_logging()
 
 # -------------------------------------
 
-from contextlib import asynccontextmanager
-from typing import List
+from contextlib import asynccontextmanager # noqa: E402
+from typing import List # noqa: E402
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.routing import APIRoute  # Import APIRoute
-from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi import FastAPI, HTTPException, Request # noqa: E402
+from fastapi.exceptions import RequestValidationError # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware # noqa: E402
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse # noqa: E402
+from fastapi.routing import APIRoute # noqa: E402
+from fastapi.staticfiles import StaticFiles # noqa: E402
+from starlette.exceptions import HTTPException as StarletteHTTPException # noqa: E402
 
 # Import the runtime tracer
-from .config.runtime_tracer import get_loaded_files, start_tracing, stop_tracing
-from .health.db_health import check_database_connection
-from .routers.batch_page_scraper import router as batch_page_scraper_api_router
-from .routers.batch_sitemap import router as batch_sitemap_api_router
-from .routers.db_portal import router as db_portal_api_router
-from .routers.dev_tools import router as dev_tools_api_router
-from .routers.domains import (
+from .config.runtime_tracer import ( # noqa: E402
+    get_loaded_files,
+    get_loaded_modules,  # Import the new function
+    start_tracing,
+    stop_tracing,
+)
+from .health.db_health import check_database_connection # noqa: E402
+from .routers.batch_page_scraper import router as batch_page_scraper_api_router # noqa: E402
+from .routers.batch_sitemap import router as batch_sitemap_api_router # noqa: E402
+from .routers.db_portal import router as db_portal_api_router # noqa: E402
+from .routers.dev_tools import router as dev_tools_api_router # noqa: E402
+from .routers.domains import ( # noqa: E402
     router as domains_api_router,  # Added import for domains router
 )
-from .routers.email_scanner import router as email_scanner_api_router
+from .routers.email_scanner import router as email_scanner_api_router # noqa: E402
 
 # Import routers - Refactored to import the router instance directly
-from .routers.google_maps_api import router as google_maps_api_router
-from .routers.local_businesses import (
+from .routers.google_maps_api import router as google_maps_api_router # noqa: E402
+from .routers.local_businesses import ( # noqa: E402
     router as local_businesses_api_router,  # Import the new router instance
 )
-from .routers.modernized_page_scraper import (
+from .routers.modernized_page_scraper import ( # noqa: E402
     router as modernized_page_scraper_api_router,
 )
-from .routers.modernized_sitemap import router as modernized_sitemap_api_router
-from .routers.places_staging import router as places_staging_api_router
-from .routers.profile import router as profile_api_router
-from .routers.sitemap_files import (
+from .routers.modernized_sitemap import router as modernized_sitemap_api_router # noqa: E402
+from .routers.places_staging import router as places_staging_api_router # noqa: E402
+from .routers.profile import router as profile_api_router # noqa: E402
+from .routers.sitemap_files import ( # noqa: E402
     router as sitemap_files_router,  # Import the new sitemap files router
 )
-from .routers.sqlalchemy import (
+from .routers.sqlalchemy import ( # noqa: E402
     routers as sqlalchemy_routers,  # Import SQLAlchemy routers
 )
 
 # Import the shared scheduler instance and its lifecycle functions
-from .scheduler_instance import shutdown_scheduler, start_scheduler
-from .scraper.metadata_extractor import session_manager
+from .scheduler_instance import shutdown_scheduler, start_scheduler # noqa: E402
+from .scraper.metadata_extractor import session_manager # noqa: E402
 
 # Import only the setup functions now, not shutdown
-from .services.domain_scheduler import setup_domain_scheduler
-from .services.domain_sitemap_submission_scheduler import (
+from .services.domain_scheduler import setup_domain_scheduler # noqa: E402
+from .services.domain_sitemap_submission_scheduler import ( # noqa: E402
     setup_domain_sitemap_submission_scheduler,
 )
-from .services.sitemap_scheduler import setup_sitemap_scheduler
-from .session.async_session import get_session
+from .services.sitemap_scheduler import setup_sitemap_scheduler # noqa: E402
+from .session.async_session import get_session # noqa: E402
 
-# Standard FastAPI error handling is used instead of custom ErrorService
-# from .services.core.error_service import ErrorService
+# Imports moved from later in the file
+from fastapi.openapi.docs import ( # noqa: E402
+    get_redoc_html,
+    get_swagger_ui_html,
+)
+from fastapi.openapi.utils import get_openapi # noqa: E402
 
-# TENANT ISOLATION COMPLETELY REMOVED
-# All tenant isolation code has been removed from the entire application
-# Do not re-add any tenant isolation or tenant middleware
+# --- Setup Logging AFTER all top-level imports ---
+# setup_logging() # Removed from here
+# -------------------------------------------------
 
 # Create logger for this module
 logger = logging.getLogger(__name__)
@@ -89,6 +98,18 @@ async def lifespan(app: FastAPI):
     Starts and stops runtime file tracing.
     """
     logger.info("Starting up the ScraperSky API - Lifespan Start")
+
+    # --- Debug Logging --- ADDED
+    try:
+        cwd = os.getcwd()
+        logger.info(f"DEBUG: Current Working Directory: {cwd}")
+        src_contents = os.listdir("/app/src")
+        logger.info(f"DEBUG: Contents of /app/src: {src_contents}")
+    except Exception as e:
+        logger.error(
+            f"DEBUG: Error getting CWD or listing /app/src: {e}", exc_info=True
+        )
+    # --- End Debug Logging ---
 
     # Start runtime file tracing (early)
     start_tracing()
@@ -125,9 +146,15 @@ async def lifespan(app: FastAPI):
     # Stop runtime file tracing (before other shutdown tasks)
     stop_tracing()
     final_loaded_files = get_loaded_files()
+    final_loaded_modules = get_loaded_modules()  # Get loaded modules
     logger.info(f"Total unique /app/src/*.py files loaded: {len(final_loaded_files)}")
     for file_path in sorted(list(final_loaded_files)):
         logger.info(f"LOADED_SRC_FILE: {file_path}")
+    logger.info(
+        f"Total unique src.* modules loaded: {len(final_loaded_modules)}"
+    )  # Log module count
+    for module_name in sorted(list(final_loaded_modules)):  # Log module names
+        logger.info(f"LOADED_MODULE: {module_name}")
 
     # Shutdown the shared scheduler instance
     shutdown_scheduler()
@@ -162,13 +189,15 @@ app = FastAPI(
 # Use FastAPI's native OpenAPI schema generation instead of static schema
 
 # Set up Swagger UI and ReDoc
-from fastapi.openapi.docs import (
-    get_redoc_html,
-    get_swagger_ui_html,
-)
+# Removed imports from here as they were moved up
+# from fastapi.openapi.docs import (
+#     get_redoc_html,
+#     get_swagger_ui_html,
+# )
 
-# Explicitly expose OpenAPI schema (this ensures it's always available)
-from fastapi.openapi.utils import get_openapi
+# Explicitly expose OpenAPI schema (this ensures it\'s always available)
+# Removed import from here as it was moved up
+# from fastapi.openapi.utils import get_openapi
 
 
 @app.get("/api/schema.json", include_in_schema=False)

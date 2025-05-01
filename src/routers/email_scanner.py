@@ -25,6 +25,10 @@ from ..tasks.email_scraper import scan_website_for_emails
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Define dependencies outside function signatures to satisfy B008
+SessionDep = Depends(get_session_dependency)
+CurrentUserDep = Depends(get_current_user)
+
 
 class EmailScanningResponse(BaseModel):
     domain_id: uuid.UUID
@@ -51,8 +55,8 @@ class EmailScanningResponse(BaseModel):
 async def scan_website_for_emails_api(
     scan_request: EmailScanRequest,  # Use the new request schema
     background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_session_dependency),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    session: AsyncSession = SessionDep,
+    current_user: Dict[str, Any] = CurrentUserDep,
 ):
     """
     Initiate an email scan for a given domain ID, creating a Job record.
@@ -69,22 +73,24 @@ async def scan_website_for_emails_api(
     if user_id_str:
         try:
             user_id = uuid.UUID(user_id_str)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:  # Add 'as e' for B904 fix
             logger.error(
-                f"Could not convert user ID '{user_id_str}' to UUID. User info: {current_user}"
+                f"Could not convert user ID '{user_id_str}' to UUID. "
+                f"User info: {current_user}"
             )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid user ID format in token.",
-            )
+            ) from e  # Add 'from e' for B904
 
     if not user_id:
         logger.error(
             f"Could not get valid user ID from current_user. User info: {current_user}"
         )
+        # No original exception here, so 'from None' is appropriate for B904
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user context."
-        )
+        ) from None
 
     # Requirement #6: Check for existing PENDING or RUNNING jobs for this domain
     try:
@@ -92,7 +98,7 @@ async def scan_website_for_emails_api(
         stmt = (
             select(Job)
             .where(Job.domain_id == domain_id)
-            .where(Job.status.in_([TaskStatus.PENDING.value, TaskStatus.RUNNING.value]))
+            .where(Job.status.in_([TaskStatus.PENDING.value, TaskStatus.RUNNING.value]))  # noqa
             .order_by(
                 Job.created_at.desc()
             )  # Get the most recent one if multiple somehow exist
@@ -102,11 +108,12 @@ async def scan_website_for_emails_api(
 
         if existing_job:
             logger.info(
-                f"Active scan job ({existing_job.job_id}) already exists for domain {domain_id}. Returning existing job ID."
+                f"Active scan job ({existing_job.job_id}) already exists for domain "
+                f"{domain_id}. Returning existing job ID."
             )
             # Access the actual UUID value
             existing_job_id_value = existing_job.job_id
-            return JobSubmissionResponse(job_id=existing_job_id_value)
+            return JobSubmissionResponse(job_id=existing_job_id_value)  # noqa
 
     except Exception as e:
         logger.error(
@@ -116,15 +123,16 @@ async def scan_website_for_emails_api(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error checking for existing jobs.",
-        )
+        ) from e  # Add 'from e' for B904
 
     # Verify domain exists (optional but good practice)
     domain_obj = await session.get(Domain, domain_id)
     if not domain_obj:
         logger.error(f"Domain with ID {domain_id} not found.")
+        # No original exception here, so 'from None' is appropriate for B904
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Domain not found."
-        )
+        ) from None
 
     # Requirement #5: Create a new Job record
     try:
@@ -141,7 +149,8 @@ async def scan_website_for_emails_api(
         await session.flush()  # Flush to get the generated job.job_id
         await session.commit()  # Commit the new job record
         logger.info(
-            f"Created new email scan job {job.job_id} for domain {domain_id} by user {user_id}"
+            f"Created new email scan job {job.job_id} for domain {domain_id} "
+            f"by user {user_id}"
         )
 
         # Extract the generated UUID job_id AFTER flush/commit
@@ -156,24 +165,28 @@ async def scan_website_for_emails_api(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error creating scan job record.",
-        )
+        ) from e  # Add 'from e' for B904
 
     # Add the background task, passing the new job's UUID value
     # Ensure the task function signature matches (job_id, user_id)
     background_tasks.add_task(
-        scan_website_for_emails, job_id=new_job_id_value, user_id=user_id
+        scan_website_for_emails,
+        job_id=new_job_id_value,
+        user_id=user_id,  # noqa
     )
-    logger.info(f"Queued background task scan_website_for_emails for job {new_job_id_value}")
+    logger.info(
+        f"Queued background task scan_website_for_emails for job {new_job_id_value}"
+    )
 
     # Return the actual UUID value
-    return JobSubmissionResponse(job_id=new_job_id_value)
+    return JobSubmissionResponse(job_id=new_job_id_value)  # noqa
 
 
 @router.get("/scan/status/{job_id}", response_model=JobStatusResponse)
 async def get_scan_status_api(
     job_id: uuid.UUID,  # Use UUID type hint for path parameter
-    session: AsyncSession = Depends(get_session_dependency),
-    # current_user: Dict[str, Any] = Depends(get_current_user) # Auth usually needed here too
+    session: AsyncSession = SessionDep,
+    # current_user: Dict[str, Any] = CurrentUserDep # Auth usually needed here too
 ):
     """Retrieve the status and results of a specific email scan job by its UUID."""
     # Add authentication check if needed based on requirements
@@ -186,9 +199,10 @@ async def get_scan_status_api(
 
         if not job:
             logger.warning(f"Job with ID {job_id} not found.")
+            # No original exception here, so 'from None' is appropriate for B904
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Scan job not found"
-            )
+            ) from None
 
         # Optional: Add authorization check - e.g., does this user own this job?
         # if job.created_by != user_id:
@@ -209,7 +223,7 @@ async def get_scan_status_api(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving job status.",
-        )
+        ) from e  # Add 'from e' for B904
 
 
 # --- Remove or Comment Out Old Endpoints ---

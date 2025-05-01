@@ -8,7 +8,9 @@ relationships between models.
 
 # Import all models for easy access
 # Enum exports for easier import in other modules
-from enum import Enum, auto
+# import enum # Removed unused import
+# import uuid # Removed unused import
+from enum import Enum # Kept Enum, removed auto
 
 # RBAC models - imports commented out as part of RBAC removal
 # These model definitions are preserved in their respective files for future reintegration
@@ -20,6 +22,7 @@ from enum import Enum, auto
 # Note: While the relationship definitions with these models remain in other models,
 # they will not be active since the models themselves are not imported
 # Import custom data types and base classes
+# Restore imports needed by other modules
 from .api_models import (
     BatchRequest,
     BatchResponse,
@@ -77,6 +80,12 @@ __all__ = [
     "Base",
     "BaseModel",
     "model_to_dict",
+    # API models (add restored ones here)
+    "BatchRequest",
+    "BatchResponse",
+    "BatchStatusResponse",
+    "SitemapScrapingRequest",
+    "SitemapScrapingResponse",
     # Core models
     "Job",
     "Domain",
@@ -92,7 +101,8 @@ __all__ = [
     # RBAC models - commented out as part of RBAC removal
     # These exports are preserved for future reintegration but commented out
     # to prevent their use in the current codebase
-    # "Role", "Permission", "UserRole", "FeatureFlag", "TenantFeature", "SidebarFeature",
+    # "Role", "Permission", "UserRole", "FeatureFlag",
+    # "TenantFeature", "SidebarFeature",
     # Enums
     "SitemapType",
     "DiscoveryMethod",
