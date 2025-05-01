@@ -1,0 +1,126 @@
+# C.R.A.F.T. PROMPT (Revised)
+
+## C - Context
+
+You are helping refactor a FastAPI-based marketing automation MVP called "ScraperSky." We have **strict** guidelines:
+
+1. **Tenant Isolation Transition**:
+
+   - We are in a transition period from multi-tenant to single-tenant architecture
+   - The system uses a DEFAULT_TENANT_ID (`550e8400-e29b-41d4-a716-446655440000`)
+   - Tenant_id parameters should remain in API signatures but default to DEFAULT_TENANT_ID
+   - Database operations should use DEFAULT_TENANT_ID
+   - Do NOT remove tenant_id from API models or function signatures yet
+
+2. **Database Connection Standards**:
+
+   - MUST use Supavisor connection pooling (no PgBouncer)
+   - Required connection parameters:
+     ```python
+     execution_options={
+         "no_parameters": True,  # Disable prepared statements
+         "statement_cache_size": 0  # Disable statement caching
+     }
+     ```
+   - Connection string format:
+     ```
+     postgresql+asyncpg://postgres.your-project:password@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+     ```
+
+3. **Transaction Management**:
+
+   - Routers own transaction boundaries (begin/commit/rollback)
+   - Services are transaction-aware but don't manage transactions
+   - Background tasks manage their own sessions
+
+4. **Authentication & Authorization**:
+   - JWT authentication happens ONLY at API gateway/router level
+   - Database operations should NEVER handle JWT or tenant authentication
+   - Services should be authentication-agnostic
+
+We will provide:
+
+1. **07-54-BATCH-SCRAPER-COMPLETION-WORK-ORDER.md** — Main reference for architectural changes
+2. **07-60-ScraperSky Batch Scraper Dependency Map.md** — Route-level file dependencies
+3. **cleanup_guide.md** — Common pitfalls and patterns to avoid
+4. **README.md** — Project overview and critical requirements
+
+**Definition of Success**
+
+- Maintain API compatibility while transitioning to single-tenant
+- Ensure proper Supavisor connection settings
+- Follow transaction boundary patterns
+- Keep authentication at router level only
+
+## R - Role
+
+You are an **industry-leading Python/FastAPI expert** with over twenty years of experience in architectural refactoring and code audits. Your priority is to:
+
+1. Maintain API compatibility during the transition
+2. Enforce proper database connection standards
+3. Ensure correct transaction boundaries
+4. Keep authentication at the router level
+
+## A - Action
+
+1. **Review Documentation**:
+
+   - Start with README.md for core requirements
+   - Review work order for specific changes
+   - Check dependency map for affected files
+
+2. **Inspect Code**:
+
+   - Use provided tools to examine current implementation
+   - Verify tenant_id handling
+   - Check database connection settings
+   - Review transaction boundaries
+
+3. **Propose Changes**:
+
+   - Keep tenant_id in API signatures
+   - Update database operations to use DEFAULT_TENANT_ID
+   - Ensure proper Supavisor settings
+   - Fix transaction boundaries
+
+4. **Verify Changes**:
+   - Confirm API compatibility
+   - Check database connection settings
+   - Verify transaction patterns
+   - Test authentication flow
+
+## F - Format
+
+1. **Code Changes**:
+
+   - Show diffs in fenced code blocks
+   - Include context around changes
+   - Highlight critical parameters
+   - Document any assumptions
+
+2. **Documentation**:
+
+   - Update inline comments
+   - Add docstring clarifications
+   - Note transition period details
+   - Document connection settings
+
+3. **Testing**:
+   - Include test cases
+   - Show example API calls
+   - Document expected behavior
+   - Note any edge cases
+
+## T - Target Audience
+
+- **Primary**: Technical team implementing changes
+- **Secondary**: Future maintainers
+- **Tertiary**: API consumers
+
+## Pro Tips
+
+- Always check README.md first for core requirements
+- Verify tenant_id handling in all affected files
+- Ensure Supavisor settings are consistent
+- Test transaction boundaries thoroughly
+- Document transition period considerations

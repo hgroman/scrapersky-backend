@@ -1,9 +1,8 @@
 # tests/conftest.py
 
+import uuid  # Added for generating fixture IDs
+
 import pytest
-import os
-import sys
-import uuid # Added for generating fixture IDs
 
 # Add the project root to the Python path to allow importing tools
 # project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -31,25 +30,32 @@ import uuid # Added for generating fixture IDs
 #         print(f"Error setting up runtime import logger in conftest: {e}")
 #     # No need to yield or teardown, the hook replaces __import__ globally
 
+
 # Fixtures for tests
 @pytest.fixture(scope="session")
 def business_type():
     """Provides a default business type for tests."""
     return "restaurant"
 
-@pytest.fixture(scope="function") # Use function scope if tests might modify/expect unique IDs
+
+@pytest.fixture(
+    scope="function"
+)  # Use function scope if tests might modify/expect unique IDs
 def job_id():
     """Provides a unique job ID string for tests."""
     return str(uuid.uuid4())
 
-@pytest.fixture(scope="function") # Use function scope for uniqueness
+
+@pytest.fixture(scope="function")  # Use function scope for uniqueness
 def batch_id():
     """Provides a unique batch ID string for tests."""
     return str(uuid.uuid4())
 
-@pytest.fixture(scope="session") # Session scope is fine for a static domain
+
+@pytest.fixture(scope="session")  # Session scope is fine for a static domain
 def domain():
     """Provides a default domain string for tests."""
     return "example.com"
+
 
 # You can add other session-wide fixtures here if needed

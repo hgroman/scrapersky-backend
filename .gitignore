@@ -68,8 +68,8 @@ inspect_table.py
 *.backup.pgbouncer*
 
 # Project specific directories to ignore
-Docs/
-project-docs/
+# Docs/
+# project-docs/
 scripts/
 tests/
 
@@ -81,3 +81,7 @@ _Archive_4.13.25/
 
 # Ignore VS Code workspace files
 *.code-workspace
+
+# Generated Reports & Data
+reports/
+*.json

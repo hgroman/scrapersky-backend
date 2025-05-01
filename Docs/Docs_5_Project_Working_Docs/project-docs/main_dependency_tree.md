@@ -1,0 +1,145 @@
+# ScraperSky Backend Dependency Tree (from src/main.py)
+
+This document outlines the Python files within the `src` directory that are directly or indirectly reachable from the main application entry point (`src/main.py`) via imports or router declarations.
+
+**Note:** This analysis is based on static imports found in the code. Dynamic imports or references might not be captured.
+
+## Dependency Tree
+
+1.  **`src/main.py`** (Root)
+    - Imports/References:
+      - 2. **`src/config/logging_config.py`**
+        - Imports: `src/config/settings.py` (See 3)
+      - 3. **`src/config/settings.py`**
+        - (Imports external libs: `os`, `dotenv`, `pydantic`, `pydantic_settings`)
+      - 4. **`src/health/db_health.py`**
+        - (Imports external libs: `logging`, `sqlalchemy`)
+      - 5. **`src/routers/batch_page_scraper.py`**
+        - Imports:
+          - 6. `src/models/job.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/batch_job.py` (See 8)
+          - 7. `src/models/base.py`
+          - 8. `src/models/batch_job.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/job.py` (See 6)
+          - 9. `src/schemas/batch.py`
+            - Imports: `src/schemas/job.py` (See 10), `pydantic`
+          - 10. `src/schemas/job.py`
+            - Imports: `pydantic`, `uuid`, `datetime`, `enum`
+          - 11. `src/services/batch/batch_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/job.py` (See 6), `src/schemas/batch.py` (See 9), `src/services/scraping/page_scraper_service.py` (See 13), `src/tasks/page_scraper_task.py` (See 14)
+          - 12. `src/db/session.py`
+            - Imports: `src/config/settings.py` (See 3), `sqlalchemy.ext.asyncio`
+          - 13. `src/services/scraping/page_scraper_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/models/page.py` (See 16), `src/scraper/metadata_extractor.py` (See 17)
+          - 14. `src/tasks/page_scraper_task.py` (Assumed dependency for batch service)
+          - 15. `src/models/domain.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/enums.py` (See 18), `src/models/sitemap.py` (See 19), `src/models/page.py` (See 16), `src/models/contact.py` (See 20)
+          - 16. `src/models/page.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/domain.py` (See 15)
+          - 17. `src/scraper/metadata_extractor.py`
+            - Imports: `src/models/page.py` (See 16), `src/db/session.py` (See 12), `src/scraper/robots_parser.py` (See 21)
+          - 18. `src/models/enums.py`
+            - Imports: `enum`
+          - 19. `src/models/sitemap.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/enums.py` (See 18), `src/models/domain.py` (See 15)
+          - 20. `src/models/contact.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/domain.py` (See 15)
+          - 21. `src/scraper/robots_parser.py` (Assumed dependency for metadata extractor)
+          - 22. `src/auth/dependencies.py`
+            - Imports: `src/auth/jwt_auth.py` (See 23), `src/db/session.py` (See 12), `src/models/user.py` (See 24), `src/services/user_service.py` (See 25), `src/config/settings.py` (See 3)
+          - 23. `src/auth/jwt_auth.py`
+            - Imports: `src/config/settings.py` (See 3), `jose`, `datetime`
+          - 24. `src/models/user.py`
+            - Imports: `src/models/base.py` (See 7)
+          - 25. `src/services/user_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/user.py` (See 24)
+      - 26. **`src/routers/batch_sitemap.py`**
+        - Imports: `src/models/job.py` (See 6), `src/schemas/batch.py` (See 9), `src/schemas/job.py` (See 10), `src/services/batch/batch_sitemap_service.py` (See 27), `src/auth/dependencies.py` (See 22)
+          - 27. `src/services/batch/batch_sitemap_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/job.py` (See 6), `src/schemas/batch.py` (See 9), `src/services/sitemap/sitemap_service.py` (See 28), `src/tasks/sitemap_analyzer_task.py` (See 29)
+          - 28. `src/services/sitemap/sitemap_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/models/sitemap.py` (See 19), `src/scraper/sitemap_analyzer.py` (See 30)
+          - 29. `src/tasks/sitemap_analyzer_task.py` (Assumed dependency for batch sitemap service)
+          - 30. `src/scraper/sitemap_analyzer.py`
+            - Imports: `src/scraper/robots_parser.py` (See 21)
+      - 31. **`src/routers/db_portal.py`**
+        - Imports: `src/db/session.py` (See 12), `src/auth/dependencies.py` (See 22), `src/services/db_portal_service.py` (See 32)
+          - 32. `src/services/db_portal_service.py`
+            - Imports: `src/db/session.py` (See 12), `sqlalchemy`
+      - 33. **`src/routers/dev_tools.py`**
+        - Imports: `src/services/domain_scheduler.py` (See 34), `src/services/sitemap_scheduler.py` (See 35), `src/services/domain_sitemap_submission_scheduler.py` (See 36), `src/auth/dependencies.py` (See 22)
+      - 34. **`src/services/domain_scheduler.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/services/scraping/domain_processor.py` (See 37), `src/scheduler_instance.py` (See 38)
+          - 37. `src/services/scraping/domain_processor.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/scraper/metadata_extractor.py` (See 17), `src/services/sitemap/sitemap_service.py` (See 28), `src/services/email_scan_service.py` (See 39)
+          - 38. `src/scheduler_instance.py`
+            - (Imports external libs: `logging`, `apscheduler`)
+          - 39. `src/services/email_scan_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/models/job.py` (See 6), `src/tasks/email_scraper.py` (See 40)
+          - 40. `src/tasks/email_scraper.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/contact.py` (See 20), `src/models/domain.py` (See 15), `src/scraper/email_extractor.py` (See 41)
+          - 41. `src/scraper/email_extractor.py`
+      - 35. **`src/services/sitemap_scheduler.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/job.py` (See 6), `src/models/sitemap.py` (See 19), `src/services/scraping/sitemap_processor.py` (See 42), `src/scheduler_instance.py` (See 38)
+          - 42. `src/services/scraping/sitemap_processor.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/sitemap.py` (See 19), `src/scraper/page_fetcher.py` (See 43), `src/scraper/metadata_extractor.py` (See 17)
+          - 43. `src/scraper/page_fetcher.py` (Assumed dependency)
+      - 36. **`src/services/domain_sitemap_submission_scheduler.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/services/sitemap/sitemap_submission_service.py` (See 44), `src/scheduler_instance.py` (See 38)
+          - 44. `src/services/sitemap/sitemap_submission_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/services/sitemap/sitemap_service.py` (See 28)
+      - 45. **`src/routers/domains.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/schemas/domain.py` (See 46), `src/services/domain_crud_service.py` (See 47), `src/auth/dependencies.py` (See 22)
+          - 46. `src/schemas/domain.py`
+            - Imports: `src/models/enums.py` (See 18), `pydantic`
+          - 47. `src/services/domain_crud_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/domain.py` (See 15), `src/schemas/domain.py` (See 46)
+      - 48. **`src/routers/google_maps_api.py`**
+        - Imports: `src/schemas/google_maps.py` (See 49), `src/services/discovery/google_maps_service.py` (See 50), `src/auth/dependencies.py` (See 22)
+          - 49. `src/schemas/google_maps.py`
+            - Imports: `pydantic`
+          - 50. `src/services/discovery/google_maps_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/job.py` (See 6), `src/models/places_staging.py` (See 51), `src/services/places_staging_crud_service.py` (See 52), `src/tasks/google_maps_task.py` (See 53)
+          - 51. `src/models/places_staging.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/enums.py` (See 18), `src/models/job.py` (See 6)
+          - 52. `src/services/places_staging_crud_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/places_staging.py` (See 51), `src/schemas/places_staging.py` (See 54)
+          - 53. `src/tasks/google_maps_task.py` (Assumed dependency)
+          - 54. `src/schemas/places_staging.py`
+            - Imports: `src/models/enums.py` (See 18), `pydantic`
+      - 55. **`src/routers/local_businesses.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/local_business.py` (See 56), `src/schemas/local_business.py` (See 57), `src/services/local_business_crud_service.py` (See 58), `src/auth/dependencies.py` (See 22)
+          - 56. `src/models/local_business.py`
+            - Imports: `src/models/base.py` (See 7), `src/models/enums.py` (See 18), `src/models/domain.py` (See 15), `src/models/places_staging.py` (See 51)
+          - 57. `src/schemas/local_business.py`
+            - Imports: `src/models/enums.py` (See 18), `pydantic`
+          - 58. `src/services/local_business_crud_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/local_business.py` (See 56), `src/schemas/local_business.py` (See 57)
+      - 59. **`src/routers/modernized_page_scraper.py`**
+        - Imports: `src/schemas/page_scraper.py` (See 60), `src/services/scraping/page_scraper_service.py` (See 13), `src/auth/dependencies.py` (See 22)
+          - 60. `src/schemas/page_scraper.py`
+            - Imports: `pydantic`
+      - 61. **`src/routers/modernized_sitemap.py`**
+        - Imports: `src/models/job.py` (See 6), `src/schemas/job.py` (See 10), `src/schemas/sitemap.py` (See 62), `src/services/sitemap/sitemap_service.py` (See 28), `src/auth/dependencies.py` (See 22)
+          - 62. `src/schemas/sitemap.py`
+            - Imports: `src/models/enums.py` (See 18), `pydantic`
+      - 63. **`src/routers/places_staging.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/places_staging.py` (See 51), `src/schemas/places_staging.py` (See 54), `src/services/places_staging_crud_service.py` (See 52), `src/auth/dependencies.py` (See 22)
+      - 64. **`src/routers/profile.py`**
+        - Imports: `src/schemas/user.py` (See 65), `src/auth/dependencies.py` (See 22), `src/models/user.py` (See 24)
+          - 65. `src/schemas/user.py`
+            - Imports: `pydantic`
+      - 66. **`src/routers/sitemap_files.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/sitemap.py` (See 19), `src/schemas/sitemap.py` (See 62), `src/services/sitemap_file_crud_service.py` (See 67), `src/auth/dependencies.py` (See 22)
+          - 67. `src/services/sitemap_file_crud_service.py`
+            - Imports: `src/db/session.py` (See 12), `src/models/sitemap.py` (See 19), `src/schemas/sitemap.py` (See 62)
+      - 68. **`src/routers/sqlalchemy.py`**
+        - Imports: `src/db/session.py` (See 12), `src/models/*`, `src/schemas/*` (Many models/schemas likely imported here)
+      - 69. **`src/routers/email_scanner.py`**
+        - Imports: `src/models/job.py` (See 6), `src/schemas/email_scan.py` (See 70), `src/schemas/job.py` (See 10), `src/services/email_scan_service.py` (See 39), `src/auth/dependencies.py` (See 22)
+          - 70. `src/schemas/email_scan.py`
+            - Imports: `pydantic`
+      - 71. **`src/session/async_session.py`** (Duplicate of 12 - `src/db/session.py`. Assuming `src/session/async_session.py` just re-exports or configures `src/db/session.py`)
+        - Imports: `src/db/session.py` (See 12)
+
+This provides a structured view of the dependencies originating from `src/main.py`.

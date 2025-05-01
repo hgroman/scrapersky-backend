@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Dependency Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #controls {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        #graph {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .node circle {
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .node text {
+            font-size: 12px;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .node.handler circle {
+            fill: #4285f4;
+        }
+        .node.dependency circle {
+            fill: #ea4335;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h1>FastAPI Dependency Graph</h1>
+        <div>
+            <button id="zoom-in">Zoom In</button>
+            <button id="zoom-out">Zoom Out</button>
+            <button id="reset">Reset</button>
+            <input type="checkbox" id="show-handlers" checked>
+            <label for="show-handlers">Show Handlers</label>
+            <input type="checkbox" id="show-dependencies" checked>
+            <label for="show-dependencies">Show Dependencies</label>
+            <input type="search" id="search" placeholder="Search..." style="margin-left: 20px;">
+        </div>
+    </div>
+    <div id="graph"></div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Load the graph data
+        const graphData = {"nodes": [{"id": "src.main.get_api_schema", "type": "handler", "file": "src/main.py"}, {"id": "src.main.custom_swagger_ui_html", "type": "handler", "file": "src/main.py"}, {"id": "src.main.redoc_html", "type": "handler", "file": "src/main.py"}, {"id": "src.main.documentation_page", "type": "handler", "file": "src/main.py"}, {"id": "src.routers.sqlalchemy.health_check", "type": "handler", "file": "src/routers/sqlalchemy/__init__.py"}, {"id": "src.routers.google_maps_api.get_debug_info", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.search_places", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.get_search_status", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.get_staging_places", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.update_place_status", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.batch_update_places", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.health_check", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.get_job_results", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.google_maps_api.get_search_history", "type": "handler", "file": "src/routers/google_maps_api.py"}, {"id": "src.routers.modernized_sitemap.scan_domain", "type": "handler", "file": "src/routers/modernized_sitemap.py"}, {"id": "src.routers.modernized_sitemap.get_job_status", "type": "handler", "file": "src/routers/modernized_sitemap.py"}, {"id": "src.routers.modernized_page_scraper.scan_domain", "type": "handler", "file": "src/routers/modernized_page_scraper.py"}, {"id": "src.routers.modernized_page_scraper.batch_scan_domains", "type": "handler", "file": "src/routers/modernized_page_scraper.py"}, {"id": "src.routers.modernized_page_scraper.get_job_status", "type": "handler", "file": "src/routers/modernized_page_scraper.py"}, {"id": "src.routers.modernized_page_scraper.get_batch_status", "type": "handler", "file": "src/routers/modernized_page_scraper.py"}, {"id": "src.routers.batch_page_scraper.scan_domain", "type": "handler", "file": "src/routers/batch_page_scraper.py"}, {"id": "src.routers.batch_page_scraper.get_job_status", "type": "handler", "file": "src/routers/batch_page_scraper.py"}, {"id": "src.routers.batch_page_scraper.create_batch_endpoint", "type": "handler", "file": "src/routers/batch_page_scraper.py"}, {"id": "src.routers.batch_page_scraper.get_batch_status_endpoint", "type": "handler", "file": "src/routers/batch_page_scraper.py"}, {"id": "src.routers.batch_page_scraper.health_check", "type": "handler", "file": "src/routers/batch_page_scraper.py"}, {"id": "src.routers.batch_page_scraper.test_background_task", "type": "handler", "file": "src/routers/batch_page_scraper.py"}, {"id": "src.routers.dev_tools.rebuild_container", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.restart_container", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.check_container_health", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_container_status", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_server_status", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_logs", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_dev_tools_page", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_database_schema", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_route_information", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_system_status", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_database_tables", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_table_fields", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.get_db_tables", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.setup_sidebar", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.process_pending_domains_endpoint", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.check_scheduler_status", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.dev_tools.trigger_domain_processing_endpoint", "type": "handler", "file": "src/routers/dev_tools.py"}, {"id": "src.routers.db_portal.list_tables", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.db_portal.get_table_schema", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.db_portal.get_sample_data", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.db_portal.execute_query", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.db_portal.validate_schema", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.db_portal.generate_model", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.db_portal.health_check", "type": "handler", "file": "src/routers/db_portal.py"}, {"id": "src.routers.profile.get_profiles", "type": "handler", "file": "src/routers/profile.py"}, {"id": "src.routers.profile.get_profile", "type": "handler", "file": "src/routers/profile.py"}, {"id": "src.routers.profile.create_profile", "type": "handler", "file": "src/routers/profile.py"}, {"id": "src.routers.profile.update_profile", "type": "handler", "file": "src/routers/profile.py"}, {"id": "src.routers.profile.delete_profile", "type": "handler", "file": "src/routers/profile.py"}, {"id": "src.main.root", "type": "handler", "file": "src/main.py"}, {"id": "src.main.docs_redirect", "type": "handler", "file": "src/main.py"}, {"id": "src.main.sitemap_viewer", "type": "handler", "file": "src/main.py"}, {"id": "src.main.legacy_sitemap_analyzer", "type": "handler", "file": "src/main.py"}, {"id": "src.main.sitemap_data_viewer", "type": "handler", "file": "src/main.py"}, {"id": "src.main.email_scanner_view", "type": "handler", "file": "src/main.py"}, {"id": "src.main.batch_test_view", "type": "handler", "file": "src/main.py"}, {"id": "src.main.db_portal_view", "type": "handler", "file": "src/main.py"}, {"id": "src.main.api_test_view", "type": "handler", "file": "src/main.py"}, {"id": "src.main.health_check", "type": "handler", "file": "src/main.py"}, {"id": "src.main.database_health", "type": "handler", "file": "src/main.py"}, {"id": "get_current_user", "type": "dependency", "file": "src/auth/jwt_auth.py"}, {"id": "unknown", "type": "dependency", "file": "unknown"}, {"id": "get_session_dependency", "type": "dependency", "file": "src/session/async_session.py"}, {"id": "get_development_user", "type": "dependency", "file": "src/routers/modernized_sitemap.py"}, {"id": "verify_page_scraper_access", "type": "dependency", "file": "src/routers/modernized_page_scraper.py"}, {"id": "get_db_params", "type": "dependency", "file": "src/utils/db_helpers.py"}], "links": [{"source": "src.routers.google_maps_api.get_debug_info", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.search_places", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.search_places", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_search_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_search_status", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_staging_places", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_staging_places", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.update_place_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.update_place_status", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.batch_update_places", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.batch_update_places", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_job_results", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_job_results", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_search_history", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.google_maps_api.get_search_history", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.modernized_sitemap.scan_domain", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.modernized_sitemap.scan_domain", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.modernized_sitemap.get_job_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.scan_domain", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.scan_domain", "target": "verify_page_scraper_access", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_session_dependency", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.batch_scan_domains", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.batch_scan_domains", "target": "verify_page_scraper_access", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_session_dependency", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.get_job_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.get_job_status", "target": "verify_page_scraper_access", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_session_dependency", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.get_batch_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.modernized_page_scraper.get_batch_status", "target": "verify_page_scraper_access", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_session_dependency", "type": "depends_on"}, {"source": "verify_page_scraper_access", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.scan_domain", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.scan_domain", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.scan_domain", "target": "get_db_params", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.get_job_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.get_job_status", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.get_job_status", "target": "get_db_params", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.create_batch_endpoint", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.create_batch_endpoint", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.create_batch_endpoint", "target": "get_db_params", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.get_batch_status_endpoint", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.get_batch_status_endpoint", "target": "get_development_user", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.get_batch_status_endpoint", "target": "get_db_params", "type": "depends_on"}, {"source": "src.routers.batch_page_scraper.health_check", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_database_schema", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_database_schema", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_system_status", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_database_tables", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_table_fields", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_table_fields", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_db_tables", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.get_db_tables", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.dev_tools.setup_sidebar", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.dev_tools.setup_sidebar", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.db_portal.list_tables", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.db_portal.get_table_schema", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.db_portal.get_sample_data", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.db_portal.execute_query", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.db_portal.validate_schema", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.db_portal.generate_model", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.db_portal.health_check", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.profile.get_profiles", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.profile.get_profiles", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.profile.get_profiles", "target": "get_db_params", "type": "depends_on"}, {"source": "src.routers.profile.get_profile", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.profile.get_profile", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.profile.create_profile", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.profile.create_profile", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.profile.update_profile", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.profile.update_profile", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}, {"source": "src.routers.profile.delete_profile", "target": "get_session_dependency", "type": "depends_on"}, {"source": "src.routers.profile.delete_profile", "target": "get_current_user", "type": "depends_on"}, {"source": "get_current_user", "target": "unknown", "type": "depends_on"}]};
+
+        // Set up the SVG
+        const width = window.innerWidth;
+        const height = window.innerHeight - document.getElementById('controls').offsetHeight;
+
+        const svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Create a group for the graph
+        const g = svg.append("g");
+
+        // Set up the simulation
+        const simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide(30));
+
+        // Draw the links
+        const link = g.append("g")
+            .selectAll("line")
+            .data(graphData.links)
+            .enter()
+            .append("line")
+            .attr("class", "link");
+
+        // Draw the nodes
+        const node = g.append("g")
+            .selectAll(".node")
+            .data(graphData.nodes)
+            .enter()
+            .append("g")
+            .attr("class", d => `node \${d.type}`)
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // Add circles to nodes
+        node.append("circle")
+            .attr("r", 8);
+
+        // Add labels to nodes
+        node.append("text")
+            .attr("dx", 12)
+            .attr("dy", ".35em")
+            .text(d => d.id.split('.').pop());
+
+        // Set up tooltip
+        const tooltip = d3.select("#tooltip");
+
+        node.on("mouseover", (event, d) => {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip.html(`
+                <strong>ID:</strong> \${d.id}<br/>
+                <strong>Type:</strong> \${d.type}<br/>
+                <strong>File:</strong> \${d.file}
+            `)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", () => {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+
+        // Update positions on simulation tick
+        simulation.nodes(graphData.nodes)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(graphData.links);
+
+        function ticked() {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("transform", d => `translate(\${d.x},\${d.y})`);
+        }
+
+        // Zoom functionality
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Buttons functionality
+        document.getElementById("zoom-in").addEventListener("click", () => {
+            svg.transition().call(zoom.scaleBy, 1.5);
+        });
+
+        document.getElementById("zoom-out").addEventListener("click", () => {
+            svg.transition().call(zoom.scaleBy, 0.75);
+        });
+
+        document.getElementById("reset").addEventListener("click", () => {
+            svg.transition().call(zoom.transform, d3.zoomIdentity);
+        });
+
+        // Filter functionality
+        document.getElementById("show-handlers").addEventListener("change", updateVisibility);
+        document.getElementById("show-dependencies").addEventListener("change", updateVisibility);
+
+        function updateVisibility() {
+            const showHandlers = document.getElementById("show-handlers").checked;
+            const showDependencies = document.getElementById("show-dependencies").checked;
+
+            node.style("display", d => {
+                if (d.type === "handler" && !showHandlers) return "none";
+                if (d.type === "dependency" && !showDependencies) return "none";
+                return null;
+            });
+
+            link.style("display", d => {
+                const sourceNode = graphData.nodes.find(n => n.id === d.source.id);
+                const targetNode = graphData.nodes.find(n => n.id === d.target.id);
+
+                if (!showHandlers && sourceNode.type === "handler") return "none";
+                if (!showDependencies && targetNode.type === "dependency") return "none";
+
+                return null;
+            });
+        }
+
+        // Search functionality
+        document.getElementById("search").addEventListener("input", search);
+
+        function search(event) {
+            const term = event.target.value.toLowerCase();
+
+            if (term === "") {
+                node.style("opacity", 1);
+                link.style("opacity", 0.6);
+                return;
+            }
+
+            const matchingNodes = graphData.nodes
+                .filter(n => n.id.toLowerCase().includes(term) || n.file.toLowerCase().includes(term))
+                .map(n => n.id);
+
+            node.style("opacity", d => matchingNodes.includes(d.id) ? 1 : 0.1);
+            link.style("opacity", d =>
+                matchingNodes.includes(d.source.id) && matchingNodes.includes(d.target.id) ? 0.6 : 0.1
+            );
+        }
+    </script>
+</body>
+</html>

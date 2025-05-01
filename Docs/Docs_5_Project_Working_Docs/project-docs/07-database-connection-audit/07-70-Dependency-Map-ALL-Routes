@@ -1,0 +1,874 @@
+# ScraperSky Scanner Dependency Maps
+
+## Table of Contents
+
+1. [Google Maps API](#1-google-maps-api-dependency-map)
+2. [Sitemap Scanner](#2-sitemap-scanner-dependency-map)
+3. [Single Domain Scanner](#3-single-domain-scanner-dependency-map)
+4. [Batch Scraper](#4-batch-scraper-dependency-map)
+5. [Separation of Concerns](#separation-of-concerns)
+6. [Supporting Tools](#supporting-tools)
+   - [Database Portal](#61-database-portal)
+   - [Developer Tools](#62-developer-tools)
+   - [Profile API](#63-profile-api)
+7. [Standardization Audit](#7-standardization-audit)
+8. [Architectural Principles Reference](#8-architectural-principles-reference)
+
+## 1. Google Maps API Dependency Map
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/google_maps_api.py                                                    │
+│  ├── Provides HTTP endpoints for places search and management                     │
+│  ├── Handles request validation                                                   │
+│  ├── Owns transaction boundaries                                                  │
+│  └── Depends on auth layer for authentication/authorization                       │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                     ┌────────────────┴─────────────────┐
+                     │                                  │
+                     ▼                                  ▼
+┌─────────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│ SERVICE LAYER                       │  │ AUTH LAYER                              │
+├─────────────────────────────────────┤  ├─────────────────────────────────────────┤
+│ src/services/places/                │  │ src/auth/jwt_auth.py                    │
+│  ├── places_service.py              │  │  └── Authentication functions           │
+│  │   └── Core places operations     │  │                                         │
+│  ├── places_search_service.py       │  │ src/services/core/user_context_service.py│
+│  │   └── Search operations          │  │  └── User context management            │
+│  └── places_storage_service.py      │  │                                         │
+│      └── Data persistence           │  └─────────────────────────────────────────┘
+└────────────────┬────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ EXTERNAL INTEGRATION LAYER          │
+├─────────────────────────────────────┤
+│ src/integrations/                   │
+│  └── google_maps_client.py (implied)│
+│      └── Google Maps API client     │
+└────────────────┬────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ DATA ACCESS LAYER                   │
+├─────────────────────────────────────┤
+│ src/session/                        │
+│  └── async_session.py               │
+│     ├── get_session()               │
+│     └── get_session_dependency()    │
+│                                     │
+│ src/models/                         │
+│  ├── Place                          │
+│  └── PlaceSearch                    │
+└─────────────────────────────────────┘
+
+## 2. Sitemap Scanner Dependency Map
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/modernized_sitemap.py                                                 │
+│  ├── Provides HTTP endpoint for sitemap scanning                                  │
+│  ├── Handles request validation                                                   │
+│  ├── Owns transaction boundaries                                                  │
+│  └── Manages authentication/authorization                                         │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                     ┌────────────────┴─────────────────┐
+                     │                                  │
+                     ▼                                  ▼
+┌─────────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│ SERVICE LAYER                       │  │ AUTH LAYER                              │
+├─────────────────────────────────────┤  ├─────────────────────────────────────────┤
+│ src/services/sitemap/               │  │ src/auth/jwt_auth.py                    │
+│  └── processing_service.py          │  │  └── Authentication functions           │
+│      ├── sitemap_processing_service │  │                                         │
+│      ├── process_domain_with_own_session() │ src/services/core/user_context_service.py │
+│      └── get_job_status()           │  │  └── User context management            │
+└────────────────┬────────────────────┘  └─────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ SITEMAP CRAWLER LAYER               │
+├─────────────────────────────────────┤
+│ src/crawler/                        │
+│  └── sitemap_crawler.py (implied)   │
+│      ├── Parse XML sitemaps         │
+│      ├── Extract URLs               │
+│      └── Handle sitemap recursion   │
+└────────────────┬────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ DATA ACCESS LAYER                   │
+├─────────────────────────────────────┤
+│ src/session/                        │
+│  └── async_session.py               │
+│     ├── get_session()               │
+│     └── get_session_dependency()    │
+│                                     │
+│ src/models/                         │
+│  ├── SitemapJob                     │
+│  └── SitemapUrl                     │
+└─────────────────────────────────────┘
+
+## 3. Single Domain Scanner Dependency Map
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/modernized_page_scraper.py                                            │
+│  ├── Provides HTTP endpoint for single domain scanning                            │
+│  ├── Handles request validation                                                   │
+│  ├── Owns transaction boundaries                                                  │
+│  └── Manages authentication/authorization                                         │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                     ┌────────────────┴─────────────────┐
+                     │                                  │
+                     ▼                                  ▼
+┌─────────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│ SERVICE LAYER                       │  │ AUTH LAYER                              │
+├─────────────────────────────────────┤  ├─────────────────────────────────────────┤
+│ src/services/page_scraper/          │  │ src/auth/jwt_auth.py                    │
+│  └── processing_service.py          │  │  └── Authentication functions           │
+│      ├── initiate_domain_scan()     │  │                                         │
+│      ├── process_domain_with_own_session() │ src/services/core/user_context_service.py │
+│      └── get_job_status()           │  │  └── User context management            │
+└────────────────┬────────────────────┘  └─────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ SCRAPER LAYER                       │
+├─────────────────────────────────────┤
+│ src/scraper/                        │
+│  ├── metadata_extractor.py          │
+│  │   └── Extract metadata from pages │
+│  └── domain_utils.py                │
+│      └── URL normalization & parsing │
+└────────────────┬────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ DATA ACCESS LAYER                   │
+├─────────────────────────────────────┤
+│ src/session/                        │
+│  └── async_session.py               │
+│     ├── get_session()               │
+│     └── get_session_dependency()    │
+│                                     │
+│ src/models/                         │
+│  ├── Job                            │
+│  └── Domain                         │
+└─────────────────────────────────────┘
+
+## 4. Batch Scraper Dependency Map
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/batch_page_scraper.py                                                 │
+│  ├── Provides HTTP endpoints for batch operations                                 │
+│  ├── Handles request validation                                                   │
+│  ├── Owns transaction boundaries                                                  │
+│  └── Manages authentication/authorization                                         │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                     ┌────────────────┴─────────────────┐
+                     │                                  │
+                     ▼                                  ▼
+┌─────────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│ SERVICE LAYER                       │  │ AUTH LAYER                              │
+├─────────────────────────────────────┤  ├─────────────────────────────────────────┤
+│ src/services/batch/                 │  │ src/auth/jwt_auth.py                    │
+│  └── batch_processor_service.py     │  │  └── Authentication functions           │
+│      ├── create_batch()             │  │                                         │
+│      ├── process_domains_batch()    │  │ src/services/core/user_context_service.py
+│      ├── get_batch_status()         │  │  └── User context management            │
+│      └── process_batch_with_own_session│  │                                         │
+└────────────────┬────────────────────┘  └─────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ DOMAIN PROCESSING SERVICES          │
+├─────────────────────────────────────┤
+│ src/services/page_scraper/          │
+│  └── processing_service.py          │
+│      ├── initiate_domain_scan()     │
+│      ├── process_domain_with_own_session()│
+│      └── get_job_status()           │
+└────────────────┬────────────────────┘
+                 │
+      ┌──────────┴──────────┐
+      │                     │
+      ▼                     ▼
+┌─────────────────┐   ┌─────────────────────┐
+│ SCRAPER LAYER   │   │ DATA ACCESS LAYER   │
+├─────────────────┤   ├─────────────────────┤
+│ src/scraper/    │   │ src/session/        │
+│  ├── metadata_  │   │  └── async_session.py│
+│     extractor.py│   │     ├── get_session()│
+│  └── domain_    │   │     └── get_session_dependency()│
+│     utils.py    │   │                     │
+└─────────────────┘   │ src/models/         │
+                      │  ├── BatchJob       │
+                      │  ├── Job            │
+                      │  └── Domain         │
+                      └─────────────────────┘
+
+## 5. Separation of Concerns
+
+The ScraperSky architecture follows a consistent layered approach with clear separation of concerns:
+
+1. **Layer 1: Auth Layer**
+   - Authentication and authorization
+   - User context management
+   - Security boundary enforcement
+   - JWT token validation and processing
+
+2. **Layer 2: API/Router Layer**
+   - Handles HTTP requests and responses
+   - Enforces authentication
+   - Owns transaction boundaries (begin/commit/rollback)
+   - Manages validation and error responses
+   - Delegates business logic to services
+
+3. **Layer 3: Service Layer**
+   - Implements business logic
+   - Accepts sessions but doesn't manage transactions
+   - Coordinates between different components
+   - Handles background processing
+
+4. **Layer 4: Domain-Specific Layer**
+   - Domain-specific web scraping logic
+   - Metadata extraction from HTML
+   - URL processing and normalization
+   - Independent of database and API concerns
+
+5. **Layer 5: Data Access Layer**
+   - Database connection management
+   - Session handling
+   - Model definitions
+   - Query functionality
+
+This architecture ensures clean separation between authentication, HTTP handling, business logic, domain-specific functionality, and data access, following the established design principles.
+
+## 6. Supporting Tools
+
+The following components provide supporting tooling for the ScraperSky platform, enabling database inspection, developer operations, and user profile management.
+
+### 6.1 Database Portal
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/db_portal.py                                                          │
+│  ├── Provides HTTP endpoints for database inspection                              │
+│  ├── Handles request validation                                                   │
+│  ├── Owns transaction boundaries                                                  │
+│  └── Exposes database schema information                                          │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ SERVICE LAYER                                                                     │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/services/db_inspector.py                                                      │
+│  ├── list_all_tables()                                                            │
+│  ├── get_table_schema()                                                           │
+│  ├── get_sample_data()                                                            │
+│  ├── execute_safe_query()                                                         │
+│  ├── validate_table_schema()                                                      │
+│  └── generate_model_code()                                                        │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ DATA ACCESS LAYER                                                                 │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/session/                                                                      │
+│  └── async_session.py                                                             │
+│     ├── get_session()                                                             │
+│     └── get_session_dependency()                                                  │
+└───────────────────────────────────────────────────────────────────────────────────┘
+
+### 6.2 Developer Tools
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/dev_tools.py                                                          │
+│  ├── Provides HTTP endpoints for development operations                           │
+│  ├── Handles container management                                                 │
+│  ├── Exposes system diagnostics                                                   │
+│  └── Manages database schema inspection                                           │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+        ┌────────────────┬────────────┴────────────┬────────────────┐
+        │                │                         │                │
+        ▼                ▼                         ▼                ▼
+┌─────────────────┐ ┌────────────────┐  ┌───────────────────┐ ┌────────────────┐
+│ CONTAINER OPS   │ │ SERVER STATUS  │  │ DATABASE ACCESS   │ │ AUTH LAYER     │
+├─────────────────┤ ├────────────────┤  ├───────────────────┤ ├────────────────┤
+│ run_command()   │ │ get_logs()     │  │ src/session/      │ │ src/auth/      │
+│ rebuild_        │ │ get_server_    │  │ async_session.py  │ │ jwt_auth.py    │
+│ container()     │ │ status()       │  │                   │ │                │
+└─────────────────┘ └────────────────┘  └───────────────────┘ └────────────────┘
+
+### 6.3 Profile API
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT                                                                       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ main.py                                                                           │
+│  └── Initializes FastAPI app and registers routers                                │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ API LAYER / ROUTER                                                                │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ src/routers/profile.py                                                            │
+│  ├── Provides HTTP endpoints for profile management                               │
+│  ├── Handles request validation                                                   │
+│  ├── Owns transaction boundaries                                                  │
+│  └── Manages authentication/authorization                                         │
+└─────────────────────────────────────┬─────────────────────────────────────────────┘
+                                      │
+                     ┌────────────────┴─────────────────┐
+                     │                                  │
+                     ▼                                  ▼
+┌─────────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│ SERVICE LAYER                       │  │ AUTH LAYER                              │
+├─────────────────────────────────────┤  ├─────────────────────────────────────────┤
+│ src/services/profile_service.py     │  │ src/auth/jwt_auth.py                    │
+│  ├── get_profiles()                 │  │  └── Authentication functions           │
+│  ├── get_profile()                  │  │                                         │
+│  ├── create_profile()               │  └─────────────────────────────────────────┘
+│  ├── update_profile()               │
+│  └── delete_profile()               │
+└────────────────┬────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────┐
+│ DATA ACCESS LAYER                   │
+├─────────────────────────────────────┤
+│ src/session/                        │
+│  └── async_session.py               │
+│     ├── get_session()               │
+│     └── get_session_dependency()    │
+│                                     │
+│ src/models/                         │
+│  └── profile.py                     │
+└─────────────────────────────────────┘
+
+## 7. Standardization Audit
+
+This section provides a comprehensive audit framework for validating that all endpoints and their associated service layers adhere to our architectural standards.
+
+### 7.1 Service Layer Audit Table
+
+| Layer 3: Service                     | Layer 2: Router(s)           | Transaction Boundary | Background Processing     | UUID Handling     | Data Models         | Auth Integration |
+| ------------------------------------ | ---------------------------- | -------------------- | ------------------------- | ----------------- | ------------------- | ---------------- |
+| `places_service.py`                  | `google_maps_api.py`         | □ L2-owned           | □ Self-contained sessions | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `places_search_service.py`           | `google_maps_api.py`         | □ L2-owned           | □ Self-contained sessions | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `places_storage_service.py`          | `google_maps_api.py`         | □ L2-owned           | □ Self-contained sessions | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `sitemap/processing_service.py`      | `modernized_sitemap.py`      | □ L2-owned           | □ Self-contained sessions | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `page_scraper/processing_service.py` | `modernized_page_scraper.py` | □ L2-owned           | □ Self-contained sessions | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `batch/batch_processor_service.py`   | `batch_page_scraper.py`      | □ L2-owned           | □ Self-contained sessions | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `db_inspector.py`                    | `db_portal.py`               | □ L2-owned           | □ N/A                     | □ N/A             | □ Consistent models | □ Layer 1-based  |
+| `profile_service.py`                 | `profile.py`                 | □ L2-owned           | □ N/A                     | □ Standard format | □ Consistent models | □ Layer 1-based  |
+| `core/user_context_service.py`       | Multiple                     | □ N/A                | □ N/A                     | □ Standard format | □ N/A               | □ Layer 1-based  |
+
+### 7.2 Endpoint Transaction Management Audit
+
+| Layer 2: Endpoint                                         | Router                       | Transaction Start              | Transaction Commit | Error Handling | Session Source  |
+| --------------------------------------------------------- | ---------------------------- | ------------------------------ | ------------------ | -------------- | --------------- |
+| `/api/v3/localminer-discoveryscan/search/places`          | `google_maps_api.py`         | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/localminer-discoveryscan/search/status/{job_id}` | `google_maps_api.py`         | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/localminer-discoveryscan/results/{job_id}`       | `google_maps_api.py`         | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/sitemap/scan`                                    | `modernized_sitemap.py`      | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/sitemap/status/{job_id}`                         | `modernized_sitemap.py`      | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/modernized_page_scraper/scan`                    | `modernized_page_scraper.py` | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/modernized_page_scraper/status/{job_id}`         | `modernized_page_scraper.py` | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/batch_page_scraper/batch`                        | `batch_page_scraper.py`      | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/batch_page_scraper/batch/{batch_id}/status`      | `batch_page_scraper.py`      | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/db-portal/tables`                                | `db_portal.py`               | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/db-portal/tables/{table_name}`                   | `db_portal.py`               | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/profiles`                                        | `profile.py`                 | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+| `/api/v3/profiles/{profile_id}`                           | `profile.py`                 | □ `async with session.begin()` | □ Auto-commit      | □ Try/except   | □ L2 Dependency |
+
+### 7.3 Background Task Audit
+
+| Layer 3: Service                     | Background Task                    | Own Session  | Transaction Management         | Error Handling       | Progress Tracking |
+| ------------------------------------ | ---------------------------------- | ------------ | ------------------------------ | -------------------- | ----------------- |
+| `places_search_service.py`           | `process_places_search_background` | □ L3-created | □ `async with session.begin()` | □ Try/except/finally | □ Updates status  |
+| `sitemap/processing_service.py`      | `process_domain_with_own_session`  | □ L3-created | □ `async with session.begin()` | □ Try/except/finally | □ Updates status  |
+| `page_scraper/processing_service.py` | `process_domain_with_own_session`  | □ L3-created | □ `async with session.begin()` | □ Try/except/finally | □ Updates status  |
+| `batch/batch_processor_service.py`   | `process_batch_with_own_session`   | □ L3-created | □ `async with session.begin()` | □ Try/except/finally | □ Updates status  |
+
+### 7.4 Model Consistency Audit (Layer 5)
+
+| Layer 5: Model | Used By               | UUID Primary Key | Standard Timestamps | JSON Schema | DTOs Defined |
+| -------------- | --------------------- | ---------------- | ------------------- | ----------- | ------------ |
+| `Place`        | Google Maps API       | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `PlaceSearch`  | Google Maps API       | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `SitemapJob`   | Sitemap Scanner       | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `SitemapUrl`   | Sitemap Scanner       | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `Job`          | Single Domain Scanner | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `Domain`       | Single Domain Scanner | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `BatchJob`     | Batch Scraper         | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+| `Profile`      | Profile API           | □ Yes            | □ Yes               | □ Yes       | □ Yes        |
+
+## 8. Architectural Principles Reference
+
+This section provides definitive reference information on ScraperSky's architectural principles as they relate to each layer in the architecture. It should be used by auditors to verify implementation against established standards.
+
+### 8.1 Layer 1: Auth Layer - Official Standards
+
+| Principle            | Standard                                      | Reference                   | Implementation Pattern          |
+| -------------------- | --------------------------------------------- | --------------------------- | ------------------------------- |
+| JWT Authentication   | **Use only JWT for authentication**           | AUTHENTICATION_BOUNDARY.md  | JWT Bearer token validation     |
+| Boundary Enforcement | **JWT auth ONLY at API gateway/router level** | AUTHENTICATION_BOUNDARY.md  | Only in router dependencies     |
+| ID Propagation       | **Pass user ID to services, not tokens**      | AUTHENTICATION_BOUNDARY.md  | Extract ID from token in router |
+| Simplified Auth      | **RBAC and tenant isolation removed**         | RBAC_SYSTEM_SIMPLIFIED.md   | Use default tenant ID           |
+| Default Tenant       | **Always use DEFAULT_TENANT_ID**              | TENANT_ISOLATION_REMOVED.md | Import from `jwt_auth.py`       |
+
+**Example Auth Implementation Pattern:**
+
+```python
+# Layer 1 (Auth) implementation - JWT authentication
+# In src/auth/jwt_auth.py
+async def get_current_user(request: Request):
+    """Get the current user from JWT token."""
+    # L1 RESPONSIBILITY: JWT validation
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    # L1 RESPONSIBILITY: JWT decode and validation
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        tenant_id = payload.get("tenant_id", DEFAULT_TENANT_ID)
+
+        # Return user information for router
+        return {
+            "id": user_id,
+            "tenant_id": tenant_id,
+            "email": payload.get("email"),
+            "roles": payload.get("roles", [])
+        }
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+```
+
+### 8.2 Layer 2: API/Router - Official Standards
+
+| Principle             | Standard                                                                     | Reference                        | Implementation Pattern                                    |
+| --------------------- | ---------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------- |
+| Transaction Ownership | **Routers OWN transactions** - They begin, commit, and rollback transactions | TRANSACTION_MANAGEMENT_GUIDE.md  | `async with session.begin():` in all endpoint handlers    |
+| Session Source        | **Session provided via dependency injection**                                | CORE_ARCHITECTURAL_PRINCIPLES.md | `session: AsyncSession = Depends(get_session_dependency)` |
+| Error Handling        | **Use FastAPI's built-in error handling** with try/except blocks             | CORE_ARCHITECTURAL_PRINCIPLES.md | `try/except` blocks wrapping transaction blocks           |
+| Authentication        | **JWT authentication ONLY at API gateway/router level**                      | AUTHENTICATION_BOUNDARY.md       | `current_user: Dict = Depends(get_current_user)`          |
+| Background Tasks      | **Add background tasks AFTER transaction commits**                           | BACKGROUND_TASK_PATTERN.md       | `background_tasks.add_task()` after the transaction block |
+
+**Official Layer 2 Implementation Pattern from CORE_ARCHITECTURAL_PRINCIPLES.md:**
+
+```python
+@router.post("/action", response_model=ResponseModel)
+async def action(
+    request: RequestModel,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: dict = Depends(get_current_user)
+):
+    # Validate request
+    if not request.field:
+        raise HTTPException(status_code=400, detail="Field is required")
+
+    # L2 RESPONSIBILITY: Transaction boundary - router owns transactions
+    async with session.begin():
+        # Call service with session parameter
+        result = await service.perform_action(
+            session=session,
+            data=request.dict(),
+            user_id=current_user["id"]  # Pass user ID, not token
+        )
+
+    # L2 RESPONSIBILITY: Add background tasks AFTER transaction commits
+    background_tasks.add_task(
+        service.background_process,
+        job_id=str(result.id)
+    )
+
+    # Return standard response
+    return {
+        "job_id": str(result.id),
+        "status": "pending",
+        "status_url": f"/api/v3/resource-name/status/{result.id}"
+    }
+```
+
+### 8.3 Layer 3: Service - Official Standards
+
+| Principle             | Standard                                                                                 | Reference                        | Implementation Pattern                                  |
+| --------------------- | ---------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------- |
+| Transaction Awareness | **Services are transaction-AWARE** - They work within transactions but don't manage them | TRANSACTION_MANAGEMENT_GUIDE.md  | No `session.begin()` calls, accept session as parameter |
+| Session Management    | **Never create sessions within services** (except for background tasks)                  | CONNECTION_MANAGEMENT_GUIDE.md   | Accept session as parameter, no session creation        |
+| Business Logic        | **Services should implement business logic** - No business logic in routers              | CORE_ARCHITECTURAL_PRINCIPLES.md | Place all non-HTTP handling logic in services           |
+| UUID Handling         | **Use proper UUID handling** - Convert strings to UUIDs as needed                        | UUID_STANDARDIZATION_GUIDE.md    | Handle UUID conversion gracefully                       |
+| Error Propagation     | **Propagate errors to router** - Don't catch/swallow errors within services              | ERROR_HANDLING_GUIDE.md          | Let exceptions bubble up to router error handling       |
+
+**Official Layer 3 Implementation Pattern from CORE_ARCHITECTURAL_PRINCIPLES.md:**
+
+```python
+# Layer 3 (Service) implementation - transaction aware, not managing
+async def perform_action(
+    session: AsyncSession,  # Accept session from router
+    data: dict,
+    user_id: str  # Accept user ID, not token
+) -> Entity:
+    # L3 RESPONSIBILITY: Business logic implementation
+    entity = Entity(
+        id=uuid.uuid4(),  # Standard UUID
+        name=data["name"],
+        created_by=user_id
+    )
+
+    # L3 RESPONSIBILITY: Use session but DON'T manage transactions
+    session.add(entity)
+    await session.flush()  # Flush without commit - router manages commit
+
+    return entity
+```
+
+### 8.4 Layer 3: Background Task - Official Standards
+
+| Principle              | Standard                                                     | Reference                       | Implementation Pattern                      |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------- | ------------------------------------------- |
+| Session Creation       | **Create dedicated sessions** for background tasks           | BACKGROUND_TASK_PATTERN.md      | `async_session_factory()` at task start     |
+| Transaction Management | **Manage own transactions** within background tasks          | TRANSACTION_MANAGEMENT_GUIDE.md | `async with session.begin():` within task   |
+| Session Closure        | **Always ensure session closure** in finally blocks          | CONNECTION_MANAGEMENT_GUIDE.md  | `finally: await session.close()`            |
+| Error Handling         | **Handle errors properly** with separate error sessions      | ERROR_HANDLING_GUIDE.md         | Catch/log errors, update status accordingly |
+| Status Updates         | **Use the job tracking pattern** for long-running operations | JOB_TRACKING_PATTERN.md         | Update job status at key points             |
+
+**Official Background Task Implementation Pattern from CORE_ARCHITECTURAL_PRINCIPLES.md:**
+
+```python
+# Background task implementation - creates and manages own session
+async def background_process(job_id: str):
+    # L3 RESPONSIBILITY: Create dedicated session
+    session = async_session_factory()
+    try:
+        # L3 RESPONSIBILITY: Manage own transaction
+        async with session.begin():
+            # Get job
+            job = await get_job_by_id(session, uuid.UUID(job_id))
+            # Update status
+            job.status = "processing"
+
+        # L3 RESPONSIBILITY: Process in separate transaction
+        try:
+            async with session.begin():
+                # Processing logic
+                # ...
+
+            # L3 RESPONSIBILITY: Update status on success
+            async with session.begin():
+                job = await get_job_by_id(session, uuid.UUID(job_id))
+                job.status = "completed"
+
+        except Exception as processing_error:
+            logger.error(f"Processing error: {str(processing_error)}")
+            # L3 RESPONSIBILITY: Update status on error - separate transaction
+            async with session.begin():
+                job = await get_job_by_id(session, uuid.UUID(job_id))
+                job.status = "failed"
+                job.error = str(processing_error)
+
+    finally:
+        # L3 RESPONSIBILITY: Always close session
+        await session.close()
+```
+
+### 8.5 Layer 4: Domain-Specific Layer - Official Standards
+
+| Principle              | Standard                                         | Reference                        | Implementation Pattern                      |
+| ---------------------- | ------------------------------------------------ | -------------------------------- | ------------------------------------------- |
+| Separation of Concerns | **Domain-specific logic in specialized modules** | CORE_ARCHITECTURAL_PRINCIPLES.md | Place in `/src/scraper/` or `/src/crawler/` |
+| Independence           | **Independent of database and API concerns**     | SEPARATION_OF_CONCERNS.md        | No direct database interaction              |
+| Testability            | **Domain logic should be testable in isolation** | TESTABILITY_GUIDE.md             | Pure functions where possible               |
+| Error Handling         | **Domain-specific error types**                  | ERROR_HANDLING_GUIDE.md          | Custom exceptions for domain issues         |
+| Configuration          | **Externalize domain-specific configuration**    | CONFIGURATION_GUIDE.md           | Environment variables for thresholds/limits |
+
+**Example Implementation Pattern:**
+
+```python
+# Layer 4 (Domain) implementation - focused on specific domain logic
+class MetadataExtractor:
+    def __init__(self, config: Dict[str, Any] = None):
+        self.config = config or DEFAULT_CONFIG
+
+    async def extract_metadata(self, html_content: str) -> Dict[str, Any]:
+        """Extract metadata from HTML content."""
+        # L4 RESPONSIBILITY: Domain-specific processing logic
+        try:
+            # Parse HTML
+            soup = BeautifulSoup(html_content, 'html.parser')
+
+            # Extract metadata based on domain knowledge
+            title = soup.title.text if soup.title else ""
+            description = soup.find('meta', {'name': 'description'})
+            description = description.get('content', "") if description else ""
+
+            # Return structured data
+            return {
+                "title": title,
+                "description": description,
+                # Other extracted fields
+            }
+        except Exception as e:
+            # L4 RESPONSIBILITY: Domain-specific error handling
+            raise MetadataExtractionError(f"Failed to extract metadata: {str(e)}")
+```
+
+### 8.6 Layer 5: Data Access - Official Standards
+
+| Principle        | Standard                                            | Reference                     | Implementation Pattern                                             |
+| ---------------- | --------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------ |
+| UUID Format      | **Use PostgreSQL UUID type** in database schema     | UUID_STANDARDIZATION_GUIDE.md | `Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)` |
+| Model Definition | **Models should match database schema**             | DATABASE_SCHEMA_GUIDE.md      | SQLAlchemy model fields match table structure                      |
+| Timestamps       | **Standard timestamp fields** on all entities       | DATABASE_STANDARDS.md         | `created_at` and `updated_at` on all entities                      |
+| Relationships    | **Properly defined relationships** between entities | DATABASE_SCHEMA_GUIDE.md      | `relationship()` for associated entities                           |
+| DTO Pattern      | **Data Transfer Objects** for API responses         | API_STANDARDIZATION_GUIDE.md  | Pydantic models for request/response objects                       |
+
+**Example Model Implementation Pattern:**
+
+```python
+# Layer 5 (Data Access) implementation - SQLAlchemy model
+class Job(Base):
+    """Model for job tracking."""
+    __tablename__ = "jobs"
+
+    # L5 RESPONSIBILITY: Standardized UUID primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # L5 RESPONSIBILITY: Standard fields
+    status = Column(String, nullable=False, default="pending")
+    domain = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # L5 RESPONSIBILITY: Proper relationships
+    results = relationship("Result", back_populates="job")
+
+    # L5 RESPONSIBILITY: Serialization methods
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "id": str(self.id),
+            "status": self.status,
+            "domain": self.domain,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+```
+
+### 8.7 Google Maps API Exemplar
+
+The Google Maps API implementation is designated as the **gold standard** for proper architectural implementation. Key exemplar patterns include:
+
+1. **Clean Transaction Boundaries:**
+
+   - Routers own transactions via `async with session.begin()`
+   - Services never manage transactions
+   - Background tasks handle their own sessions
+
+2. **Background Processing Pattern:**
+
+   - Background task creation after transaction commit
+   - Proper error handling and status updates
+   - Clear progress tracking
+
+3. **Proper Layer Separation:**
+
+   - Router handles HTTP concerns
+   - Services implement business logic
+   - Domain-specific logic in specialized modules
+   - Data access in models
+
+4. **API Standardization:**
+   - Consistent naming: `/api/v3/localminer-discoveryscan/*`
+   - Standardized response formats
+   - Proper status endpoints
+
+As noted in the standardization template, all other endpoints should follow the patterns established in the Google Maps API implementation.
+
+### 8.8 Common Anti-Patterns to Avoid
+
+Based on TRANSACTION_MANAGEMENT_GUIDE.md and other sources, these patterns should be avoided:
+
+1. **Nested Transactions:**
+
+   ```python
+   # ANTI-PATTERN: Service trying to start transaction when router already has one
+   async with session.begin():  # Router starts transaction
+       result = await service.create_with_transaction(session)  # Service tries to start another
+   ```
+
+2. **Session Creation in Services:**
+
+   ```python
+   # ANTI-PATTERN: Service creating session instead of accepting it
+   async def process_data(data: dict):
+       session = async_session_factory()  # WRONG: Service should not create session
+       # ...
+   ```
+
+3. **Missing Transaction Boundaries:**
+
+   ```python
+   # ANTI-PATTERN: Router endpoint with no transaction boundaries
+   @router.post("/resource")
+   async def create_resource(request: RequestModel, session: AsyncSession):
+       # No transaction boundary - changes might not be committed
+       result = await service.create_resource(session, request.data)
+       return result
+   ```
+
+4. **Tenant or Authorization Logic in Services:**
+
+   ```python
+   # ANTI-PATTERN: Service handling auth
+   async def get_user_data(session: AsyncSession, token: str):  # WRONG: Should accept user_id, not token
+       # WRONG: Services should not handle JWT
+       payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+       user_id = payload.get("sub")
+       # ...
+   ```
+
+5. **Direct Database Access in Layer 4:**
+   ```python
+   # ANTI-PATTERN: Domain logic directly accessing database
+   class MetadataProcessor:
+       def __init__(self):
+           self.session = async_session_factory()  # WRONG: Domain layer should not access DB directly
+       # ...
+   ```
+
+### 8.9 Verification Checklist for Auditors
+
+When auditing endpoints, verify these key aspects based on the architectural principles:
+
+1. ✓ **Authentication Management**: JWT auth implemented in Layer 1, enforced in router dependencies
+2. ✓ **Transaction Boundaries**: Router (Layer 2) uses `async with session.begin()` for all database operations
+3. ✓ **Session Passing**: Router passes session to services, services don't create sessions
+4. ✓ **Error Handling**: Try/except blocks around transactions with proper error responses
+5. ✓ **User ID Propagation**: User ID passed to services, not tokens
+6. ✓ **Background Tasks**: Added after transaction commits, manage own sessions
+7. ✓ **UUID Handling**: UUIDs properly parsed and formatted
+8. ✓ **Layer Separation**: Clear separation between auth, HTTP, business logic, domain logic, and data access
+9. ✓ **Model Standards**: Models follow database schema standards
+10. ✓ **Response Standards**: Standard response formats used consistently
+
+## Appendix: Routes to Background Services Mapping
+
+This appendix provides a clear mapping of all routes that trigger background services in the system.
+
+### 1. Google Maps API Router (google_maps_api.py)
+
+```
+/api/v3/localminer-discoveryscan/search/places
+└─ BACKGROUND SERVICE #1: process_places_search_background()
+   └─ FILE: places_search_service.py
+```
+
+### 2. Sitemap Scanner Router (modernized_sitemap.py)
+
+```
+/api/v3/sitemap/scan
+└─ BACKGROUND SERVICE #2: process_domain_with_own_session()
+   └─ FILE: sitemap/processing_service.py
+```
+
+### 3. Single Domain Scanner Router (modernized_page_scraper.py)
+
+```
+/api/v3/modernized_page_scraper/scan
+└─ BACKGROUND SERVICE #3: process_domain_with_own_session()
+   └─ FILE: page_scraper/processing_service.py
+```
+
+### 4. Batch Scraper Router (batch_page_scraper.py)
+
+```
+/api/v3/batch_page_scraper/batch
+└─ BACKGROUND SERVICE #4: process_batch_with_own_session() ✓ FIXED
+   └─ FILE: batch/batch_processor_service.py
+   └─ CALLS: BACKGROUND SERVICE #3 for each domain in batch
+```
+
+All four background services create their own database connections. These connections must be configured with proper execution options to disable prepared statements for Supavisor compatibility.
+```
+
+---
+
+Let me know if you need any further modifications or additional details.
