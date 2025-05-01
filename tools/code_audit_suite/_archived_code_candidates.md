@@ -330,3 +330,18 @@ Provides a `UserContextService` intended to manage user-specific context (like u
 
 - `UserContextService`
 - `user_context_service` (singleton instance)
+
+<!--
+Verification Note (YYYY-MM-DD):
+Compared against Docs/Docs_5_Project_Working_Docs/project-docs/41-Code-Audit-And-Archive/41.31-final_archived_files.md (Verified Baseline Archive).
+
+This candidates file lists the following src/ files that are NOT in the final verified archive (meaning they were likely candidates but ultimately restored/kept in the main codebase):
+
+- src/core/exceptions.py
+- src/core/response.py
+- src/models.py
+- src/models/enums.py
+- src/routers/sqlalchemy/__init__.py
+- src/services/batch/types.py
+- src/services/core/user_context_service.py
+-->
