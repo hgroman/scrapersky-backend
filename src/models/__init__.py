@@ -10,7 +10,7 @@ relationships between models.
 # Enum exports for easier import in other modules
 # import enum # Removed unused import
 # import uuid # Removed unused import
-from enum import Enum # Kept Enum, removed auto
+from enum import Enum  # Kept Enum, removed auto
 
 # RBAC models - imports commented out as part of RBAC removal
 # These model definitions are preserved in their respective files for future reintegration
