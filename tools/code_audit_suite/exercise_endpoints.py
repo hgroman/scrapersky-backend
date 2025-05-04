@@ -1,8 +1,8 @@
-import requests
-import time
 import argparse
-import json
-import os
+import time
+
+import requests
+
 
 def get_all_endpoints(base_url):
     """Get all endpoints from OpenAPI schema"""
@@ -23,6 +23,7 @@ def get_all_endpoints(base_url):
         print(f"Failed to get OpenAPI schema: {str(e)}")
         return []
 
+
 def exercise_all_endpoints(base_url, delay=0.5):
     """Call all API endpoints"""
     endpoints = get_all_endpoints(base_url)
@@ -39,7 +40,7 @@ def exercise_all_endpoints(base_url, delay=0.5):
                 status = response.status_code
                 print(f"  Response: {status}")
             else:
-                print(f"  Skipping (requires parameters or not GET)")
+                print("  Skipping (requires parameters or not GET)")
 
             # Add delay to avoid overwhelming the server
             time.sleep(delay)
@@ -47,10 +48,17 @@ def exercise_all_endpoints(base_url, delay=0.5):
         except Exception as e:
             print(f"  Error: {str(e)}")
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Exercise API endpoints to trace module usage")
-    parser.add_argument("--url", default="http://localhost:8000", help="Base URL of the API")
-    parser.add_argument("--wait", type=int, default=30, help="Seconds to wait for scheduler tasks")
+    parser = argparse.ArgumentParser(
+        description="Exercise API endpoints to trace module usage"
+    )
+    parser.add_argument(
+        "--url", default="http://localhost:8000", help="Base URL of the API"
+    )
+    parser.add_argument(
+        "--wait", type=int, default=30, help="Seconds to wait for scheduler tasks"
+    )
     args = parser.parse_args()
 
     print(f"Starting endpoint testing for {args.url}")
@@ -60,6 +68,7 @@ def main():
     time.sleep(args.wait)
 
     print("Test complete - check reports/runtime_loaded_files.txt for results")
+
 
 if __name__ == "__main__":
     main()

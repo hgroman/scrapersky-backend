@@ -59,7 +59,8 @@ async def run_job_loop(
         fetch_session = await get_session()
         if fetch_session is None:
             logger.error(
-                "SCHEDULER_LOOP: Failed to obtain background database session for fetching."
+                "SCHEDULER_LOOP: Failed to obtain background database session "
+                "for fetching."
             )
             return
 
@@ -83,12 +84,14 @@ async def run_job_loop(
 
             if not items_to_process_ids:
                 logger.debug(
-                    f"SCHEDULER_LOOP: No {model.__name__} items found with status {queued_status}. Loop finished."
+                    f"SCHEDULER_LOOP: No {model.__name__} items found with status "
+                    f"{queued_status}. Loop finished."
                 )
                 return
 
             logger.info(
-                f"SCHEDULER_LOOP: Found {initial_item_count} {model.__name__} items with status {queued_status}. Marking as Processing."
+                f"SCHEDULER_LOOP: Found {initial_item_count} {model.__name__} items with "
+                f"status {queued_status}. Marking as Processing."
             )
 
             # Mark selected items as Processing
@@ -111,7 +114,8 @@ async def run_job_loop(
 
     except Exception as fetch_err:
         logger.exception(
-            f"SCHEDULER_LOOP: Error during fetch/mark phase for {model.__name__}: {fetch_err}"
+            f"SCHEDULER_LOOP: Error during fetch/mark phase for "
+            f"{model.__name__}: {fetch_err}"
         )
         # Do not proceed if fetching/marking failed
         return
@@ -121,7 +125,8 @@ async def run_job_loop(
 
     # Phase 2: Process Each Item Individually (Separate Transactions)
     logger.info(
-        f"SCHEDULER_LOOP: Starting individual processing for {initial_item_count} {model.__name__} items."
+        f"SCHEDULER_LOOP: Starting individual processing for "
+        f"{initial_item_count} {model.__name__} items."
     )
     for item_id in items_to_process_ids:
         item_session: Optional[AsyncSession] = None
@@ -129,7 +134,8 @@ async def run_job_loop(
             item_session = await get_session()
             if item_session is None:
                 logger.error(
-                    f"SCHEDULER_LOOP: Failed to get session for processing item {item_id}. Skipping."
+                    f"SCHEDULER_LOOP: Failed to get session for processing item "
+                    f"{item_id}. Skipping."
                 )
                 items_failed += 1
                 continue
@@ -144,7 +150,8 @@ async def run_job_loop(
             items_failed += 1
             # Use logger.exception to include traceback
             logger.exception(
-                f"SCHEDULER_LOOP: Error processing {model.__name__} ID {item_id}: {process_err}"
+                f"SCHEDULER_LOOP: Error processing {model.__name__} ID "
+                f"{item_id}: {process_err}"
             )
             # Attempt to mark as Failed in a *separate* error-handling transaction
             error_session: Optional[AsyncSession] = None
@@ -152,7 +159,8 @@ async def run_job_loop(
                 error_session = await get_session()
                 if error_session is None:
                     logger.error(
-                        f"SCHEDULER_LOOP: Failed to get error session for item {item_id}. Cannot mark as Failed."
+                        f"SCHEDULER_LOOP: Failed to get error session for item "
+                        f"{item_id}. Cannot mark as Failed."
                     )
                     continue  # Skip marking failed if we can't get a session
 
@@ -170,11 +178,13 @@ async def run_job_loop(
                     )
                     await error_session.execute(failed_item_update_stmt)
                 logger.warning(
-                    f"SCHEDULER_LOOP: Marked {model.__name__} ID {item_id} as Failed due to error."
+                    f"SCHEDULER_LOOP: Marked {model.__name__} ID {item_id} as "
+                    f"Failed due to error."
                 )
             except Exception as update_err:
                 logger.exception(
-                    f"SCHEDULER_LOOP: CRITICAL - Failed to mark {model.__name__} ID {item_id} as Failed: {update_err}"
+                    f"SCHEDULER_LOOP: CRITICAL - Failed to mark {model.__name__} "
+                    f"ID {item_id} as Failed: {update_err}"
                 )
             finally:
                 if error_session:
@@ -185,7 +195,9 @@ async def run_job_loop(
                 await item_session.close()
 
     logger.info(
-        f"SCHEDULER_LOOP: Finished processing batch for {model.__name__}. Success: {items_processed_successfully}, Failed: {items_failed}, Total Attempted: {initial_item_count}."
+        f"SCHEDULER_LOOP: Finished processing batch for {model.__name__}. "
+        f"Success: {items_processed_successfully}, Failed: {items_failed}, "
+        f"Total Attempted: {initial_item_count}."
     )
 
 

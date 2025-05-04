@@ -29,7 +29,8 @@ class SitemapURL(BaseModel):
                 return priority_float
             else:
                 logger.warning(
-                    f"Invalid priority value '{v}', must be between 0.0 and 1.0. Setting to None."
+                    f"Invalid priority value '{v}', must be between 0.0 and 1.0. "
+                    f"Setting to None."
                 )
                 return None
         except (ValueError, TypeError):
@@ -67,7 +68,8 @@ class SitemapURL(BaseModel):
                 pass
             # Add other formats if needed, e.g., RFC 822
             logger.warning(
-                f"Could not parse lastmod date '{v}' with common formats. Setting to None."
+                f"Could not parse lastmod date '{v}' with common formats. "
+                f"Setting to None."
             )
             return None
 
@@ -84,12 +86,12 @@ class SitemapParser:
         return elem.tag.split("}", 1)[-1] if "}" in elem.tag else elem.tag
 
     def parse(self, content: str, base_url: str) -> List[SitemapURL]:
-        """
-        Parses sitemap XML content.
+        """Parse sitemap content (XML string).
 
         Args:
             content: The sitemap content as a string.
-            base_url: The base URL for resolving relative paths (often the sitemap URL itself).
+            base_url: The base URL for resolving relative paths
+                      (often the sitemap URL itself).
 
         Returns:
             A list of SitemapURL objects.
@@ -99,7 +101,7 @@ class SitemapParser:
 
         try:
             # Handle potential gzip content passed as string (less ideal, but for safety)
-            if content.startswith("\\x1f\\x8b"):  # Gzip magic bytes
+            if content.startswith("\x1f\x8b"):  # Gzip magic bytes
                 logger.warning(
                     "Attempting to parse potential gzip content passed as string."
                 )
@@ -150,9 +152,11 @@ class SitemapParser:
                                 urls.append(SitemapURL(**sitemap_data))
                                 processed_locs.add(loc_text)
                             except Exception as pydantic_err:
-                                logger.warning(
-                                    f"Skipping sitemap index entry due to validation error: {pydantic_err} for data {sitemap_data}"
+                                error_msg = (
+                                    f"Skipping sitemap index entry due to validation error: "
+                                    f"{pydantic_err} for data {sitemap_data}"
                                 )
+                                logger.warning(error_msg)
 
             elif root_tag == "urlset":
                 logger.info("Detected URL set.")
@@ -183,14 +187,16 @@ class SitemapParser:
                                 urls.append(SitemapURL(**url_data))
                                 processed_locs.add(loc_text)
                             except Exception as pydantic_err:
-                                logger.warning(
-                                    f"Skipping URL entry due to validation error: {pydantic_err} for data {url_data}"
+                                error_msg = (
+                                    f"Skipping URL entry due to validation error: "
+                                    f"{pydantic_err} for data {url_data}"
                                 )
+                                logger.warning(error_msg)
 
             else:
                 logger.warning(f"Unknown root element found: {root_tag}")
 
-        except ET.ParseError as e:
+        except (ET.ParseError, AttributeError) as e:
             logger.error(f"Failed to parse XML sitemap: {e}")
         except Exception as e:
             logger.exception(f"Unexpected error during sitemap parsing: {e}")
