@@ -85,3 +85,6 @@ _Archive_4.13.25/
 # Generated Reports & Data
 reports/
 *.json
+
+# Ignore specific folders moved out during refactoring
+Z-Curation-Workflow-Process-Build/

@@ -1,4 +1,14 @@
-# Scheduled Tasks with APScheduler in FastAPI
+# Guide: Scheduled Tasks with APScheduler Pattern
+
+**Document ID:** 21
+**Date:** 2024-07-22
+**Status:** Active
+
+**CRITICAL NOTE:** For accessing application configuration (`settings`) within scheduler setup or job functions, refer to the correct import pattern documented in `28-SCHEDULER_AND_SETTINGS_PATTERNS.md`. Failure to import the `settings` instance correctly will lead to `AttributeError`.
+
+## Purpose
+
+This guide outlines the standard pattern for creating and managing background scheduled tasks using the `APScheduler` library within the ScraperSky backend.
 
 ## Quick Reference
 

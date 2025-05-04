@@ -21,7 +21,9 @@ from ..config.settings import settings
 # from ..models.sitemap import SitemapFile, SitemapUrl, SitemapFileStatusEnum, SitemapCurationStatusEnum
 from ..models.job import Job
 from ..models.local_business import DomainExtractionStatusEnum, LocalBusiness
-from ..models.place import DeepScanStatusEnum, Place
+
+# Import the NEW Enum for deep scan status
+from ..models.place import GcpApiDeepScanStatusEnum, Place
 
 # Import the shared scheduler instance
 from ..scheduler_instance import scheduler
@@ -206,8 +208,8 @@ async def process_pending_jobs(limit: int = 10):
         ):  # Session for the deep scan batch
             stmt_select = (
                 select(Place)
-                # Query using the dedicated deep_scan_status field
-                .where(Place.deep_scan_status == DeepScanStatusEnum.Queued)
+                # Query using the dedicated deep_scan_status field and the NEW enum
+                .where(Place.deep_scan_status == GcpApiDeepScanStatusEnum.Queued)
                 .order_by(Place.updated_at.asc())  # Process oldest first
                 .limit(limit)
                 # --- Reinstated after debugging --- #
@@ -232,8 +234,8 @@ async def process_pending_jobs(limit: int = 10):
                     )
 
                     try:
-                        # Mark as Processing immediately
-                        place.deep_scan_status = DeepScanStatusEnum.Processing  # type: ignore
+                        # Mark as Processing immediately using the NEW enum
+                        place.deep_scan_status = GcpApiDeepScanStatusEnum.Processing  # type: ignore
                         place.updated_at = datetime.utcnow()  # type: ignore
                         await (
                             session.flush()
@@ -248,34 +250,45 @@ async def process_pending_jobs(limit: int = 10):
                             place_id=place_id_str, tenant_id=tenant_id_str
                         )
 
-                        if result:
-                            place.deep_scan_status = DeepScanStatusEnum.Completed  # type: ignore
+                        if result.get("success"):
+                            logger.info(
+                                f"Deep Scan: Success for Place ID: {place.place_id}"
+                            )
+                            # Update status to Completed using the NEW enum
+                            place.deep_scan_status = GcpApiDeepScanStatusEnum.Completed  # type: ignore
+                            place.deep_scan_error = None  # type: ignore
                             place.updated_at = datetime.utcnow()  # type: ignore
                             deep_scans_successful += 1
-                            logger.info(
-                                f"Deep Scan: Successfully processed Place ID: {place.place_id}"
-                            )
                         else:
-                            # Let the except block handle marking as Error
-                            raise Exception(
-                                f"process_single_deep_scan failed or returned None for place_id {place_id_str}"
+                            error_msg = result.get("error", "Unknown deep scan error")
+                            logger.error(
+                                f"Deep Scan: Failed for Place ID: {place.place_id} - Error: {error_msg}"
                             )
+                            # Update status to Error using the NEW enum
+                            place.deep_scan_status = GcpApiDeepScanStatusEnum.Error  # type: ignore
+                            place.deep_scan_error = error_msg[:1024]  # type: ignore # Truncate
+                            place.updated_at = datetime.utcnow()  # type: ignore
 
-                    except Exception as e:
+                    except Exception as deep_scan_e:
                         logger.error(
-                            f"Deep Scan: Error processing Place ID {place.place_id}: {e}",
+                            f"Deep Scan: Exception during processing Place ID: {place.place_id} - {deep_scan_e}",
                             exc_info=True,
                         )
-                        # Mark as failed in DB
-                        place.deep_scan_status = DeepScanStatusEnum.Error  # type: ignore
-                        place.deep_scan_error = str(e)[:2000]  # type: ignore
-                        place.updated_at = datetime.utcnow()  # type: ignore
-                        deep_scans_processed -= 1
-                    finally:
-                        # If loop completes, context manager commits changes for this deep scan batch
-                        logger.info(
-                            "Deep scan batch loop finished. Session context manager will commit/rollback."
-                        )
+                        try:
+                            # Attempt to mark as Error using the NEW enum on exception
+                            place.deep_scan_status = GcpApiDeepScanStatusEnum.Error  # type: ignore
+                            place.deep_scan_error = str(deep_scan_e)[:1024]  # type: ignore
+                            place.updated_at = datetime.utcnow()  # type: ignore
+                        except Exception as inner_e:
+                            logger.error(
+                                f"Error marking place {place.place_id} as error: {inner_e}",
+                                exc_info=True,
+                            )
+                        finally:
+                            # If loop completes, context manager commits changes for this deep scan batch
+                            logger.info(
+                                "Deep scan batch loop finished. Session context manager will commit/rollback."
+                            )
 
     except Exception as e:
         logger.error(

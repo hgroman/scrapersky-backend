@@ -12,7 +12,7 @@ import logging
 import uuid
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -22,9 +22,9 @@ logger.setLevel(logging.DEBUG)
 
 # Corrected import path
 from ..models.sitemap import (
-    SitemapDeepCurationStatusEnum,
-    SitemapDeepProcessStatusEnum,
     SitemapFile,
+    SitemapImportCurationStatusEnum,
+    SitemapImportProcessStatusEnum,
 )
 from ..schemas.sitemap_file import PaginatedSitemapFileResponse, SitemapFileRead
 
@@ -80,7 +80,7 @@ class SitemapFilesService:
         page: int = 1,
         size: int = 15,
         domain_id: Optional[uuid.UUID] = None,
-        deep_scrape_curation_status: Optional[SitemapDeepCurationStatusEnum] = None,
+        deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = None,
         url_contains: Optional[str] = None,
         sitemap_type: Optional[str] = None,
         discovery_method: Optional[str] = None,
@@ -122,7 +122,7 @@ class SitemapFilesService:
                 # Compare against the .value of the Enum member for robustness
                 filters_applied.append(
                     SitemapFile.deep_scrape_curation_status
-                    == deep_scrape_curation_status.value
+                    == deep_scrape_curation_status
                 )
                 logger.debug(
                     f"Applying filter: deep_scrape_curation_status == {deep_scrape_curation_status.value}"
@@ -296,111 +296,93 @@ class SitemapFilesService:
         self,
         session: AsyncSession,
         sitemap_file_ids: List[uuid.UUID],
-        new_curation_status: SitemapDeepCurationStatusEnum,
+        new_curation_status: SitemapImportCurationStatusEnum,
         updated_by: Optional[uuid.UUID] = None,  # Added user tracking
     ) -> Dict[str, int]:
         """
-        Batch update the deep_scrape_curation_status for multiple sitemap files.
-        If the new status is 'Selected', also attempts to queue them for deep scrape
-        by setting deep_scrape_process_status to 'Queued', unless they are already 'Processing'.
+        Batch update the deep_scrape_curation_status of sitemap files.
+        If the new status is 'Selected', update the deep_scrape_process_status to 'Queued'.
 
         Args:
-            session: SQLAlchemy AsyncSession.
-            sitemap_file_ids: A list of UUIDs for the records to update.
-            new_curation_status: The new SitemapDeepCurationStatusEnum status to set.
+            session: SQLAlchemy AsyncSession
+            sitemap_file_ids: List of SitemapFile UUIDs to update.
+            new_curation_status: The new curation status enum value.
             updated_by: Optional UUID of the user performing the update.
 
         Returns:
-            A dictionary containing 'updated_count' (records with curation status changed)
-            and 'queued_count' (records successfully set to 'queued' process status).
+            A dictionary containing 'updated_count' and 'queued_count'.
         """
-        if not sitemap_file_ids:
-            logger.warning("Batch curation status update called with empty ID list.")
-            return {"updated_count": 0, "queued_count": 0}
-
-        logger.debug(
-            f"Batch updating curation status to {new_curation_status.name} for {len(sitemap_file_ids)} sitemap files, updated_by: {updated_by}"
+        logger.info(
+            f"Starting batch update: {len(sitemap_file_ids)} files, status={new_curation_status}, by={updated_by}"
         )
 
-        updated_count = 0
-        queued_count = 0
+        # --- Begin Transaction --- (Managed by router, assumed here)
+        # async with session.begin(): <-- Router should handle this
+
+        # 1. Validate IDs (optional but good practice)
+        if not sitemap_file_ids:
+            logger.warning("Batch update called with empty sitemap_file_ids list.")
+            return {"updated_count": 0, "queued_count": 0}
+
+        # 2. Prepare update values dictionary
+        update_values = {
+            # Use renamed Enum property if DB column name wasn't changed
+            SitemapFile.deep_scrape_curation_status: new_curation_status,
+            SitemapFile.updated_at: func.now(),
+            SitemapFile.updated_by: updated_by,  # Add user tracking
+        }
+
+        # 3. Conditionally add process status update
+        queue_for_processing = (
+            new_curation_status == SitemapImportCurationStatusEnum.Selected
+        )
+        if queue_for_processing:
+            # Use renamed Enum for process status
+            update_values[SitemapFile.sitemap_import_status] = (
+                SitemapImportProcessStatusEnum.Queued
+            )
+            # Clear any previous error when re-queuing
+            update_values[SitemapFile.sitemap_import_error] = None
+            logger.info(
+                f"New status is '{new_curation_status.value}', also setting process status to 'Queued'."
+            )
+
+        # 4. Build and execute the UPDATE statement
+        stmt = (
+            update(SitemapFile)
+            .where(SitemapFile.id.in_(sitemap_file_ids))
+            .values(update_values)
+            .execution_options(synchronize_session=False)  # Important for bulk updates
+        )
 
         try:
-            # Use transaction block for atomicity
-            async with session.begin():
-                # 1. Update curation status
-                update_values_curation = {
-                    # Explicitly use .value here too for robustness
-                    "deep_scrape_curation_status": new_curation_status.value,
-                    "updated_at": func.now(),  # Keep updated_at fresh
-                }
-                if updated_by:
-                    update_values_curation["updated_by"] = updated_by
+            result = await session.execute(stmt)
+            updated_count = result.rowcount
+            logger.info(f"Executed batch update, rowcount: {updated_count}")
 
-                update_stmt_curation = (
-                    update(SitemapFile)
-                    .where(SitemapFile.id.in_(sitemap_file_ids))
-                    .values(**update_values_curation)
-                    .execution_options(synchronize_session=False)
-                )
-                result_curation = await session.execute(update_stmt_curation)
-                # Relying on rowcount, acknowledging potential driver issues mentioned in 23.6
-                updated_count = (
-                    result_curation.rowcount
-                    if result_curation.rowcount >= 0
-                    else len(sitemap_file_ids)
-                )
-                logger.debug(
-                    f"Curation status update query affected rowcount: {result_curation.rowcount}. Set updated_count to {updated_count}."
+            # Determine queued_count based on the flag and updated count
+            queued_count = updated_count if queue_for_processing else 0
+
+            # Optional: Check if updated_count matches len(sitemap_file_ids)?
+            if updated_count != len(sitemap_file_ids):
+                logger.warning(
+                    f"Batch update affected {updated_count} rows, but {len(sitemap_file_ids)} IDs were provided. Some IDs might be invalid or already had the target status."
                 )
 
-                # 2. If selected, conditionally update process status to 'queued'
-                if new_curation_status == SitemapDeepCurationStatusEnum.Selected:
-                    update_values_process = {
-                        # Use .value to ensure the correct string is sent to the DB
-                        "deep_scrape_process_status": SitemapDeepProcessStatusEnum.Queued.value,
-                        "updated_at": func.now(),  # Keep updated_at fresh
-                        # Optionally clear previous error?
-                        # "deep_scrape_error": None
-                    }
-                    # updated_by is already set by the first update, no need to repeat unless desired
+            # --- Commit Transaction --- (Managed by router)
+            # await session.commit() <-- Router handles commit/rollback
 
-                    update_stmt_process = (
-                        update(SitemapFile)
-                        .where(
-                            SitemapFile.id.in_(sitemap_file_ids),
-                            # Correctly handle NULL or != 'processing'
-                            or_(
-                                SitemapFile.deep_scrape_process_status
-                                == None,  # Check if NULL
-                                SitemapFile.deep_scrape_process_status
-                                != SitemapDeepProcessStatusEnum.Processing.value,  # Check if not processing
-                            ),
-                        )
-                        .values(**update_values_process)
-                        .execution_options(synchronize_session=False)
-                    )
-                    result_process = await session.execute(update_stmt_process)
-                    # Relying on rowcount
-                    queued_count = (
-                        result_process.rowcount if result_process.rowcount >= 0 else 0
-                    )  # Default to 0 if rowcount is negative/unknown
-                    logger.debug(
-                        f"Process status update to queued query affected rowcount: {result_process.rowcount}. Set queued_count to {queued_count}."
-                    )
-
-            # Commit is automatic via 'async with session.begin()'
-            logger.info(
-                f"Batch curation status update completed. Updated: {updated_count}, Queued: {queued_count}"
-            )
             return {"updated_count": updated_count, "queued_count": queued_count}
 
         except Exception as e:
             logger.error(
-                f"Error during batch curation status update: {e}", exc_info=True
+                f"Error during batch sitemap status update: {e}", exc_info=True
             )
-            # Exception will automatically trigger rollback due to 'async with session.begin()'
-            raise  # Re-raise for the router to handle
+            # --- Rollback Transaction --- (Managed by router)
+            # await session.rollback() <-- Router handles commit/rollback
+            raise  # Re-raise the exception to ensure router handles rollback
+
+        # --- End Transaction --- (Managed by router)
 
     async def delete(
         self, session: AsyncSession, sitemap_file_id: Union[str, uuid.UUID]

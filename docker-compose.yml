@@ -47,6 +47,11 @@ services:
       # Maximum concurrent instances of the scheduler
       - SITEMAP_SCHEDULER_MAX_INSTANCES=${SITEMAP_SCHEDULER_MAX_INSTANCES:-1}
 
+      # Sitemap Import Scheduler Configuration (WF-06) - Renamed from Deep Scrape
+      - SITEMAP_IMPORT_SCHEDULER_INTERVAL_MINUTES=${SITEMAP_IMPORT_SCHEDULER_INTERVAL_MINUTES:-1}
+      - SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE=${SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE:-20}
+      - SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES=${SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES:-1}
+
       # --- Debug/Audit Settings ---
       - ENABLE_IMPORT_TRACING=true # Set to true to disable reload and enable import logging
       - DB_CONNECTION_TIMEOUT=60 # Increase connection/command timeout to 60s

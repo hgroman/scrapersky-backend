@@ -1,0 +1,286 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Enhanced FastAPI Codebase Analysis</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body { padding: 20px; }
+                .summary-card { margin-bottom: 20px; }
+                .component-card { margin-bottom: 10px; }
+                .confidence-high { color: green; }
+                .confidence-medium { color: orange; }
+                .confidence-low { color: red; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Enhanced FastAPI Codebase Analysis</h1>
+                <p class="text-muted">Generated on 2025-03-31 06:16:16</p>
+
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-header bg-primary text-white">
+                                Scheduler Components
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">14 Components</h5>
+                                <p class="card-text">Schedulers, background tasks, and periodic jobs</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-header bg-info text-white">
+                                Lifecycle Events
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">0 Events</h5>
+                                <p class="card-text">FastAPI startup and shutdown events</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-header bg-success text-white">
+                                Database Connections
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">0 Connections</h5>
+                                <p class="card-text">Database engines and connection patterns</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduler Components Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Scheduler Components</h2>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Components that handle scheduled tasks and background jobs:</p>
+                                <div class="list-group">
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">fastapi_startup_scheduler <span class="confidence-high">(90%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/main.py</h6>
+                            <p class="card-text">event_type: startup, scheduler_references: 1</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">project-docs/07-database-connection-audit/scripts/debug_sitemap_flow.py</h6>
+                            <p class="card-text">background_tasks_references: 2</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/routers/modernized_sitemap.py</h6>
+                            <p class="card-text">background_tasks_references: 2</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/services/batch/batch_functions.py</h6>
+                            <p class="card-text">background_tasks_references: 1</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">apscheduler <span class="confidence-medium">(80%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">scripts/enhanced_codebase_analyzer.py</h6>
+                            <p class="card-text">No additional details</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">scripts/enhanced_codebase_analyzer.py</h6>
+                            <p class="card-text">background_tasks_references: 2</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">celery <span class="confidence-medium">(85%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">scripts/enhanced_codebase_analyzer.py</h6>
+                            <p class="card-text">celery_references: 4</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/services/sitemap_service.py</h6>
+                            <p class="card-text">background_tasks_references: 2</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/routers/batch_page_scraper.py</h6>
+                            <p class="card-text">background_tasks_references: 4</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/services/batch/batch_processor_service.py</h6>
+                            <p class="card-text">background_tasks_references: 1</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">apscheduler <span class="confidence-high">(100%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/services/domain_scheduler.py</h6>
+                            <p class="card-text">scheduler_var: scheduler, scheduled_jobs: ['\n        process_pending_domains']</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/routers/modernized_page_scraper.py</h6>
+                            <p class="card-text">background_tasks_references: 3</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/routers/google_maps_api.py</h6>
+                            <p class="card-text">background_tasks_references: 1</p>
+                        </div>
+                    </div>
+
+                    <div class="component-card card">
+                        <div class="card-body">
+                            <h5 class="card-title">background_tasks <span class="confidence-medium">(70%)</span></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">src/services/sitemap/processing_service.py</h6>
+                            <p class="card-text">background_tasks_references: 2</p>
+                        </div>
+                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lifecycle Events Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Lifecycle Events</h2>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">FastAPI application lifecycle events:</p>
+                                <div class="list-group">
+        <p>No lifecycle events detected</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Connections Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Database Connections</h2>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Database connection patterns:</p>
+                                <div class="list-group">
+        <p>No database connections detected</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Containerization Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Containerization</h2>
+                            </div>
+                            <div class="card-body">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Docker: ✅ Found</h5>
+                        <h5>Docker Compose: ✅ Found</h5>
+                    </div>
+                    <div class="col-md-6">
+            <h5>Details:</h5><ul><li><strong>base_image:</strong> python:3.11-slim</li><li><strong>exposes_port:</strong> True</li><li><strong>has_healthcheck:</strong> True</li><li><strong>uses_entrypoint:</strong> False</li><li><strong>services:</strong> ['services', 'scrapersky', 'ports', 'environment', 'volumes', 'healthcheck']</li><li><strong>uses_volumes:</strong> True</li><li><strong>defines_networks:</strong> False</li><li><strong>server:</strong> uvicorn</li><li><strong>port_config:</strong> int(os.getenv("PORT"</li></ul>
+                    </div>
+                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environment Variables Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Environment Variables</h2>
+                            </div>
+                            <div class="card-body">
+        <ul><li>DATABASE_URL</li><li>DEV_TOKEN</li><li>DEV_USER_ID</li><li>GOOGLE_MAPS_API_KEY</li><li>LOG_LEVEL</li><li>SCRAPER_API_KEY</li><li>SCRAPER_SKY_DEV_MODE</li><li>SUPABASE_DB_PASSWORD</li><li>SUPABASE_POOLER_HOST</li><li>SUPABASE_POOLER_PORT</li><li>SUPABASE_POOLER_USER</li><li>SUPABASE_URL</li><li>SYSTEM_USER_ID</li></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations Section -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Recommendations</h2>
+                            </div>
+                            <div class="card-body">
+                                <h5>Based on the analysis, consider the following recommendations:</h5>
+                                <ul>
+        <li>Your application uses APScheduler. Consider reviewing scheduler management to ensure proper shutdown and error handling.</li><li>Run the full codebase analysis suite regularly to detect orphaned files and dead code.</li><li>Consider setting up CI/CD integration to run these checks automatically.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="mt-5 mb-3 text-muted text-center">
+                    <p>Generated by Enhanced FastAPI Codebase Analyzer</p>
+                </footer>
+            </div>
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        </body>
+        </html>

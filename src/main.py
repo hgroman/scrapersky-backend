@@ -33,6 +33,10 @@ from fastapi.routing import APIRoute  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from starlette.exceptions import HTTPException as StarletteHTTPException  # noqa: E402
 
+from src.services.sitemap_import_scheduler import (
+    setup_sitemap_import_scheduler,  # CORRECTED Import
+)
+
 # Import the runtime tracer
 from .config.runtime_tracer import (  # noqa: E402
     get_loaded_files,
@@ -139,6 +143,14 @@ async def lifespan(app: FastAPI):
         logger.error(
             f"Failed to setup Domain Sitemap Submission scheduler job: {e}",
             exc_info=True,
+        )
+
+    # Setup for the renamed Sitemap Import scheduler
+    try:
+        setup_sitemap_import_scheduler()
+    except Exception as e:
+        logger.error(
+            f"Failed to setup Sitemap Import scheduler job: {e}", exc_info=True
         )
 
     logger.info("Finished adding jobs to shared scheduler.")

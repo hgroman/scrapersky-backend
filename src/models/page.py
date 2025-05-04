@@ -28,7 +28,8 @@ class Page(Base, BaseModel):
 
     # From simple_inspect output:
     # id uuid NO gen_random_uuid() ✓
-    # tenant_id uuid NO  -- NOTE: Assuming tenant isolation removed, but copying schema for now
+    # tenant_id uuid NO  -- NOTE: Assuming tenant isolation removed,
+    #                      but copying schema for now
     # domain_id uuid NO → domains.id
     # url text NO
     # title text YES
@@ -54,44 +55,49 @@ class Page(Base, BaseModel):
     id: Column[uuid.UUID] = Column(
         PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    tenant_id: Column[Optional[uuid.UUID]] = Column(
+    tenant_id: Column[uuid.UUID] = Column(
         PGUUID(as_uuid=True), nullable=False
-    )  # TODO: Confirm if needed post-tenant removal
-    domain_id: Column[Optional[uuid.UUID]] = Column(
+    )
+    domain_id: Column[uuid.UUID] = Column(
         PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False
     )
     url: Column[str] = Column(Text, nullable=False)
-    title: Column[Optional[str]] = Column(Text, nullable=True)
-    description: Column[Optional[str]] = Column(Text, nullable=True)
-    h1: Column[Optional[str]] = Column(Text, nullable=True)
-    canonical_url: Column[Optional[str]] = Column(Text, nullable=True)
-    meta_robots: Column[Optional[str]] = Column(Text, nullable=True)
-    has_schema_markup: Column[Optional[bool]] = Column(
+    title: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    description: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    h1: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    canonical_url: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    meta_robots: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    has_schema_markup: Column[Optional[bool]] = Column( # type: ignore
         Boolean, default=False, nullable=True
     )
-    schema_types: Column[Optional[List[Optional[str]]]] = Column(
+    schema_types: Column[Optional[List[Optional[str]]]] = Column( # type: ignore
         ARRAY(String), nullable=True
     )
-    has_contact_form: Column[Optional[bool]] = Column(
+    has_contact_form: Column[Optional[bool]] = Column( # type: ignore
         Boolean, default=False, nullable=True
     )
-    has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
-    word_count: Column[Optional[int]] = Column(Integer, nullable=True)
-    inbound_links: Column[Optional[List[Optional[str]]]] = Column(
+    has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True) # type: ignore
+    word_count: Column[Optional[int]] = Column(Integer, nullable=True) # type: ignore
+    inbound_links: Column[Optional[List[Optional[str]]]] = Column( # type: ignore
         ARRAY(String), nullable=True
     )
-    outbound_links: Column[Optional[List[Optional[str]]]] = Column(
+    outbound_links: Column[Optional[List[Optional[str]]]] = Column( # type: ignore
         ARRAY(String), nullable=True
     )
-    last_modified: Column[Optional[datetime]] = Column(
+    last_modified: Column[Optional[datetime]] = Column( # type: ignore
         DateTime(timezone=True), nullable=True
     )
-    last_scan: Column[Optional[datetime]] = Column(
+    last_scan: Column[Optional[datetime]] = Column( # type: ignore
         DateTime(timezone=True), nullable=True
     )
-    page_type: Column[Optional[str]] = Column(Text, nullable=True)
-    lead_source: Column[Optional[str]] = Column(Text, nullable=True)
-    additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True)
+    page_type: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    lead_source: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
+    additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True) # type: ignore
+
+    # Foreign key to track the source sitemap file (optional)
+    sitemap_file_id: Column[Optional[uuid.UUID]] = Column( # type: ignore
+        PGUUID(as_uuid=True), ForeignKey("sitemap_files.id"), nullable=True, index=True
+    )
 
     # Relationships
     domain = relationship("Domain", back_populates="pages")

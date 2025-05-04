@@ -41,8 +41,9 @@ class SitemapFileStatusEnum(enum.Enum):
     Error = "Error"
 
 
-class SitemapDeepCurationStatusEnum(enum.Enum):
-    """Status values for SitemapCurationStatusEnum in database"""
+# Rename Enum related to Sitemap Curation status
+class SitemapImportCurationStatusEnum(enum.Enum):
+    """Status values for Sitemap Import Curation Status"""
 
     New = "New"
     Selected = "Selected"
@@ -51,8 +52,9 @@ class SitemapDeepCurationStatusEnum(enum.Enum):
     Archived = "Archived"
 
 
-class SitemapDeepProcessStatusEnum(enum.Enum):
-    """Status values mapped to deep_scan_status_enum in database (MUST MATCH DB DEFINITION)"""
+# Rename Enum related to Sitemap Processing status
+class SitemapImportProcessStatusEnum(enum.Enum):
+    """Status values mapped to sitemap_import_status_enum in database (MUST MATCH DB DEFINITION)"""
 
     # Setting to CAPITALIZED values to match corrected DB schema
     Queued = "Queued"
@@ -137,26 +139,28 @@ class SitemapFile(Base, BaseModel):
     process_after = Column(DateTime(timezone=True), nullable=True)
     last_processed_at = Column(DateTime(timezone=True), nullable=True)
 
-    # Deep scrape columns
+    # Renamed section comment: Sitemap Import columns (previously Deep Scrape)
+    # Note: deep_scrape_curation_status column potentially needs DB migration/rename later
     deep_scrape_curation_status = Column(
         SQLAlchemyEnum(
-            SitemapDeepCurationStatusEnum,
-            name="SitemapCurationStatusEnum",
+            SitemapImportCurationStatusEnum,  # Use renamed Enum
+            name="SitemapCurationStatusEnum",  # Keep DB name for now unless migrated
             create_type=False,
         ),
         nullable=True,
-        default=SitemapDeepCurationStatusEnum.New,
+        default=SitemapImportCurationStatusEnum.New,  # Use renamed Enum
         index=True,
     )
-    deep_scrape_error = Column(Text, nullable=True)
-    deep_scrape_process_status = Column(
+    sitemap_import_error = Column(Text, name="sitemap_import_error", nullable=True)
+    sitemap_import_status = Column(
         SQLAlchemyEnum(
-            SitemapDeepProcessStatusEnum,
-            name="deep_scan_status_enum",
+            SitemapImportProcessStatusEnum,  # Use renamed Enum
+            name="sitemap_import_status_enum",
             create_type=False,
         ),
         nullable=True,
         index=True,
+        name="sitemap_import_status",
     )
 
     # Additional metadata
@@ -209,15 +213,17 @@ class SitemapFile(Base, BaseModel):
             if tenant_id:
                 try:
                     tenant_id_obj = uuid.UUID(tenant_id)
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
+                    raise ValueError(f"Invalid UUID format for tenant_id: {tenant_id}") from err
 
             created_by_obj = None
             if created_by:
                 try:
                     created_by_obj = uuid.UUID(created_by)
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for created_by: {created_by}")
+                    raise ValueError(f"Invalid UUID format for created_by: {created_by}") from err
 
             # Create the sitemap file
             sitemap_file = cls(
@@ -411,16 +417,17 @@ class SitemapUrl(Base, BaseModel):
             if tenant_id:
                 try:
                     tenant_id_obj = uuid.UUID(tenant_id)
-                except ValueError:
+                except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
-                    raise ValueError(f"Invalid UUID format for tenant_id: {tenant_id}")
+                    raise ValueError(f"Invalid UUID format for tenant_id: {tenant_id}") from err
 
             created_by_obj = None
             if created_by:
                 try:
                     created_by_obj = uuid.UUID(created_by)
-                except ValueError:
+                except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for created_by: {created_by}")
+                    raise ValueError(f"Invalid UUID format for created_by: {created_by}") from err
 
             # Create the sitemap URL
             sitemap_url = cls(

@@ -1,7 +1,16 @@
-# Guide: Shared Scheduler Integration Pattern
+# Guide: Shared Scheduler Integration
+
+**Document ID:** 24
+**Date:** 2024-07-22
+**Status:** Active
+
+**CRITICAL NOTE:** For accessing application configuration (`settings`) within scheduler setup or job functions, refer to the correct import pattern documented in `28-SCHEDULER_AND_SETTINGS_PATTERNS.md`. Failure to import the `settings` instance correctly will lead to `AttributeError`.
+
+## Purpose
+
+This document details the integration pattern for using the **single shared `APScheduler` instance** across the ScraperSky application.
 
 **Document ID:** 24-SHARED_SCHEDULER_INTEGRATION_GUIDE
-**Status:** Active
 **Created:** April 2025
 **Author:** Gemini Assistant
 **Related Documents:**

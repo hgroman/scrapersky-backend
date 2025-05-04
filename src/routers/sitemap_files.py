@@ -14,7 +14,7 @@ from src.auth.jwt_auth import get_current_user
 # Core Dependencies
 from ..db.session import get_db_session
 from ..models.sitemap import (
-    SitemapDeepCurationStatusEnum,
+    SitemapImportCurationStatusEnum,
 )
 from ..schemas.sitemap_file import (
     PaginatedSitemapFileResponse,
@@ -54,8 +54,9 @@ sitemap_files_service = SitemapFilesService()
 async def list_sitemap_files(
     # Updated query parameters as per Spec 23.5 / Implementation 23.6
     domain_id: Optional[uuid.UUID] = Query(None, description="Filter by domain UUID"),
-    deep_scrape_curation_status: Optional[SitemapDeepCurationStatusEnum] = Query(
-        None, description="Filter by deep scrape curation status (New, Selected, etc.)"
+    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = Query(
+        None,
+        description="Filter by sitemap import curation status (New, Selected, etc.)",
     ),
     url_contains: Optional[str] = Query(
         None,

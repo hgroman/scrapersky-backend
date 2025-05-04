@@ -31,7 +31,7 @@ from ..models.api_models import (
 
 # We need a service or direct model access to interact with Place model
 from ..models.place import (  # Import the Place model AND the new DeepScanStatusEnum
-    DeepScanStatusEnum,
+    GcpApiDeepScanStatusEnum,
     Place,
     PlaceStatusEnum,
 )
@@ -296,7 +296,7 @@ async def update_places_status_batch(
                 f"API status '{new_main_status.name}' (mapping to DB '{target_db_status_member.name}') will trigger deep scan queueing."
             )
 
-        eligible_deep_scan_statuses = [None, DeepScanStatusEnum.Error]
+        eligible_deep_scan_statuses = [None, GcpApiDeepScanStatusEnum.Error]
 
         # Execute within a transaction
         logger.debug(
@@ -338,7 +338,7 @@ async def update_places_status_batch(
                     trigger_deep_scan
                     and place.deep_scan_status in eligible_deep_scan_statuses
                 ):  # type: ignore
-                    place.deep_scan_status = DeepScanStatusEnum.Queued  # type: ignore
+                    place.deep_scan_status = GcpApiDeepScanStatusEnum.Queued  # type: ignore
                     place.deep_scan_error = None  # type: ignore
                     place.updated_at = now  # type: ignore
                     actually_queued_count += 1
@@ -397,7 +397,7 @@ async def queue_places_for_deep_scan(
     updated_count = 0
     try:
         # Ensure we only queue places whose current deep_scan_status indicates they haven't run successfully
-        eligible_statuses = [None, DeepScanStatusEnum.Error]  # Changed from Error
+        eligible_statuses = [None, GcpApiDeepScanStatusEnum.Error]  # Changed from Error
         stmt_update = (
             update(Place)
             .where(
@@ -407,7 +407,7 @@ async def queue_places_for_deep_scan(
                 ),  # Check current status before queuing
             )
             .values(
-                deep_scan_status=DeepScanStatusEnum.Queued,  # Ensuring uppercase Queued is used
+                deep_scan_status=GcpApiDeepScanStatusEnum.Queued,  # Ensuring uppercase Queued is used
                 deep_scan_error=None,  # Clear any previous error when queuing
                 updated_at=datetime.utcnow(),
             )

@@ -2,13 +2,13 @@ import asyncio
 import inspect
 import logging
 import os
+import pathlib
 import time
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.session import get_db_session
 from src.models.domain import Domain
 from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
+from src.services.sitemap_import_service import SitemapImportService
 
 from ..auth.jwt_auth import get_current_user
 
@@ -43,8 +44,8 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
-# Get the absolute path to the static directory
-STATIC_DIR = Path(__file__).parent.parent.parent / "static"
+# Get the absolute path to the static directory using pathlib.Path
+STATIC_DIR = pathlib.Path(__file__).parent.parent.parent / "static"
 
 # Container status tracking
 container_operations = {}
@@ -891,15 +892,16 @@ async def process_pending_domains_endpoint(limit: int = 5):
 
     For development and testing purposes only.
     """
-    from ..services.domain_scheduler import process_pending_domains
+    try:
+        # fmt: off
+        from src.services.domain_scheduler import process_pending_domains  # noqa: E402
+        # fmt: on
 
-    # Run the processing function with the specified limit
-    await process_pending_domains(limit=limit)
-
-    return {
-        "status": "success",
-        "message": f"Manually triggered processing of up to {limit} pending domains",
-    }
+        await process_pending_domains(limit)
+        return JSONResponse(content={"message": "Processing triggered successfully"})
+    except Exception as e:
+        logger.error(f"Error triggering domain processing: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get(
@@ -1041,3 +1043,41 @@ async def test_domain_sitemap_submission(
 
 
 # --- End Test Endpoint ---
+
+
+@router.post(
+    "/trigger-sitemap-import/{sitemap_file_id}",
+    tags=["Scheduler Triggers", "Development"],
+)
+async def trigger_sitemap_import_endpoint(
+    sitemap_file_id: UUID = Path(
+        ..., description="The UUID of the SitemapFile to process"
+    ),
+    session: AsyncSession = Depends(get_session_dependency),
+):
+    """
+    Manually triggers the sitemap import process for a single SitemapFile ID.
+
+    This bypasses the scheduler and directly calls the SitemapImportService.
+    Useful for testing the import logic for a specific sitemap file.
+    The SitemapFile record MUST exist in the database.
+    """
+    logger.info(f"Manual trigger request for SitemapFile ID: {sitemap_file_id}")
+    service = SitemapImportService()
+    try:
+        await service.process_single_sitemap_file(
+            sitemap_file_id=sitemap_file_id, session=session
+        )
+        logger.info(f"Manual trigger successful for SitemapFile ID: {sitemap_file_id}")
+        return {
+            "message": "Sitemap import process triggered successfully.",
+            "sitemap_file_id": sitemap_file_id,
+        }
+    except Exception as e:
+        logger.exception(
+            f"Manual trigger failed for SitemapFile ID: {sitemap_file_id}. Error: {e}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process sitemap file {sitemap_file_id}: {str(e)}",
+        ) from e

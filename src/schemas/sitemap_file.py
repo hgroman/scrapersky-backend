@@ -8,8 +8,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-# Import the Enum from the model to reuse it
-from ..models.sitemap import SitemapDeepCurationStatusEnum, SitemapFileStatusEnum
+# Import the Renamed Enum from the model to reuse it
+from ..models.sitemap import SitemapFileStatusEnum, SitemapImportCurationStatusEnum
 
 
 # Base Schema: Fields common to Create and Read
@@ -50,7 +50,8 @@ class SitemapFileUpdate(BaseModel):
     error_message: Optional[str] = None
     processing_time: Optional[float] = None
     url_count: Optional[int] = None
-    deep_scrape_curation_status: Optional[SitemapDeepCurationStatusEnum] = None
+    # Use renamed Enum
+    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = None
     # updated_by will likely be set automatically
     # If API allows manual update, add: updated_by: Optional[uuid.UUID] = None
 
@@ -67,7 +68,8 @@ class SitemapFileRead(SitemapFileBase):
     updated_at: datetime  # Inherited from BaseModel
     created_by: Optional[uuid.UUID] = None  # Include if set in model
     updated_by: Optional[uuid.UUID] = None  # Include if set in model
-    deep_scrape_curation_status: Optional[SitemapDeepCurationStatusEnum] = None
+    # Use renamed Enum
+    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = None
     domain_name: Optional[str] = None  # Added field for domain name
 
 
@@ -83,7 +85,8 @@ class PaginatedSitemapFileResponse(BaseModel):
 # Schema for Batch Update operations (example: updating status)
 class SitemapFileBatchUpdate(BaseModel):
     sitemap_file_ids: List[uuid.UUID]
-    deep_scrape_curation_status: SitemapDeepCurationStatusEnum
+    # Use renamed Enum
+    deep_scrape_curation_status: SitemapImportCurationStatusEnum
 
     class Config:
         # REMOVED use_enum_values = True

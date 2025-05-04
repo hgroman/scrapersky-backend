@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE: int = 10  # Default batch size
     # DOMAIN_SITEMAP_SCHEDULER_MAX_INSTANCES: int = 1 # Add if needed, defaults to 1 in setup logic usually
 
+    # Sitemap Import Scheduler settings (Renamed from Deep Scrape)
+    SITEMAP_IMPORT_SCHEDULER_INTERVAL_MINUTES: int = 1  # Default interval
+    SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE: int = 20  # Default batch size
+    SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES: int = 1  # Default max instances
+
     # External API Keys
     # openai_api_key: Optional[str] = None  # Removed OpenAI API key
     scraper_api_key: Optional[str] = None
