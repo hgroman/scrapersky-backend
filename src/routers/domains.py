@@ -118,13 +118,16 @@ async def list_domains(
         filters.append(Domain.domain.ilike(f"%{domain_filter}%"))
         logger.debug(f"Applying filter: domain ilike %{domain_filter}%")
 
+    # Apply filters to the main query
     if filters:
         base_query = base_query.where(*filters)
 
     # --- Get Total Count (with filters) ---
-    count_query = (
-        select(func.count(Domain.id)).select_from(Domain).where(*filters)
-    )  # Reuse filters
+    # Correctly build the count query by applying filters individually
+    count_query = select(func.count(Domain.id)).select_from(Domain)
+    if filters:
+        count_query = count_query.where(*filters) # Apply filters correctly here too
+
     count_result = await session.execute(count_query)
     total = count_result.scalar_one()
     logger.debug(f"Total domains matching filters: {total}")
