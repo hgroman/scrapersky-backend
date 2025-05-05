@@ -290,6 +290,25 @@ SITEMAP_SCHEDULER_MAX_INSTANCES=${SITEMAP_SCHEDULER_MAX_INSTANCES:-1}
 
 These settings can be configured in the `.env` file or directly in the Docker environment variables to override the defaults.
 
+## Development Tips
+
+### Handling Multi-line Git Commits
+
+If you encounter issues committing multi-line messages directly (especially with special characters or quotes), you can use a temporary file:
+
+```bash
+# 1. Craft your commit message with printf, ensuring proper quoting and newlines (\\n)
+printf 'Subject Line\\n\\nDetailed body explaining the change.\\n- Bullet point 1\\n- Bullet point 2\\n\\nCloses #issue_number\\n' > /tmp/commit_msg.txt
+
+# 2. Commit using the temporary file. Use --no-verify if needed to bypass hooks.
+git commit -F /tmp/commit_msg.txt # Add --no-verify if needed
+
+# 3. (Optional) Remove the temporary file
+rm /tmp/commit_msg.txt
+```
+
+This method ensures the message is passed to Git exactly as intended, avoiding shell interpretation issues.
+
 ## Documentation
 
 For detailed documentation, see:
