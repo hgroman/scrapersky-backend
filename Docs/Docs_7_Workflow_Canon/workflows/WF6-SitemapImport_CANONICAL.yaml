@@ -1,0 +1,460 @@
+workflow:
+  id: "WF6"
+  name: "Sitemap Import"
+  description: "Automated background process that extracts URLs from sitemap files and creates Page records"
+  version: "1.0.0"
+  owner: "Data Processing Team"
+
+# Dependencies section with standardized format
+depends_on_models:
+  - name: SitemapFile
+    file_path: src/models/sitemap.py
+    table: sitemap_files
+    description: Primary model containing sitemap URLs and import status
+  - name: Page
+    file_path: src/models/page.py
+    table: pages
+    description: Model for storing extracted URLs from sitemaps
+  - name: Domain
+    file_path: src/models/domain.py
+    table: domains
+    description: Parent model for sitemap files
+
+depends_on_enums:
+  - name: SitemapImportProcessStatusEnum
+    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py model file
+    values: [Queued, Processing, Completed, Error]
+    description: Status values for the sitemap import process
+  - name: PageStatusEnum
+    file_path: src/models/page.py  # Enum is defined directly in the page.py model file
+    values: [New, Selected, Rejected, Processed]
+    description: Status values for pages created during sitemap import
+  
+  # Reference paths to related documentation
+  documentation:
+    dependency_trace: "/Docs/Docs_7_Workflow_Canon/Dependency_Traces/WF6-SitemapImport_dependency_trace.md"
+    linear_steps: "/Docs/Docs_7_Workflow_Canon/Linear-Steps/WF6-SitemapImport_linear_steps.md"
+    micro_work_order: "/Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF6-SitemapImport_micro_work_order.md"
+  
+  # Entry points into this workflow
+  entry_points:
+    - type: "background_service"
+      description: "Automatic scheduler polls for queued sitemap files"
+      component: "src/services/sitemap_import_scheduler.py"
+    - type: "api"
+      description: "Development endpoints for manual triggering"
+      component: "src/routers/dev_tools.py"
+  
+  # Exit points out of this workflow
+  exit_points:
+    - type: "database_state_change"
+      description: "Sitemap files are marked as Completed or Error"
+      component: "src/models/sitemap.py:sitemap_import_status"
+    - type: "database_creation"
+      description: "Page records are created for extracted URLs"
+      component: "src/models/page.py"
+  
+  # Connections to other workflows
+  connections:
+    incoming:
+      - from_workflow: "WF5-SitemapCuration"
+        description: "Producer-consumer pattern: WF5 marks sitemap files with sitemap_import_status=Queued for processing by WF6"
+        component: "src/models/sitemap.py:sitemap_import_status=Queued"
+        pattern: "Dual-Status Update Pattern"
+    outgoing:
+      - to_workflow: "Future page processing workflows"
+        description: "Producer pattern: WF6 creates Page records that become inputs for downstream page processing workflows"
+        
+# Standardized workflow connections with explicit database tables
+workflow_connections:
+  as_consumer:
+    - producer_workflow: WF5-SitemapCuration
+      # Database table that this workflow consumes data from (MANDATORY)
+      interface_table: sitemap_files  # Explicit table name from database schema
+      # Field that contains the status signal this workflow looks for
+      handoff_field: sitemap_import_status
+      # Value that triggers consumption
+      consumed_value: SitemapFileImportStatusEnum.Queued
+      connection_details: |
+        WF6 consumes records from the sitemap_files table when records have sitemap_import_status = "Queued".
+        The sitemap_import_scheduler polls these records and processes the sitemap files to extract URLs
+        and create page records.
+      connection_source_file: src/routers/sitemap_files.py
+      connection_source_function: update_sitemap_files_status_batch
+      connection_target_file: src/services/sitemap_import_scheduler.py
+      connection_target_function: process_pending_sitemap_imports
+      # Explicit database operation that reads from the producer table
+      consumption_query: "SELECT * FROM sitemap_files WHERE sitemap_import_status = 'queued' ORDER BY updated_at LIMIT 10"
+  
+  as_producer:
+    - consumer_workflow: FutureWorkflows
+      # Database table that this workflow writes to for the next workflow (MANDATORY)
+      interface_table: pages  # Explicit table name from database schema
+      # Field that contains the status signal for the next workflow
+      handoff_field: status
+      # Value that signals readiness for the next workflow
+      produced_value: PageStatusEnum.New
+      connection_details: |
+        WF6 produces records in the pages table with status = "New" that will be consumed by
+        future page processing workflows. These pages are created during the sitemap import process
+        and represent discovered URLs that need further processing.
+      connection_source_file: src/services/sitemap_import_service.py
+      connection_source_function: process_sitemap_file
+      # No target file/function yet as the consumer workflow is not yet implemented
+      # Explicit database operation that creates records in the pages table
+      production_operation: "INSERT INTO pages (url, domain_id, status, created_at, ...) VALUES (...)"
+        component: "src/models/page.py"
+        pattern: "Data Pipeline Stage"
+  
+  # Core components of this workflow
+  components:
+    - id: "13A"
+      name: "Sitemap Import Scheduler"
+      type: "background_service"
+      description: "Background job to process queued sitemap files"
+      file_path: "src/services/sitemap_import_scheduler.py"
+      primary: true
+      functions:
+        - name: "process_pending_sitemap_imports"
+          description: "Polls for and processes queued sitemap files"
+        - name: "setup_sitemap_import_scheduler"
+          description: "Configures and schedules the background job"
+    
+    - id: "13A.1"
+      name: "Sitemap Import Service"
+      type: "service"
+      description: "Core processing logic for sitemap imports"
+      file_path: "src/services/sitemap_import_service.py"
+      primary: true
+      functions:
+        - name: "process_single_sitemap_file"
+          description: "Processes an individual sitemap file, extracting URLs and creating Page records"
+    
+    - id: "13A.2"
+      name: "Sitemap Models"
+      type: "data_model"
+      description: "Database models for sitemap files and status enums"
+      file_path: "src/models/sitemap.py"
+      primary: true
+      data_structures:
+        - name: "SitemapFile"
+          description: "Model representing sitemap files with their processing status"
+        - name: "SitemapImportProcessStatusEnum"
+          description: "Status values for the import process"
+    
+    - id: "13A.3"
+      name: "Page Model"
+      type: "data_model"
+      description: "Database model for pages extracted from sitemaps"
+      file_path: "src/models/page.py"
+      primary: false
+      data_structures:
+        - name: "Page"
+          description: "Model representing a web page URL with metadata"
+    
+    - id: "13A.4"
+      name: "Sitemap Parser"
+      type: "utility"
+      description: "Utility for parsing sitemap XML content"
+      file_path: "src/common/sitemap_parser.py"
+      primary: false
+      functions:
+        - name: "parse"
+          description: "Parses sitemap XML and extracts URLs"
+    
+    - id: "13A.5"
+      name: "Scheduler Loop SDK"
+      type: "utility"
+      description: "Reusable job processing loop"
+      file_path: "src/common/curation_sdk/scheduler_loop.py"
+      primary: false
+      functions:
+        - name: "run_job_loop"
+          description: "Standardized batch processing of database records"
+    
+    - id: "13A.6"
+      name: "Development Tools"
+      type: "api"
+      description: "Endpoints for manual testing"
+      file_path: "src/routers/dev_tools.py"
+      primary: false
+      endpoints:
+        - path: "/api/v3/dev/import-sitemap/{sitemap_file_id}"
+          method: "POST"
+          description: "Manually trigger import for a specific sitemap file"
+  
+  # Phases of execution within the workflow
+  phases:
+    - id: "P1"
+      name: "Scheduler Initialization"
+      description: "Setup and initialization of the background scheduler"
+      steps:
+        - id: "S1.1"
+          name: "Scheduler Setup"
+          description: "Initialize the background job during application startup"
+          components: ["13A"]
+          code_references:
+            - "src/main.py:setup_sitemap_import_scheduler()"
+        - id: "S1.2"
+          name: "Job Configuration"
+          description: "Configure job parameters from settings"
+          components: ["13A"]
+          code_references:
+            - "src/services/sitemap_import_scheduler.py:setup_sitemap_import_scheduler"
+    
+    - id: "P2"
+      name: "Polling for Queued Files"
+      description: "Periodic polling for sitemap files that need processing"
+      steps:
+        - id: "S2.1"
+          name: "Job Execution"
+          description: "Scheduler triggers the processing job"
+          components: ["13A"]
+          code_references:
+            - "src/services/sitemap_import_scheduler.py:process_pending_sitemap_imports"
+        - id: "S2.2"
+          name: "Database Polling"
+          description: "Query for sitemap files with queued status"
+          components: ["13A", "13A.2", "13A.5"]
+          code_references:
+            - "src/common/curation_sdk/scheduler_loop.py:run_job_loop"
+    
+    - id: "P3"
+      name: "Processing Sitemap Files"
+      description: "Processing each sitemap file to extract URLs"
+      steps:
+        - id: "S3.1"
+          name: "Status Update - Processing"
+          description: "Mark sitemap file as processing"
+          components: ["13A", "13A.2", "13A.5"]
+          code_references:
+            - "src/common/curation_sdk/scheduler_loop.py:run_job_loop"
+        - id: "S3.2"
+          name: "Service Invocation"
+          description: "Call import service to process the file"
+          components: ["13A", "13A.1", "13A.5"]
+          code_references:
+            - "src/services/sitemap_import_service.py:process_single_sitemap_file"
+        - id: "S3.3"
+          name: "HTTP Request"
+          description: "Fetch sitemap content via HTTP"
+          components: ["13A.1"]
+          code_references:
+            - "src/services/sitemap_import_service.py:httpx.AsyncClient()"
+        - id: "S3.4"
+          name: "Sitemap Parsing"
+          description: "Parse XML to extract URLs"
+          components: ["13A.1", "13A.4"]
+          code_references:
+            - "src/services/sitemap_import_service.py:self.sitemap_parser.parse()"
+        - id: "S3.5"
+          name: "URL Processing"
+          description: "Create Page records for extracted URLs"
+          components: ["13A.1", "13A.3"]
+          code_references:
+            - "src/services/sitemap_import_service.py:pages_to_insert.append(Page(**page_data_cleaned))"
+        - id: "S3.6"
+          name: "Database Operations"
+          description: "Insert Page records to database"
+          components: ["13A.1", "13A.3"]
+          code_references:
+            - "src/services/sitemap_import_service.py:session.add_all(pages_to_insert)"
+        - id: "S3.7"
+          name: "Status Update - Completion"
+          description: "Mark sitemap file as completed"
+          components: ["13A.1", "13A.2"]
+          code_references:
+            - "src/services/sitemap_import_service.py:sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Completed"
+    
+    - id: "P4"
+      name: "Error Handling"
+      description: "Handling various error scenarios"
+      steps:
+        - id: "S4.1"
+          name: "HTTP Error Handling"
+          description: "Handle HTTP status errors"
+          components: ["13A.1", "13A.2"]
+          code_references:
+            - "src/services/sitemap_import_service.py:except httpx.HTTPStatusError as e:"
+        - id: "S4.2"
+          name: "Network Error Handling"
+          description: "Handle network and request errors"
+          components: ["13A.1", "13A.2"]
+          code_references:
+            - "src/services/sitemap_import_service.py:except httpx.RequestError as e:"
+        - id: "S4.3"
+          name: "General Error Handling"
+          description: "Handle other exceptions"
+          components: ["13A.1", "13A.2"]
+          code_references:
+            - "src/services/sitemap_import_service.py:except Exception as e:"
+    
+    - id: "P5"
+      name: "Job Completion"
+      description: "Finalizing the processing job"
+      steps:
+        - id: "S5.1"
+          name: "Job Finalization"
+          description: "Log completion and schedule next run"
+          components: ["13A"]
+          code_references:
+            - "src/services/sitemap_import_scheduler.py:logger.info(\"Finished scheduled job: process_pending_sitemap_imports\")"
+  
+  # Architectural principles applied
+  architectural_principles:
+    - id: "AP1"
+      name: "Async Processing"
+      description: "Uses async/await pattern for non-blocking I/O operations"
+      verification:
+        - "All I/O operations use async methods"
+        - "Database operations use SQLAlchemy's async session"
+        - "HTTP requests use httpx AsyncClient"
+    
+    - id: "AP2"
+      name: "Status Transition Pattern"
+      description: "Uses well-defined status transitions to track processing state"
+      verification:
+        - "Clear enum definitions for all possible statuses"
+        - "Consistent status updates at each processing stage"
+        - "Error states properly captured in status"
+    
+    - id: "AP3"
+      name: "Batch Processing"
+      description: "Processes records in configurable batches to optimize resource usage"
+      verification:
+        - "Batch size is configurable via settings"
+        - "Processing is limited to avoid resource exhaustion"
+        - "Oldest records are processed first"
+    
+    - id: "AP4"
+      name: "Error Isolation"
+      description: "Failures in one record don't affect processing of others"
+      verification:
+        - "Each record is processed in its own transaction"
+        - "Errors are caught and logged without failing the entire batch"
+        - "Failed records are marked for later review"
+    
+    - id: "AP5"
+      name: "ORM Usage"
+      description: "Uses SQLAlchemy ORM for database operations"
+      verification:
+        - "No raw SQL queries in the codebase"
+        - "Models properly defined with relationships"
+        - "Proper use of SQLAlchemy session management"
+    
+    - id: "AP6"
+      name: "Transaction Management"
+      description: "Explicit transaction boundaries and error handling"
+      verification:
+        - "Transactions are committed on success"
+        - "Transactions are rolled back on error"
+        - "Exception handling covers all transaction paths"
+
+    - id: "AP7"
+      name: "API Versioning"
+      description: "Uses v3 prefix for all API endpoints"
+      verification:
+        - "Dev tool endpoints use /api/v3/ prefix"
+        - "No deprecated endpoints remain"
+  
+  # Technical principles applied
+  technical_principles:
+    - id: "TP1"
+      name: "Idempotency"
+      description: "Reprocessing the same sitemap doesn't create duplicate records"
+      verification:
+        - "Duplicate URL checks within batch"
+        - "Proper handling of IntegrityErrors"
+        - "Graceful fallback to individual record processing on conflicts"
+    
+    - id: "TP2"
+      name: "Comprehensive Logging"
+      description: "Detailed logging throughout the workflow"
+      verification:
+        - "Job start/end events are logged"
+        - "Processing steps are logged"
+        - "Errors include detailed information"
+        - "Log levels are appropriate for each message"
+    
+    - id: "TP3"
+      name: "Resource Management"
+      description: "Proper management of external resources"
+      verification:
+        - "HTTP client used within async context manager"
+        - "Timeout settings prevent hanging requests"
+        - "Database connections managed through sessions"
+    
+    - id: "TP4"
+      name: "Configuration Externalization"
+      description: "Configuration values stored in settings"
+      verification:
+        - "No hardcoded configuration values"
+        - "All settings loaded from environment or config file"
+        - "Settings have reasonable defaults"
+  
+  # Tests covering this workflow
+  tests:
+    unit_tests:
+      - path: "tests/services/test_sitemap_import_service.py"
+        description: "Tests for the sitemap import service"
+      - path: "tests/services/test_sitemap_import_scheduler.py"
+        description: "Tests for the sitemap import scheduler"
+    
+    integration_tests:
+      - path: "tests/integration/test_sitemap_import_workflow.py"
+        description: "End-to-end tests for the sitemap import workflow"
+  
+  # Known issues or limitations with clear actionable TODOs
+  known_issues:
+    - id: "KI1"
+      description: "No retry mechanism for transient network failures"
+      severity: "medium"
+      ticket: "SCRSKY-236"
+      target_date: "2025-05-25"
+      workaround: "Manual requeuing of failed imports via database update"
+      actionable_todo: "Implement exponential backoff retry mechanism in sitemap_import_service.py for HTTP requests"
+      files_to_modify:
+        - "src/services/sitemap_import_service.py"
+    
+    - id: "KI2"
+      description: "Limited validation of extracted URLs"
+      severity: "low"
+      ticket: "SCRSKY-237"
+      target_date: "2025-06-05"
+      workaround: "URLs are validated in downstream processes"
+      actionable_todo: "Add URL validation logic before database insertion to filter invalid or malformed URLs"
+      files_to_modify:
+        - "src/services/sitemap_import_service.py"
+    
+    - id: "KI3"
+      description: "Transaction boundaries owned by service rather than router in dev tools endpoint"
+      severity: "medium"
+      ticket: "SCRSKY-235"
+      target_date: "2025-05-20"
+      workaround: "Current implementation works but violates architectural principles"
+      actionable_todo: "Refactor dev_tools.py to follow 'Routers own transaction boundaries' pattern"
+      files_to_modify:
+        - "src/routers/dev_tools.py"
+    
+    - id: "KI4"
+      description: "Missing operational metrics for monitoring workflow health"
+      severity: "low"
+      ticket: "SCRSKY-238"
+      target_date: "2025-06-10"
+      workaround: "Manual log inspection for troubleshooting"
+      actionable_todo: "Add structured metrics collection for processing time, success rates, and URL counts"
+      files_to_modify:
+        - "src/services/sitemap_import_service.py"
+        - "src/services/sitemap_import_scheduler.py"
+  
+  # Documentation TODOs
+  documentation_todos:
+    - id: "DT1"
+      description: "Update 1.1-background-services.md with complete WF6 references"
+      ticket: "SCRSKY-240"
+      target_date: "2025-05-10"
+    
+    - id: "DT2"
+      description: "Update 3-python_file_status_map.md to include all WF6 components"
+      ticket: "SCRSKY-241"
+      target_date: "2025-05-10"

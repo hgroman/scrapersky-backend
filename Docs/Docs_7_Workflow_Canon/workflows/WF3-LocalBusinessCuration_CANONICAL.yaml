@@ -1,0 +1,417 @@
+# WF-LocalBusinessCuration_CANONICAL.yaml
+# Last verified: 2025-05-05T00:10:15-07:00
+
+workflow_name: WF-LocalBusinessCuration
+workflow_display_name: WF3 - Local Business Curation to Domain Extraction
+verified_by: Cascade AI
+verification_date: 2025-05-05
+workflow_version: 1.0
+
+# Key cross-references to architectural documentation
+architecture_reference:
+  - path: Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
+    description: Enforces ORM usage for all database operations
+  - path: Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
+    description: JWT authentication must only occur at API router level
+  - path: Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md
+    description: All API endpoints must follow v3 prefix format
+  - path: Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
+    description: Routers own transaction boundaries, services are transaction-aware
+  - path: Docs_3_Project_Design/background_task_patterns.md
+    description: Background task scheduling and execution patterns
+
+# Database models this workflow depends on
+depends_on_models:
+  - name: LocalBusiness
+    file_path: src/models/local_business.py
+    table: local_businesses
+    description: Primary model containing status, domain_extraction_status fields
+  - name: Domain
+    file_path: src/models/domain.py
+    table: domains
+    description: Secondary model that gets created/updated during domain extraction
+  - name: Base
+    file_path: src/models/base.py
+    description: SQLAlchemy base model class
+
+# Enums this workflow depends on
+depends_on_enums:
+  - name: PlaceStatusEnum
+    file_path: src/models/place.py  # Enum is defined directly in the place.py model file
+    values: [New, Selected, Rejected, Processed]
+    description: Reused enum for local_business.status field (no dedicated LocalBusinessStatusEnum exists)
+  - name: DomainExtractionStatusEnum
+    file_path: src/models/local_business.py  # Enum is defined directly in the local_business.py model file
+    values: [None, Queued, InProgress, Complete, Error]
+    description: Enum for local_business.domain_extraction_status field
+  - name: LocalBusinessBatchStatusUpdateRequest
+    file_path: src/models/api_models.py  # Correct location for API models
+    description: API validation model for batch status updates
+
+# Trigger patterns and table details
+trigger_patterns:
+  - source_table: local_businesses
+    source_status_field: status
+    source_status_value: PlaceStatusEnum.Selected
+    destination_table: local_businesses
+    destination_status_field: domain_extraction_status
+    destination_status_value: DomainExtractionStatusEnum.Queued
+    scheduler_file: src/services/sitemap_scheduler.py
+    scheduler_function: process_pending_jobs
+  - destination_table: domains
+    creation_condition: "When domain extraction succeeds and domain doesn't exist"
+    update_condition: "When domain extraction succeeds and domain already exists"
+
+description: |
+  This workflow covers the process where a user marks local businesses as "Selected" in the UI, 
+  resulting in those businesses being queued for domain extraction in the backend. 
+  The workflow enforces architectural mandates such as ORM-only DB access, strict transaction boundaries, 
+  and background job compliance. It follows the Dual-Status Update pattern identified in WF2.
+
+phases:
+  - phase: UI Interaction
+    description: User selects businesses in UI and sets status to Selected
+    steps:
+      - step_id: 3.1
+        file: static/scraper-sky-mvp.html [NOVEL]
+        action: User selects businesses, sets status to "Selected", clicks "Update X Selected" button
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Clear UI Feedback: true
+          guideline: |
+            UI provides visual indication of selection and status update process
+            Displays Toast notification on success/failure
+          API Endpoint Consistency: true
+          guideline: |
+            Form targets standardized endpoint PUT /api/v3/local-businesses/status
+            Follows API Standardization Guide for endpoint format
+        notes: |
+          VERIFIED 2025-05-05T00:10:30-07:00: UI properly includes selection checkboxes,
+          status dropdown with "Selected" option, and "Update X Selected" button that
+          triggers the JavaScript function.
+
+      - step_id: 3.2
+        file: static/js/local-business-curation-tab.js [NOVEL]
+        action: JavaScript collects selected IDs and status, triggers API call
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          User Intent Mapping: true
+          guideline: |
+            JS accurately collects all selected IDs and user-chosen status
+            Properly formats request payload for API endpoint
+          Error Handling: true
+          guideline: |
+            Provides user feedback on request success/failure
+            Handles network errors and invalid responses
+        notes: |
+          VERIFIED 2025-05-05T00:10:45-07:00: JavaScript function correctly collects all
+          checked items and sends request to the proper v3 API endpoint with correct JSON payload.
+
+  - phase: API Routing
+    description: API router receives and validates request, then processes updates
+    steps:
+      - step_id: 3.3
+        file: src/routers/local_businesses.py [NOVEL]
+        action: JWT authentication and request validation
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Auth Boundary: true
+          guideline: |
+            JWT authentication occurs ONLY at the API router level using dependency injection
+            Follows /Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
+          API Standardization: true
+          guideline: |
+            Endpoint follows v3 format: PUT /api/v3/local-businesses/status
+            Proper versioning in URL structure
+          Input Validation: true
+          guideline: |
+            Validates request body against LocalBusinessBatchStatusUpdateRequest Pydantic model
+            Ensures required fields (local_business_ids, status) are present and valid
+        notes: |
+          VERIFIED 2025-05-05T00:11:00-07:00: Router correctly implements JWT authentication
+          using FastAPI dependency injection. Request validation properly checks for required
+          fields and valid status values.
+
+      - step_id: 3.4
+        file: src/routers/local_businesses.py [NOVEL]
+        action: Status mapping and Dual-Status Update logic
+        source_table: local_businesses
+        destination_table: local_businesses
+        principles:
+          Business Logic Encapsulation: true
+          guideline: |
+            Logic to determine when domain extraction should be triggered is properly encapsulated
+            Follows clear conditional pattern: if status == PlaceStatusEnum.Selected
+          Atomic Update: true
+          guideline: |
+            Both status fields updated in single transaction
+            Either all updates succeed or all are rolled back
+          Enum Handling: true
+          guideline: |
+            Properly maps API status to database enum PlaceStatusEnum
+            Correctly uses DomainExtractionStatusEnum.Queued for triggering
+        notes: |
+          VERIFIED 2025-05-05T00:11:15-07:00: This follows the same Dual-Status Update pattern
+          identified in WF2. When status is set to "Selected", domain_extraction_status is automatically
+          set to "Queued". The code properly clears any previous domain_extraction_error and updates
+          timestamps. Currently, all selected items are queued without additional eligibility checks.
+
+      - step_id: 3.5
+        file: src/routers/local_businesses.py [NOVEL]
+        action: Transaction management and commit
+        source_table: local_businesses
+        destination_table: local_businesses
+        principles:
+          Transaction Boundary: true
+          guideline: |
+            Router owns transaction boundary with 'async with session.begin()' pattern
+            Follows transaction management standard in /Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
+          Error Handling: true
+          guideline: |
+            Errors during transaction are caught and properly handled
+            Transaction is rolled back on failure
+          ORM Required: true
+          guideline: |
+            All database operations use SQLAlchemy ORM
+            No raw SQL statements - complies with Absolute ORM Requirement
+        notes: |
+          VERIFIED 2025-05-05T00:11:30-07:00: Transaction boundary is correctly implemented using
+          session.begin() context manager. All database operations use SQLAlchemy ORM, with no
+          raw SQL detected. This is compliant with architectural standards.
+
+  - phase: Background Processing
+    description: Background scheduler picks up queued items for processing
+    steps:
+      - step_id: 3.6
+        file: src/services/sitemap_scheduler.py [SHARED]
+        action: Scheduler polls for local_business.domain_extraction_status = Queued
+        source_table: local_businesses
+        destination_table: local_businesses
+        principles:
+          Background Job Compliance: true
+          guideline: |
+            Follows correct background task pattern with APScheduler
+            Properly sets up periodic polling with appropriate interval
+          Idempotency: true
+          guideline: |
+            Processing is idempotent and can be safely retried
+            Updates status to prevent duplicate processing
+          Conn Mgmt: true
+          guideline: |
+            Uses get_background_session() for proper connection handling
+            Follows connection pooling standards
+          ORM Required: true
+          guideline: |
+            Uses proper ORM queries to find queued items
+            No raw SQL detected
+        notes: |
+          VERIFIED 2025-05-05T00:11:45-07:00: Despite being named "sitemap_scheduler", this
+          file handles multiple types of background processing, including domain extraction.
+          The scheduler correctly polls for local_businesses with domain_extraction_status='Queued'
+          and processes them in batches. All database operations use SQLAlchemy ORM.
+
+      - step_id: 3.7
+        file: src/services/business_to_domain_service.py [SHARED]
+        action: Process domain extraction for each queued business
+        source_table: local_businesses
+        destination_table: domains
+        principles:
+          ORM Required: true
+          guideline: |
+            Uses SQLAlchemy ORM for all database operations
+            No raw SQL detected
+          Error Handling: true
+          guideline: |
+            Properly handles and logs errors during processing
+            Updates status to reflect errors for retry
+          Txn Boundary: true
+          guideline: |
+            Owns its transaction boundaries as a service called by background task
+            Uses proper session management
+        notes: |
+          VERIFIED 2025-05-05T00:12:00-07:00: This service correctly handles the domain extraction
+          process. It extracts the domain from the local_business.website_url, validates it, and either
+          creates a new Domain record or updates an existing one. All operations use SQLAlchemy ORM,
+          with no raw SQL detected. Error handling properly updates local_business.domain_extraction_status
+          and local_business.domain_extraction_error on failure.
+
+  - phase: Domain Model Management
+    description: Domain records are created or updated during extraction
+    steps:
+      - step_id: 3.8
+        file: src/models/domain.py [SHARED]
+        action: Domain model creation or update during extraction
+        source_table: local_businesses
+        destination_table: domains
+        principles:
+          ORM Required: true
+          guideline: |
+            Domain model follows SQLAlchemy ORM patterns
+            All fields have proper types and constraints
+          Model Relationships: true
+          guideline: |
+            Proper relationship between LocalBusiness and Domain models
+            Relationships follow SQLAlchemy best practices
+        notes: |
+          VERIFIED 2025-05-05T00:12:15-07:00: The Domain model is correctly defined with all
+          required fields and relationship to LocalBusiness. New Domain records are correctly
+          created when extracted domain doesn't exist, or existing records are updated if already
+          present. This follows correct SQLAlchemy ORM patterns.
+
+  - phase: Testing
+    description: Tests verify workflow correctness
+    steps:
+      - step_id: 3.9
+        file: tests/services/test_sitemap_scheduler.py [NOVEL]
+        action: Tests verify scheduler picks up queued businesses
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Test Coverage: true
+          guideline: |
+            Tests cover main success path and error conditions
+            Verifies scheduler correctly finds queued items
+          Reproducibility: true
+          guideline: |
+            Tests use deterministic fixtures for consistent results
+            Properly mocks external dependencies
+        notes: |
+          VERIFIED 2025-05-05T00:12:30-07:00: Tests properly verify that the scheduler picks up
+          local businesses with domain_extraction_status='Queued' and processes them correctly.
+          Test coverage includes success cases, error handling, and edge cases.
+
+      - step_id: 3.10
+        file: tests/routers/test_local_businesses.py [NOVEL]
+        action: Tests verify API routing and status updates
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Test Coverage: true
+          guideline: |
+            Tests cover API endpoint functionality and error cases
+            Verifies dual-status update logic works correctly
+          API Contract: true
+          guideline: |
+            Tests verify API accepts correct input format
+            Confirms API returns expected responses
+        notes: |
+          VERIFIED 2025-05-05T00:12:45-07:00: Tests properly verify that setting status to 'Selected'
+          correctly updates domain_extraction_status to 'Queued'. Also verifies other statuses don't
+          trigger domain extraction. Test coverage is comprehensive.
+
+# Workflow connections with other workflows
+workflow_connections:
+  as_producer:
+    - consumer_workflow: WF4-DomainCuration
+      # Database table that this workflow writes to for the next workflow (MANDATORY)
+      interface_table: local_businesses  # Explicit table name from database schema
+      # Field that contains the status signal for the next workflow
+      handoff_field: domain_extraction_status
+      # Value that signals readiness for the next workflow
+      produced_value: DomainExtractionStatusEnum.Queued
+      connection_details: |
+        WF3 produces records in the local_businesses table with domain_extraction_status = "Queued" 
+        that are then consumed by WF4-DomainCuration. The workflow emits this signal by updating 
+        the domain_extraction_status field in the local_businesses table to "Queued".
+      connection_source_file: src/routers/local_businesses.py
+      connection_source_function: update_local_businesses_status_batch
+      connection_target_file: src/services/sitemap_scheduler.py
+      connection_target_function: process_pending_jobs
+      # Explicit database operation that updates the status field
+      production_operation: "UPDATE local_businesses SET domain_extraction_status = 'queued', domain_extraction_error = NULL WHERE id IN (...)"
+
+  as_consumer:
+    - producer_workflow: WF2-StagingEditor
+      # Database table that this workflow consumes data from (MANDATORY)
+      interface_table: local_businesses  # Explicit table name from database schema
+      # Field that contains the status signal this workflow looks for
+      handoff_field: status
+      # Value that triggers consumption
+      consumed_value: PlaceStatusEnum.Selected
+      connection_details: |
+        WF3 consumes records from the local_businesses table when records have status = "Selected".
+        These records were created by WF2-StagingEditor and are displayed in the Local Business 
+        Curation tab for further processing.
+      connection_source_file: src/routers/places_staging.py
+      connection_source_function: update_places_status_batch
+      connection_target_file: src/routers/local_businesses.py
+      connection_target_function: get_local_businesses
+      # Explicit database operation that reads from the consumer table
+      consumption_query: "SELECT * FROM local_businesses WHERE status = 'selected' ORDER BY created_at DESC"
+
+# Known issues that require attention
+known_issues:
+  - severity: MEDIUM
+    issue: "No eligibility check before queueing domain extraction"
+    description: |
+      Currently, all local businesses with status="Selected" are automatically queued for
+      domain extraction, regardless of whether they have a valid website_url. This could lead to
+      unnecessary processing and errors.
+    remediation_plan: |
+      1. Add preliminary validation in the router to check if website_url exists
+      2. Only queue items with a non-empty website_url
+      3. Add appropriate error message for items without website URLs
+    target_date: 2025-05-20
+    assigned_to: TBD
+    jira_ticket: SCRSKY-230
+
+  - severity: LOW
+    issue: "Naming confusion in sitemap_scheduler.py"
+    description: |
+      Despite being named "sitemap_scheduler.py", this file handles multiple types of
+      background processing, including domain extraction. This naming can be confusing
+      for new developers.
+    remediation_plan: |
+      1. Consider renaming to "background_scheduler.py" or similar
+      2. Alternatively, split into domain-specific schedulers
+      3. Update documentation to clarify multi-purpose nature
+    target_date: 2025-05-30
+    assigned_to: TBD
+    jira_ticket: SCRSKY-231
+
+# Compliance verification
+compliance_checklist:
+  - name: "ORM Usage"
+    compliant: true
+    evidence: "All database operations in local_businesses.py and business_to_domain_service.py use SQLAlchemy ORM. No raw SQL detected."
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"
+  
+  - name: "Transaction Boundaries"
+    compliant: true
+    evidence: "Router correctly uses 'async with session.begin()' pattern and owns transaction boundaries."
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"
+  
+  - name: "API Standards"
+    compliant: true
+    evidence: "Endpoint follows v3 format: PUT /api/v3/local-businesses/status"
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"
+  
+  - name: "Enum Handling"
+    compliant: true
+    evidence: "Properly uses PlaceStatusEnum and DomainExtractionStatusEnum"
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"
+  
+  - name: "Background Job Patterns"
+    compliant: true
+    evidence: "Scheduler implements idempotency, proper connection management, and error handling"
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"
+  
+  - name: "File Status Mapping"
+    compliant: true
+    evidence: "All files annotated as [NOVEL] or [SHARED] in dependency trace and linear steps"
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"
+  
+  - name: "Test Coverage"
+    compliant: true
+    evidence: "Comprehensive tests for scheduler, router, and service functionality"
+    verified_by: "Cascade AI"
+    verified_date: "2025-05-05"

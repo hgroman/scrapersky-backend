@@ -1,0 +1,261 @@
+progress_tracker:
+  # Critical database models and enums used across workflows
+  model_files:
+    - file: src/models/place.py
+      table: places
+      workflows: [WF1, WF2]
+      description: Primary model for place data
+    - file: src/models/place_search.py
+      table: place_searches
+      workflows: [WF1]
+      description: Model for search queries
+    - file: src/models/local_business.py
+      table: local_businesses
+      workflows: [WF2, WF3, WF4]
+      description: Model for local business data
+    - file: src/models/domain.py
+      table: domains
+      workflows: [WF3, WF4, WF5, WF6]
+      description: Model for domain data
+    - file: src/models/sitemap.py
+      table: sitemap_files
+      workflows: [WF5, WF6]
+      description: Model for sitemap files
+    - file: src/models/page.py
+      table: pages
+      workflows: [WF6]
+      description: Model for pages extracted from sitemaps
+      
+  enum_files:
+    - file: src/models/place.py
+      enums: [PlaceStatusEnum, DeepScanStatusEnum]
+      workflows: [WF1, WF2, WF3]
+      table: places
+    - file: src/models/local_business.py
+      enums: [DomainExtractionStatusEnum]
+      workflows: [WF3, WF4]
+      table: local_businesses
+    - file: src/models/domain.py
+      enums: [SitemapCurationStatusEnum, SitemapAnalysisStatusEnum]
+      workflows: [WF4, WF5]
+      table: domains
+    - file: src/models/sitemap.py
+      enums: [SitemapImportCurationStatusEnum, SitemapImportProcessStatusEnum, SitemapFileStatusEnum]
+      workflows: [WF5, WF6]
+      table: sitemap_files
+    - file: src/models/page.py
+      enums: [PageStatusEnum]
+      workflows: [WF6]
+      table: pages
+    - file: src/models/enums.py
+      enums: [SitemapAnalysisStatusEnum, DomainStatusEnum]
+      workflows: [Multiple]
+      notes: "This file contains some duplicate enum definitions that are also defined in their respective model files"
+      
+  # List of files whose imports have been checked
+  evaluated_files:
+    - src/routers/batch_page_scraper.py # (1)
+    - src/auth/jwt_auth.py # (1.1, 4.4, 4.6.1, 5.1, 6.1, 7.1, 8.1, 9.1, 10.1, 11.1, 12.1, 13.1)
+    - src/config/settings.py # (1.2, 1.1.1, 1.6.2.1, 4.5, 4.1.1, 4.3.1, 6.9.1, 7.2, 7.4.1, 9.2, 10.2)
+    - src/models/__init__.py # (1.3, 1.6.3.1, 1.9.2.1, 1.9.2.4.1, 6.2, 6.9.2, 7.3, 9.3, 10.5.1.1)
+    - src/models/api_models.py # (1.3.1, 5.3, 8.3, 10.3, 11.3)
+    - src/models/base.py # (1.3.2, 1.3.3.1, 1.3.4.1, 1.3.5.1, 1.3.6.1, 1.3.7.1, 1.3.8.1, 1.3.9.1, 1.3.10.1, 8.4.2, 8.4.3, 12.3.1)
+    - src/models/batch_job.py # (1.3.3, 1.6.1)
+    - src/models/tenant.py # (1.3.3.2, 1.4, 1.3.11, 1.3.5.2, 1.3.6.2, 1.3.8.2, 1.3.9.2, 1.6.3.2, 1.9.2.4.2, 6.4, 12.4, 12.3.2, 2.5.5)
+    - src/models/contact.py # (1.3.4, 6.9.3)
+    - src/models/domain.py # (1.3.5, 4.2, 4.3.2, 5.4, 6.8, 6.9.4, 2.5.2)
+    - src/models/job.py # (1.3.6, 6.3, 6.9.5, 2.5.3)
+    - src/models/page.py # (1.3.7, 6.9.6)
+    - src/models/place.py # (1.3.8, 7.4.3.1, 7.5.1, 8.5, 8.4.1, 11.4)
+    - src/models/place_search.py # (1.3.9, 7.8, 7.4.2, 7.5.2)
+    - src/models/sitemap.py # (1.3.10, 13.3, 13.4.1, 13.5.1, 2.5.4)
+    - src/schemas/job.py # (1.5, 6.6, 9.4, 10.4)
+    - src/services/batch/batch_functions.py # (1.6, 1.7.1)
+    - src/session/async_session.py # (1.6.2, 1.10, 1.6.3.5, 3.2, 4.9, 6.7, 6.9.7, 7.7, 9.7, 10.6, 12.6)
+    - src/services/page_scraper/domain_processor.py # (1.6.3, 1.9.1, 9.8)
+    - src/scraper/domain_utils.py # (1.6.3.3, 1.9.2.2, 10.5.1.2)
+    - src/scraper/metadata_extractor.py # (1.6.3.4)
+    - src/utils/scraper_api.py # (1.6.3.4.1)
+    - src/services/batch/types.py # (1.6.4, 1.8, 1.7.2)
+    - src/services/batch/batch_processor_service.py # (1.7)
+    - src/services/page_scraper/__init__.py # (1.9, 9.6)
+    - src/services/page_scraper/processing_service.py # (1.9.2)
+    - src/services/core/validation_service.py # (1.9.2.3, 10.5.2)
+    - src/services/job_service.py # (1.9.2.4, 10.7, 2.5.6)
+    - src/utils/db_helpers.py # (1.11, 2.6, 12.7)
+    - src/routers/batch_sitemap.py # (2)
+    - src/services/sitemap/sitemap_service.py # (2.5)
+    - src/routers/db_portal.py # (3)
+    - src/services/db_inspector.py # (3.1)
+    - src/routers/dev_tools.py # (4)
+    - src/db/session.py # (4.1, 5.2, 8.2, 11.2, 13.2, 2.5.1)
+    - src/services/domain_to_sitemap_adapter_service.py # (4.3)
+    - src/db/sitemap_handler.py # (4.6)
+    - src/scheduler_instance.py # (4.7)
+    - src/services/core/user_context_service.py # (4.8, 9.5)
+    - src/routers/domains.py # (5)
+    - src/routers/email_scanner.py # (6)
+    - src/schemas/email_scan.py # (6.5)
+    - src/tasks/email_scraper.py # (6.9)
+    - src/routers/google_maps_api.py # (7)
+    - src/services/places/places_search_service.py # (7.4)
+    - src/services/places/places_storage_service.py # (7.6, 7.4.3)
+    - src/services/places/places_service.py # (7.5, 7.4.3.2)
+    - src/routers/local_businesses.py # (8)
+    - src/models/local_business.py # (8.4)
+    - src/routers/modernized_page_scraper.py # (9)
+    - src/routers/modernized_sitemap.py # (10)
+    - src/services/sitemap/processing_service.py # (10.5)
+    - src/scraper/sitemap_analyzer.py # (10.5.1)
+    - src/scraper/utils.py # (10.5.1.3)
+    - src/routers/places_staging.py # (11)
+    - src/routers/profile.py # (12)
+    - src/core/response.py # (12.2)
+    - src/models/profile.py # (12.3, 12.5.2)
+    - src/services/profile_service.py # (12.5)
+    - src/core/__init__.py # (12.5.1)
+    - src/core/exceptions.py # (12.5.1.1)
+    - src/routers/sitemap_files.py # (13)
+    - src/schemas/sitemap_file.py # (13.4, 13.5.2)
+    - src/services/sitemap_files_service.py # (13.5)
+    - src/routers/sqlalchemy/__init__.py # (14)
+
+  # List of all unique files/directories mentioned in main_routers.md so far
+  discovered_files:
+    # Main Routers (from src/main.py)
+    - src/routers/batch_page_scraper.py
+    - src/routers/batch_sitemap.py
+    - src/routers/db_portal.py
+    - src/routers/dev_tools.py
+    - src/routers/domains.py
+    - src/routers/email_scanner.py
+    - src/routers/google_maps_api.py
+    - src/routers/local_businesses.py
+    - src/routers/modernized_page_scraper.py
+    - src/routers/modernized_sitemap.py
+    - src/routers/places_staging.py
+    - src/routers/profile.py
+    - src/routers/sitemap_files.py
+    - src/routers/sqlalchemy/ # Directory
+    # Imports of (1) src/routers/batch_page_scraper.py
+    - src/auth/jwt_auth.py
+    - src/config/settings.py
+    - src/models/__init__.py
+    - src/models/tenant.py
+    - src/schemas/job.py
+    - src/services/batch/batch_functions.py
+    - src/services/batch/batch_processor_service.py
+    - src/services/batch/types.py
+    - src/services/page_scraper/__init__.py
+    - src/session/async_session.py
+    - src/utils/db_helpers.py
+    # Imports of (1.1) src/auth/jwt_auth.py - already listed
+    # Imports of (1.1.1) src/config/settings.py - no internal imports
+    # Imports of (1.3) src/models/__init__.py
+    - src/models/api_models.py
+    - src/models/base.py
+    - src/models/batch_job.py
+    - src/models/contact.py
+    - src/models/domain.py
+    - src/models/job.py
+    - src/models/page.py
+    - src/models/place.py
+    - src/models/place_search.py
+    - src/models/sitemap.py
+    # Imports of (1.3.3) src/models/batch_job.py - already listed
+    # Imports of (1.3.4) src/models/contact.py - already listed
+    # Imports of (1.3.5) src/models/domain.py - already listed
+    # Imports of (1.3.6) src/models/job.py - already listed
+    # Imports of (1.3.7) src/models/page.py - already listed
+    # Imports of (1.3.8) src/models/place.py - already listed
+    # Imports of (1.3.9) src/models/place_search.py - already listed
+    # Imports of (1.3.10) src/models/sitemap.py - already listed
+    # Imports of (1.4) src/models/tenant.py - already listed
+    # Imports of (1.5) src/schemas/job.py - no internal imports
+    # Imports of (1.6) src/services/batch/batch_functions.py
+    - src/services/page_scraper/domain_processor.py # Added
+    # Imports of (1.6.2) src/session/async_session.py - already listed
+    # Imports of (1.6.3) src/services/page_scraper/domain_processor.py
+    - src/scraper/domain_utils.py # Added
+    - src/scraper/metadata_extractor.py # Added
+    # Imports of (1.6.3.4) src/scraper/metadata_extractor.py
+    - src/utils/scraper_api.py # Added
+    # Imports of (1.7) src/services/batch/batch_processor_service.py - already listed
+    # Imports of (1.8) src/services/batch/types.py - no internal imports
+    # Imports of (1.9) src/services/page_scraper/__init__.py
+    - src/services/page_scraper/processing_service.py # Added
+    # Imports of (1.9.2) src/services/page_scraper/processing_service.py
+    - src/services/core/validation_service.py # Added
+    - src/services/job_service.py # Added
+    # Imports of (1.9.2.4) src/services/job_service.py - already listed
+    # Imports of (1.10) src/session/async_session.py - already listed
+    # Imports of (1.11) src/utils/db_helpers.py - no internal imports
+
+    # Imports of (2) src/routers/batch_sitemap.py
+    - src/services/sitemap/sitemap_service.py # Added - MISSING FILE - NOW FOUND
+
+    # Imports of (3) src/routers/db_portal.py
+    - src/services/db_inspector.py # Added
+
+    # Imports of (4) src/routers/dev_tools.py
+    - src/db/session.py # Added
+    # - src/models/domain.py # Already listed
+    - src/services/domain_to_sitemap_adapter_service.py # Added
+    # - src/auth/jwt_auth.py # Already listed
+    # - src/config/settings.py # Already listed
+    - src/db/sitemap_handler.py # Added
+    - src/scheduler_instance.py # Added
+    - src/services/core/user_context_service.py # Added
+    # - src/session/async_session.py # Already listed
+
+    # Imports of (6) src/routers/email_scanner.py
+    # - src/auth/jwt_auth.py # Already listed
+    # - src/models/__init__.py # Already listed
+    # - src/models/job.py # Already listed
+    # - src/models/tenant.py # Already listed
+    - src/schemas/email_scan.py # Added
+    # - src/schemas/job.py # Already listed
+    # - src/session/async_session.py # Already listed
+    # - src/models/domain.py # Already listed
+    - src/tasks/email_scraper.py # Added
+
+    # Imports of (7) src/routers/google_maps_api.py
+    - src/services/places/places_search_service.py # Added
+    - src/services/places/places_service.py # Added
+    - src/services/places/places_storage_service.py # Added
+
+    # Imports of (8) src/routers/local_businesses.py
+    - src/models/local_business.py # Added
+
+    # Imports of (10) src/routers/modernized_sitemap.py
+    - src/services/sitemap/processing_service.py # Added
+
+    # Imports of (10.5) src/services/sitemap/processing_service.py
+    - src/scraper/sitemap_analyzer.py # Added
+    - src/services/sitemap_import_scheduler.py # [NTRA] Background sitemap import scheduler (traced)
+    - src/services/sitemap_import_service.py # [NTRA] Processes single sitemap file, creates pages (traced)
+    - src/models/sitemap.py # [NTRA] SitemapFile, SitemapUrl models (traced)
+    - src/models/page.py # [NTRA] Page model, links to sitemap_file_id (traced)
+    - src/common/curation_sdk/scheduler_loop.py # [NTRA] Job loop utility (traced)
+
+    # Imports of (10.5.1) src/scraper/sitemap_analyzer.py
+    - src/scraper/utils.py # Added
+
+    # Imports of (12) src/routers/profile.py
+    - src/core/response.py # Added
+    - src/models/profile.py # Added
+    - src/services/profile_service.py # Added
+
+    # Imports of (12.5) src/services/profile_service.py
+    - src/core/__init__.py # Added
+
+    # Imports of (12.5.1) src/core/__init__.py
+    - src/core/exceptions.py # Added
+
+    # Imports of (13) src/routers/sitemap_files.py
+    - src/schemas/sitemap_file.py # Added
+    - src/services/sitemap_files_service.py # Added
+
+  summary:
+    evaluated_count: 65 # Incremented
+    discovered_count: 65 # No change

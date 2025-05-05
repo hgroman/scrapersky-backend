@@ -1,0 +1,112 @@
+workflow_name: WF-02 Staging Editor Curation to Deep Scan
+date_reviewed: YYYY-MM-DD
+reviewed_by: TODO
+
+phases:
+  - phase: UI Interaction
+    steps:
+      - step_id: 1.1
+        file: static/js/staging-editor-tab.js
+        action: User selects rows, sets status="Selected", clicks "Update X Selected"
+        principles:
+          API Std: false
+          Clear User Feedback: false
+        notes: "TODO: Verify JS implementation details"
+
+  - phase: API Routing
+    steps:
+      - step_id: 2.1
+        file: src/routers/places_staging.py
+        action: Endpoint PUT /api/v3/places/staging/status receives request, validates
+        principles:
+          API Std: false
+          Auth Boundary: false
+          Conn Mgmt: false
+          Txn Boundary: false
+          Code Org: false
+          UUID Std: false
+          Enum Handling: false
+        notes: "TODO: Raw SQL detected in this router (see lines ~121-180). Refactor to SQLAlchemy ORM for compliance with Absolute ORM Requirement. Track progress in micro work order and enforce via CI."
+      - step_id: 2.2
+        file: src/routers/places_staging.py
+        action: Maps status, determines trigger_deep_scan=true, starts transaction
+        principles:
+          Enum Handling: false
+          Code Org: false
+          Txn Boundary: false
+        notes: ""
+      - step_id: 2.3
+        file: src/routers/places_staging.py
+        action: Calls places_staging_service.update_places_status
+        principles:
+          Auth Boundary: false
+          Txn Boundary: false
+          Code Org: false
+        notes: ""
+
+  - phase: Service Delegation & Logic
+    steps:
+      - step_id: 3.1
+        file: src/services/places_staging_service.py
+        action: update_places_status receives params, fetches PlacesStaging objects
+        principles:
+          Auth Boundary: false
+          Txn Boundary: false
+          ORM Req: false
+          Code Org: false
+          UUID Std: false
+          Enum Handling: false
+        notes: ""
+
+  - phase: Database Interaction
+    steps:
+      - step_id: 4.1
+        file: src/services/places_staging_service.py
+        action: Updates place.status=Selected, place.deep_scan_status=Queued
+        principles:
+          ORM Req: false
+          Models: false
+          Enums: false
+          UUIDs: false
+        notes: "Dual-Status update logic"
+
+  - phase: Background Task Triggering
+    steps:
+      - step_id: 5.1
+        file: src/services/places_staging_service.py
+        action: Setting deep_scan_status = 'Queued' acts as trigger
+        principles:
+          Decoupling: false
+          Atomicity: false
+        notes: "Status-based queuing"
+
+  - phase: Background Task Execution
+    steps:
+      - step_id: 6.1
+        file: src/services/sitemap_scheduler.py # Assuming this scheduler picks it up
+        action: Polls DB for PlacesStaging with deep_scan_status='Queued'
+        principles:
+          Bg Task Pattern: true
+          Decoupling: true
+          Conn Mgmt: true
+          Txn Boundary: true
+          ORM Req: true
+          Code Org: true
+          Error Handling: true
+        notes: "VERIFIED 2025-05-04T10:56:28-07:00: src/services/sitemap_scheduler.py polls for Places with deep_scan_status='Queued' and is responsible for triggering deep scan background tasks. This matches the workflow and architectural intent. See code lines ~211-249."
+      - step_id: 6.2
+        file: src/services/places_deep_service.py 
+        action: Processes the deep scan for the place
+        principles:
+          Bg Task Pattern: true
+          Idempotency: true
+          Retry Logic: true
+          Txn Boundary: true
+          ORM Req: true
+        notes: "VERIFIED 2025-05-04T10:56:28-07:00: PlacesDeepService.process_single_deep_scan is invoked by the scheduler for each queued Place. Service follows required patterns (decoupling, background task, ORM). See code lines ~227, ~249 in sitemap_scheduler.py and PlacesDeepService class definition."
+
+# ---
+# Known Issues (as of 2025-05-04T11:03:54-07:00)
+known_issues:
+  - "Raw SQL in src/routers/places_staging.py flagged for ORM refactor (see TODO in notes)."
+  - "JobService integration incomplete in PlacesDeepService; job status updates skipped."

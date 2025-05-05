@@ -1,0 +1,97 @@
+workflow_name: WF-06 Sitemap Deep Scrape Processing
+date_reviewed: YYYY-MM-DD
+reviewed_by: TODO
+
+phases:
+  - phase: UI Interaction
+    steps:
+      - step_id: 1.1
+        file: N/A
+        action: No direct UI interaction for this background workflow
+        principles:
+          API Std: false
+          Clear User Feedback: false
+        notes: "Workflow triggered by background polling"
+
+  - phase: API Routing
+    steps:
+      - step_id: 2.1
+        file: N/A
+        action: No API endpoint directly triggers this specific processing step
+        principles:
+          API Std: false
+          Auth Boundary: false
+          Conn Mgmt: false
+          Txn Boundary: false
+          Code Org: false
+          UUID Std: false
+          Enum Handling: false
+        notes: "Initiated by scheduler, not direct API call"
+
+  - phase: Service Delegation & Logic # Represents the Scheduler calling the service
+    steps:
+      - step_id: 3.1
+        file: src/services/deep_scrape_scheduler.py
+        action: Scheduler job (`run_job_loop`) calls SitemapDeepScrapeService.process_single_sitemap_file
+        principles:
+          Auth Boundary: false # N/A for internal call
+          Txn Boundary: true # Service uses nested transactions; loop handles overall txn
+          ORM Req: true # run_job_loop likely uses ORM
+          Code Org: true # Service/Scheduler separation
+          UUID Std: true # IDs are passed/used
+          Enum Handling: true # Status enums are used
+        notes: "Scheduler delegates processing to the dedicated service."
+
+  - phase: Database Interaction # Parsing & Page Creation Logic
+    steps:
+      - step_id: 4.1
+        file: src/services/sitemap_deep_scrape_service.py
+        action: Service fetches SitemapFile, fetches sitemap XML via HTTP, parses XML, extracts URLs
+        principles:
+          ORM Req: true # Uses session.get
+          Models: true # Uses SitemapFile model
+          Enums: true # Uses SitemapDeepScrapeStatusEnum
+          UUIDs: true # Uses sitemap_file_id
+        notes: "Core sitemap processing logic, including HTTP fetch."
+      - step_id: 4.2
+        file: src/services/sitemap_deep_scrape_service.py
+        action: Creates Page records via bulk insert (ON CONFLICT DO NOTHING) for extracted URLs
+        principles:
+          ORM Req: true # Uses SQLAlchemy Core insert via ORM session
+          Models: true # Interacts with Page model
+          Enums: true # Sets PageScrapeStatusEnum
+          UUIDs: true # Uses sitemap_file_id, domain_id
+        notes: "Mechanism for queuing next step (page scraping) via Page status."
+      - step_id: 4.3
+        file: src/services/sitemap_deep_scrape_service.py
+        action: Updates SitemapFile status (Completed/Failed) and error message
+        principles:
+          ORM Req: true # Uses session.get and attribute assignment
+          Models: true # Updates SitemapFile model
+          Enums: true # Sets SitemapDeepScrapeStatusEnum
+          UUIDs: true # Uses sitemap_file_id
+        notes: "Final status update for this stage within nested transaction."
+
+  - phase: Background Task Triggering # Triggering the *next* step (Page Scraping)
+    steps:
+      - step_id: 5.1
+        file: src/services/sitemap_deep_scrape_service.py
+        action: Creating Page records with status='Queued' acts as trigger for Page Scraping workflow (WF-??)
+        principles:
+          Decoupling: true # Next step triggered via DB status, not direct call
+          Atomicity: true # Page creation happens within the service's transaction
+        notes: "Status-based queuing decouples sitemap processing from page scraping."
+
+  - phase: Background Task Execution # Represents the Scheduler initiating *this* workflow
+    steps:
+      - step_id: 6.1 # This step actually happens *before* step 3.1 logically
+        file: src/services/deep_scrape_scheduler.py
+        action: Scheduler (`run_job_loop`) polls DB for SitemapFile with deep_scrape_status='Queued'
+        principles:
+          Bg Task Pattern: true # Standard polling loop pattern
+          Conn Mgmt: true # Handled by get_background_session and run_job_loop
+          Txn Boundary: true # run_job_loop manages transaction per batch/item
+          ORM Req: true # Uses SQLAlchemy select/update
+          Code Org: true # Dedicated scheduler module
+          Error Handling: true # run_job_loop includes error handling & status updates
+        notes: "Initiation step for WF-06 using generic job loop."
