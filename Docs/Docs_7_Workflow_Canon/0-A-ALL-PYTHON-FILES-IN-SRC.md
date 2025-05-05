@@ -7,9 +7,7 @@ src/__init__.py
 src/auth/__init__.py
 src/auth/jwt_auth.py
 src/common/__init__.py
-src/common/curation_sdk/router_base.py
 src/common/curation_sdk/scheduler_loop.py
-src/common/curation_sdk/status_queue_helper.py
 src/common/sitemap_parser.py
 src/config/logging_config.py
 src/config/runtime_tracer.py
@@ -68,7 +66,6 @@ src/services/__init__.py
 src/services/batch/__init__.py
 src/services/batch/batch_functions.py
 src/services/batch/batch_processor_service.py
-src/services/batch/simple_task_test.py
 src/services/batch/types.py
 src/services/business_to_domain_service.py
 src/services/core/__init__.py
@@ -102,7 +99,7 @@ src/utils/db_helpers.py
 src/utils/scraper_api.py
 ```
 
-There are 97 Python files in total in the src directory.
+There are 94 Python files in total in the src directory.
 
 ## Comparison with Workflow Documentation
 
@@ -110,7 +107,11 @@ This list shows the actual source code files in the project. It can be used to v
 
 Key observations:
 
-- Several `__init__.py` files and package structure files aren't mentioned in workflow documentation
-- Additional utilities like `src/config/logging_config.py` and `src/health/db_health.py` exist but aren't explicitly referenced
-- The file `src/services/batch/simple_task_test.py` appears to be a test file within the source tree
+- Three previously identified orphaned files have been properly handled:
+  - `src/common/curation_sdk/router_base.py` has been moved to the archive directory
+  - `src/common/curation_sdk/status_queue_helper.py` has been moved to the archive directory
+  - `src/services/batch/simple_task_test.py` has been moved to the tests directory
+- The file previously referenced as `src/services/page_scraper/page_scraper_service.py` is actually named `processing_service.py`
+- All essential infrastructure files are now documented in `1.0-System-Infrastructure-Layer.md`
 - All service packages have proper `__init__.py` files for Python package structure
+- There are no longer any orphaned files in the codebase
