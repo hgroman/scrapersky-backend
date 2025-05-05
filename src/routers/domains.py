@@ -53,7 +53,7 @@ ALLOWED_SORT_FIELDS = {
 }
 
 
-@router.get("/", response_model=PaginatedDomainResponse)
+@router.get("", response_model=PaginatedDomainResponse)
 async def list_domains(
     session: AsyncSession = Depends(get_db_session),  # Correct dependency for routers
     current_user: Dict[str, Any] = Depends(get_current_user),  # More specific type hint
@@ -61,7 +61,9 @@ async def list_domains(
     size: int = Query(20, ge=1, le=100, description="Number of items per page"),
     sort_by: Optional[str] = Query(
         "updated_at",
-        description=f"Field to sort by. Allowed fields: {', '.join(ALLOWED_SORT_FIELDS.keys())}",
+        description=(
+            f"Field to sort by. Allowed fields: {', '.join(ALLOWED_SORT_FIELDS.keys())}"
+        ),
     ),
     sort_desc: bool = Query(True, description="Sort in descending order"),
     sitemap_curation_status: Optional[SitemapCurationStatusEnum] = Query(
@@ -79,14 +81,20 @@ async def list_domains(
     """
     user_sub = current_user.get("sub", "unknown_user")  # Provide default
     logger.info(
-        f"User {user_sub} listing domains: page={page}, size={size}, sort_by={sort_by}, sort_desc={sort_desc}, curation_status={sitemap_curation_status}, domain_filter={domain_filter}"
+        f"User {user_sub} listing domains: page={page}, size={size}, "
+        f"sort_by={sort_by}, sort_desc={sort_desc}, "
+        f"curation_status={sitemap_curation_status}, "
+        f"domain_filter={domain_filter}"
     )
 
     # Validate sort_by field
     if sort_by and sort_by not in ALLOWED_SORT_FIELDS:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid sort field '{sort_by}'. Allowed fields: {', '.join(ALLOWED_SORT_FIELDS.keys())}",
+            detail=(
+                f"Invalid sort field '{sort_by}'. Allowed fields: "
+                f"{', '.join(ALLOWED_SORT_FIELDS.keys())}"
+            ),
         )
 
     # Determine the sort column, using the default if sort_by is None or invalid (though invalid checked above)
@@ -161,7 +169,9 @@ async def update_domain_sitemap_curation_status_batch(
     """
     user_sub = current_user.get("sub", "unknown_user")
     logger.info(
-        f"User {user_sub} requesting batch sitemap curation update for {len(request_body.domain_ids)} domains to status '{request_body.sitemap_curation_status.value}'"
+        f"User {user_sub} requesting batch sitemap curation update for "
+        f"{len(request_body.domain_ids)} domains to status "
+        f"'{request_body.sitemap_curation_status.value}'"
     )
 
     domain_ids = request_body.domain_ids
@@ -172,12 +182,15 @@ async def update_domain_sitemap_curation_status_batch(
         db_curation_status = SitemapCurationStatusEnum[
             api_status.name
         ]  # Use .name for reliable mapping
-    except KeyError:
-        logger.error(f"Invalid API status value received: {api_status.value}")
+    except KeyError as e:
+        # Log the error including the invalid value received
+        logger.error(
+            f"Invalid API status value received: {api_status.value}", exc_info=True
+        )
         raise HTTPException(
             status_code=400,
             detail=f"Invalid sitemap curation status value: {api_status.value}",
-        )
+        ) from e
 
     updated_count = 0
     queued_count = 0
@@ -206,7 +219,8 @@ async def update_domain_sitemap_curation_status_batch(
             domain.sitemap_curation_status = db_curation_status  # type: ignore
             updated_count += 1
             logger.debug(
-                f"Updating domain {domain.id} sitemap_curation_status to {db_curation_status.value}"
+                f"Updating domain {domain.id} sitemap_curation_status to "
+                f"{db_curation_status.value}"
             )
 
             # Conditional logic: If status is 'Selected', queue for analysis
@@ -226,10 +240,11 @@ async def update_domain_sitemap_curation_status_batch(
         await session.rollback()  # Rollback on error
         raise HTTPException(
             status_code=500, detail="Internal server error during database update."
-        )
+        ) from e
 
     logger.info(
-        f"Batch sitemap curation update completed by {user_sub}. Updated: {updated_count}, Queued for analysis: {queued_count}"
+        f"Batch sitemap curation update completed by {user_sub}. "
+        f"Updated: {updated_count}, Queued for analysis: {queued_count}"
     )
 
     return {"updated_count": updated_count, "queued_count": queued_count}
