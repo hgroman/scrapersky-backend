@@ -125,7 +125,7 @@ The API defines a query parameter `trigger_deep_scan: bool` that is completely i
 
 ### WF1 - Single Search
 
-**Workflow Description**: 
+**Workflow Description**:
 Users initiate a business discovery search via the "Single Search" UI tab, resulting in backend processing via the Google Maps API and storage of results in the database for later processing in WF2-Staging Editor.
 
 **Micro-Work Order**: /Docs_7_Workflow_Canon/Micro-Work-Orders/WF1-SingleSearch_micro_work_order.md
@@ -295,7 +295,7 @@ Despite being named "sitemap_scheduler.py", this file handles multiple types of 
 
 ### WF4 - Domain Curation (2025-05-05)
 
-**Workflow Description**: 
+**Workflow Description**:
 Domain objects are marked with `sitemap_curation_status` = 'Selected' in the Domain Curation UI tab, resulting in them being queued for sitemap analysis/processing in the backend.
 
 **Micro-Work Order**: /Docs_7_Workflow_Canon/Micro-Work-Orders/WF4-DomainCuration_micro_work_order.md
@@ -355,7 +355,7 @@ The adapter service contains a hardcoded INTERNAL_API_BASE_URL for API calls. Th
 
 ### WF5 - Sitemap Curation (2025-05-05)
 
-**Workflow Description**: 
+**Workflow Description**:
 Sitemap file objects are marked with `deep_scrape_curation_status` = 'Selected' in the Sitemap Curation UI tab, resulting in them being queued for deep scrape processing in the backend.
 
 **Micro-Work Order**: /Docs_7_Workflow_Canon/Micro-Work-Orders/WF5-SitemapCuration_micro_work_order.md
@@ -495,9 +495,9 @@ The pattern consists of these key components:
       │        ▼                ▼                                             ▼
       │    consumes        consumes                                       consumes
       └──────┐ from WF1      from WF2                                       from WF3
-             │                                                                   
-  No upstream                                                                  
-   consumer                                                                   
+             │
+  No upstream
+   consumer
 ```
 
 **Impact**:
@@ -579,4 +579,3 @@ During the workflow documentation audit, we discovered that several enum classes
 | WF6-3 | Limited URL validation before database insertion | LOW | SCRSKY-237 | 2025-06-05 | OPEN | - |
 | WF5-2 | Missing deep scrape service implementation | HIGH | SCRSKY-235 | 2025-05-20 | OPEN | - |
 | SHARED-1 | Duplicate enum definitions in codebase | MEDIUM | SCRSKY-260 | 2025-06-10 | OPEN | - |
-

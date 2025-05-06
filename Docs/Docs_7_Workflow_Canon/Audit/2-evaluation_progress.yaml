@@ -25,7 +25,7 @@ progress_tracker:
       table: pages
       workflows: [WF6]
       description: Model for pages extracted from sitemaps
-      
+
   enum_files:
     - file: src/models/place.py
       enums: [PlaceStatusEnum, DeepScanStatusEnum]
@@ -51,7 +51,7 @@ progress_tracker:
       enums: [SitemapAnalysisStatusEnum, DomainStatusEnum]
       workflows: [Multiple]
       notes: "This file contains some duplicate enum definitions that are also defined in their respective model files"
-      
+
   # List of files whose imports have been checked
   evaluated_files:
     - src/routers/batch_page_scraper.py # (1)

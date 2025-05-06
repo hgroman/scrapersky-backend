@@ -6,10 +6,10 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 
 ---
 
-**Workflow Name:**  
-**YAML File:**  
-**Date/Time:**  
-**Reviewer:**  
+**Workflow Name:**
+**YAML File:**
+**Date/Time:**
+**Reviewer:**
 
 ---
 
@@ -60,7 +60,7 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 ---
 
 **Notes/Exceptions:**
-- 
+-
 
 ---
 
@@ -91,7 +91,7 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 
 **Notes/Exceptions:**
 
-- 
+-
 
 ---
 

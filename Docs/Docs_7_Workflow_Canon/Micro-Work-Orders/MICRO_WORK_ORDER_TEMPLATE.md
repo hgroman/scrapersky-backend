@@ -75,5 +75,5 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 
 ---
 
-**Reviewer:** ____________________  
+**Reviewer:** ____________________
 **Date:** ________________________
