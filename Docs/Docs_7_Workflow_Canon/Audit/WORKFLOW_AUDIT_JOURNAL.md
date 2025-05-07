@@ -557,6 +557,62 @@ During the workflow documentation audit, we discovered that several enum classes
 
 ---
 
+#### [2025-05-06] Inconsistent enum naming patterns and non-standard enum values
+
+- **Workflow**: ALL (SHARED)
+- **Files**: src/models/sitemap.py, src/models/domain.py, src/models/page.py
+- **Severity**: HIGH
+- **Type**: Technical Debt, Naming Conventions, Standardization
+- **Discovered By**: Cascade AI
+- **Timestamp**: 2025-05-06T17:15:00-07:00
+
+**Description**:
+During standardization research, we identified inconsistent naming patterns and non-standard values in status enum classes across workflow models. These deviations from the established standards create confusion and maintenance challenges:
+
+1. **Enum naming inconsistencies**:
+   - Standard pattern is `{WorkflowNameTitleCase}CurationStatus` and `{WorkflowNameTitleCase}ProcessingStatus` as seen in `PageCurationStatus` and `PageProcessingStatus`
+   - Non-standard implementations found in:
+     - `SitemapImportCurationStatusEnum` (should be `SitemapImportCurationStatus` without "Enum" suffix)
+     - `SitemapCurationStatusEnum` (uses source table rather than workflow name pattern)
+
+2. **Non-standard enum values**:
+   - Standard CurationStatus values: `New, Queued, Processing, Complete, Error, Skipped`
+   - Standard ProcessingStatus values: `Queued, Processing, Complete, Error`
+   - Non-standard implementations found in:
+     - `SitemapImportCurationStatusEnum`: Uses `Selected` instead of `Queued`, adds `Maybe`, `Not_a_Fit`, `Archived`
+     - `SitemapImportProcessStatusEnum`: Uses `Completed` (instead of `Complete`), adds non-standard `Submitted`
+     - `SitemapCurationStatusEnum`: Uses `Selected` instead of `Queued`, adds `Maybe`, `Not_a_Fit`, `Archived`
+     - `SitemapAnalysisStatusEnum`: Uses `Completed` instead of `Complete`
+
+3. **Base class inconsistencies**:
+   - Standard pattern uses `str, Enum` (seen in `PageCurationStatus`)
+   - Legacy implementations use `enum.Enum` (all non-standard enums)
+
+**Impact**:
+- Violates the standardized dual-status update pattern, creating inconsistency in how workflows interact
+- Creates confusion for developers implementing new workflows without clear naming standards
+- Makes it difficult to create generic utilities that work across all workflows
+- Increases risk of errors when modifying or extending existing workflows
+- Complicates API documentation and integration due to inconsistent status value names
+
+**Remediation Plan**:
+1. Document all non-standard enum implementations in a comprehensive inventory
+2. Determine migration approach for each non-standard enum:
+   - Rename enum classes to follow `{WorkflowNameTitleCase}CurationStatus` pattern
+   - Standardize base class to `str, Enum`
+   - Map legacy status values to standard values (e.g., `Selected` → `Queued`)
+3. Create database migration scripts for enum type changes
+4. Update all code references to use new enum names and values
+5. Update API documentation to reflect standardized values
+6. Add validation in CI/CD pipeline to enforce standard enum naming and values
+
+**Reference(s)**:
+- JIRA: SCRSKY-NEW (To be created)
+- Related documentation: WORKFLOW_STANDARDIZATION_Q&A FU4 - Python Backend - Models.md
+- Reference implementation: src/models/page.py (PageCurationStatus, PageProcessingStatus)
+
+---
+
 ## Remediation Tracking
 
 | Issue ID | Description | Severity | JIRA | Target Date | Status | Completed Date |

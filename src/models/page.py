@@ -4,6 +4,7 @@ SQLAlchemy Model for the 'pages' table.
 
 import uuid
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
 
 from sqlalchemy import (
@@ -16,11 +17,29 @@ from sqlalchemy import (
     String,
     Text,
 )
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
+
+
+# --- Page Curation Workflow Enums ---
+class PageCurationStatus(str, Enum):
+    New = "New"
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+    Skipped = "Skipped"
+
+
+class PageProcessingStatus(str, Enum):
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
 
 
 class Page(Base, BaseModel):
@@ -55,49 +74,61 @@ class Page(Base, BaseModel):
     id: Column[uuid.UUID] = Column(
         PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    tenant_id: Column[uuid.UUID] = Column(
-        PGUUID(as_uuid=True), nullable=False
-    )
+    tenant_id: Column[uuid.UUID] = Column(PGUUID(as_uuid=True), nullable=False)
     domain_id: Column[uuid.UUID] = Column(
         PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False
     )
     url: Column[str] = Column(Text, nullable=False)
-    title: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    description: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    h1: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    canonical_url: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    meta_robots: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    has_schema_markup: Column[Optional[bool]] = Column( # type: ignore
+    title: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    description: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    h1: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    canonical_url: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    meta_robots: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    has_schema_markup: Column[Optional[bool]] = Column(  # type: ignore
         Boolean, default=False, nullable=True
     )
-    schema_types: Column[Optional[List[Optional[str]]]] = Column( # type: ignore
+    schema_types: Column[Optional[List[Optional[str]]]] = Column(  # type: ignore
         ARRAY(String), nullable=True
     )
-    has_contact_form: Column[Optional[bool]] = Column( # type: ignore
+    has_contact_form: Column[Optional[bool]] = Column(  # type: ignore
         Boolean, default=False, nullable=True
     )
-    has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True) # type: ignore
-    word_count: Column[Optional[int]] = Column(Integer, nullable=True) # type: ignore
-    inbound_links: Column[Optional[List[Optional[str]]]] = Column( # type: ignore
+    has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)  # type: ignore
+    word_count: Column[Optional[int]] = Column(Integer, nullable=True)  # type: ignore
+    inbound_links: Column[Optional[List[Optional[str]]]] = Column(  # type: ignore
         ARRAY(String), nullable=True
     )
-    outbound_links: Column[Optional[List[Optional[str]]]] = Column( # type: ignore
+    outbound_links: Column[Optional[List[Optional[str]]]] = Column(  # type: ignore
         ARRAY(String), nullable=True
     )
-    last_modified: Column[Optional[datetime]] = Column( # type: ignore
+    last_modified: Column[Optional[datetime]] = Column(  # type: ignore
         DateTime(timezone=True), nullable=True
     )
-    last_scan: Column[Optional[datetime]] = Column( # type: ignore
+    last_scan: Column[Optional[datetime]] = Column(  # type: ignore
         DateTime(timezone=True), nullable=True
     )
-    page_type: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    lead_source: Column[Optional[str]] = Column(Text, nullable=True) # type: ignore
-    additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True) # type: ignore
+    page_type: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    lead_source: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True)  # type: ignore
 
     # Foreign key to track the source sitemap file (optional)
-    sitemap_file_id: Column[Optional[uuid.UUID]] = Column( # type: ignore
+    sitemap_file_id: Column[Optional[uuid.UUID]] = Column(  # type: ignore
         PGUUID(as_uuid=True), ForeignKey("sitemap_files.id"), nullable=True, index=True
     )
+
+    # --- Page Curation Workflow Columns ---
+    page_curation_status: Column[PageCurationStatus] = Column(  # type: ignore
+        PgEnum(PageCurationStatus, name="pagecurationstatus", create_type=False),
+        nullable=False,
+        default=PageCurationStatus.New,
+        index=True,
+    )
+    page_processing_status: Column[Optional[PageProcessingStatus]] = Column(  # type: ignore
+        PgEnum(PageProcessingStatus, name="pageprocessingstatus", create_type=False),
+        nullable=True,
+        index=True,
+    )
+    page_processing_error: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
 
     # Relationships
     domain = relationship("Domain", back_populates="pages")
