@@ -78,7 +78,7 @@ class DatabaseConfig:
     def sync_connection_string(self) -> str:
         """Generate the SQLAlchemy connection string for psycopg2 (sync).
         ALWAYS returns the DIRECT connection string, bypassing the pooler.
-        Used for Alembic migrations and other synchronous tooling.
+        Used for Supabase MCP migrations and other synchronous tooling.
         """
         # ALWAYS use the direct connection host/port/user for sync operations
         logging.info(f"Generating DIRECT sync connection string to {self.host}")

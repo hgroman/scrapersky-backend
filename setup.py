@@ -16,7 +16,6 @@ setup(
         "pydantic>=2.0.0",
         "asyncpg",
         "python-jose",
-        "alembic",
     ],
     python_requires=">=3.8",
 )

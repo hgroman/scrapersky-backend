@@ -1,0 +1,74 @@
+ScraperSky — Final Strategic Plan (May 7 2025)
+0. Executive snapshot
+You now have a crawl → dedupe → chunk → embed → query loop that is polite, async, tenant‑safe, and cheap to run on a basic Render box + Supabase.
+The only “nice‑to‑have” you’re not yet using is Supabase MCP (Model Context Protocol) – an AI‑first control plane that can automate your DevOps and schema‑design tasks. MCP is not required for runtime, but it can shave hours off migrations, branching, and scripted ops.
+
+1. Lock‑in “must‑haves”
+Pillar	Concrete choice
+API & schedulers	FastAPI (ASGI) + APScheduler in‑process
+Data layer	SQLAlchemy 2 ORM only → Supavisor pooler
+Store & search	Supabase Postgres + pgvector (HNSW)
+Crawl	crawl4ai v0.6. (stream + memory‑adaptive)*
+Multi‑tenant security	Tenant ID col + RLS on every table
+Async embeddings	Trigger → pgmq → Edge Function (gte‑small)
+
+These remain unchanged; every optimisation below respects them.
+
+2. Key workflow (where friction lives & how we remove it)
+Step	Bottleneck risk	Our remedy
+① URL discovery	duplicate fetches, param spam	url‑normalize + SHA‑256 content hash before crawl
+② Fetching	site bans, OOM on small box	robots.txt check + RateLimiter with back‑off; ≤ 8 Playwright pages; MemoryAdaptiveDispatcher
+③ Storing raw	bloated DB, redo cost	gzip HTML to Supabase Storage CDN; store hash in pages
+④ Chunking	embeddings too big / irrelevant	token‑based splitter (800‑token chunks, 200 overlap)
+⑤ Embeddings	blocking API latency	Edge Function batch via pgmq; retries handled in queue
+⑥ Search	cross‑tenant leaks, low recall	HNSW (`m 16 
+⑦ Connections	hitting Postgres limits	Supavisor txn‑pool; SQLAlchemy NullPool locally
+⑧ Observability	silent failures	OTEL spans + Prom metrics: duplicate %, success %, embed lat, recall %
+
+3. Where Supabase MCP fits
+What MCP is	Why you might adopt it	Impact on runtime
+Open‑source Model Context Protocol server that exposes 20+ “tools” for LLM agents to manage Supabase projects (e.g. create migrations, fetch logs, spin up branches).
+Supabase
+• Let a coding‑assistant (Cursor, Claude, etc.) generate migrations or RLS policies for you.
+• One‑prompt branching → seed data → preview → merge.
+• AI‑driven health checks: an agent can pull logs & metrics and suggest index tweaks in‑chat.	Zero. MCP talks to the Supabase management API, not your live crawler. Safe to add gradually; remove with no data loss.
+Adoption cost	npx @supabase/mcp-server-supabase --access-token <PAT> + a .cursor/mcp.json file in the repo.
+Supabase
+< 30 min setup; PAT scoped to project.
+
+Recommendation: Use MCP in development only—think “AI DBA.” It won’t make scraping faster, but it will shorten schema/RLS iteration cycles and eventually let an agent auto‑scale indexes or rotate Vault keys.
+
+4. “Cutting‑edge bolt‑ons” still inside your guard‑rails
+Bolt‑on	Why it’s interesting now	Effort
+Automatic Embeddings GA	Official Supabase template (pgmq + Edge Function) landed in Launch Week 14, Apr 2025.
+Supabase
+ Your current plan already mirrors it – just import their schema & cron scripts to get queue dashboards for free.	⬤⬤⚪
+Supabase Branches	Instant dev/staging DB clones. Use branches for A/B schema tests without risking prod vectors.	⬤⚪⚪
+Realtime channel for crawl progress	Stream per‑page progress to a React admin panel via Supabase Realtime; no polling.	⬤⬤⚪
+Vault column‑level encryption	Encrypt emails/phones at rest with managed keys; policy‑based decrypt.	⬤⬤⚪
+pg_stat_statements + OTEL	Correlate slow SQL with trace IDs to pinpoint crawl or search bottlenecks.	⬤⚪⚪
+Edge Rate‑Limiter	Move politeness logic to a Postgres function that updates a domains_crawl_state row; cuts extra net RTTs from crawler worker.	⬤⬤⚪
+
+Legend: ⬤⚪⚪ = low effort, ⬤⬤⚪ = medium, ⬤⬤⬤ = high.
+
+5. Revised 30‑day execution map
+Week	Outcome	Milestones
+1	Foundation live	Supabase project, pgvector, HNSW index; FastAPI skeleton; APScheduler loop; OTEL baseline.
+2	Crawl & store	crawl4ai integrated with URL‑norm + hash dedup; raw HTML in Storage; per‑domain politeness table & limiter.
+3	Embed & search	Automatic Embeddings pipeline running; chunked vectors searchable with RLS; Grafana dashboard for KPIs.
+4	Hardening + AI DevOps	DLQ replay; Vault encryption; integrate MCP server for schema ops; soak test 1 000‑website batch and tune m/ef_search.
+
+6. Strategic long view (post‑MVP)
+Zero‑copy federated search – when “websites disappear,” your crawler pivots to public JSON/GraphQL endpoints. The same chunk→vector pipeline applies; swap the fetcher.
+
+On‑device inference – as open‑source MiniLM models hit WebGPU, clients can embed locally and sync only vectors (bandwidth win).
+
+AI agent layer – MCP + custom tools let agents run competitive‑intel queries (“which competitors added a pricing page yesterday?”) without manual SQL.
+
+Quantum‑safe vault – keep PII encryption abstracted (Vault keys) so migrating to post‑quantum ciphers is a key‑swap, not a rewrite.
+
+Final recommendation
+Ship the MVP exactly as outlined above; add MCP in dev for faster iterations; keep an eye on Supabase Launch Week drops (they ship vectors & AI features every quarter).
+Your stack stays lean (Python + Supabase), yet is positioned to absorb cutting‑edge capabilities—vector AI, live dashboards, agentic DevOps—without re‑platforming.
+
+That’s the most future‑proof footing you can have in 2025 while still getting a “kick‑ass scraper” into users’ hands this quarter.

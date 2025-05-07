@@ -8,7 +8,6 @@ starlette==0.40.0
 
 # Database
 SQLAlchemy==2.0.38
-alembic==1.14.1
 asyncpg==0.30.0
 # psycopg2-binary==2.9.6 # Removed, incompatible with Python 3.13, using psycopg 3 instead
 # psycopg==3.2.5 # Base package doesn't include necessary binary parts

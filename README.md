@@ -118,7 +118,7 @@ cp .env.example .env
 docker-compose up -d
 
 # Apply database migrations
-docker-compose exec app alembic upgrade head
+docker-compose exec app supabase db push --linked
 
 # Access API documentation
 open http://localhost:8000/docs
@@ -158,7 +158,8 @@ scraper-sky-backend/
 │   ├── testing/              # Testing utilities
 │   └── utility/              # Development utilities
 ├── examples/                 # Example implementations
-├── migrations/               # Alembic migrations
+├── supabase/                # Supabase configuration
+│   └── migrations/         # SQL migration files
 ├── Docs/                     # Project documentation
 └── static/                   # Static files
 ```
@@ -178,7 +179,7 @@ The application provides API endpoints for:
 
 - **SQLAlchemy 2.0**: Uses the latest SQLAlchemy with async support
 - **Connection Pooling**: Properly configured for Supabase
-- **Migration Management**: Alembic for database schema evolution
+- **Migration Management**: Supabase MCP for database schema evolution
 - **Prepared Statements**: The system uses SQLAlchemy ORM by default, but endpoints support multiple parameters to bypass prepared statements when needed:
   - `raw_sql=true` - Tells the backend to use raw SQL instead of ORM
   - `no_prepare=true` - Disables prepared statements

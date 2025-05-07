@@ -117,13 +117,15 @@ These questions help refine implementation details:
 
 ## Phase 1 Tasks: Schema Preparation
 
-> **CRITICAL: MANUAL SQL FOR ALL DATABASE SCHEMA CHANGES**
+> **CRITICAL: USE SUPABASE MCP FOR ALL DATABASE SCHEMA CHANGES**
 >
-> As per the AI Collaboration Constitution (§3), all database schema changes for this project—including creating ENUM types (Sec 1.4), adding or altering columns (Sec 1.3), and creating indexes—**MUST be performed MANUALLY via SQL execution** by the User directly against the Supabase/PostgreSQL database.
+> As per the AI Collaboration Constitution (§3), all database schema changes for this project—including creating ENUM types (Sec 1.4), adding or altering columns (Sec 1.3), and creating indexes—**MUST be performed using Supabase MCP (Migrations, Customizations, and Policies)**.
 >
-> **Alembic is NOT USED for this project.**
+> **Supabase MCP** uses natural language to generate PostgreSQL migration files, which can then be executed against the database environment automatically.
 >
-> Ensure all SQL executed is logged in your workflow\'s "Exact Specific Effort" document.
+> **SQL migration files should be created in the `supabase/migrations/` directory** with timestamps in the format `YYYYMMDDHHMMSS_description.sql`.
+>
+> Ensure all schema changes are logged in your workflow's "Exact Specific Effort" document.
 
 After answering the questionnaire, complete these database schema tasks to prepare for implementation:
 
@@ -208,7 +210,7 @@ ORDER BY
 > This approach (model-based placement) is our preferred pattern going forward to support better separation of concerns.
 > While you may see legacy enums in `src/models/enums.py` or `src/models/api_models.py`, new workflow status enums should follow the domain-based pattern.
 
-After planning your database schema changes (and ideally after creating a migration for them), you MUST update the corresponding SQLAlchemy model file. This involves defining the Python Enum classes and adding the new `Column` definitions.
+After planning your database schema changes and creating a migration using Supabase MCP, you MUST update the corresponding SQLAlchemy model file. This involves defining the Python Enum classes and adding the new `Column` definitions that match the schema changes you applied through MCP migrations.
 
 ```python
 # In: src/models/{source_table}.py
