@@ -77,8 +77,8 @@ def setup_sitemap_import_scheduler() -> None:
         # Check if job exists before logging next run time
         job = scheduler.get_job(job_id)
         if job and job.next_run_time:
-            logger.info(f"Job '{job_id}' next run time: {job.next_run_time}")
+             logger.info(f"Job '{job_id}' next run time: {job.next_run_time}")
         else:
-            logger.warning(f"Could not determine next run time for job '{job_id}'.")
+             logger.warning(f"Could not determine next run time for job '{job_id}'.")
     except Exception as e:
         logger.exception(f"Failed to add job {job_id}: {e}")

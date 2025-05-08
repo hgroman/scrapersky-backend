@@ -86,7 +86,7 @@ async def get_dashboard_stats(...):
 async def get_profiles(...):
     try:
         # ...
-
+        
         # REMOVED: async with session.begin():
         result = await session.execute(text(
             """
@@ -108,7 +108,7 @@ async def get_profiles(...):
             "limit": limit,
             "offset": offset
         })
-
+        
         # ...
     except Exception as e:
         # ...
@@ -135,7 +135,7 @@ async def get_tenants(...):
             "limit": limit,
             "offset": offset
         })
-
+        
         # ...
     except Exception as e:
         # ...
@@ -158,7 +158,7 @@ async def get_roles(...):
             ORDER BY name
             """
         ))
-
+        
         # ...
     except Exception as e:
         # ...
@@ -188,14 +188,14 @@ async def get_all_permissions(...):
 async def create_permission(...):
     try:
         # ...
-
+        
         # REMOVED: async with session.begin():
         new_permission = await rbac_service.create_permission(
             session=session,
             name=name,
             description=description
         )
-
+        
         # ...
     except Exception as e:
         # ...
@@ -208,7 +208,7 @@ async def get_permission(...):
     try:
         # REMOVED: async with session.begin():
         permissions = await rbac_service.get_all_permissions(session)
-
+        
         # ...
     except Exception as e:
         # ...
@@ -228,7 +228,7 @@ async def get_role_permissions(...):
 
         result = await session.execute(stmt)
         permissions = result.scalars().all()
-
+        
         # ...
     except Exception as e:
         # ...
@@ -240,7 +240,7 @@ async def get_role_permissions(...):
 async def assign_permission_to_role(...):
     try:
         # ...
-
+        
         # REMOVED: async with session.begin():
         # Convert role_id to int for the rbac_service
         result = await rbac_service.assign_permissions_to_role(
@@ -248,7 +248,7 @@ async def assign_permission_to_role(...):
             role_id,  # Pass as integer directly
             [permission_id]
         )
-
+        
         # ...
     except Exception as e:
         # ...
@@ -261,7 +261,7 @@ async def remove_permission_from_role(...):
     try:
         # REMOVED: async with session.begin():
         result = await rbac_service.remove_permission_from_role(session, role_id, permission_id)
-
+        
         # ...
     except Exception as e:
         # ...
@@ -273,10 +273,10 @@ async def remove_permission_from_role(...):
 async def get_user_permissions(...):
     try:
         # ...
-
+        
         # REMOVED: async with session.begin():
         permissions = await rbac_service.get_user_permissions(session, user_id, tenant_id)
-
+        
         # ...
     except Exception as e:
         # ...
@@ -293,7 +293,7 @@ This router contains transaction contexts in several endpoints:
 # Fixed by removing transaction context
 async def scan_domain(...):
     # ...
-
+    
     # REMOVED: async with session.begin():
     result = await page_processing_service.initiate_domain_scan(
         session=session,
@@ -302,7 +302,7 @@ async def scan_domain(...):
         user_id=user_id,
         max_pages=scan_request.max_pages or 1000
     )
-
+    
     # ...
 ```
 
@@ -311,12 +311,12 @@ async def scan_domain(...):
 # Fixed by removing transaction context
 async def batch_scan_domains(...):
     # ...
-
+    
     # REMOVED: async with session.begin():
     # Currently there are no database operations in the main handler,
     # but this ensures proper session management if added in the future
     pass
-
+    
     # ...
 ```
 
@@ -325,14 +325,14 @@ async def batch_scan_domains(...):
 # Fixed by removing transaction context
 async def get_job_status(...):
     # ...
-
+    
     # REMOVED: async with session.begin():
     status = await page_processing_service.get_job_status(
         session=session,
         job_id=job_id,
         tenant_id=tenant_id
     )
-
+    
     # ...
 ```
 
@@ -341,13 +341,13 @@ async def get_job_status(...):
 # Fixed by removing transaction context
 async def get_batch_status(...):
     # ...
-
+    
     # REMOVED: async with session.begin():
     status = await page_processing_service.get_batch_status(
         batch_id=batch_id,
         tenant_id=tenant_id
     )
-
+    
     # ...
 ```
 

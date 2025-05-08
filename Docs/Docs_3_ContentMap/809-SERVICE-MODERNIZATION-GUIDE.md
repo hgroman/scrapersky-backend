@@ -155,7 +155,7 @@ from ..models import RequestModel, ResponseModel
 # Import services
 from ..services import (
     # Core services
-    auth_service, db_service,
+    auth_service, db_service, 
     # Enhanced services
     error_service, validation_service, job_manager_service
 )
@@ -178,21 +178,21 @@ async def endpoint(
     )
     if not is_valid:
         raise ValueError(message)  # Automatically converted to HTTP 400
-
+        
     # Validate tenant ID
     tenant_id = auth_service.validate_tenant_id(request.tenant_id, current_user)
-
+    
     # Create job using job_manager_service
     job_id = await job_manager_service.create_job(
-        "job_type", tenant_id, current_user.get("user_id"),
+        "job_type", tenant_id, current_user.get("user_id"), 
         {"initial": "data"}
     )
-
+    
     # Start background task
     background_tasks.add_task(
         process_task, job_id, request, tenant_id, current_user
     )
-
+    
     # Return response
     return ResponseModel(
         job_id=job_id,
@@ -208,16 +208,16 @@ async def process_task(job_id, request, tenant_id, current_user):
         await job_manager_service.update_job_status(
             job_id, status="running", message="Starting task"
         )
-
+        
         # Database operation using db_service
         results = await db_service.fetch_all(
             "SELECT * FROM table WHERE tenant_id = %(tenant_id)s",
             {"tenant_id": tenant_id}
         )
-
+        
         # Process results
         processed_data = [process_item(item) for item in results]
-
+        
         # Store results using db_service
         for item in processed_data:
             await db_service.execute(
@@ -232,33 +232,33 @@ async def process_task(job_id, request, tenant_id, current_user):
                     "user_id": current_user.get("user_id")
                 }
             )
-
+        
         # Complete job
         await job_manager_service.update_job_status(
             job_id, status="complete", progress=1.0,
             result_data={"count": len(processed_data)},
             message="Task completed"
         )
-
+        
         # Save job to database
         await job_manager_service.save_job_to_database(job_id, tenant_id)
-
+        
     except Exception as e:
         # Log error
         error_service.log_exception(
-            e, "process_task",
+            e, "process_task", 
             context={"job_id": job_id, "tenant_id": tenant_id}
         )
-
+        
         # Update job status
         await job_manager_service.update_job_status(
             job_id, status="failed", error=str(e),
             message="Task failed"
         )
-
+        
         # Save failed job to database
         await job_manager_service.save_job_to_database(job_id, tenant_id)
-
+        
         # Re-raise for error handling
         raise
 ```
@@ -273,17 +273,17 @@ async def endpoint(request: RequestModel):
         # Manual validation
         if not request.field or len(request.field) < 2:
             raise HTTPException(status_code=400, detail="Invalid field")
-
+            
         # Direct database connection
         conn = await get_db_connection()
-
+        
         # Generate job ID
         job_id = f"prefix_{uuid.uuid4().hex}"
         _job_statuses[job_id] = {"status": "pending"}
-
+        
         # Start background task
         background_tasks.add_task(process_task, job_id)
-
+        
         return {"job_id": job_id}
     except Exception as e:
         logger.error(f"Error: {str(e)}")
@@ -302,13 +302,13 @@ async def endpoint(
     is_valid, message = validation_service.validate_string_length(request.field)
     if not is_valid:
         raise ValueError(message)
-
+        
     # Create job
     job_id = await job_manager_service.create_job("job_type", tenant_id, user_id)
-
+    
     # Start background task
     background_tasks.add_task(process_task, job_id, request)
-
+    
     return {"job_id": job_id, "status": "started"}
 ```
 
@@ -329,7 +329,7 @@ async def endpoint(request: RequestModel):
         "tenant_id": tenant_id,
         "created_by": user_id
     })
-
+    
     # Create job using SQLAlchemy service
     job = await job_service.create({
         "job_type": "domain_scan",
@@ -337,10 +337,10 @@ async def endpoint(request: RequestModel):
         "tenant_id": tenant_id,
         "status": "pending"
     })
-
+    
     # Start background task
     background_tasks.add_task(process_task, str(job.id), str(domain.id))
-
+    
     return {
         "job_id": str(job.id),
         "domain_id": str(domain.id),

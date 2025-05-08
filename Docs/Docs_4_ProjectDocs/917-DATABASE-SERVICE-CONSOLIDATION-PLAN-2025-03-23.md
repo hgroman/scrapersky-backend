@@ -54,7 +54,7 @@ This document outlines the detailed plan for standardizing on `services/core/db_
 The codebase currently contains several competing database access patterns:
 
 1. **Direct SQL execution**
-   - Found in: sitemap_analyzer.py, dev_tools.py
+   - Found in: sitemap_analyzer.py, dev_tools.py 
    - Issues: Security risks, inconsistent error handling, no transaction management
 
 2. **Custom handlers**

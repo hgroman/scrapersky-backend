@@ -162,7 +162,7 @@ async def get_all_features(
     # Check if we're in a transaction
     in_transaction = session.in_transaction()
     logger.debug(f"get_all_features transaction state: {in_transaction}")
-
+    
     # Service should not manage transactions, so warn if not in transaction
     if not in_transaction:
         logger.warning("get_all_features called without an active transaction; the router should handle transactions")
@@ -220,10 +220,10 @@ Modified tests to verify new transaction management pattern:
 async def test_get_all_features_uses_transaction(mock_session, mock_feature_service, mock_rbac_checks):
     """Test that get_all_features properly owns the transaction boundary."""
     # ...test setup...
-
+    
     # Assert session.begin() WAS called by the router (owns transaction boundary)
     mock_session.begin.assert_called_once()
-
+    
     # Assert transaction context was entered
     mock_session.begin.return_value.__aenter__.assert_called_once()
 ```
@@ -250,21 +250,21 @@ async def test_feature_service_is_transaction_aware():
     """Test that FeatureService is transaction-aware but doesn't manage transactions."""
     # Create a real FeatureService
     service = FeatureService()
-
+    
     # Mock session
     mock_session = AsyncMock(spec=AsyncSession)
     mock_session.in_transaction.return_value = True
-
+    
     # Test method
     with patch.object(mock_session, 'commit', AsyncMock()) as mock_commit, \
          patch.object(mock_session, 'rollback', AsyncMock()) as mock_rollback:
-
+        
         # Call the service method
         await service.get_all_features(mock_session)
-
+        
         # Check that in_transaction was called (transaction awareness)
         mock_session.in_transaction.assert_called()
-
+        
         # Check that commit/rollback were NOT called (router should handle this)
         assert not mock_commit.called
         assert not mock_rollback.called
@@ -278,7 +278,7 @@ async def test_feature_service_is_transaction_aware():
 
 2. **Four-Layer RBAC Integration**:
    - Basic permission checks with `require_permission`
-   - Feature enablement checks with `require_feature_enabled`
+   - Feature enablement checks with `require_feature_enabled`  
    - Role level checks with `require_role_level`
    - Tab permission checks with `require_tab_permission` (where applicable)
 

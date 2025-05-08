@@ -68,7 +68,7 @@ To verify the fix:
 This fix demonstrates the importance of consistent transaction management patterns. By adhering to the established practices where:
 
 1. Routers own transaction boundaries
-2. Services are transaction-aware but don't manage transactions
+2. Services are transaction-aware but don't manage transactions 
 3. Background tasks create their own dedicated sessions and transactions
 
 We've successfully fixed the database insertion issue without introducing any new code patterns or dependencies. The sitemap analyzer now correctly stores discovered sitemap data in the database while maintaining proper transaction isolation.

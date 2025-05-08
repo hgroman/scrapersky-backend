@@ -5,10 +5,10 @@ _Last updated: 2025-05-05T00:45:32-07:00_
 ## Objective
 To audit and document the Sitemap Curation workflow (WF5) where sitemap files are marked as 'Selected' in the UI, resulting in them being queued for deep scrape processing.
 
-**Workflow Name:** WF5-Sitemap Curation
-**JIRA Assignment:** SCRSKY-206
-**Assigned To:** Henry G.
-**Requested Due Date:** 2025-05-05
+**Workflow Name:** WF5-Sitemap Curation  
+**JIRA Assignment:** SCRSKY-206  
+**Assigned To:** Henry G.  
+**Requested Due Date:** 2025-05-05  
 **Status:** COMPLETED
 
 ---

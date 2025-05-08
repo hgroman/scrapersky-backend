@@ -15,11 +15,11 @@ After discussing the approach, we've decided to **preserve the RBAC database mod
 - RBAC imports have been commented out in models/__init__.py
 
 ### What Still Needs Addressing:
-1. **Model Files**:
+1. **Model Files**: 
    - RBAC model files will be preserved
    - Ensure they're properly commented out in __init__ files
 
-2. **Auth Component**:
+2. **Auth Component**: 
    - `src/auth/auth_service.py` still has RBAC service dependencies
    - `src/auth/dependencies.py` has simplified JWT auth but may still have RBAC references
 
@@ -165,6 +165,6 @@ The RBAC removal will be considered complete when:
 ## Next Steps
 
 1. Begin with Phase 1: Document and Preserve Model Definitions
-2. Document progress in "34-RBAC-Removal-Implementation-Results.md"
+2. Document progress in "34-RBAC-Removal-Implementation-Results.md" 
 3. Verify each step before proceeding to the next phase
 4. Update this plan if additional issues are discovered during implementation

@@ -27,18 +27,18 @@ class ErrorService:
         },
         # ... many more categories
     }
-
+    
     # Comprehensive PostgreSQL error handling
     DB_ERROR_MESSAGES = {
         '23505': 'A record with this data already exists.',
         '23503': 'The referenced record does not exist.',
         # ... many more error codes
     }
-
+    
     @classmethod
     def handle_exception(cls, exception, operation, include_traceback=False):
         # Categorizes exceptions and returns appropriate HTTP errors
-
+        
     @classmethod
     def route_error_handler(cls, router):
         # Wraps all routes in a router with error handling
@@ -55,10 +55,10 @@ Simpler implementation with:
 class ErrorService:
     def validation_error(self, message, details=None):
         # Create validation error response
-
+        
     def not_found(self, message, resource_type=None, resource_id=None):
         # Create not found error response
-
+        
     # Several more error methods
 ```
 
@@ -79,10 +79,10 @@ The codebase has two competing authentication implementations:
 class AuthService:
     def validate_tenant_id(self, tenant_id, current_user=None):
         # Tenant ID validation
-
+        
     async def get_user_from_token(self, token):
         # Extract user information from JWT token
-
+        
     # Dependency for current user
     async def get_current_user(request, credentials):
         # Extracts authenticated user from request
@@ -97,13 +97,13 @@ class AuthService:
 ```python
 def create_access_token(data, expires_delta=None):
     # Create JWT token
-
+    
 def decode_token(token):
     # Decode and validate JWT token
-
+    
 async def get_current_user(token):
     # Get current user from token
-
+    
 def check_permissions(required_permissions):
     # Permission checking (simplified)
 ```
@@ -177,7 +177,7 @@ async def scan_domain(
             url=request.url,
             user_id=current_user["id"]
         )
-
+    
     # Return response after transaction is committed
     return result
 ```

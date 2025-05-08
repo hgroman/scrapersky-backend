@@ -29,23 +29,23 @@ class YourNewTable(Base):
 
     # Primary key (uses UUID by default)
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
+    
     # Basic fields
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
-
+    
     # Foreign keys and tenant isolation
     tenant_id = Column(UUID(as_uuid=True), ForeignKey('tenants.id', ondelete="CASCADE"), nullable=False)
-
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
+    
     # Relationships (if needed)
     # tenant = relationship("Tenant", back_populates="your_new_tables")
     # related_items = relationship("RelatedModel", back_populates="your_new_table")
-
+    
     # Table constraints (if needed)
     __table_args__ = (
         # UniqueConstraint('name', 'tenant_id', name='uq_name_tenant'),
@@ -80,27 +80,27 @@ logger = logging.getLogger(__name__)
 
 class YourNewService:
     """Service for your new table operations."""
-
+    
     # Optional: Add caching if needed
     _cache = {}
     _cache_timestamp = {}
     CACHE_TTL = 300  # 5 minutes
-
+    
     @staticmethod
     def normalize_tenant_id(tenant_id: Optional[str]) -> str:
         """
         Basic tenant ID validation with fallback to default.
-
+        
         Args:
             tenant_id: The tenant ID to normalize
-
+            
         Returns:
             Normalized tenant ID
         """
         if not tenant_id:
             logger.warning("Empty tenant ID, using default")
             return DEFAULT_TENANT_ID
-
+            
         try:
             # Ensure valid UUID format
             uuid_obj = uuid.UUID(str(tenant_id).strip())
@@ -110,7 +110,7 @@ class YourNewService:
         except ValueError as e:
             logger.warning(f"Invalid tenant_id format: '{tenant_id}', error: {str(e)}, using default")
             return DEFAULT_TENANT_ID
-
+    
     async def get_all_items(
         self,
         session: AsyncSession,
@@ -118,31 +118,31 @@ class YourNewService:
     ) -> List[Dict[str, Any]]:
         """
         Get all items for a tenant.
-
+        
         Args:
             session: Database session
             tenant_id: The tenant ID
-
+            
         Returns:
             List of item dictionaries
         """
         # Normalize tenant ID
         tenant_id = self.normalize_tenant_id(tenant_id)
-
+        
         try:
             # Build query
             stmt = select(YourNewTable).where(YourNewTable.tenant_id == tenant_id)
-
+            
             # Execute query
             result = await session.execute(stmt)
             items = result.scalars().all()
-
+            
             # Convert to dictionaries
             return [model_to_dict(item) for item in items]
         except SQLAlchemyError as e:
             logger.error(f"Error getting items: {str(e)}")
             return []
-
+            
     async def get_item_by_id(
         self,
         session: AsyncSession,
@@ -151,18 +151,18 @@ class YourNewService:
     ) -> Optional[Dict[str, Any]]:
         """
         Get an item by ID.
-
+        
         Args:
             session: Database session
             item_id: The item ID
             tenant_id: The tenant ID
-
+            
         Returns:
             Item dictionary or None if not found
         """
         # Normalize tenant ID
         tenant_id = self.normalize_tenant_id(tenant_id)
-
+        
         try:
             # Build query
             stmt = select(YourNewTable).where(
@@ -171,20 +171,20 @@ class YourNewService:
                     YourNewTable.tenant_id == tenant_id
                 )
             )
-
+            
             # Execute query
             result = await session.execute(stmt)
             item = result.scalar_one_or_none()
-
+            
             if not item:
                 return None
-
+                
             # Convert to dictionary
             return model_to_dict(item)
         except SQLAlchemyError as e:
             logger.error(f"Error getting item by ID: {str(e)}")
             return None
-
+            
     async def create_item(
         self,
         session: AsyncSession,
@@ -195,20 +195,20 @@ class YourNewService:
     ) -> Optional[Dict[str, Any]]:
         """
         Create a new item.
-
+        
         Args:
             session: Database session
             name: Item name
             tenant_id: The tenant ID
             description: Optional description
             is_active: Whether the item is active
-
+            
         Returns:
             Created item dictionary or None if creation failed
         """
         # Normalize tenant ID
         tenant_id = self.normalize_tenant_id(tenant_id)
-
+        
         try:
             # Check if item already exists
             stmt = select(YourNewTable).where(
@@ -219,11 +219,11 @@ class YourNewService:
             )
             result = await session.execute(stmt)
             existing = result.scalar_one_or_none()
-
+            
             if existing:
                 logger.warning(f"Item '{name}' already exists for tenant {tenant_id}")
                 return model_to_dict(existing)
-
+            
             # Create new item
             item = YourNewTable(
                 name=name,
@@ -231,17 +231,17 @@ class YourNewService:
                 is_active=is_active,
                 tenant_id=tenant_id
             )
-
+            
             session.add(item)
             await session.commit()
             await session.refresh(item)
-
+            
             return model_to_dict(item)
         except SQLAlchemyError as e:
             await session.rollback()
             logger.error(f"Error creating item: {str(e)}")
             return None
-
+            
     async def update_item(
         self,
         session: AsyncSession,
@@ -253,7 +253,7 @@ class YourNewService:
     ) -> Optional[Dict[str, Any]]:
         """
         Update an item.
-
+        
         Args:
             session: Database session
             item_id: The item ID
@@ -261,13 +261,13 @@ class YourNewService:
             name: New name (optional)
             description: New description (optional)
             is_active: New active status (optional)
-
+            
         Returns:
             Updated item dictionary or None if update failed
         """
         # Normalize tenant ID
         tenant_id = self.normalize_tenant_id(tenant_id)
-
+        
         try:
             # Get existing item
             stmt = select(YourNewTable).where(
@@ -278,11 +278,11 @@ class YourNewService:
             )
             result = await session.execute(stmt)
             item = result.scalar_one_or_none()
-
+            
             if not item:
                 logger.warning(f"Item {item_id} not found for tenant {tenant_id}")
                 return None
-
+                
             # Update fields if provided
             if name is not None:
                 item.name = name
@@ -290,16 +290,16 @@ class YourNewService:
                 item.description = description
             if is_active is not None:
                 item.is_active = is_active
-
+                
             await session.commit()
             await session.refresh(item)
-
+            
             return model_to_dict(item)
         except SQLAlchemyError as e:
             await session.rollback()
             logger.error(f"Error updating item: {str(e)}")
             return None
-
+            
     async def delete_item(
         self,
         session: AsyncSession,
@@ -308,18 +308,18 @@ class YourNewService:
     ) -> bool:
         """
         Delete an item.
-
+        
         Args:
             session: Database session
             item_id: The item ID
             tenant_id: The tenant ID
-
+            
         Returns:
             True if successful, False otherwise
         """
         # Normalize tenant ID
         tenant_id = self.normalize_tenant_id(tenant_id)
-
+        
         try:
             # Delete item
             stmt = delete(YourNewTable).where(
@@ -329,9 +329,9 @@ class YourNewService:
                 )
             )
             result = await session.execute(stmt)
-
+            
             await session.commit()
-
+            
             return result.rowcount > 0
         except SQLAlchemyError as e:
             await session.rollback()
@@ -427,14 +427,14 @@ async def get_item(
     """Get a specific item."""
     try:
         item = await your_service.get_item_by_id(
-            session,
-            item_id,
+            session, 
+            item_id, 
             get_tenant_id(current_user, tenant_id)
         )
-
+        
         if not item:
             return error_service.not_found(f"Item with ID {item_id} not found")
-
+            
         return standard_response(item)
     except Exception as e:
         logger.error(f"Error getting item: {str(e)}")
@@ -450,11 +450,11 @@ async def create_item(
     try:
         # Get tenant ID with proper validation
         tenant_id = get_tenant_id(current_user, item_data.get("tenant_id"))
-
+        
         # Validate required fields
         if not item_data.get("name"):
             return error_service.validation_error("Item name is required")
-
+            
         # Create item
         item = await your_service.create_item(
             session,
@@ -463,10 +463,10 @@ async def create_item(
             description=item_data.get("description"),
             is_active=item_data.get("is_active", True)
         )
-
+        
         if not item:
             return error_service.server_error("Failed to create item")
-
+            
         return standard_response(item)
     except Exception as e:
         logger.error(f"Error creating item: {str(e)}")
@@ -491,10 +491,10 @@ async def update_item(
             description=item_data.get("description"),
             is_active=item_data.get("is_active")
         )
-
+        
         if not item:
             return error_service.not_found(f"Item with ID {item_id} not found")
-
+            
         return standard_response(item)
     except Exception as e:
         logger.error(f"Error updating item: {str(e)}")
@@ -514,10 +514,10 @@ async def delete_item(
             item_id,
             get_tenant_id(current_user, tenant_id)
         )
-
+        
         if not success:
             return error_service.not_found(f"Item with ID {item_id} not found")
-
+            
         return standard_response({"success": True})
     except Exception as e:
         logger.error(f"Error deleting item: {str(e)}")

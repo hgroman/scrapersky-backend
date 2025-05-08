@@ -25,7 +25,7 @@ The system provides these core functions:
 
 The project followed these sequential phases with specific goals and achievements:
 
-1. **Initial Assessment** (March 23, 2025)
+1. **Initial Assessment** (March 23, 2025) 
    - Comprehensive dependency matrix creation
    - Service duplication identification
    - Unused file analysis
@@ -123,14 +123,14 @@ These patterns have been consistently established and documented:
                user_id=current_user.get("id"),
                data=request.dict()
            )
-
+       
        # Background tasks after transaction completion
        background_tasks.add_task(
            background_service.process_in_background,
            job_id=result.job_id,
            user_id=current_user.get("id")
        )
-
+       
        return {
            "data": result,
            "meta": {"status": "success", "message": "Operation completed"}
@@ -149,13 +149,13 @@ These patterns have been consistently established and documented:
            select(Model).where(Model.id == data["id"])
        )
        model = result.scalar_one_or_none()
-
+       
        # Delegate to other services with the same session
        related_data = await related_service.get_data(
            session=session,
            id=model.related_id
        )
-
+       
        return {"model": model, "related": related_data}
    ```
 
@@ -173,10 +173,10 @@ These patterns have been consistently established and documented:
                        job_id=job_id,
                        status="processing"
                    )
-
+                   
                    # Perform main operation
                    result = await process_data(session, job_id)
-
+                   
                    # Update job status to completed
                    await job_service.update_job_status(
                        session=session,
@@ -187,7 +187,7 @@ These patterns have been consistently established and documented:
            except Exception as e:
                # Handle errors independently
                logger.error(f"Error in background task: {str(e)}")
-
+               
                # Create new session for error reporting
                async with get_session() as error_session:
                    async with error_session.begin():
@@ -204,10 +204,10 @@ These patterns have been consistently established and documented:
    async def test_service_function():
        # Use real user credentials
        TEST_USER_ID = "5905e9fe-6c61-4694-b09a-6602017b000a"
-
+       
        # Generate unique job ID
        job_id = str(uuid.uuid4())
-
+       
        # Test with get_session context manager
        async with get_session() as session:
            async with session.begin():
@@ -217,13 +217,13 @@ These patterns have been consistently established and documented:
                    user_id=TEST_USER_ID,
                    parameter="test_value"
                )
-
+               
                # Verify database results
                db_result = await session.execute(
                    select(Model).where(Model.job_id == job_id)
                )
                model = db_result.scalar_one()
-
+               
                # Assert expected results
                assert model.status == "completed"
    ```
@@ -254,12 +254,12 @@ Database connections have been standardized with these strict patterns:
        """Create an async engine with PostgreSQL dialect and proper connection parameters"""
        # Use the Supavisor pooler connection string
        DATABASE_URL = f"postgresql+asyncpg://postgres.{PROJECT_REF}:{PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
-
+       
        # Create SSL context with certificate verification disabled
        ssl_context = ssl.create_default_context()
        ssl_context.check_hostname = False
        ssl_context.verify_mode = ssl.CERT_NONE
-
+       
        # Create engine with proper pooling parameters
        engine = create_async_engine(
            DATABASE_URL,
@@ -274,7 +274,7 @@ Database connections have been standardized with these strict patterns:
                "statement_cache_size": 0
            }
        )
-
+       
        return engine
    ```
 
@@ -285,7 +285,7 @@ Database connections have been standardized with these strict patterns:
        """FastAPI dependency that provides a database session"""
        async with async_session_factory() as session:
            yield session
-
+   
    # In router file
    @router.get("/endpoint")
    async def endpoint(
@@ -307,7 +307,7 @@ Database connections have been standardized with these strict patterns:
            finally:
                if not session.closed:
                    await session.close()
-
+   
    # In background task
    async def process_in_background():
        async with get_session() as session:
@@ -396,20 +396,20 @@ src/
   auth/ - Authentication services and JWT handling
     auth_service.py - Core authentication logic
     jwt_auth.py - JWT implementation with standardized methods
-
+  
   config/ - Application configuration settings
     settings.py - Environment-specific configuration
-
+  
   core/ - Core functionality and exceptions
     exceptions.py - Exception definitions
     response.py - Standardized response formatting
-
+  
   db/ - Database connection and session management
     engine.py - Database engine configuration
     session.py - Session factory and dependencies
     direct_session.py - Direct session creation (to be deprecated)
     sitemap_handler.py - Sitemap-specific database operations
-
+  
   models/ - SQLAlchemy ORM models
     base.py - Base model class
     domain.py - Domain model
@@ -418,42 +418,42 @@ src/
     profile.py - User profile model
     sitemap.py - Sitemap models
     user.py - User model
-
+  
   routers/ - FastAPI router endpoints
     batch_page_scraper.py - Batch scraping endpoints
     google_maps_api.py - Google Maps API endpoints
     modernized_sitemap.py - Modern sitemap endpoints
     profile.py - User profile endpoints
-
+  
   services/ - Service layer implementations
     core/ - Core services
       auth_service.py - Authentication service
       db_service.py - Database service
       user_context_service.py - User context handling
-
+    
     sitemap/ - Sitemap processing services
       analyzer_service.py - Sitemap analysis
       background_service.py - Background processing
       processing_service.py - Sitemap processing
       sitemap_service.py - Core sitemap functionality
-
+    
     places/ - Google Maps API related services
       places_search_service.py - Search functionality
       places_service.py - Core places functionality
       places_storage_service.py - Storage service
-
+    
     page_scraper/ - Page scraping services
       processing_service.py - Page processing
-
+    
     batch/ - Batch processing services
       batch_processor_service.py - Batch job processing
-
+    
     storage/ - Storage services
       storage_service.py - File storage
-
+  
   session/ - Session management
     async_session.py - Async session factory and context managers
-
+  
   utils/ - Utility functions and helpers
     db_helpers.py - Database helper functions
     db_utils.py - Database utilities

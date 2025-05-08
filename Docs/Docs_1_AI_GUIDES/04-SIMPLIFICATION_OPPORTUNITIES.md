@@ -20,7 +20,7 @@ Create a standardized `Repository` pattern for each model:
 # Example implementation for SitemapRepository
 class SitemapRepository:
     """Handles all database operations for Sitemap models."""
-
+    
     @staticmethod
     async def create_sitemap(
         session: AsyncSession,
@@ -39,7 +39,7 @@ class SitemapRepository:
             tenant_id=tenant_id,
             **kwargs
         )
-
+    
     @staticmethod
     async def find_by_id(
         session: AsyncSession,
@@ -52,7 +52,7 @@ class SitemapRepository:
             sitemap_id=sitemap_id,
             tenant_id=tenant_id
         )
-
+    
     @staticmethod
     async def find_by_domain(
         session: AsyncSession,
@@ -65,7 +65,7 @@ class SitemapRepository:
             domain_id=domain_id,
             tenant_id=tenant_id
         )
-
+        
     # Additional methods as needed...
 ```
 
@@ -109,17 +109,17 @@ async def create_resource(
 ):
     """
     Create a new resource.
-
+    
     Args:
         request: The resource creation request
         background_tasks: FastAPI background tasks
         session: Database session
         current_user: Authenticated user information
         tenant_id: Validated tenant ID
-
+        
     Returns:
         The created resource
-
+        
     Raises:
         HTTPException: If resource creation fails
     """
@@ -133,17 +133,17 @@ async def create_resource(
                 tenant_id=tenant_id,
                 user_id=current_user["id"]
             )
-
+        
         # Background tasks after transaction
         background_tasks.add_task(
             resource_service.process_resource_background,
             resource_id=result.id,
             tenant_id=tenant_id
         )
-
+        
         # Return response
         return ResponseModel.from_orm(result)
-
+        
     except ValueError as e:
         # Handle validation errors
         raise HTTPException(status_code=400, detail=str(e))
@@ -196,26 +196,26 @@ Example implementation:
 ```python
 class SitemapQueryService:
     """Handles read operations for sitemap data."""
-
+    
     async def get_sitemap(self, session: AsyncSession, sitemap_id: str, tenant_id: str):
         """Get a sitemap by ID."""
         return await sitemap_repository.find_by_id(session, sitemap_id, tenant_id)
-
+    
     async def list_sitemaps(self, session: AsyncSession, domain_id: str, tenant_id: str):
         """List all sitemaps for a domain."""
         return await sitemap_repository.find_by_domain(session, domain_id, tenant_id)
 
 class SitemapCommandService:
     """Handles write operations for sitemap data."""
-
+    
     async def create_sitemap(self, session: AsyncSession, data: dict, tenant_id: str):
         """Create a new sitemap."""
         # Validation
         if not data.get("url"):
             raise ValueError("URL is required")
-
+            
         # Domain business logic
-
+        
         # Persistence
         return await sitemap_repository.create_sitemap(
             session=session,
@@ -225,7 +225,7 @@ class SitemapCommandService:
 
 class SitemapBackgroundService:
     """Handles background tasks for sitemap processing."""
-
+    
     async def process_domain(self, domain_id: str, tenant_id: str):
         """Process a domain in the background."""
         # Create session specifically for background task
@@ -268,7 +268,7 @@ class AppError(Exception):
     """Base class for application errors."""
     status_code = 500
     error_code = "INTERNAL_ERROR"
-
+    
     def __init__(self, message: str, details: Optional[dict] = None):
         self.message = message
         self.details = details or {}
@@ -350,7 +350,7 @@ async def run_background_task(
     """
     # Initialize state tracking
     task_tracker.set_state(task_id, "running")
-
+    
     # Create dedicated session
     session = async_session_factory()
     try:
@@ -358,18 +358,18 @@ async def run_background_task(
         async with session.begin():
             # Run the actual task
             result = await task_func(session, *args, **kwargs)
-
+            
             # Update success state
             task_tracker.set_state(task_id, "completed", result=result)
             return result
-
+            
     except Exception as e:
         # Log error
         logger.error(f"Background task {task_id} failed: {str(e)}")
-
+        
         # Update error state
         task_tracker.set_state(task_id, "failed", error=str(e))
-
+        
         # Error recovery with separate session
         try:
             async with async_session_factory() as error_session:

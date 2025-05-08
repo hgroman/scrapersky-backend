@@ -52,10 +52,10 @@ Create a middleware or utility function that automatically applies connection po
 def get_supavisor_ready_url(db_url: str) -> str:
     """
     Enhance database URL with required Supavisor connection pooling parameters.
-
+    
     Args:
         db_url: Original database URL
-
+        
     Returns:
         Enhanced URL with connection pooling parameters
     """
@@ -75,15 +75,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 def create_db_engine() -> AsyncEngine:
     """
     Create SQLAlchemy async engine with proper Supavisor parameters.
-
+    
     Returns:
         Configured AsyncEngine instance
     """
     database_url = settings.get_database_url()
-
+    
     # Apply connection pooling parameters
     enhanced_url = get_supavisor_ready_url(database_url)
-
+    
     # Create engine with enhanced URL
     engine = create_async_engine(
         enhanced_url,
@@ -94,7 +94,7 @@ def create_db_engine() -> AsyncEngine:
         pool_timeout=settings.db_pool_timeout,
         pool_pre_ping=True  # Verify connections before use
     )
-
+    
     return engine
 ```
 
@@ -111,10 +111,10 @@ def get_db_params(
 ) -> Dict[str, Any]:
     """
     Get standardized database parameters for endpoints.
-
+    
     This function can be used as a dependency in FastAPI endpoints
     to ensure consistent parameters for database operations.
-
+    
     Returns:
         Dictionary of standardized database parameters
     """
@@ -142,7 +142,7 @@ async def get_profiles(
 ):
     """
     Get profiles with standardized database parameters.
-
+    
     The db_params dependency automatically includes
     the required connection pooling parameters.
     """
@@ -150,7 +150,7 @@ async def get_profiles(
     raw_sql = db_params["raw_sql"]
     no_prepare = db_params["no_prepare"]
     statement_cache_size = db_params["statement_cache_size"]
-
+    
     # Use parameters as needed...
     # ...
     return {"profiles": results}

@@ -56,7 +56,7 @@ async def endpoint(
             session=session,
             data=request.dict()
         )
-
+    
     # Return after transaction is committed
     return result
 ```
@@ -93,7 +93,7 @@ async def endpoint(
             session=session,
             data=request.dict()
         )
-
+    
     # Add background task AFTER transaction is committed
     # Don't pass the session to background task
     background_tasks.add_task(
@@ -101,13 +101,13 @@ async def endpoint(
         job_id=job.id,
         data=request.dict()
     )
-
+    
     return {"job_id": job.id, "status": "processing"}
 
 # Background task creates its own session
 async def process_background_job(job_id: str, data: dict):
     from src.db.session import async_session_factory
-
+    
     # Create a new session for background task
     async with async_session_factory() as bg_session:
         try:
@@ -156,7 +156,7 @@ from src.services.core.db_service import db_service
 
 result = await db_service.fetch_one(
     session=session,
-    query="SELECT * FROM table WHERE id = :id",
+    query="SELECT * FROM table WHERE id = :id", 
     params={"id": record_id}
 )
 return result
@@ -192,7 +192,7 @@ async def service_operation(session, data):
     # Optional transaction state logging for debugging
     in_transaction = session.in_transaction()
     logger.debug(f"Transaction state in operation: {in_transaction}")
-
+    
     # Do work
     return result
 ```

@@ -16,7 +16,7 @@ This document outlines the plan for creating comprehensive test interfaces for a
 1. **Create an endpoint inventory**
    - Document all endpoints by router
    - Categorize by functionality (CRUD, search, etc.)
-   - Identify permission requirements
+   - Identify permission requirements 
    - Map database tables and relationships
    - Identify RBAC implications
 

@@ -67,9 +67,9 @@ Establish bulletproof CI enforcement for workflow documentation and codebase sta
 
 ## Progress & Blockers
 - **Progress:**
-  -
+  - 
 - **Blockers:**
-  -
+  - 
 
 ---
 

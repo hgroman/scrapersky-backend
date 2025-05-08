@@ -129,7 +129,7 @@ async def process_background_task(job_id: str, data: dict):
         except Exception as e:
             # Log errors but don't propagate since this is a background task
             logger.error(f"Error in background task {job_id}: {str(e)}")
-
+            
             # Error recovery with separate session if needed
             try:
                 async with get_session() as error_session:

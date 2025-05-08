@@ -56,7 +56,7 @@
 
 10. ✅ `src/routers/modernized_page_scraper.py`
    - Updated to use `get_session_dependency` instead of `get_db_session`
-   - Added transaction boundaries to all endpoints
+   - Added transaction boundaries to all endpoints 
    - Fixed missing session parameters in service calls
    - Removed incorrect comments about transaction management
    - Fixed inconsistent service method parameters
@@ -64,7 +64,7 @@
 11. ✅ `src/routers/profile.py`
    - Updated to use `get_session_dependency` instead of `get_db_session`
    - Transaction boundaries were already correctly implemented
-   - Added missing CRUD endpoints for complete API functionality
+   - Added missing CRUD endpoints for complete API functionality 
    - All service methods were already correctly receiving session parameters
    - Had proper error handling with appropriate exception propagation
 

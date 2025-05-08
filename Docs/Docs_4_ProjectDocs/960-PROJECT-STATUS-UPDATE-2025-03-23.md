@@ -14,8 +14,8 @@ The ScraperSky backend is undergoing a systematic consolidation and simplificati
 - **Benefits:** Consistent error handling across all endpoints with proper categorization
 
 ### 2. Auth Service Consolidation ✅
-- **Standardized on:** `auth/jwt_auth.py`
-- **Implementation:**
+- **Standardized on:** `auth/jwt_auth.py` 
+- **Implementation:** 
   - Changed imports in all router files from auth_service.py to jwt_auth.py
   - Replaced complex tenant validation with simplified `tenant_id = request.tenant_id or current_user.get("tenant_id", DEFAULT_TENANT_ID)`
   - Using DEFAULT_TENANT_ID consistently across all files

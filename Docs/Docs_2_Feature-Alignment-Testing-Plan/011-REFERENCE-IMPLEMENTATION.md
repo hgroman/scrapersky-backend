@@ -125,7 +125,7 @@ async def search_places(
 ):
     """
     Search for places using Google Maps API.
-
+    
     Permissions required:
     - places:search permission
     - google_maps_api feature enabled
@@ -153,7 +153,7 @@ async def service_method(self, session: AsyncSession, ...):
     """Service method that is transaction-aware."""
     in_transaction = session.in_transaction()
     logger.debug(f"Session transaction state: {in_transaction}")
-
+    
     # Implementation that doesn't create transactions
     # ...
 ```
@@ -194,7 +194,7 @@ async def route_handler():
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(
-            status_code=500,
+            status_code=500, 
             detail="An unexpected error occurred"
         )
 ```
@@ -259,11 +259,11 @@ class PlacesResponse(BaseModel):
     data: Optional[List[PlaceDTO]]
     total_count: int
     message: Optional[str] = None
-
+    
     @classmethod
     def success(cls, data, total_count):
         return cls(success=True, data=data, total_count=total_count)
-
+    
     @classmethod
     def error(cls, message):
         return cls(success=False, data=None, total_count=0, message=message)
@@ -282,14 +282,14 @@ async def process_data(
 ):
     # Validate request
     # ...
-
+    
     # Create a job record with explicit transaction
     async with session.begin():
         job = await job_service.create(
             session=session,
             job_data={...}
         )
-
+    
     # Add background task
     background_tasks.add_task(
         process_in_background,
@@ -297,7 +297,7 @@ async def process_data(
         parameters=request.parameters,
         session=None  # Pass None so background task creates its own session
     )
-
+    
     # Return immediate response
     return {"job_id": job.id, "status": "processing"}
 ```

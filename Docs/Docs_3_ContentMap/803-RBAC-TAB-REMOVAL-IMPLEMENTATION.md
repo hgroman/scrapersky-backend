@@ -15,7 +15,7 @@
 
 4. **Router files partially updated**:
    - `/src/routers/google_maps_api.py`: Updated imports and removed tab permission checks
-   - `/src/routers/batch_page_scraper.py`: Updated imports and removed tab permission checks
+   - `/src/routers/batch_page_scraper.py`: Updated imports and removed tab permission checks 
    - `/src/routers/modernized_sitemap.py`: Updated imports and removed tab permission checks
    - `/src/routers/dev_tools.py`: Updated imports
    - `/src/routers/rbac_admin.py`: Updated imports

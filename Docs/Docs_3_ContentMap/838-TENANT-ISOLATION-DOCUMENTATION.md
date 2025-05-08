@@ -38,7 +38,7 @@ The tenant isolation implementation is spread across several key files in the co
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
     # ...
     tenant_id = payload.get("tenant_id", DEFAULT_TENANT_ID)
-
+    
     user = {
         # ...
         "tenant_id": tenant_id,
@@ -103,10 +103,10 @@ class TenantMiddleware:
     async def __call__(self, request: Request, call_next):
         # Extract tenant ID from headers or token
         tenant_id = extract_tenant_id(request)
-
+        
         # Add tenant context to request state
         request.state.tenant_id = tenant_id
-
+        
         response = await call_next(request)
         return response
 ```

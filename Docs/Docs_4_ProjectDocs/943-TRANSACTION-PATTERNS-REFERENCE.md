@@ -1,8 +1,8 @@
 # Database Transaction Patterns Reference
 
-**Date:** 2025-03-25
-**Author:** Cascade AI
-**Status:** Active
+**Date:** 2025-03-25  
+**Author:** Cascade AI  
+**Status:** Active  
 **Related Document:** [Database Connection Audit Plan](./942-DATABASE-CONNECTION-AUDIT-PLAN.md)
 
 ## Purpose
@@ -39,16 +39,16 @@ async def create_resource(
                 data=request.data,
                 user_id=current_user.id  # Pass only the user ID, not the token
             )
-
+        
         # Background tasks added AFTER transaction completes
         # This prevents issues where background job runs before transaction commits
         background_tasks.add_task(
             notification_service.send_notification,
             resource_id=result.id
         )
-
+        
         return result
-
+        
     except Exception as e:
         # Error handling with proper logging
         logger.error(f"Error creating resource: {str(e)}")
@@ -73,19 +73,19 @@ class ResourceService:
             description=data["description"],
             user_id=user_id
         )
-
+        
         session.add(new_resource)
-
+        
         # May call other services, passing the SAME session
         await self.tag_service.add_tags(
             session=session,
             resource=new_resource,
             tags=data.get("tags", [])
         )
-
+        
         # NO commit or rollback here!
         # The router owns the transaction
-
+        
         return new_resource
 ```
 
@@ -109,15 +109,15 @@ async def process_background_job(job_id: str):
                 if not job:
                     logger.error(f"Job not found: {job_id}")
                     return
-
+                
                 # Process the job
                 job.status = "processing"
                 # ... processing logic ...
                 job.status = "completed"
-
+                
             # Transaction is committed when exiting the context
             logger.info(f"Background job completed: {job_id}")
-
+            
         except Exception as e:
             # Handle errors - transaction is automatically rolled back
             logger.error(f"Error in background job {job_id}: {str(e)}")
@@ -153,10 +153,10 @@ class BadService:
 async def create_resource(session: AsyncSession = Depends(get_session)):
     async with session.begin():  # Outer transaction
         # ... some logic ...
-
+        
         # WRONG: Nested transaction
         result = await service.create_with_transaction(session, data)
-
+        
         # ... more logic ...
 
 # Service incorrectly creates nested transaction
@@ -174,7 +174,7 @@ async def create_with_transaction(session, data):
 async def create_resource(session: AsyncSession = Depends(get_session)):
     async with session.begin():
         resource = await service.create_resource(session, data)
-
+        
     # WRONG: Passing session to background task
     background_tasks.add_task(process_in_background, session, resource.id)
 ```

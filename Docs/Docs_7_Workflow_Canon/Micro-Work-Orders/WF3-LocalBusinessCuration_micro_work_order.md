@@ -88,7 +88,7 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 
 ### 1. No eligibility check before queueing domain extraction (MEDIUM)
 - **Description**: Currently, all local businesses with status="Selected" are automatically queued for domain extraction, regardless of whether they have a valid website_url. This could lead to unnecessary processing and errors.
-- **Remediation Plan**:
+- **Remediation Plan**: 
   1. Add preliminary validation in the router to check if website_url exists
   2. Only queue items with a non-empty website_url
   3. Add appropriate error message for items without website URLs
@@ -136,5 +136,5 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 
 ---
 
-**Reviewer:** Cascade AI
+**Reviewer:** Cascade AI  
 **Date:** 2025-05-05T00:17:00-07:00

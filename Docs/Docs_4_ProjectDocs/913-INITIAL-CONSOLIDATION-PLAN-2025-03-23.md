@@ -31,7 +31,7 @@ KEEP ONLY:
 
 REMOVE:
 - src/db/async_sb_connection.py
-- src/db/sb_connection.py
+- src/db/sb_connection.py 
 - src/db/sb_connection copy.py
 
 ## MEDIUM-PRIORITY ACTIONS
@@ -52,7 +52,7 @@ Remove tenant isolation code from:
 Remove:
 - src/utils/db_schema_helper.py
 - src/utils/db_utils.py
-- src/utils/scraper_api.py
+- src/utils/scraper_api.py 
 - src/utils/sidebar.py
 - src/tasks/email_scraper.py
 - src/test_domain_scrape.py

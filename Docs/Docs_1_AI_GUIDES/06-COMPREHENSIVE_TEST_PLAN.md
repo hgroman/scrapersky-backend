@@ -12,7 +12,7 @@ These tests verify that transactions are properly managed by routers and backgro
 async def test_router_transaction_management():
     """
     Test that router correctly manages transaction boundaries.
-
+    
     This test verifies:
     1. Transaction commits on success
     2. Transaction rolls back on error
@@ -21,7 +21,7 @@ async def test_router_transaction_management():
     # Mock service and background tasks
     mock_service = create_mock_service()
     mock_bg_tasks = create_mock_background_tasks()
-
+    
     # Test case 1: Successful transaction
     test_data = {"id": str(uuid.uuid4()), "name": "test"}
     response = await client.post(
@@ -30,7 +30,7 @@ async def test_router_transaction_management():
         headers={"Authorization": "Bearer test_token"}
     )
     assert response.status_code == 201
-
+    
     # Verify data was committed
     async with get_test_session() as session:
         result = await session.execute(
@@ -39,22 +39,22 @@ async def test_router_transaction_management():
         model = result.scalars().first()
         assert model is not None
         assert model.name == test_data["name"]
-
+    
     # Verify background task was added after commit
     assert mock_bg_tasks.add_task.called
     assert mock_bg_tasks.add_task.call_args[0][0] == mock_service.background_process
-
+    
     # Test case 2: Failed transaction
     error_data = {"id": str(uuid.uuid4()), "name": "error_trigger"}
     mock_service.create_resource.side_effect = ValueError("Test error")
-
+    
     response = await client.post(
         "/api/v3/resource",
         json=error_data,
         headers={"Authorization": "Bearer test_token"}
     )
     assert response.status_code == 400
-
+    
     # Verify data was NOT committed
     async with get_test_session() as session:
         result = await session.execute(
@@ -72,7 +72,7 @@ These tests verify that services are properly transaction-aware without managing
 async def test_service_transaction_awareness():
     """
     Test that services are properly transaction-aware.
-
+    
     This test verifies:
     1. Services use the provided session
     2. Services don't create their own transactions
@@ -80,21 +80,21 @@ async def test_service_transaction_awareness():
     """
     # Create test service
     test_service = RealService()
-
+    
     # Create mock session with transaction tracking
     mock_session = create_mock_session()
-
+    
     # Test case 1: Service uses provided session
     await test_service.create_resource(mock_session, {"name": "test"})
-
+    
     # Verify session was used correctly
     assert mock_session.add.called
     assert mock_session.begin.not_called  # Service should not call begin()
-
+    
     # Test case 2: Service propagates errors
     mock_session.reset_mock()
     mock_session.add.side_effect = ValueError("Test error")
-
+    
     with pytest.raises(ValueError):
         await test_service.create_resource(mock_session, {"name": "error"})
 ```
@@ -107,7 +107,7 @@ These tests verify that background tasks properly manage their own transactions.
 async def test_background_task_transactions():
     """
     Test that background tasks properly manage their own transactions.
-
+    
     This test verifies:
     1. Background tasks create their own sessions
     2. They manage transaction boundaries
@@ -118,37 +118,37 @@ async def test_background_task_transactions():
     session_created = False
     transaction_begun = False
     session_closed = False
-
+    
     # Mock session factory
     original_factory = async_session_factory
-
+    
     def mock_factory():
         nonlocal session_created
         session_created = True
         session = original_factory()
-
+        
         # Wrap session methods to track calls
         original_begin = session.begin
         original_close = session.close
-
+        
         async def tracked_begin(*args, **kwargs):
             nonlocal transaction_begun
             transaction_begun = True
             return await original_begin(*args, **kwargs)
-
+        
         async def tracked_close(*args, **kwargs):
             nonlocal session_closed
             session_closed = True
             return await original_close(*args, **kwargs)
-
+        
         session.begin = tracked_begin
         session.close = tracked_close
         return session
-
+    
     # Replace factory temporarily
     import src.db.session
     src.db.session.async_session_factory = mock_factory
-
+    
     try:
         # Execute background task
         task_id = str(uuid.uuid4())
@@ -157,12 +157,12 @@ async def test_background_task_transactions():
             domain="example.com",
             tenant_id="550e8400-e29b-41d4-a716-446655440000"
         )
-
+        
         # Verify session management
         assert session_created, "Background task did not create session"
         assert transaction_begun, "Background task did not begin transaction"
         assert session_closed, "Background task did not close session"
-
+        
         # Verify database state
         async with get_test_session() as session:
             result = await session.execute(
@@ -186,7 +186,7 @@ These tests verify that API endpoints function correctly and follow established 
 async def test_sitemap_scan_endpoint():
     """
     Test the sitemap scan endpoint.
-
+    
     This test verifies:
     1. Authentication works correctly
     2. Request validation works
@@ -198,49 +198,49 @@ async def test_sitemap_scan_endpoint():
         "Authorization": "Bearer test_token",
         "X-Tenant-ID": "550e8400-e29b-41d4-a716-446655440000"
     }
-
+    
     # Test case 1: Successful request
     request_data = {
         "base_url": "example.com",
         "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
         "max_pages": 100
     }
-
+    
     response = await client.post(
         "/api/v3/sitemap/scan",
         json=request_data,
         headers=headers
     )
-
+    
     assert response.status_code == 202
     data = response.json()
     assert "job_id" in data
     assert "status_url" in data
     assert data["status_url"].startswith("/api/v3/sitemap/status/")
-
+    
     # Test case 2: Invalid request
     invalid_data = {
         "base_url": "",  # Empty URL
         "tenant_id": "550e8400-e29b-41d4-a716-446655440000"
     }
-
+    
     response = await client.post(
         "/api/v3/sitemap/scan",
         json=invalid_data,
         headers=headers
     )
-
+    
     assert response.status_code == 400
     data = response.json()
     assert "detail" in data
-
+    
     # Test case 3: Authentication failure
     response = await client.post(
         "/api/v3/sitemap/scan",
         json=request_data,
         # No headers
     )
-
+    
     assert response.status_code == 401
 ```
 
@@ -252,7 +252,7 @@ These tests verify that background task status can be correctly retrieved.
 async def test_job_status_endpoint():
     """
     Test the job status endpoint.
-
+    
     This test verifies:
     1. Status retrieval works for in-memory jobs
     2. Status retrieval works for database jobs
@@ -260,7 +260,7 @@ async def test_job_status_endpoint():
     """
     # Setup test job
     job_id = f"sitemap_{uuid.uuid4().hex[:32]}"
-
+    
     # Add job to in-memory tracking
     from src.services.sitemap.processing_service import _job_statuses
     _job_statuses[job_id] = {
@@ -269,24 +269,24 @@ async def test_job_status_endpoint():
         "domain": "example.com",
         "progress": 0.5
     }
-
+    
     # Setup authentication
     headers = {
         "Authorization": "Bearer test_token",
         "X-Tenant-ID": "550e8400-e29b-41d4-a716-446655440000"
     }
-
+    
     # Test case 1: Retrieve in-memory status
     response = await client.get(
         f"/api/v3/sitemap/status/{job_id}",
         headers=headers
     )
-
+    
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "running"
     assert data["progress"] == 0.5
-
+    
     # Test case 2: Create database job and retrieve status
     async with get_test_session() as session:
         async with session.begin():
@@ -298,25 +298,25 @@ async def test_job_status_endpoint():
                 metadata={"domain": "database-example.com"}
             )
             session.add(job)
-
+    
     response = await client.get(
         f"/api/v3/sitemap/status/{job.job_id}",
         headers=headers
     )
-
+    
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "complete"
     assert data["progress"] == 1.0
     assert data["domain"] == "database-example.com"
-
+    
     # Test case 3: Not found job
     non_existent_job_id = f"sitemap_{uuid.uuid4().hex[:32]}"
     response = await client.get(
         f"/api/v3/sitemap/status/{non_existent_job_id}",
         headers=headers
     )
-
+    
     assert response.status_code == 200  # Note: returns 200 with not_found status
     data = response.json()
     assert data["status"] == "not_found"
@@ -332,7 +332,7 @@ These tests verify that authentication works correctly.
 async def test_authentication():
     """
     Test authentication functionality.
-
+    
     This test verifies:
     1. Valid tokens are accepted
     2. Invalid tokens are rejected
@@ -343,34 +343,34 @@ async def test_authentication():
     @app.get("/test/auth")
     async def test_auth_endpoint(current_user: dict = Depends(get_current_user)):
         return {"user_id": current_user["id"]}
-
+    
     # Test case 1: Valid token
     valid_token = create_test_token("test_user")
     response = await client.get(
         "/test/auth",
         headers={"Authorization": f"Bearer {valid_token}"}
     )
-
+    
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == "test_user"
-
+    
     # Test case 2: Invalid token
     invalid_token = "invalid.token.here"
     response = await client.get(
         "/test/auth",
         headers={"Authorization": f"Bearer {invalid_token}"}
     )
-
+    
     assert response.status_code == 401
-
+    
     # Test case 3: Expired token
     expired_token = create_test_token("test_user", expires_in=-3600)  # Expired 1 hour ago
     response = await client.get(
         "/test/auth",
         headers={"Authorization": f"Bearer {expired_token}"}
     )
-
+    
     assert response.status_code == 401
 ```
 
@@ -382,7 +382,7 @@ These tests verify that authorization and permission checking works correctly.
 async def test_permission_checking():
     """
     Test permission checking functionality.
-
+    
     This test verifies:
     1. Users with required permissions can access endpoints
     2. Users without required permissions are denied
@@ -395,7 +395,7 @@ async def test_permission_checking():
     ):
         require_permission(current_user, "access_test")
         return {"access": "granted"}
-
+    
     @app.get("/test/feature")
     async def test_feature_endpoint(
         current_user: dict = Depends(get_current_user),
@@ -408,7 +408,7 @@ async def test_permission_checking():
             permissions=current_user.get("permissions", [])
         )
         return {"feature": "enabled"}
-
+    
     # Test case 1: User with permission
     user_with_perm = {
         "id": "user1",
@@ -416,14 +416,14 @@ async def test_permission_checking():
         "permissions": ["access_test"]
     }
     token_with_perm = create_test_token_for_user(user_with_perm)
-
+    
     response = await client.get(
         "/test/protected",
         headers={"Authorization": f"Bearer {token_with_perm}"}
     )
-
+    
     assert response.status_code == 200
-
+    
     # Test case 2: User without permission
     user_without_perm = {
         "id": "user2",
@@ -431,14 +431,14 @@ async def test_permission_checking():
         "permissions": ["other_permission"]
     }
     token_without_perm = create_test_token_for_user(user_without_perm)
-
+    
     response = await client.get(
         "/test/protected",
         headers={"Authorization": f"Bearer {token_without_perm}"}
     )
-
+    
     assert response.status_code == 403
-
+    
     # Test case 3: Feature flag check
     # Setup test data in database
     async with get_test_session() as session:
@@ -449,7 +449,7 @@ async def test_permission_checking():
                 is_enabled=True
             )
             session.add(tenant_feature)
-
+    
     response = await client.get(
         "/test/feature",
         headers={
@@ -457,7 +457,7 @@ async def test_permission_checking():
             "X-Tenant-ID": "550e8400-e29b-41d4-a716-446655440000"
         }
     )
-
+    
     assert response.status_code == 200
 ```
 
@@ -471,7 +471,7 @@ These tests verify that the sitemap scanning functionality works end-to-end.
 async def test_sitemap_scanning_integration():
     """
     Test sitemap scanning integration.
-
+    
     This test verifies the end-to-end flow:
     1. Scan request is accepted
     2. Background task processes the domain
@@ -494,13 +494,13 @@ async def test_sitemap_scanning_integration():
             }
         ]
     )
-
+    
     # Setup authentication
     headers = {
         "Authorization": "Bearer test_token",
         "X-Tenant-ID": "550e8400-e29b-41d4-a716-446655440000"
     }
-
+    
     # Step 1: Initiate scan
     response = await client.post(
         "/api/v3/sitemap/scan",
@@ -511,45 +511,45 @@ async def test_sitemap_scanning_integration():
         },
         headers=headers
     )
-
+    
     assert response.status_code == 202
     data = response.json()
     job_id = data["job_id"]
-
+    
     # Step 2: Process the job (in tests we can't wait for background task)
     await process_domain_now(
         job_id=job_id,
         domain="example.com",
         tenant_id="550e8400-e29b-41d4-a716-446655440000"
     )
-
+    
     # Step 3: Verify database state
     async with get_test_session() as session:
         # Check sitemap_files table
         sitemap_query = select(SitemapFile).where(SitemapFile.job_id == job_id)
         sitemap_result = await session.execute(sitemap_query)
         sitemaps = sitemap_result.scalars().all()
-
+        
         assert len(sitemaps) == 1
         sitemap = sitemaps[0]
         assert sitemap.url == "https://example.com/sitemap.xml"
         assert sitemap.sitemap_type == "standard"
-
+        
         # Check sitemap_urls table
         urls_query = select(SitemapUrl).where(SitemapUrl.sitemap_id == sitemap.id)
         urls_result = await session.execute(urls_query)
         urls = urls_result.scalars().all()
-
+        
         assert len(urls) == 2
         assert any(url.url == "https://example.com/page1" for url in urls)
         assert any(url.url == "https://example.com/page2" for url in urls)
-
+    
     # Step 4: Check status endpoint
     response = await client.get(
         f"/api/v3/sitemap/status/{job_id}",
         headers=headers
     )
-
+    
     assert response.status_code == 200
     status_data = response.json()
     assert status_data["status"] == "complete"
@@ -564,7 +564,7 @@ These tests verify that the batch processing functionality works end-to-end.
 async def test_batch_processing_integration():
     """
     Test batch processing integration.
-
+    
     This test verifies the end-to-end flow:
     1. Batch job is created
     2. URLs are processed

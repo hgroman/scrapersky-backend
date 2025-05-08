@@ -25,7 +25,7 @@ async def endpoint(
             data=request.data,
             user_id=current_user.get("id")
         )
-
+    
     # Return after transaction is committed
     return result
 ```
@@ -48,7 +48,7 @@ async def async_endpoint(
             job_type="operation",
             status="pending"
         )
-
+    
     # Add background task AFTER transaction commits
     # Don't pass the session to background task
     background_tasks.add_task(
@@ -56,7 +56,7 @@ async def async_endpoint(
         job_id=str(job.id),
         data=request.dict()
     )
-
+    
     return {"job_id": str(job.id), "status": "processing"}
 
 # Background task function - creates its own session
@@ -71,22 +71,22 @@ async def process_background_job(job_id: str, data: dict):
                 if not job:
                     logger.error(f"Job not found: {job_id}")
                     return
-
+                
                 job.status = "processing"
-
+                
                 # Process data
                 result = await some_service.process_data(
                     session=bg_session,
                     data=data
                 )
-
+                
                 # Update job with result
                 job.status = "completed"
                 job.result = result
-
+            
             # Transaction committed when exiting context
             logger.info(f"Background job completed: {job_id}")
-
+            
         except Exception as e:
             # Handle errors - transaction is rolled back
             logger.error(f"Error in background job {job_id}: {str(e)}")
@@ -110,7 +110,7 @@ class SomeService:
     async def operation(self, session: AsyncSession, data: dict, user_id: str):
         # Use session but don't begin/commit transactions
         # No async with session.begin():
-
+        
         # Perform operations using session
         new_record = SomeModel(
             name=data.get("name"),
@@ -118,16 +118,16 @@ class SomeService:
             user_id=user_id
         )
         session.add(new_record)
-
+        
         # No session.commit() - router handles that
-
+        
         # May call other services, passing the same session
         related_data = await other_service.create_related(
-            session=session,
+            session=session, 
             parent_id=new_record.id,
             data=data.get("related_items", [])
         )
-
+        
         return {
             "id": new_record.id,
             "name": new_record.name,
@@ -150,27 +150,27 @@ async def endpoint_with_errors(
             # Business logic validation
             if not request.data:
                 raise ValueError("Data is required")
-
+            
             # Call service
             result = await some_service.operation(
                 session=session,
                 data=request.data,
                 user_id=current_user.get("id")
             )
-
+        
         # Return after successful transaction
         return result
-
+        
     except ValueError as e:
         # Handle validation errors
         raise HTTPException(status_code=400, detail=str(e))
-
+        
     except SQLAlchemyError as e:
         # Handle database errors
         # Transaction is automatically rolled back
         logger.error(f"Database error: {str(e)}")
         raise HTTPException(status_code=500, detail="Database error occurred")
-
+        
     except Exception as e:
         # Handle unexpected errors
         logger.error(f"Unexpected error: {str(e)}")
@@ -193,29 +193,29 @@ async def test_some_operation():
                     "name": "Test Record",
                     "description": "Test Description"
                 }
-
+                
                 # Call service directly
                 result = await some_service.operation(
                     session=test_session,
                     data=test_data,
                     user_id=test_user_id
                 )
-
+                
                 # Assert results
                 assert result.get("name") == "Test Record"
-
+                
                 # Retrieve record to verify
                 record = await test_session.get(SomeModel, result.get("id"))
                 assert record is not None
                 assert record.name == "Test Record"
-
+                
                 # Intentionally roll back by raising exception
                 raise TestRollbackException("Rolling back test transaction")
-
+                
         except TestRollbackException:
             # Expected exception for rollback
             pass
-
+        
         # Verify transaction was rolled back
         # Create a new transaction
         async with test_session.begin():

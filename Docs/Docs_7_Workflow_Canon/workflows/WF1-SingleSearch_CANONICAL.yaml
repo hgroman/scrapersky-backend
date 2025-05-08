@@ -22,14 +22,14 @@ workflow_connections:
   as_producer:
     - consumer_workflow: WF2-StagingEditor
       # Database table that this workflow writes to for the next workflow (MANDATORY)
-      interface_table: places  # Explicit table in DB schema
+      interface_table: places  # Explicit table in DB schema 
       # Field that contains the status signal for the next workflow
       handoff_field: status
       # Value that signals readiness for the next workflow
       produced_value: PlaceStatusEnum.New
       connection_details: |
-        WF1 produces place records in the places table with status="New" that are then consumed by
-        WF2-StagingEditor. The workflow writes these records through the PlacesService, which
+        WF1 produces place records in the places table with status="New" that are then consumed by 
+        WF2-StagingEditor. The workflow writes these records through the PlacesService, which 
         creates entries with the PlaceStatusEnum.New status.
       connection_source_file: src/services/places_service.py
       connection_source_function: create_place_from_search
@@ -37,7 +37,7 @@ workflow_connections:
       connection_target_function: get_places
       # Explicit database operation that inserts into the places table
       production_operation: "INSERT INTO places (id, name, status, ...) VALUES (...)"
-
+  
   # WF1 is the first workflow in the chain, so it has no upstream consumer
 
 phases:
@@ -167,7 +167,7 @@ known_issues:
     actionable_todo: "Replace raw SQL query with SQLAlchemy ORM in store_places method"
     files_to_modify:
       - "src/services/places/places_storage_service.py"
-
+  
   - id: "KI2"
     description: "Hardcoded connection parameters in places_service.py"
     severity: "MEDIUM"
@@ -178,7 +178,7 @@ known_issues:
     files_to_modify:
       - "src/services/places/places_service.py"
       - "src/config/settings.py"
-
+  
   - id: "KI3"
     description: "Missing transaction boundary in API router"
     severity: "MEDIUM"
@@ -188,7 +188,7 @@ known_issues:
     actionable_todo: "Add explicit transaction boundary using 'async with session.begin()' in router"
     files_to_modify:
       - "src/routers/google_maps_api.py"
-
+  
   - id: "KI4"
     description: "Missing error handling for API failures"
     severity: "MEDIUM"
@@ -207,14 +207,14 @@ documentation_todos:
     target_date: "2025-05-12"
     files_to_modify:
       - "/Docs/Docs_4_Architecture/workflow-diagrams.md"
-
+  
   - id: "DT2"
     description: "Create error handling guide referenced in WF1 documentation"
     ticket: "SCRSKY-253"
     target_date: "2025-05-15"
     files_to_modify:
       - "/Docs/Docs_1_AI_GUIDES/22-ERROR_HANDLING_GUIDE.md"
-
+  
   - id: "DT3"
     description: "Create ENUM handling guide referenced in WF1 documentation"
     ticket: "SCRSKY-254"

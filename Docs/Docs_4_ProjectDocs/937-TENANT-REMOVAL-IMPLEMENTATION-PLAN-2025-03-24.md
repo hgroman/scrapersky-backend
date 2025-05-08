@@ -11,7 +11,7 @@
 2. **RBAC & Feature Flag Components**
    - All imports and usage of RBAC constants, permissions
    - Remove all feature flag checks and custom permissions
-   - Remove role hierarchy and access level checks
+   - Remove role hierarchy and access level checks 
 
 3. **Authentication Components to Modify**
    - `/src/auth/dependencies.py` (Remove tenant validation, keep JWT)
@@ -34,7 +34,7 @@
 
 ## Implementation Steps
 
-### 1. Baseline Setup
+### 1. Baseline Setup 
 
 1. Create a DEFAULT_TENANT_ID constant in a central location
 2. Ensure all JWT auth continues to work without tenant validation
@@ -44,7 +44,7 @@
 1. Remove tenant middleware registration from main.py
 2. Disable all tenant validation code
 3. Remove tenant context managers from database code
-4. Create placeholder tenant_id parameter handlers
+4. Create placeholder tenant_id parameter handlers 
 
 ### 3. Modify All Router Files
 
@@ -56,7 +56,7 @@
 
 1. Remove tenant context from session creation
 2. Remove Row-Level Security (RLS) filters
-3. Simplify session initialization
+3. Simplify session initialization 
 
 ### 5. Update DB Services
 
@@ -84,7 +84,7 @@
 
 ### Secondary Priority
 1. `/src/models/tenant.py` - Disable functionality, keep schema
-2. `/src/models/user.py` - Remove tenant relationship
+2. `/src/models/user.py` - Remove tenant relationship 
 3. `/src/models/profile.py` - Remove tenant relationship
 4. `/src/services/core/tenant_service.py` - Replace with dummy service
 5. All remaining service files with tenant references

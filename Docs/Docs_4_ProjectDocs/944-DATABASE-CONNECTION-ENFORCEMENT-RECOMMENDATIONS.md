@@ -1,8 +1,8 @@
 # Database Connection Enforcement Recommendations
 
-**Date:** 2025-03-25
-**Author:** Cascade AI
-**Status:** Draft
+**Date:** 2025-03-25  
+**Author:** Cascade AI  
+**Status:** Draft  
 **Priority:** High
 
 ## Executive Summary
@@ -35,15 +35,15 @@ import os
 class DatabaseConnectionLinter(ast.NodeVisitor):
     def __init__(self):
         self.violations = []
-
+        
     def visit_Call(self, node):
         # Check for direct session creation
         if isinstance(node.func, ast.Name) and node.func.id == 'async_session_factory':
             self.violations.append((node.lineno, "Direct session creation using async_session_factory"))
-
+        
         # Check for other non-compliant patterns
         # ...
-
+        
         self.generic_visit(node)
 
 def lint_file(file_path):
@@ -116,7 +116,7 @@ async def endpoint(session: AsyncSession = Depends(get_session_dependency)):
 ```python
 async def background_task():
     from ...session.async_session import get_session
-
+    
     async with get_session() as session:
         # Use session here
 ```
@@ -172,9 +172,9 @@ async def process_in_background(data_id: int):
             select(Data).where(Data.id == data_id)
         )
         data = result.scalars().first()
-
+        
         # Process data
-
+        
         # Changes are automatically committed when context manager exits
 ```
 ```

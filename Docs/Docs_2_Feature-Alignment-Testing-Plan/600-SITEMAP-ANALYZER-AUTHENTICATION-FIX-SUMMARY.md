@@ -63,7 +63,7 @@ To test the implementation, follow these steps:
 ## Next Steps
 
 1. Complete the remaining items on the verification checklist
-2. Run the full test script from `512-SITEMAP-ANALYZER-TEST-INSTRUCTIONS.md`
+2. Run the full test script from `512-SITEMAP-ANALYZER-TEST-INSTRUCTIONS.md` 
 3. Verify frontend functionality with different authentication tokens
 4. Document any additional issues found during testing
 

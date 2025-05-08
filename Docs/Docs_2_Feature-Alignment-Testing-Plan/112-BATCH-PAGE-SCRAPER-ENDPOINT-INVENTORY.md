@@ -51,7 +51,7 @@ Scans a single domain to extract metadata from its pages. This initiates a backg
 - **Tab Permission**: `discovery-scan`
 
 #### Database Interactions
-- **Tables**:
+- **Tables**: 
   - `jobs`: Creates a job record to track processing
   - `domains`: Stores domain metadata
   - `pages`: Stores extracted page data
@@ -112,8 +112,8 @@ Process a batch of domains for page content extraction. This endpoint handles mu
 - **Tab Permission**: `deep-analysis`
 
 #### Database Interactions
-- **Tables**:
-  - `batch_jobs`: Creates a batch record
+- **Tables**: 
+  - `batch_jobs`: Creates a batch record 
   - `jobs`: Creates job records for each domain
   - `domains`: Stores domain metadata
   - `pages`: Stores extracted page data
@@ -179,7 +179,7 @@ Check the status of a single domain processing job. This provides detailed infor
 - **Minimum Role**: `USER`
 
 #### Database Interactions
-- **Tables**:
+- **Tables**: 
   - `jobs`: Reads job status and metadata
 
 #### Technical Notes
@@ -235,7 +235,7 @@ Check the status of a batch processing job. Provides aggregated information abou
 - **Minimum Role**: `ADMIN`
 
 #### Database Interactions
-- **Tables**:
+- **Tables**: 
   - `batch_jobs`: Reads batch status information
   - `jobs`: Reads individual job statuses related to the batch
 
@@ -436,12 +436,12 @@ const pollStatus = async (jobId) => {
       'Authorization': `Bearer ${token}`,
     }
   });
-
+  
   const data = await response.json();
   if (data.status === 'completed' || data.status === 'failed') {
     return data;
   }
-
+  
   // Poll again after delay
   await new Promise(resolve => setTimeout(resolve, 2000));
   return pollStatus(jobId);
@@ -511,7 +511,7 @@ curl -X GET "http://localhost:8000/api/v3/batch_page_scraper/health"
 **New Request:**
 ```json
 {
-  "base_url": "example.com",
+  "base_url": "example.com", 
   "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
   "max_pages": 1000
 }

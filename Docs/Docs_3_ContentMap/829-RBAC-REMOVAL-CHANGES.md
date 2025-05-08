@@ -32,7 +32,7 @@ For each router that uses RBAC checks (like `check_sitemap_access`), we'll keep 
 async def check_sitemap_access(user: dict = Depends(user_dependency), session: AsyncSession = Depends(get_db_session)):
     tenant_id = auth_service.validate_tenant_id(None, user) or DEFAULT_TENANT_ID
     require_permission(user, PERM_ACCESS_SITEMAP)
-
+    
     # Skip feature check in development mode
     if not is_development_mode() and not is_feature_check_disabled():
         logger.debug(f"Checking feature enablement for {FEATURE_CONTENTMAP}")
@@ -58,7 +58,7 @@ async def check_sitemap_access(user: dict = Depends(user_dependency), session: A
     #     logger.warning(f"⚠️ Bypassing feature check for {FEATURE_CONTENTMAP} in development/testing mode")
     # if not is_development_mode() and not is_feature_check_disabled():
     #     await require_role_level(user, ROLE_HIERARCHY["USER"], session)
-
+    
     return tenant_id
 ```
 

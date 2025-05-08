@@ -51,7 +51,7 @@ A total of 11 files were standardized:
 1. `src/db/sitemap_handler.py`
 2. `src/routers/sitemap_analyzer.py`
 3. `src/routers/modernized_sitemap.py`
-4. `src/routers/db_portal.py`
+4. `src/routers/db_portal.py` 
 5. `src/services/db_inspector.py`
 6. `src/db/domain_handler.py`
 7. `src/routers/dev_tools.py`
@@ -98,7 +98,7 @@ A total of 11 files were standardized:
 4. Archive old database connection files:
    - Move src/db/session.py to archive/db/session.py
    - Move other deprecated modules to appropriate archive locations
-
+   
 5. Check for any remaining references to old modules
 
 ## Conclusion

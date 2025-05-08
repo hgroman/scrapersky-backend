@@ -63,9 +63,9 @@ trigger_patterns:
     update_condition: "When domain extraction succeeds and domain already exists"
 
 description: |
-  This workflow covers the process where a user marks local businesses as "Selected" in the UI,
-  resulting in those businesses being queued for domain extraction in the backend.
-  The workflow enforces architectural mandates such as ORM-only DB access, strict transaction boundaries,
+  This workflow covers the process where a user marks local businesses as "Selected" in the UI, 
+  resulting in those businesses being queued for domain extraction in the backend. 
+  The workflow enforces architectural mandates such as ORM-only DB access, strict transaction boundaries, 
   and background job compliance. It follows the Dual-Status Update pattern identified in WF2.
 
 phases:
@@ -313,8 +313,8 @@ workflow_connections:
       # Value that signals readiness for the next workflow
       produced_value: DomainExtractionStatusEnum.Queued
       connection_details: |
-        WF3 produces records in the local_businesses table with domain_extraction_status = "Queued"
-        that are then consumed by WF4-DomainCuration. The workflow emits this signal by updating
+        WF3 produces records in the local_businesses table with domain_extraction_status = "Queued" 
+        that are then consumed by WF4-DomainCuration. The workflow emits this signal by updating 
         the domain_extraction_status field in the local_businesses table to "Queued".
       connection_source_file: src/routers/local_businesses.py
       connection_source_function: update_local_businesses_status_batch
@@ -333,7 +333,7 @@ workflow_connections:
       consumed_value: PlaceStatusEnum.Selected
       connection_details: |
         WF3 consumes records from the local_businesses table when records have status = "Selected".
-        These records were created by WF2-StagingEditor and are displayed in the Local Business
+        These records were created by WF2-StagingEditor and are displayed in the Local Business 
         Curation tab for further processing.
       connection_source_file: src/routers/places_staging.py
       connection_source_function: update_places_status_batch
@@ -379,37 +379,37 @@ compliance_checklist:
     evidence: "All database operations in local_businesses.py and business_to_domain_service.py use SQLAlchemy ORM. No raw SQL detected."
     verified_by: "Cascade AI"
     verified_date: "2025-05-05"
-
+  
   - name: "Transaction Boundaries"
     compliant: true
     evidence: "Router correctly uses 'async with session.begin()' pattern and owns transaction boundaries."
     verified_by: "Cascade AI"
     verified_date: "2025-05-05"
-
+  
   - name: "API Standards"
     compliant: true
     evidence: "Endpoint follows v3 format: PUT /api/v3/local-businesses/status"
     verified_by: "Cascade AI"
     verified_date: "2025-05-05"
-
+  
   - name: "Enum Handling"
     compliant: true
     evidence: "Properly uses PlaceStatusEnum and DomainExtractionStatusEnum"
     verified_by: "Cascade AI"
     verified_date: "2025-05-05"
-
+  
   - name: "Background Job Patterns"
     compliant: true
     evidence: "Scheduler implements idempotency, proper connection management, and error handling"
     verified_by: "Cascade AI"
     verified_date: "2025-05-05"
-
+  
   - name: "File Status Mapping"
     compliant: true
     evidence: "All files annotated as [NOVEL] or [SHARED] in dependency trace and linear steps"
     verified_by: "Cascade AI"
     verified_date: "2025-05-05"
-
+  
   - name: "Test Coverage"
     compliant: true
     evidence: "Comprehensive tests for scheduler, router, and service functionality"

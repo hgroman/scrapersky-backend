@@ -89,7 +89,7 @@ phases:
           Code Org: true # Proper error handling for KeyError
           Txn Boundary: false # Covered in later step
         notes: "Proper enum mapping using SitemapCurationStatusEnum[api_status.name]"
-
+  
   - phase: Database Interaction
     steps:
       - step_id: 3.1
@@ -168,8 +168,8 @@ workflow_connections:
       # Value that signals readiness for the next workflow
       produced_value: SitemapAnalysisStatusEnum.Queued
       connection_details: |
-        WF4 produces records in the domains table with sitemap_analysis_status = "Queued" that
-        are then consumed by WF5-SitemapCuration. The workflow emits this signal by updating the
+        WF4 produces records in the domains table with sitemap_analysis_status = "Queued" that 
+        are then consumed by WF5-SitemapCuration. The workflow emits this signal by updating the 
         sitemap_analysis_status field in the domains table to "Queued".
       connection_source_file: src/routers/domains.py
       connection_source_function: update_domains_batch_status
@@ -177,7 +177,7 @@ workflow_connections:
       connection_target_function: process_pending_sitemap_submissions
       # Explicit database operation that updates the status field
       production_operation: "UPDATE domains SET sitemap_analysis_status = 'queued', sitemap_analysis_error = NULL WHERE id IN (...)"
-
+  
   as_consumer:
     - producer_workflow: WF3-LocalBusinessCuration
       # Database table that this workflow consumes data from (MANDATORY)
@@ -188,7 +188,7 @@ workflow_connections:
       consumed_value: DomainExtractionStatusEnum.Queued
       connection_details: |
         WF4 consumes records from the local_businesses table when records have domain_extraction_status = "Queued".
-        The sitemap_scheduler polls these records and triggers the domain extraction process which
+        The sitemap_scheduler polls these records and triggers the domain extraction process which 
         creates or updates domain records in the database.
       connection_source_file: src/routers/local_businesses.py
       connection_source_function: update_local_businesses_status_batch
@@ -222,6 +222,6 @@ known_issues:
     remediation: "Consider moving from direct API call to service-to-service communication"
     jira: "SCRSKY-232"
   - issue: Hardcoded internal API URL
-    severity: LOW
+    severity: LOW 
     remediation: "Move INTERNAL_API_BASE_URL to configuration settings"
     jira: "SCRSKY-233"

@@ -37,11 +37,11 @@ These tests verify that service methods check transaction state but don't create
 async def test_service_method_transaction_awareness(mock_session, mock_session_in_transaction):
     """Test that service method checks transaction state but doesn't create transactions."""
     service = ServiceClass()
-
+    
     # Test with session not in transaction
     await service.method(mock_session, ...)
     mock_session.in_transaction.assert_called_once()
-
+    
     # Test with session already in transaction
     await service.method(mock_session_in_transaction, ...)
     mock_session_in_transaction.in_transaction.assert_called_once()
@@ -59,7 +59,7 @@ async def test_router_method_creates_transaction(mock_session):
     with patch("src.services.service_module.service_method", new=AsyncMock(return_value=...)):
         # Call the router method
         await router_method(..., session=mock_session)
-
+        
         # Verify the router created a transaction
         mock_session.begin.assert_called_once()
 ```
@@ -74,11 +74,11 @@ async def test_background_task_creates_own_session():
     """Test that background task creates its own session."""
     # Mock session factory
     mock_session = AsyncMock(spec=AsyncSession)
-
+    
     with patch("src.db.session.async_session_factory", return_value=mock_session):
         # Call background task method
         await background_task_method(...)
-
+        
         # Verify session was created and transaction was started
         mock_session.begin.assert_called_once()
 ```
@@ -92,10 +92,10 @@ These tests verify that service methods propagate exceptions for transaction man
 async def test_service_method_exception_propagation(mock_session):
     """Test that exceptions in service method are propagated to the caller."""
     service = ServiceClass()
-
+    
     # Mock dependency to raise exception
     dependency_mock = AsyncMock(side_effect=Exception("Test error"))
-
+    
     with patch.object(service, '_dependency_method', new=dependency_mock):
         # Test that the exception is propagated
         with pytest.raises(Exception, match="Test error"):
@@ -115,10 +115,10 @@ async def test_concurrent_service_access():
         asyncio.create_task(service.method(session1, ...)),
         asyncio.create_task(service.method(session2, ...))
     ]
-
+    
     # Run tasks concurrently
     results = await asyncio.gather(*tasks, return_exceptions=True)
-
+    
     # Verify results maintain transaction isolation
     # ...
 ```
@@ -163,7 +163,7 @@ def mock_session():
     cm.__aenter__ = AsyncMock(return_value=None)
     cm.__aexit__ = AsyncMock(return_value=None)
     session.begin.return_value = cm
-
+    
     return session
 
 
@@ -175,7 +175,7 @@ def mock_session_in_transaction():
     session.in_transaction.return_value = True
     # Mock flush to do nothing
     session.flush = AsyncMock()
-
+    
     return session
 ```
 

@@ -91,5 +91,5 @@ Map every atomic step in the Domain Curation workflow (WF4) from UI to DB and ba
 
 ---
 
-**Reviewer:** ____________________
+**Reviewer:** ____________________  
 **Date:** ________________________

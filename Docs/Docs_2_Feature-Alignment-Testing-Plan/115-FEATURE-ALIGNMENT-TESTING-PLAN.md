@@ -30,7 +30,7 @@ Through comparative analysis of `google_maps_api.py` and `batch_page_scraper.py`
    ```
    Batch Page Scraper:
    Request → is_development_mode() check → get_development_user() → Full access granted
-
+   
    Google Maps API (before fix):
    Request → get_current_user → JWT validation → Authentication failed
    ```
@@ -175,12 +175,12 @@ def test_search_endpoint():
     """Test the search endpoint with development token."""
     url = f"{BASE_URL}/api/v3/google_maps_api/search"
     headers = {"Authorization": f"Bearer {DEV_TOKEN}"}
-
+    
     response = requests.post(url, json=TEST_DATA, headers=headers)
-
+    
     print(f"Search endpoint status code: {response.status_code}")
     print(f"Response: {json.dumps(response.json(), indent=2)}")
-
+    
     if response.status_code == 200:
         print("✅ Search endpoint test PASSED")
         return response.json().get("job_id")
@@ -193,15 +193,15 @@ def test_status_endpoint(job_id):
     if not job_id:
         print("Skipping status test - no job_id available")
         return
-
+        
     url = f"{BASE_URL}/api/v3/google_maps_api/status/{job_id}"
     headers = {"Authorization": f"Bearer {DEV_TOKEN}"}
-
+    
     response = requests.get(url, headers=headers)
-
+    
     print(f"Status endpoint status code: {response.status_code}")
     print(f"Response: {json.dumps(response.json(), indent=2)}")
-
+    
     if response.status_code in [200, 404]:  # 404 is ok if job processing hasn't started
         print("✅ Status endpoint test PASSED")
     else:
@@ -211,12 +211,12 @@ def test_staging_endpoint():
     """Test the staging endpoint with development token."""
     url = f"{BASE_URL}/api/v3/google_maps_api/staging"
     headers = {"Authorization": f"Bearer {DEV_TOKEN}"}
-
+    
     response = requests.get(url, headers=headers)
-
+    
     print(f"Staging endpoint status code: {response.status_code}")
     print(f"Response: {json.dumps(response.json(), indent=2)}")
-
+    
     if response.status_code == 200:
         print("✅ Staging endpoint test PASSED")
     else:
@@ -225,22 +225,22 @@ def test_staging_endpoint():
 def run_all_tests():
     """Run all tests for Google Maps API."""
     print("=== Testing Google Maps API Authentication ===")
-
+    
     # Test search endpoint
     job_id = test_search_endpoint()
     print("\n")
-
+    
     # Wait a moment for job to be created
     time.sleep(1)
-
+    
     # Test status endpoint
     test_status_endpoint(job_id)
     print("\n")
-
+    
     # Test staging endpoint
     test_staging_endpoint()
     print("\n")
-
+    
     print("=== All tests completed ===")
 
 if __name__ == "__main__":

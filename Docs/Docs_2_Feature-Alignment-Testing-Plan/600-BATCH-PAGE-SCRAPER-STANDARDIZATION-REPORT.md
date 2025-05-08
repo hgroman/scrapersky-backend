@@ -43,8 +43,8 @@ Added imports for RBAC utilities and constants:
 
 ```python
 from ..utils.permissions import (
-    require_permission,
-    require_feature_enabled,
+    require_permission, 
+    require_feature_enabled, 
     require_role_level,
     require_tab_permission
 )
@@ -112,7 +112,7 @@ try:
     # Router owns the transaction boundary
     async with session.begin():
         # Service call...
-
+    
     # Return response
     return response_model
 
@@ -169,7 +169,7 @@ async def initiate_domain_scan(self, session: AsyncSession, ...):
     # Check if in transaction
     in_transaction = session.in_transaction()
     logger.debug(f"initiate_domain_scan transaction state: {in_transaction}")
-
+    
     if not in_transaction:
         logger.warning("initiate_domain_scan called without an active transaction; the router should handle transactions")
 ```
@@ -209,10 +209,10 @@ Added tests to verify router-owned transaction boundaries:
 @pytest.mark.asyncio
 async def test_scan_domain_uses_transaction(mock_session, ...):
     # Test implementation...
-
+    
     # Assert session.begin() WAS called by the router (owns transaction boundary)
     mock_session.begin.assert_called_once()
-
+    
     # Assert transaction context was entered
     mock_session.begin.return_value.__aenter__.assert_called_once()
 ```
@@ -225,7 +225,7 @@ Added tests to verify all four layers of RBAC checks:
 @pytest.mark.asyncio
 async def test_batch_scan_domains_uses_proper_rbac_checks(mock_session, ...):
     # Test implementation...
-
+    
     # Assert all RBAC checks were called in the correct order
     mock_rbac_checks['require_permission'].assert_called_once()
     mock_rbac_checks['require_feature_enabled'].assert_called_once()
@@ -241,10 +241,10 @@ Added tests to verify service transaction awareness:
 @pytest.mark.asyncio
 async def test_service_transaction_awareness():
     # Test implementation...
-
+    
     # Check that in_transaction was called (transaction awareness)
     mock_session.in_transaction.assert_called()
-
+    
     # Check that commit/rollback were NOT called (router should handle this)
     assert not mock_commit.called
     assert not mock_rollback.called
@@ -258,7 +258,7 @@ Added tests to verify background tasks create their own sessions:
 @pytest.mark.asyncio
 async def test_background_task_creates_own_session(mock_session, ...):
     # Test implementation...
-
+    
     # Check that background task does not receive the request session
     for arg in mock_background_tasks.add_task.call_args[0]:
         assert arg != mock_session

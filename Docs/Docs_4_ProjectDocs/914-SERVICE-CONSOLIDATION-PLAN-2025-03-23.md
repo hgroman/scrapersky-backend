@@ -21,7 +21,7 @@ For each service type, we'll standardize on ONE implementation:
 - No RBAC dependencies
 - Minimal tenant awareness (using default tenant ID)
 
-### 2. ERROR HANDLING
+### 2. ERROR HANDLING  
 **KEEP**: `services/error/error_service.py`
 - Most comprehensive implementation
 - Handles Database exceptions
@@ -102,7 +102,7 @@ For each service type, we'll standardize on ONE implementation:
 
 1. Start with low-risk consolidations
 2. Test each service change individually
-3. For database changes, create specific transaction tests
+3. For database changes, create specific transaction tests 
 4. Document failures and side effects
 
 ## EXPECTED OUTCOMES
