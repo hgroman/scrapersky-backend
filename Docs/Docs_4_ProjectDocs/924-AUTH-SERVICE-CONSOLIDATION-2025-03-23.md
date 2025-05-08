@@ -69,7 +69,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
 ```
 
 **auth_service.py:**
-```python 
+```python
 async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security)

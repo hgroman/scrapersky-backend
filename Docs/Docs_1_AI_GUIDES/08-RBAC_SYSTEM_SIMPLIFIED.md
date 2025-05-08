@@ -7,10 +7,10 @@ This document outlines the authentication system in ScraperSky after the complet
 ### Current Authentication Architecture
 
 ```
-+----------------+    
-|     JWT        |    
-| AUTHENTICATION |    
-+----------------+    
++----------------+
+|     JWT        |
+| AUTHENTICATION |
++----------------+
   Validates user
   identity only
 ```
@@ -75,14 +75,14 @@ async def scan_domain(
     session: AsyncSession = Depends(get_db_session)
 ):
     # No permission checks - only JWT authentication
-    
+
     # Route implementation...
     result = await sitemap_service.scan_domain(
         session=session,
         domain=request.domain,
         # No tenant_id needed
     )
-    
+
     return result
 ```
 
@@ -149,7 +149,7 @@ async def example_endpoint(
 ):
     # Use current_user for identity only
     # No permission or role checks
-    
+
     # Implementation...
 ```
 

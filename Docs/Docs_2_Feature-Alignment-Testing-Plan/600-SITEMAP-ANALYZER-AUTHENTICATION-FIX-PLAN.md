@@ -91,7 +91,7 @@ async def legacy_analyze_domain(
     """
     Compatibility endpoint for the legacy frontend.
     Maps the legacy frontend request format to the modern v3 API.
-    
+
     Required Permissions:
     - Basic permission: "access_sitemap_scanner"
     - Feature flag: "sitemap_analyzer"
@@ -99,31 +99,31 @@ async def legacy_analyze_domain(
     - Tab permission: "discovery-scan"
     """
     logger.info(f"Received legacy analyze request for domain: {request.domain}")
-    
+
     # Get tenant ID with proper fallbacks
     tenant_id = request.tenant_id or current_user.get("tenant_id", "")
     if not tenant_id:
         tenant_id = DEFAULT_TENANT_ID
-    
+
     # 1. Basic permission check
     require_permission(current_user, "access_sitemap_scanner")
-    
+
     # 2. Feature enablement check
     user_permissions = current_user.get("permissions", [])
     await require_feature_enabled(
-        tenant_id=tenant_id, 
-        feature_name="sitemap_analyzer", 
+        tenant_id=tenant_id,
+        feature_name="sitemap_analyzer",
         session=session,
         user_permissions=user_permissions
     )
-    
+
     # 3. Role level check
     await require_role_level(
         user=current_user,
         required_role_id=ROLE_HIERARCHY["USER"],
         session=session
     )
-    
+
     # 4. Tab permission check
     await require_tab_permission(
         user=current_user,
@@ -131,14 +131,14 @@ async def legacy_analyze_domain(
         feature_name="sitemap_analyzer",
         session=session
     )
-    
+
     # Map legacy request to modern request
     modern_request = SitemapScrapingRequest(
         base_url=request.domain,
         tenant_id=tenant_id,
         max_pages=request.max_urls_per_sitemap or 10000
     )
-    
+
     try:
         # Call the modern implementation with proper transaction boundaries
         async with session.begin():
@@ -152,7 +152,7 @@ async def legacy_analyze_domain(
                 background_tasks=background_tasks,
                 tenant_id=tenant_id
             )
-        
+
         # Map response to format expected by legacy frontend
         return {
             "job_id": response.job_id,

@@ -98,7 +98,7 @@ The database service consolidation effort is now complete.
    - [ ] Add transaction boundaries at router level
    - [ ] Replace raw SQL string concatenation with db_service
    - [ ] Add proper session dependency injection
-   - [ ] Test changes thoroughly 
+   - [ ] Test changes thoroughly
 
 3. Then `src/routers/db_portal.py`:
    - [ ] Add router-owned transaction boundaries
@@ -121,7 +121,7 @@ The database service consolidation effort is now complete.
    - Removed internal session creation (using get_session())
    - Made service transaction-aware by removing commit calls
    - The handler is now properly transaction-aware
-   
+
 3. Next file to work on: `src/routers/sitemap_analyzer.py`
    - Will need to focus on replacing direct SQL with db_service calls
    - Security critical: Replace string concatenation with parameterized queries

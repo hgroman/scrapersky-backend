@@ -8,7 +8,7 @@
 
 1. `/src/auth/tenant_isolation.py` - DELETE THIS FILE
 2. `/src/middleware/tenant_middleware.py` - DELETE THIS FILE
-3. `/src/services/core/tenant_service.py` - DELETE THIS FILE 
+3. `/src/services/core/tenant_service.py` - DELETE THIS FILE
 4. `/src/middleware/__init__.py` - DELETE IF ONLY CONTAINING TENANT IMPORTS
 
 ## FILES TO PURGE OF ALL TENANT CODE
@@ -25,7 +25,7 @@
 8. `/src/models/profile.py` - PURGE tenant relationship
 9. `/src/config/settings.py` - PURGE tenant configuration
 
-### Router Files (11 files) 
+### Router Files (11 files)
 
 1. `/src/routers/modernized_sitemap.py` - PURGE tenant validations, RBAC checks
 2. `/src/routers/batch_page_scraper.py` - PURGE tenant validations, RBAC checks
@@ -73,7 +73,7 @@
 2. `/src/models/api_models.py` - PURGE tenant fields
 3. `/src/models/domain.py` - KEEP tenant_id field, PURGE validation
 4. `/src/models/job.py` - KEEP tenant_id field, PURGE validation
-5. `/src/models/place.py` - KEEP tenant_id field, PURGE validation 
+5. `/src/models/place.py` - KEEP tenant_id field, PURGE validation
 6. `/src/models/place_search.py` - KEEP tenant_id field, PURGE validation
 7. `/src/models/sidebar.py` - REMOVE feature flag relationship
 8. `/src/models/sitemap.py` - KEEP tenant_id field, PURGE validation

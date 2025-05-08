@@ -146,5 +146,5 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 
 ---
 
-**Reviewer:** Cascade AI  
+**Reviewer:** Cascade AI
 **Date:** 2025-05-05T08:55:23-07:00

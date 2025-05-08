@@ -22,7 +22,7 @@ The following pattern was consistently applied across all components:
 
 2. **Services:**
    - Are transaction-aware but do not create transactions (with background task exceptions)
-   - Check transaction state with `session.in_transaction()` 
+   - Check transaction state with `session.in_transaction()`
    - Log transaction state for debugging
    - Propagate exceptions to callers for proper transaction handling
 

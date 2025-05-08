@@ -60,8 +60,8 @@ workflow_connections:
       # Value that triggers consumption
       consumed_value: PlaceStatusEnum.New
       connection_details: |
-        WF2 consumes place records from the places table with status="New" produced by 
-        WF1-SingleSearch workflow. These records are queried from the places table and 
+        WF2 consumes place records from the places table with status="New" produced by
+        WF1-SingleSearch workflow. These records are queried from the places table and
         displayed in the Staging Editor UI for human review and selection.
       connection_source_file: src/services/places_service.py
       connection_source_function: create_place_from_search
@@ -80,7 +80,7 @@ workflow_connections:
       produced_value: PlaceStatusEnum.Selected
       connection_details: |
         WF2 produces local_business records in the local_businesses table when places are marked
-        as "Selected" in the UI. These records are created with status="Selected" and are 
+        as "Selected" in the UI. These records are created with status="Selected" and are
         then consumed by WF3-LocalBusinessCuration for domain extraction processing.
       connection_source_file: src/routers/places_staging.py
       connection_source_function: update_places_status_batch
@@ -121,7 +121,7 @@ phases:
             UI updates with processing status after submission
             Displays Toast notification on success/failure
         notes: |
-          VERIFIED 2025-05-04T23:42:30-07:00: batchUpdateStagingStatus() function sends request to 
+          VERIFIED 2025-05-04T23:42:30-07:00: batchUpdateStagingStatus() function sends request to
           proper v3 API endpoint with correct payload. Frontend behavior properly reflects the architectural
           design. Note that the critical trigger_deep_scan parameter is NEVER sent from frontend, which
           aligns with the actual backend behavior discovered in the audit.
@@ -184,7 +184,7 @@ phases:
           ISSUE FOUND: Despite proper transaction boundaries, this router contains raw SQL statements
           that violate the Absolute ORM Requirement. This is a critical compliance issue that requires
           immediate refactoring. The raw SQL implementation bypasses the ORM safeguards and type checking.
-          
+
           REFACTOR PLAN:
           1. Replace direct SQL with SQLAlchemy ORM queries
           2. Use proper relationship loading with session.query(Place).filter(...)
@@ -437,11 +437,11 @@ actionable_todos:
     target_date: 2025-05-20
     assigned_to: TBD
     priority: MEDIUM
-    
+
   - id: WF2-TODO-3
     title: "Complete JobService integration in PlacesDeepService"
     description: |
-      Integrate PlacesDeepService with JobService for proper progress tracking and 
+      Integrate PlacesDeepService with JobService for proper progress tracking and
       observability. Update UI to display job status.
     file: src/services/places/places_deep_service.py
     lines: "65-70"
@@ -449,7 +449,7 @@ actionable_todos:
     target_date: 2025-05-30
     assigned_to: TBD
     priority: LOW
-    
+
   - id: WF2-TODO-4
     title: "Document producer-consumer relationship with WF1 and WF3"
     description: |

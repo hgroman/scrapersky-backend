@@ -111,7 +111,7 @@ async def endpoint(
                 data=request.data,
                 user_id=current_user.get("id")
             )
-        
+
         # Return after transaction committed
         return result
     except Exception as e:

@@ -25,7 +25,7 @@ The standardization focused on several key architectural patterns:
 ### RBAC Integration Pattern
 - Applied four-layer RBAC checks:
   1. Permission check (`require_permission`)
-  2. Feature enablement check (`require_feature_enabled`) 
+  2. Feature enablement check (`require_feature_enabled`)
   3. Role level check (`require_role_level`)
   4. Tab permission check (not applicable for this component)
 - Enhanced `verify_permission_admin_access` to include role level checks

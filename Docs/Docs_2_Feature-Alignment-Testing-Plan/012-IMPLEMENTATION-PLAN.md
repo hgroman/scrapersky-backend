@@ -10,7 +10,7 @@
     - RBAC integration: lines 323-345
     - Transaction boundaries: lines 301-377
     - Background tasks: lines 154-300
-   
+
 - **Transaction-Aware Services:**
   - `/src/services/places/places_service.py`
   - `/src/services/places/places_search_service.py`

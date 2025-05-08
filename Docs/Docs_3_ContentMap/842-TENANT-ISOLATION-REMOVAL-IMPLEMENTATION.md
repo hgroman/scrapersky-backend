@@ -49,7 +49,7 @@ current_tenant_id = None  # This was previously a ContextVar
 async def tenant_context(tenant_id: str):
     """
     TENANT ISOLATION REMOVED: This context manager now does nothing.
-    
+
     Args:
         tenant_id: The tenant ID (ignored)
     """
@@ -86,11 +86,11 @@ async def get_tenant_id(x_tenant_id: Optional[str] = Header(None)) -> str:
 def validate_tenant_access(tenant_id: str, current_user: Dict = Depends(get_current_user)) -> Dict:
     """
     TENANT ISOLATION REMOVED: Always grants access to any tenant.
-    
+
     Args:
         tenant_id: The tenant ID to check access for (ignored)
         current_user: The authenticated user
-        
+
     Returns:
         The current user, always granting access
     """

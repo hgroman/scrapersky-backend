@@ -21,14 +21,14 @@ async def create_resource(resource_data: ResourceCreate, db: Session = Depends(g
     try:
         # Transaction starts here
         db.begin()
-        
+
         # Services use the session but don't commit/rollback
         result = resource_service.create_resource(db, resource_data)
-        
+
         # Router commits the transaction
         db.commit()
         return result
-        
+
     except Exception as e:
         # Router handles rollback
         db.rollback()
@@ -108,9 +108,9 @@ from sqlalchemy import Column, UUID
 
 class MyModel(Base):
     __tablename__ = "my_table"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    
+
 def create_resource(db: Session, data: Dict):
     new_resource = MyModel(
         id=uuid.uuid4(),  # Use standard uuid library
@@ -194,13 +194,13 @@ def get_resource(resource_id: str, db: Session = Depends(get_db)):
 ```python
 @router.get("/v3/resources", response_model=PaginatedResponse[ResourceResponse])
 def list_resources(
-    skip: int = 0, 
+    skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
     resources = resource_service.list_resources(db, skip=skip, limit=limit)
     total = resource_service.count_resources(db)
-    
+
     return {
         "items": resources,
         "total": total,

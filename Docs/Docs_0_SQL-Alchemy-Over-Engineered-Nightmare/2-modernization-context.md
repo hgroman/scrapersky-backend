@@ -32,19 +32,19 @@ async def endpoint(request: RequestModel):
     try:
         # Validate tenant ID
         tenant_id = auth_service.validate_tenant_id(request.tenant_id, current_user)
-        
+
         # Create job
         job_id = job_service.create_job("job_type", {"status": "pending"})
-        
+
         # Execute query
         result = await db_service.fetch_all(
             "SELECT * FROM table WHERE tenant_id = %(tenant_id)s",
             {"tenant_id": tenant_id}
         )
-        
+
         # Update job status
         job_service.update_job_status(job_id, {"status": "complete"})
-        
+
         return {"data": result}
     except Exception as e:
         error_service.log_exception(e, "endpoint")
@@ -67,20 +67,20 @@ SQLAlchemy will replace the raw SQL approach with a model-driven architecture:
 async def endpoint(request: RequestModel):
     # Validate tenant ID (simplified)
     tenant_id = auth_service.validate_tenant_id(request.tenant_id, current_user)
-    
+
     # Create job using SQLAlchemy
     job = await job_service.create({
         "job_type": "job_type",
         "tenant_id": tenant_id,
         "status": "pending"
     })
-    
+
     # Query using SQLAlchemy
     results = await domain_service.get_all(tenant_id=tenant_id)
-    
+
     # Update job using SQLAlchemy
     await job_service.update(job.id, {"status": "complete"})
-    
+
     return {"data": results}
 ```
 

@@ -41,7 +41,7 @@ The sitemap analyzer frontend interface was not functioning correctly due to a 4
        Check if contentmap feature is enabled for a tenant.
        This is the feature that powers the sitemap analyzer functionality.
        In development mode, this check is bypassed with a warning.
-       
+
        Args:
            tenant_id: The tenant ID
            user: The user dictionary containing permissions
@@ -50,7 +50,7 @@ The sitemap analyzer frontend interface was not functioning correctly due to a 4
        if is_development_mode() and is_feature_check_disabled():
            logger.warning("⚠️ Feature checks DISABLED for contentmap in development mode ⚠️")
            return
-       
+
        # Proceed with normal feature check
        user_permissions = user.get("permissions", [])
        await require_feature_enabled(
@@ -115,7 +115,7 @@ To enable the contentmap feature in production:
 
 2. Enable the feature for the required tenants:
    ```sql
-   UPDATE tenant_features 
+   UPDATE tenant_features
    SET is_enabled = TRUE
    WHERE feature_id = '2a2f67fd-3ebb-4645-8d48-bf2b5bc7d6c3'
    AND tenant_id = 'YOUR_TENANT_ID';
@@ -123,8 +123,8 @@ To enable the contentmap feature in production:
 
 3. Check that the feature is enabled for all required tenants:
    ```sql
-   SELECT tf.is_enabled, t.name 
-   FROM tenant_features tf 
+   SELECT tf.is_enabled, t.name
+   FROM tenant_features tf
    JOIN feature_flags ff ON tf.feature_id = ff.id
    JOIN tenants t ON tf.tenant_id = t.id
    WHERE ff.name = 'contentmap';

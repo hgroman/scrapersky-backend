@@ -65,9 +65,7 @@ class SitemapImportService:
 
         try:
             # Fetch the sitemap content
-            async with httpx.AsyncClient(
-                follow_redirects=True, timeout=60
-            ) as client:
+            async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
                 # Pass the string URL
                 response = await client.get(sitemap_url_str)
                 # Raise HTTPError for bad responses (4xx or 5xx)
@@ -86,9 +84,9 @@ class SitemapImportService:
                     f"(URL: {sitemap_url_str})"
                 )
                 sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Completed # type: ignore
+                    SitemapImportProcessStatusEnum.Completed  # type: ignore
                 )
-                sitemap_file.sitemap_import_error = None # type: ignore
+                sitemap_file.sitemap_import_error = None  # type: ignore
                 await session.commit()
                 return
 
@@ -157,9 +155,9 @@ class SitemapImportService:
                 )
                 # Update status to Completed even if no URLs inserted
                 sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Completed # type: ignore
+                    SitemapImportProcessStatusEnum.Completed  # type: ignore
                 )
-                sitemap_file.sitemap_import_error = None # type: ignore
+                sitemap_file.sitemap_import_error = None  # type: ignore
                 await session.commit()
                 return
 
@@ -210,9 +208,9 @@ class SitemapImportService:
                 not sitemap_file_to_fail
             ):  # Only mark complete if no fatal error occurred during page insert
                 sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Completed # type: ignore
+                    SitemapImportProcessStatusEnum.Completed  # type: ignore
                 )
-                sitemap_file.sitemap_import_error = None # type: ignore
+                sitemap_file.sitemap_import_error = None  # type: ignore
                 logger.info(
                     f"Successfully completed URL import for SitemapFile "
                     f"{sitemap_file_id}."
@@ -223,19 +221,19 @@ class SitemapImportService:
         except httpx.HTTPStatusError as e:
             await session.rollback()  # Rollback any potential partial changes
             logger.error(
-                f"HTTP error fetching sitemap {sitemap_url_str} " # Use string URL
+                f"HTTP error fetching sitemap {sitemap_url_str} "  # Use string URL
                 f"(SitemapFile {sitemap_file_id}): {e.response.status_code} - {e}"
             )
-            sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Error # type: ignore
-            sitemap_file.sitemap_import_error = f"HTTP Error: {e.response.status_code}" # type: ignore
+            sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Error  # type: ignore
+            sitemap_file.sitemap_import_error = f"HTTP Error: {e.response.status_code}"  # type: ignore
             await session.commit()
         except httpx.RequestError as e:
             await session.rollback()
             logger.error(
-                f"Request error fetching sitemap {sitemap_url_str} " # Use string URL
+                f"Request error fetching sitemap {sitemap_url_str} "  # Use string URL
                 f"(SitemapFile {sitemap_file_id}): {e}"
             )
-            sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Error # type: ignore
+            sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Error  # type: ignore
             sitemap_file.sitemap_import_error = (
                 f"Request Error: {str(e)[:1024]}"  # Truncate long errors # type: ignore
             )
@@ -244,7 +242,7 @@ class SitemapImportService:
             await session.rollback()
             logger.exception(
                 f"Error processing SitemapFile {sitemap_file_id} "
-                f"(URL: {sitemap_url_str}): {e}" # Use string URL
+                f"(URL: {sitemap_url_str}): {e}"  # Use string URL
             )
             try:
                 # Attempt to update the original record even if it wasn't assigned
@@ -255,9 +253,9 @@ class SitemapImportService:
                 )
                 if sitemap_file_in_error:
                     sitemap_file_in_error.sitemap_import_status = (
-                        SitemapImportProcessStatusEnum.Error # type: ignore
+                        SitemapImportProcessStatusEnum.Error  # type: ignore
                     )
-                    sitemap_file_in_error.sitemap_import_error = str(e)[:1024] # type: ignore
+                    sitemap_file_in_error.sitemap_import_error = str(e)[:1024]  # type: ignore
                     await session.commit()
                 else:
                     logger.error(

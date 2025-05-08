@@ -90,5 +90,5 @@ Map every atomic step in the Sitemap Curation workflow (WF5) from UI to DB and b
 
 ---
 
-**Reviewer:** Cascade AI  
+**Reviewer:** Cascade AI
 **Date:** 2025-05-05T00:40:15-07:00

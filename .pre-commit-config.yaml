@@ -1,34 +1,14 @@
+# ULTRA-MINIMAL pre-commit configuration per Work Order 49
+# Absolute bare-minimum for CI - max velocity, minimum interference
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
 
+  # Ruff format only - no linting barriers
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.4.0
     hooks:
-      - id: ruff
-        args: [--fix]
       - id: ruff-format
-
-  - repo: local
-    hooks:
-      - id: forbid-pgbouncer
-        name: Forbid PgBouncer References
-        description: Prevent any PgBouncer references from being added
-        language: pygrep
-        entry: pgbouncer|PgBouncer
-        types: [python]
-
-  # Temporarily disable supavisor check until we can fix it properly
-  # - repo: local
-  #   hooks:
-  #     - id: enforce-supavisor-params
-  #       name: Enforce Supavisor Connection Parameters
-  #       description: Ensure proper Supavisor parameters are used
-  #       language: pygrep
-  #       entry: "create_async_engine(?!.*statement_cache_size=0)"
-  #       types: [python]

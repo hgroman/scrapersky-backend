@@ -25,7 +25,7 @@ We'll standardize on `services/error/error_service.py` as it's:
 - Includes a route_error_handler for wrapping routers
 
 ### 1. Keep Primary Implementation:
-- Keep `src/services/error/error_service.py` 
+- Keep `src/services/error/error_service.py`
 - Keep `src/services/error/__init__.py` (imports the service for easier importing)
 
 ### 2. Add Router Error Handler to Main App:

@@ -64,7 +64,7 @@ DEFAULT_HEADERS = {
 def test_single_domain():
     """Test the single domain analysis endpoint"""
     print("\n📋 TESTING SINGLE DOMAIN ANALYSIS")
-    
+
     # Test valid domain
     payload = {
         "domain": TEST_DOMAIN,
@@ -73,18 +73,18 @@ def test_single_domain():
         "extract_urls": True,
         "max_urls_per_sitemap": 10000
     }
-    
+
     response = requests.post(
         f"{API_BASE}/api/v1/sitemap-analyzer/analyze",
         headers=DEFAULT_HEADERS,
         json=payload
     )
-    
+
     print(f"Status Code: {response.status_code}")
     if response.status_code == 200:
         data = response.json()
         print(f"Response: {json.dumps(data, indent=2)}")
-        
+
         # Now test status endpoint
         job_id = data.get("job_id")
         if job_id:
@@ -95,35 +95,35 @@ def test_single_domain():
 def test_job_status(job_id):
     """Test the job status endpoint with polling"""
     print(f"\n📋 TESTING JOB STATUS FOR: {job_id}")
-    
+
     max_attempts = 30
     attempts = 0
-    
+
     while attempts < max_attempts:
         response = requests.get(
             f"{API_BASE}/api/v1/sitemap-analyzer/status/{job_id}",
             headers=DEFAULT_HEADERS
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             status = data.get("status")
             print(f"Status: {status} - Progress: {data.get('progress', 0)}")
-            
+
             if status in ["completed", "failed"]:
                 print(f"Final Status: {json.dumps(data, indent=2)}")
                 break
         else:
             print(f"Error checking status: {response.text}")
             break
-        
+
         attempts += 1
         time.sleep(2)  # Poll every 2 seconds
 
 def test_batch_analysis():
     """Test the batch domain analysis endpoint"""
     print("\n📋 TESTING BATCH DOMAIN ANALYSIS")
-    
+
     payload = {
         "domains": TEST_DOMAINS,
         "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -132,18 +132,18 @@ def test_batch_analysis():
         "max_urls_per_sitemap": 10000,
         "max_concurrent_jobs": 3
     }
-    
+
     response = requests.post(
         f"{API_BASE}/api/v1/sitemap-analyzer/batch",
         headers=DEFAULT_HEADERS,
         json=payload
     )
-    
+
     print(f"Status Code: {response.status_code}")
     if response.status_code == 200:
         data = response.json()
         print(f"Response: {json.dumps(data, indent=2)}")
-        
+
         # Now test batch status endpoint
         batch_id = data.get("batch_id")
         if batch_id:
@@ -154,42 +154,42 @@ def test_batch_analysis():
 def test_batch_status(batch_id):
     """Test the batch status endpoint with polling"""
     print(f"\n📋 TESTING BATCH STATUS FOR: {batch_id}")
-    
+
     max_attempts = 30
     attempts = 0
-    
+
     while attempts < max_attempts:
         response = requests.get(
             f"{API_BASE}/api/v1/sitemap-analyzer/batch-status/{batch_id}",
             headers=DEFAULT_HEADERS
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             status = data.get("status")
             completed = data.get("completed_domains", 0)
             total = data.get("total_domains", 0)
-            
+
             print(f"Status: {status} - Progress: {data.get('progress', 0)} - Completed: {completed}/{total}")
-            
+
             if status in ["completed", "failed", "partial"]:
                 print(f"Final Status: {json.dumps(data, indent=2)}")
                 break
         else:
             print(f"Error checking batch status: {response.text}")
             break
-        
+
         attempts += 1
         time.sleep(2)  # Poll every 2 seconds
 
 if __name__ == "__main__":
     print("🚀 SITEMAP ANALYZER API TEST SCRIPT")
     print(f"Base URL: {API_BASE}")
-    
+
     # Test individual endpoints
     test_single_domain()
     test_batch_analysis()
-    
+
     print("\n✅ ALL TESTS COMPLETED")
 ```
 

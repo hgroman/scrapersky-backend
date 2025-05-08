@@ -64,25 +64,25 @@ Now, we need to create comprehensive tests to verify these patterns are working 
    from sqlalchemy.orm import declarative_base
    from sqlalchemy.pool import NullPool
    from sqlalchemy import Column, Integer, String, Boolean, text
-   
+
    # Create in-memory SQLite database for testing
    TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
    Base = declarative_base()
-   
+
    # Sample model for testing
    class TestEntity(Base):
        __tablename__ = "test_entities"
        id = Column(Integer, primary_key=True)
        name = Column(String, nullable=False)
        active = Column(Boolean, default=True)
-   
+
    @pytest.fixture(scope="session")
    def event_loop():
        """Create an instance of the default event loop for each test case."""
        loop = asyncio.get_event_loop_policy().new_event_loop()
        yield loop
        loop.close()
-   
+
    @pytest.fixture(scope="session")
    async def db_engine() -> AsyncGenerator[AsyncEngine, None]:
        """Create a SQLAlchemy async engine for testing."""
@@ -92,30 +92,30 @@ Now, we need to create comprehensive tests to verify these patterns are working 
            future=True,
            echo=False  # Set to True for SQL debugging
        )
-       
+
        async with engine.begin() as conn:
            await conn.run_sync(Base.metadata.create_all)
-       
+
        yield engine
-       
+
        async with engine.begin() as conn:
            await conn.run_sync(Base.metadata.drop_all)
-       
+
        await engine.dispose()
-   
+
    @pytest.fixture
    async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
        """Create a SQLAlchemy async session for testing."""
        connection = await db_engine.connect()
        transaction = await connection.begin()
        session = AsyncSession(bind=connection, expire_on_commit=False)
-       
+
        yield session
-       
+
        await session.close()
        await transaction.rollback()
        await connection.close()
-   
+
    @pytest.fixture
    async def seed_test_data(db_session) -> None:
        """Seed test data into the database."""
@@ -157,10 +157,10 @@ async def test_transaction_commit(db_session):
     # Arrange - Get initial count
     result = await db_session.execute(select(TestEntity))
     initial_count = len(result.scalars().all())
-    
+
     # Act - Execute router function
     await mock_router_success(db_session)
-    
+
     # Assert - Verify entity was committed
     result = await db_session.execute(select(TestEntity))
     entities = result.scalars().all()
@@ -173,11 +173,11 @@ async def test_transaction_rollback(db_session):
     # Arrange - Get initial count
     result = await db_session.execute(select(TestEntity))
     initial_count = len(result.scalars().all())
-    
+
     # Act - Execute router function that should fail
     with pytest.raises(ValueError):
         await mock_router_failure(db_session)
-    
+
     # Assert - Verify no entity was committed
     result = await db_session.execute(select(TestEntity))
     entities = result.scalars().all()
@@ -190,19 +190,19 @@ async def test_nested_transaction(db_session):
     # Arrange - Get initial count
     result = await db_session.execute(select(TestEntity))
     initial_count = len(result.scalars().all())
-    
+
     # Act - Execute nested transactions
     async with db_session.begin():
         # Outer transaction
         session.add(TestEntity(name="Outer Transaction"))
-        
+
         async with db_session.begin_nested():
             # Inner transaction
             session.add(TestEntity(name="Inner Transaction"))
-            
+
             # This rollback should only affect the inner transaction
             await db_session.rollback()
-    
+
     # Assert - Verify outer transaction was committed
     result = await db_session.execute(select(TestEntity))
     entities = result.scalars().all()
@@ -244,18 +244,18 @@ async def test_session_dependency_injection():
     """Test that session is properly injected into endpoints."""
     # Arrange
     mock_session = AsyncMock(spec=AsyncSession)
-    
+
     # Replace the dependency with our mock
     with patch("test_session_dependency.get_test_session_dependency", return_value=mock_session):
         client = TestClient(app)
-        
+
         # Act
         response = client.get("/test")
-        
+
         # Assert
         assert response.status_code == 200
         assert response.json() == {"status": "success"}
-        
+
         # Verify session methods were called
         mock_session.begin.assert_called_once()
         mock_session.execute.assert_called_once()
@@ -268,27 +268,27 @@ async def test_connection_pooling(db_engine):
     for _ in range(5):
         session = AsyncSession(bind=db_engine)
         sessions.append(session)
-    
+
     # Execute queries on all sessions concurrently
     async def execute_query(session, entity_name):
         async with session.begin():
             session.add(TestEntity(name=entity_name))
-    
+
     # Run concurrent queries
     await asyncio.gather(*[
         execute_query(session, f"Pooled Entity {i}")
         for i, session in enumerate(sessions)
     ])
-    
+
     # Cleanup sessions
     for session in sessions:
         await session.close()
-    
+
     # Verify entities were created
     async with AsyncSession(bind=db_engine) as verify_session:
         result = await verify_session.execute(select(TestEntity))
         entities = result.scalars().all()
-        
+
         entity_names = [entity.name for entity in entities]
         assert all(f"Pooled Entity {i}" in entity_names for i in range(5))
 ```
@@ -310,14 +310,14 @@ class MockService:
         """Service method that accepts a session but doesn't manage transactions."""
         session.add(TestEntity(name=name))
         return True
-    
+
     async def get_entity(self, session: AsyncSession, entity_id: int):
         """Service method that does a read operation."""
         result = await session.execute(
             select(TestEntity).where(TestEntity.id == entity_id)
         )
         return result.scalar_one_or_none()
-    
+
     async def update_entity(self, session: AsyncSession, entity_id: int, new_name: str):
         """Service method that does an update operation."""
         entity = await self.get_entity(session, entity_id)
@@ -338,14 +338,14 @@ async def test_service_transaction_awareness(db_session):
     """Test that services correctly use provided sessions."""
     # Arrange
     service = MockService()
-    
+
     # Act - Call service within a transaction
     async with db_session.begin():
         result = await service.create_entity(db_session, "Transaction Test")
-    
+
     # Assert - Verify entity was created
     assert result is True
-    
+
     result = await db_session.execute(select(TestEntity).where(TestEntity.name == "Transaction Test"))
     entity = result.scalar_one_or_none()
     assert entity is not None
@@ -356,11 +356,11 @@ async def test_service_does_not_commit(db_session):
     """Test that services don't commit transactions themselves."""
     # Arrange
     service = MockService()
-    
+
     # Act - Call service without an outer transaction
     # This simulates a bug where someone might call a service without a transaction
     await service.create_entity(db_session, "No Transaction")
-    
+
     # At this point, without an explicit commit, the entity shouldn't be committed
     # We'll fetch with a new session to ensure we're not seeing uncommitted changes
     async with AsyncSession(bind=db_session.bind) as new_session:
@@ -368,7 +368,7 @@ async def test_service_does_not_commit(db_session):
             select(TestEntity).where(TestEntity.name == "No Transaction")
         )
         entity = result.scalar_one_or_none()
-    
+
     # Assert - Entity should not exist since there was no commit
     assert entity is None
 
@@ -377,7 +377,7 @@ async def test_router_service_integration(db_session):
     """Test that routers and services work correctly together."""
     # Act - Call mock router that uses service
     await mock_router_with_service(db_session)
-    
+
     # Assert - Verify entity was created
     result = await db_session.execute(
         select(TestEntity).where(TestEntity.name == "Service Test Entity")
@@ -435,18 +435,18 @@ async def mock_failing_background_task(data: str):
 async def setup_background_tests(db_engine):
     """Setup for background task tests."""
     global async_session_factory
-    
+
     # Create tables if they don't exist
     async with db_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     # Create session factory
     async_session_factory = async_sessionmaker(
         db_engine, expire_on_commit=False, class_=AsyncSession
     )
-    
+
     yield
-    
+
     # Cleanup
     async with db_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -456,7 +456,7 @@ async def test_background_task_session_management(setup_background_tests, db_eng
     """Test that background tasks correctly create and manage their own sessions."""
     # Act - Run background task
     await mock_background_task("test_data")
-    
+
     # Assert - Verify entity was created
     # Use a new session to verify data was committed
     async with AsyncSession(bind=db_engine) as verify_session:
@@ -471,7 +471,7 @@ async def test_background_task_error_handling(setup_background_tests, db_engine)
     """Test that background tasks properly handle errors and rollback transactions."""
     # Act - Run failing background task
     await mock_failing_background_task("test_error")
-    
+
     # Assert - Verify no entity was created due to rollback
     async with AsyncSession(bind=db_engine) as verify_session:
         result = await verify_session.execute(
@@ -485,24 +485,24 @@ async def test_background_task_session_closure(db_engine):
     """Test that sessions are properly closed after background task completion."""
     # Use a mock to track session closure
     original_factory = async_session_factory
-    
+
     mock_session = AsyncMock(spec=AsyncSession)
     mock_factory = AsyncMock(return_value=mock_session)
-    
+
     # Configure mock session context manager behavior
     mock_session.__aenter__.return_value = mock_session
     mock_session.begin.return_value.__aenter__.return_value = None
-    
+
     # Replace factory temporarily
     global async_session_factory
     async_session_factory = mock_factory
-    
+
     # Act - Run background task with mock session
     await mock_background_task("closure_test")
-    
+
     # Assert - Verify session was closed
     mock_session.close.assert_called_once()
-    
+
     # Restore original factory
     async_session_factory = original_factory
 ```

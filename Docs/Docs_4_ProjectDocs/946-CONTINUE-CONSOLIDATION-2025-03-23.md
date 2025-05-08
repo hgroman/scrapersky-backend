@@ -6,7 +6,7 @@
    - sitemap_analyzer.py
    - modernized_page_scraper.py
    - google_maps_api.py
-   - modernized_sitemap.py 
+   - modernized_sitemap.py
 3. We've simplified tenant validation by using DEFAULT_TENANT_ID consistently
 
 ## IMPORTANT CONSIDERATIONS

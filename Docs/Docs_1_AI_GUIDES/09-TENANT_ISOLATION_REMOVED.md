@@ -100,14 +100,14 @@ async def example_endpoint(
     session: AsyncSession = Depends(get_db_session)
 ):
     # Only JWT authentication, no tenant checks
-    
+
     # Proceed with endpoint implementation - no tenant_id
     result = await example_service.process_example(
         session=session,
         data=request.data
         # No tenant_id parameter
     )
-    
+
     return result
 ```
 

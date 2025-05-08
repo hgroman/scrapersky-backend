@@ -38,7 +38,7 @@ This document outlines the transaction management fixes required for the ActionQ
 ### Files to Modify:
 
 1. `/src/routers/modernized_sitemap.py`
-2. `/src/services/sitemap/sitemap_service.py` 
+2. `/src/services/sitemap/sitemap_service.py`
 3. `/src/services/sitemap/processing_service.py`
 
 ### Issues to Address:
@@ -109,7 +109,7 @@ The transaction is managed by the router, not by this service.
 async def complex_method(self, session, ...):
     # Check transaction state
     in_transaction = session.in_transaction()
-    
+
     if in_transaction:
         # Use existing transaction
         return await self._internal_complex_method(session, ...)
@@ -117,7 +117,7 @@ async def complex_method(self, session, ...):
         # Let caller know they should provide a transaction
         logger.warning("Method called without transaction context")
         raise ValueError("This method should be called within an active transaction")
-        
+
 async def _internal_complex_method(self, session, ...):
     # Implementation that assumes transaction exists
     ...
