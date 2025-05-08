@@ -10,9 +10,11 @@ This system **EXCLUSIVELY** uses Supavisor for connection pooling with the follo
 
 1. **Required Connection Parameters**:
 
-   - `raw_sql=true` - Use raw SQL instead of ORM
+   - `raw_sql=true` - Connection pooler configuration parameter (NOT related to application code - see note below)
    - `no_prepare=true` - Disable prepared statements
    - `statement_cache_size=0` - Control statement caching
+
+   > **IMPORTANT NOTE**: The `raw_sql=true` parameter is a required Supavisor connection pooler parameter and refers to how the connection pooler operates at the infrastructure level. This does **NOT** mean that application code should use raw SQL. The [ABSOLUTE ORM REQUIREMENT](./01-ABSOLUTE_ORM_REQUIREMENT.md) remains in full effect - all application code MUST use SQLAlchemy ORM exclusively and raw SQL is strictly prohibited.
 
 2. **Implementation Locations**:
 
