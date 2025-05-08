@@ -54,7 +54,8 @@ def is_development_environment() -> bool:
     )
 
     logger.info(
-        f"Detected environment: {'Development' if is_dev else 'Production'} based on hostname: {hostname}"
+        f"Detected environment: {'Development' if is_dev else 'Production'} "
+        f"based on hostname: {hostname}"
     )
     return is_dev
 
@@ -111,9 +112,12 @@ def get_database_url() -> str:
         )
         return connection_string
 
-    # Raise an error if environment variables are missing instead of using hardcoded fallback
+    # Raise an error if environment variables are missing
+    # (instead of using hardcoded fallback)
     raise ValueError(
-        "Missing environment variables for database connection. Please set SUPABASE_POOLER_HOST, SUPABASE_POOLER_PORT, SUPABASE_POOLER_USER, and SUPABASE_DB_PASSWORD in your .env file."
+        "Missing environment variables for database connection. "
+        "Please set SUPABASE_POOLER_HOST, SUPABASE_POOLER_PORT, SUPABASE_POOLER_USER, "
+        "and SUPABASE_DB_PASSWORD in your .env file."
     )
 
 
@@ -170,6 +174,8 @@ engine = create_async_engine(
     max_overflow=5 if IS_DEVELOPMENT else 10,
     pool_timeout=settings.db_connection_timeout,
     pool_recycle=1800,  # Recycle connections after 30 minutes
+    # REQUIRED for Supavisor compatibility
+    statement_cache_size=0,
     # Apply Supavisor compatibility options at the engine level
     execution_options={
         "isolation_level": "READ COMMITTED",

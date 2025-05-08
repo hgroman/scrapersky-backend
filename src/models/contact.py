@@ -28,6 +28,40 @@ class ContactEmailTypeEnum(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
+# Contact curation workflow status enums
+class ContactCurationStatus(str, enum.Enum):
+    New = "New"
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+    Skipped = "Skipped"
+
+
+class ContactProcessingStatus(str, enum.Enum):
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+
+
+# HubSpot sync workflow status enums
+class HubotSyncStatus(str, enum.Enum):
+    New = "New"
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+    Skipped = "Skipped"
+
+
+class HubSyncProcessingStatus(str, enum.Enum):
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+
+
 class Contact(Base, BaseModel):
     __tablename__ = "contacts"
 
@@ -69,6 +103,46 @@ class Contact(Base, BaseModel):
     job = relationship(
         "Job"
     )  # Consider adding back_populates="contacts" to Job model if needed
+
+    # Contact curation workflow status fields
+    contact_curation_status: Column[ContactCurationStatus] = Column(
+        SQLAlchemyEnum(
+            ContactCurationStatus, name="contactcurationstatus", create_type=False
+        ),
+        nullable=False,
+        default=ContactCurationStatus.New,
+        server_default="New",
+        index=True,
+    )
+
+    contact_processing_status: Column[Optional[ContactProcessingStatus]] = Column(
+        SQLAlchemyEnum(
+            ContactProcessingStatus, name="contactprocessingstatus", create_type=False
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    contact_processing_error: Column[Optional[str]] = Column(Text, nullable=True)
+
+    # HubSpot sync workflow status fields
+    hubspot_sync_status: Column[HubotSyncStatus] = Column(
+        SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
+        nullable=False,
+        default=HubotSyncStatus.New,
+        server_default="New",
+        index=True,
+    )
+
+    hubspot_processing_status: Column[Optional[HubSyncProcessingStatus]] = Column(
+        SQLAlchemyEnum(
+            HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    hubspot_processing_error: Column[Optional[str]] = Column(Text, nullable=True)
 
     # Define table arguments for constraints
     __table_args__ = (

@@ -57,13 +57,14 @@ class DatabaseConfig:
 
     @property
     def async_connection_string(self) -> str:
-        """Generate the SQLAlchemy connection string for asyncpg with proper URL encoding."""
+        """Generate the SQLAlchemy connection string for asyncpg."""
         # Note: Supavisor connection parameters are handled in connect_args
         if all([self.pooler_host, self.pooler_port, self.pooler_user]):
             # Use connection pooler if available
             logging.info(f"Using pooler connection to {self.pooler_host}")
             return (
-                f"postgresql+asyncpg://{self.pooler_user}:{quote_plus(str(self.password))}"
+                f"postgresql+asyncpg://{self.pooler_user}:"
+                f"{quote_plus(str(self.password))}"
                 f"@{self.pooler_host}:{self.pooler_port}/{self.dbname}"
             )
 
@@ -82,11 +83,11 @@ class DatabaseConfig:
         """
         # ALWAYS use the direct connection host/port/user for sync operations
         logging.info(f"Generating DIRECT sync connection string to {self.host}")
-        return (
-            f"postgresql://{self.user}:{quote_plus(str(self.password))}"
-            f"@{self.host}:{self.port}/{self.dbname}"  # Use self.host, self.port, self.user
-            f"?sslmode=require"
-        )
+        # Break into multiple lines to avoid line length issues
+        base = f"postgresql://{self.user}:{quote_plus(str(self.password))}"
+        connect = f"@{self.host}:{self.port}/{self.dbname}"
+        params = "?sslmode=require"
+        return base + connect + params
 
     @property
     def pooler_mode(self) -> bool:
@@ -170,8 +171,10 @@ engine = create_async_engine(
     max_overflow=settings.db_max_pool_size - settings.db_min_pool_size,
     pool_timeout=settings.db_connection_timeout,
     pool_recycle=1800,
-    echo=sql_echo,
+    echo=settings.db_echo,
     connect_args=connect_args,
+    # Required Supavisor parameters
+    statement_cache_size=0,
     # Apply Supavisor compatibility options at the engine level
     execution_options={
         "isolation_level": "READ COMMITTED",

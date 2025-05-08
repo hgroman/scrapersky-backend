@@ -22,7 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 # NO DEFAULT TENANT ID - As per architectural mandate, JWT/tenant authentication
-# happens ONLY at API gateway endpoints, while database operations NEVER handle JWT or tenant authentication.
+# happens ONLY at API gateway endpoints, while database operations NEVER handle
+# JWT or tenant authentication.
 
 
 def get_engine():
@@ -49,8 +50,10 @@ def get_engine():
     connect_args = {
         "statement_cache_size": 0,  # CRITICAL for Supavisor compatibility
         "prepared_statement_cache_size": 0,  # CRITICAL for Supavisor compatibility
-        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",  # Avoid prepared statement name conflicts
-        # Server settings for PostgreSQL - minimal configuration as recommended by Supabase
+        # Avoid prepared statement name conflicts
+        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+        # Server settings for PostgreSQL - minimal config as recommended
+        # PostgreSQL server settings
         "server_settings": {
             "search_path": "public",
             "application_name": "scrapersky_backend",  # Identify application in logs
@@ -73,7 +76,8 @@ def get_engine():
 
     # Log connection parameters for diagnostics
     logger.info(
-        "Using Supavisor connection pooling parameters as required by architectural mandate"
+        "Using Supavisor connection pooling parameters "
+        "as required by architectural mandate"
     )
 
     # Log the engine configuration for diagnostic purposes
@@ -87,6 +91,8 @@ def get_engine():
         connection_string,
         **pool_settings,
         connect_args=connect_args,
+        # REQUIRED for Supavisor compatibility
+        statement_cache_size=0,
         execution_options={
             "isolation_level": "READ COMMITTED",
             "raw_sql": True,  # REQUIRED for Supavisor
@@ -132,7 +138,8 @@ def get_db_url() -> str:
                 settings, "SUPABASE_PROJECT_REF", "ddfldwzhdhhzhxywqnyz"
             )
             components = {
-                "user": f"postgres.{project_ref}",  # Include project reference in username
+                # Include project reference in username
+                "user": f"postgres.{project_ref}",
                 "password": getattr(settings, "POSTGRES_PASSWORD", "postgres"),
                 "host": getattr(settings, "POSTGRES_HOST", "localhost"),
                 "port": getattr(settings, "POSTGRES_PORT", 5432),
@@ -189,7 +196,8 @@ def get_db_url() -> str:
         else:
             # Unknown format, try to prepend the driver
             logger.warning(
-                f"Unrecognized database URL format: {db_url}. Attempting to add asyncpg driver."
+                f"Unrecognized database URL format: {db_url}. "
+                f"Attempting to add asyncpg driver."
             )
             db_url = (
                 f"postgresql+asyncpg://{db_url.split('://', 1)[1]}"
@@ -202,7 +210,7 @@ def get_db_url() -> str:
     parsed_url = urlparse(db_url)
     query_params = parse_qs(parsed_url.query)
 
-    # CRITICAL: According to architectural mandate, remove ALL tenant filtering from database operations
+    # CRITICAL: According to architectural mandate, remove ALL tenant filtering
     # Per README: ALWAYS use Supavisor connection pooling with proper parameters
 
     # Add required parameters for Supavisor compatibility
@@ -240,7 +248,8 @@ def get_db_url() -> str:
 
     # Log the database URL (with credentials redacted)
     logger.info(
-        f"Using database connection: {clean_url.replace(clean_url.split('@')[0], '***CREDENTIALS_REDACTED***')}"
+        f"Using database connection: "
+        f"{clean_url.replace(clean_url.split('@')[0], '***CREDENTIALS_REDACTED***')}"
     )
 
     # Log that we're using the Supavisor connection pooler as required

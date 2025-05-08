@@ -40,6 +40,23 @@ class SitemapCurationStatusEnum(enum.Enum):
     Archived = "Archived"
 
 
+# HubSpot sync workflow status enums
+class HubotSyncStatus(str, enum.Enum):
+    New = "New"
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+    Skipped = "Skipped"
+
+
+class HubSyncProcessingStatus(str, enum.Enum):
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+
+
 # Define the enum for the sitemap analysis background process status
 class SitemapAnalysisStatusEnum(enum.Enum):
     Queued = "Queued"
@@ -188,6 +205,26 @@ class Domain(Base, BaseModel):
         index=True,
     )
     # ---------------------------------------------------- #
+
+    # --- HubSpot sync workflow fields --- #
+    hubspot_sync_status = Column(
+        SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
+        nullable=False,
+        default=HubotSyncStatus.New,
+        server_default="New",
+        index=True,
+    )
+
+    hubspot_processing_status = Column(
+        SQLAlchemyEnum(
+            HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    hubspot_processing_error = Column(Text, nullable=True)
+    # ------------------------------------ #
 
     # Relationships
     jobs = relationship("Job", back_populates="domain", lazy="selectin")
