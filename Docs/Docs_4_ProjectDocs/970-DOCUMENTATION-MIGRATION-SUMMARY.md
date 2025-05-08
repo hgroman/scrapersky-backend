@@ -49,7 +49,7 @@ The migrated documentation follows a clear numbering scheme in the 900+ range:
    - `941-SUPABASE-CONNECTION-ISSUE-2025-03-25.md` - Supabase connection issue documentation
    - `942-DATABASE-CONNECTION-AUDIT-PLAN.md` - Database connection audit action plan
    - `943-TRANSACTION-PATTERNS-REFERENCE.md` - Transaction management patterns
-   - `944-DATABASE-CONNECTION-ENFORCEMENT-RECOMMENDATIONS.md` - Database connection enforcement recommendations 
+   - `944-DATABASE-CONNECTION-ENFORCEMENT-RECOMMENDATIONS.md` - Database connection enforcement recommendations
    - `945-ENHANCED-DATABASE-CONNECTION-AUDIT-PLAN.md` - Enhanced database connection audit plan
    - `951-ARCHITECTURAL-PRINCIPLES.md` - Core architectural principles
    - `956-ARCHITECTURAL-PRINCIPLES.md` - Detailed architectural principles

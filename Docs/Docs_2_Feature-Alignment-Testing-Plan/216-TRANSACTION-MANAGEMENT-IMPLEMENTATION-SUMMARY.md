@@ -78,7 +78,7 @@ The following pattern was consistently applied across all components:
 async def service_method(self, session: AsyncSession, ...):
     """
     Method documentation with transaction requirements.
-    
+
     This method is transaction-aware and can be called from within an existing
     transaction or without a transaction. It will not start a new transaction.
     The caller (typically a router) is responsible for managing transaction boundaries.
@@ -86,14 +86,14 @@ async def service_method(self, session: AsyncSession, ...):
     # Check transaction state
     in_transaction = session.in_transaction()
     logger.debug(f"Session transaction state in service_method: {in_transaction}")
-    
+
     try:
         # Service implementation
         # ...
-        
+
         # Return result
         return result
-        
+
     except Exception as e:
         logger.error(f"Error in service_method: {str(e)}")
         # Propagate exception for transaction management by caller
@@ -107,7 +107,7 @@ async def service_method(self, session: AsyncSession, ...):
 async def router_method(..., session: AsyncSession = Depends(get_session)):
     """
     Router method documentation with transaction responsibility note.
-    
+
     IMPORTANT: This router method owns the transaction boundaries.
     It wraps service calls in a transaction context, following the pattern:
     "Routers own transaction boundaries, services do not."
@@ -117,10 +117,10 @@ async def router_method(..., session: AsyncSession = Depends(get_session)):
         async with session.begin():
             # Call service methods within transaction
             result = await service.method(session, ...)
-            
+
         # Return response outside transaction
         return result
-        
+
     except Exception as e:
         logger.error(f"Error in router_method: {str(e)}")
         # Handle error appropriately (e.g., return HTTP error response)
@@ -133,7 +133,7 @@ async def router_method(..., session: AsyncSession = Depends(get_session)):
 async def background_task_method(..., session: Optional[AsyncSession] = None):
     """
     Background task method that handles its own session and transaction.
-    
+
     IMPORTANT: This method is an exception to the rule that services don't
     manage transactions, because it runs as a background task.
     """
@@ -144,7 +144,7 @@ async def background_task_method(..., session: Optional[AsyncSession] = None):
     else:
         session_ctx = session
         own_session = False
-    
+
     try:
         # Use session as context manager if we created it
         if own_session:
@@ -156,7 +156,7 @@ async def background_task_method(..., session: Optional[AsyncSession] = None):
         else:
             # Check if already in transaction
             in_transaction = session.in_transaction()
-            
+
             if not in_transaction:
                 # Create new transaction
                 async with session.begin():
@@ -166,7 +166,7 @@ async def background_task_method(..., session: Optional[AsyncSession] = None):
                 # Use existing transaction
                 # Task implementation
                 # ...
-    
+
     except Exception as e:
         logger.error(f"Error in background task: {str(e)}")
         # Handle error (e.g., update job status)

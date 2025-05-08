@@ -1,8 +1,8 @@
 # Database Connection Audit Action Plan
 
-**Date:** 2025-03-25  
-**Author:** Cascade AI  
-**Status:** In Progress  
+**Date:** 2025-03-25
+**Author:** Cascade AI
+**Status:** In Progress
 **Priority:** CRITICAL
 
 ## Progress Update - March 25, 2025
@@ -284,7 +284,7 @@ grep -r "postgresql+asyncpg\|postgres.ddfldwzhdhhzhxywqnyz\|pooler.supabase" --i
 
 1. **Background Task Session Management**
    - Issue: Background tasks create their own sessions or use passed db_params
-   - Affected Files: 
+   - Affected Files:
      - `/src/services/sitemap/processing_service.py`
      - `/src/routers/google_maps_api.py`
      - `/src/routers/batch_page_scraper.py`
@@ -413,7 +413,7 @@ The audit of `batch_page_scraper.py` revealed the following issues:
    )
    ```
 
-3. **Remediation Required**: 
+3. **Remediation Required**:
    - Remove the non-compliant import of `async_session_factory`
    - Ensure that the background task methods (`process_domain_background` and `process_batch_background`) use the compliant `get_session()` context manager for database connections
    - Update any other background task methods that might be using non-compliant database connection patterns

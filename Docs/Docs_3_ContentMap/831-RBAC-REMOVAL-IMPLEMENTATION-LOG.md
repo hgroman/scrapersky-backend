@@ -2,7 +2,7 @@
 
 **Date: March 23, 2025**
 
-This document chronicles the implementation process of removing the Role-Based Access Control (RBAC) system from the ScraperSky backend while preserving JWT authentication, as outlined in the RBAC Removal Work Order. 
+This document chronicles the implementation process of removing the Role-Based Access Control (RBAC) system from the ScraperSky backend while preserving JWT authentication, as outlined in the RBAC Removal Work Order.
 
 ## Implementation Log
 
@@ -14,7 +14,7 @@ After examining the codebase, we identified several components of the RBAC syste
 - RBAC utility files: `permissions.py` in the utils directory
 - RBAC constants: `rbac.py` in the constants directory
 - RBAC service files: Various files in the services/rbac directory
-- RBAC model: `rbac.py` in the models directory 
+- RBAC model: `rbac.py` in the models directory
 
 We also identified files that needed to be modified to remove RBAC dependencies:
 - `src/routers/__init__.py`: To remove RBAC router imports

@@ -24,7 +24,7 @@ This document captures key lessons learned during the standardization of the Dom
 # In routers:
 try:
     # RBAC checks here
-    
+
     try:
         async with session.begin():
             result = await service.method(session, params)
@@ -68,8 +68,8 @@ require_permission(current_user, "permission_name")
 # 2. Feature enablement check
 user_permissions = current_user.get("permissions", [])
 await require_feature_enabled(
-    tenant_id=tenant_id, 
-    feature_name="feature_name", 
+    tenant_id=tenant_id,
+    feature_name="feature_name",
     session=session,
     user_permissions=user_permissions
 )

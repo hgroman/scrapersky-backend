@@ -95,7 +95,7 @@ phases:
           Error Handling: true
         notes: "VERIFIED 2025-05-04T10:56:28-07:00: src/services/sitemap_scheduler.py polls for Places with deep_scan_status='Queued' and is responsible for triggering deep scan background tasks. This matches the workflow and architectural intent. See code lines ~211-249."
       - step_id: 6.2
-        file: src/services/places_deep_service.py 
+        file: src/services/places_deep_service.py
         action: Processes the deep scan for the place
         principles:
           Bg Task Pattern: true

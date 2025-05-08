@@ -50,10 +50,10 @@ async_session_factory = async_sessionmaker(
 async def get_db_session() -> AsyncSession:
     """
     Get a database session with Supavisor compatibility parameters pre-applied.
-    
+
     This dependency automatically includes proper connection pooling settings,
     making individual endpoints simpler and more consistent.
-    
+
     Returns:
         AsyncSession: Session with Supavisor compatibility
     """
@@ -84,25 +84,25 @@ async def execute_raw_sql(
 ) -> Optional[List[Dict[str, Any]]]:
     """
     Execute raw SQL with Supavisor compatibility.
-    
+
     This helper ensures consistent SQL execution patterns across all services.
-    
+
     Args:
         session: SQLAlchemy async session
         sql: Raw SQL query
         params: Query parameters
         fetch_all: Whether to fetch all results (True) or just one (False)
-        
+
     Returns:
         Results as dict list if fetch_all=True, or single dict if fetch_all=False
     """
     try:
         # Create text SQL with Supavisor compatibility options
         query = text(sql).execution_options(postgresql_expert_mode=True)
-        
+
         # Execute with params dictionary
         result = await session.execute(query, params or {})
-        
+
         # Return results based on fetch mode
         if fetch_all:
             rows = result.fetchall()
@@ -146,14 +146,14 @@ class ProfileService:
             WHERE tenant_id = :tenant_id
             LIMIT :limit OFFSET :offset
         """
-        
+
         # Parameters for query
         params = {
             "tenant_id": tenant_id,
             "limit": limit,
             "offset": offset
         }
-        
+
         # Execute using helper - Supavisor parameters applied automatically
         return await execute_raw_sql(session, sql, params)
 ```

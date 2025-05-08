@@ -82,8 +82,8 @@ require_permission(current_user, "access_sitemap_scanner")
 
 # 2. Feature enablement check
 await require_feature_enabled(
-    tenant_id=tenant_id, 
-    feature_name="sitemap_analyzer", 
+    tenant_id=tenant_id,
+    feature_name="sitemap_analyzer",
     session=session,
     user_permissions=user_permissions
 )

@@ -35,17 +35,17 @@ These are not theoretical examples - they are working code that shows the exact 
                         ▼
 ┌───────────────────────────────────────┐
 │            Service Layer              │
-│    (/src/services/places/*.py)        │     
-└───────────────────────┬───────────────┘     
-                        ▼                     
-┌───────────────────────────────────────┐     
-│           Data Access Layer           │     
-│      (ORM Models / SQLAlchemy)        │     
-└───────────────────────┬───────────────┘     
-                        ▼                      
-┌───────────────────────────────────────┐     
-│              Database                 │     
-└───────────────────────────────────────┘     
+│    (/src/services/places/*.py)        │
+└───────────────────────┬───────────────┘
+                        ▼
+┌───────────────────────────────────────┐
+│           Data Access Layer           │
+│      (ORM Models / SQLAlchemy)        │
+└───────────────────────┬───────────────┘
+                        ▼
+┌───────────────────────────────────────┐
+│              Database                 │
+└───────────────────────────────────────┘
 ```
 
 ## Overview
@@ -202,11 +202,11 @@ The project will be considered successful when:
 async def route_handler(session: AsyncSession = Depends(get_session)):
     # Permission checks first (BEFORE transaction)
     require_permission(current_user, "permission:name")
-    
+
     # Router owns the transaction boundary
     async with session.begin():
         result = await service.get_something(session, params)
-        
+
     return result
 ```
 
@@ -217,7 +217,7 @@ async def service_method(self, session: AsyncSession, ...):
     # Check if in transaction
     in_transaction = session.in_transaction()
     logger.debug(f"Session transaction state: {in_transaction}")
-    
+
     # Implement service logic WITHOUT managing transactions
     # No session.commit() or session.rollback() here
 ```

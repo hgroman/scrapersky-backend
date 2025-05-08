@@ -29,13 +29,13 @@ depends_on_enums:
     file_path: src/models/page.py  # Enum is defined directly in the page.py model file
     values: [New, Selected, Rejected, Processed]
     description: Status values for pages created during sitemap import
-  
+
   # Reference paths to related documentation
   documentation:
     dependency_trace: "/Docs/Docs_7_Workflow_Canon/Dependency_Traces/WF6-SitemapImport_dependency_trace.md"
     linear_steps: "/Docs/Docs_7_Workflow_Canon/Linear-Steps/WF6-SitemapImport_linear_steps.md"
     micro_work_order: "/Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF6-SitemapImport_micro_work_order.md"
-  
+
   # Entry points into this workflow
   entry_points:
     - type: "background_service"
@@ -44,7 +44,7 @@ depends_on_enums:
     - type: "api"
       description: "Development endpoints for manual triggering"
       component: "src/routers/dev_tools.py"
-  
+
   # Exit points out of this workflow
   exit_points:
     - type: "database_state_change"
@@ -53,7 +53,7 @@ depends_on_enums:
     - type: "database_creation"
       description: "Page records are created for extracted URLs"
       component: "src/models/page.py"
-  
+
   # Connections to other workflows
   connections:
     incoming:
@@ -64,7 +64,7 @@ depends_on_enums:
     outgoing:
       - to_workflow: "Future page processing workflows"
         description: "Producer pattern: WF6 creates Page records that become inputs for downstream page processing workflows"
-        
+
 # Standardized workflow connections with explicit database tables
 workflow_connections:
   as_consumer:
@@ -85,7 +85,7 @@ workflow_connections:
       connection_target_function: process_pending_sitemap_imports
       # Explicit database operation that reads from the producer table
       consumption_query: "SELECT * FROM sitemap_files WHERE sitemap_import_status = 'queued' ORDER BY updated_at LIMIT 10"
-  
+
   as_producer:
     - consumer_workflow: FutureWorkflows
       # Database table that this workflow writes to for the next workflow (MANDATORY)
@@ -105,7 +105,7 @@ workflow_connections:
       production_operation: "INSERT INTO pages (url, domain_id, status, created_at, ...) VALUES (...)"
         component: "src/models/page.py"
         pattern: "Data Pipeline Stage"
-  
+
   # Core components of this workflow
   components:
     - id: "13A"
@@ -119,7 +119,7 @@ workflow_connections:
           description: "Polls for and processes queued sitemap files"
         - name: "setup_sitemap_import_scheduler"
           description: "Configures and schedules the background job"
-    
+
     - id: "13A.1"
       name: "Sitemap Import Service"
       type: "service"
@@ -129,7 +129,7 @@ workflow_connections:
       functions:
         - name: "process_single_sitemap_file"
           description: "Processes an individual sitemap file, extracting URLs and creating Page records"
-    
+
     - id: "13A.2"
       name: "Sitemap Models"
       type: "data_model"
@@ -141,7 +141,7 @@ workflow_connections:
           description: "Model representing sitemap files with their processing status"
         - name: "SitemapImportProcessStatusEnum"
           description: "Status values for the import process"
-    
+
     - id: "13A.3"
       name: "Page Model"
       type: "data_model"
@@ -151,7 +151,7 @@ workflow_connections:
       data_structures:
         - name: "Page"
           description: "Model representing a web page URL with metadata"
-    
+
     - id: "13A.4"
       name: "Sitemap Parser"
       type: "utility"
@@ -161,7 +161,7 @@ workflow_connections:
       functions:
         - name: "parse"
           description: "Parses sitemap XML and extracts URLs"
-    
+
     - id: "13A.5"
       name: "Scheduler Loop SDK"
       type: "utility"
@@ -171,7 +171,7 @@ workflow_connections:
       functions:
         - name: "run_job_loop"
           description: "Standardized batch processing of database records"
-    
+
     - id: "13A.6"
       name: "Development Tools"
       type: "api"
@@ -182,7 +182,7 @@ workflow_connections:
         - path: "/api/v3/dev/import-sitemap/{sitemap_file_id}"
           method: "POST"
           description: "Manually trigger import for a specific sitemap file"
-  
+
   # Phases of execution within the workflow
   phases:
     - id: "P1"
@@ -201,7 +201,7 @@ workflow_connections:
           components: ["13A"]
           code_references:
             - "src/services/sitemap_import_scheduler.py:setup_sitemap_import_scheduler"
-    
+
     - id: "P2"
       name: "Polling for Queued Files"
       description: "Periodic polling for sitemap files that need processing"
@@ -218,7 +218,7 @@ workflow_connections:
           components: ["13A", "13A.2", "13A.5"]
           code_references:
             - "src/common/curation_sdk/scheduler_loop.py:run_job_loop"
-    
+
     - id: "P3"
       name: "Processing Sitemap Files"
       description: "Processing each sitemap file to extract URLs"
@@ -265,7 +265,7 @@ workflow_connections:
           components: ["13A.1", "13A.2"]
           code_references:
             - "src/services/sitemap_import_service.py:sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Completed"
-    
+
     - id: "P4"
       name: "Error Handling"
       description: "Handling various error scenarios"
@@ -288,7 +288,7 @@ workflow_connections:
           components: ["13A.1", "13A.2"]
           code_references:
             - "src/services/sitemap_import_service.py:except Exception as e:"
-    
+
     - id: "P5"
       name: "Job Completion"
       description: "Finalizing the processing job"
@@ -299,7 +299,7 @@ workflow_connections:
           components: ["13A"]
           code_references:
             - "src/services/sitemap_import_scheduler.py:logger.info(\"Finished scheduled job: process_pending_sitemap_imports\")"
-  
+
   # Architectural principles applied
   architectural_principles:
     - id: "AP1"
@@ -309,7 +309,7 @@ workflow_connections:
         - "All I/O operations use async methods"
         - "Database operations use SQLAlchemy's async session"
         - "HTTP requests use httpx AsyncClient"
-    
+
     - id: "AP2"
       name: "Status Transition Pattern"
       description: "Uses well-defined status transitions to track processing state"
@@ -317,7 +317,7 @@ workflow_connections:
         - "Clear enum definitions for all possible statuses"
         - "Consistent status updates at each processing stage"
         - "Error states properly captured in status"
-    
+
     - id: "AP3"
       name: "Batch Processing"
       description: "Processes records in configurable batches to optimize resource usage"
@@ -325,7 +325,7 @@ workflow_connections:
         - "Batch size is configurable via settings"
         - "Processing is limited to avoid resource exhaustion"
         - "Oldest records are processed first"
-    
+
     - id: "AP4"
       name: "Error Isolation"
       description: "Failures in one record don't affect processing of others"
@@ -333,7 +333,7 @@ workflow_connections:
         - "Each record is processed in its own transaction"
         - "Errors are caught and logged without failing the entire batch"
         - "Failed records are marked for later review"
-    
+
     - id: "AP5"
       name: "ORM Usage"
       description: "Uses SQLAlchemy ORM for database operations"
@@ -341,7 +341,7 @@ workflow_connections:
         - "No raw SQL queries in the codebase"
         - "Models properly defined with relationships"
         - "Proper use of SQLAlchemy session management"
-    
+
     - id: "AP6"
       name: "Transaction Management"
       description: "Explicit transaction boundaries and error handling"
@@ -356,7 +356,7 @@ workflow_connections:
       verification:
         - "Dev tool endpoints use /api/v3/ prefix"
         - "No deprecated endpoints remain"
-  
+
   # Technical principles applied
   technical_principles:
     - id: "TP1"
@@ -366,7 +366,7 @@ workflow_connections:
         - "Duplicate URL checks within batch"
         - "Proper handling of IntegrityErrors"
         - "Graceful fallback to individual record processing on conflicts"
-    
+
     - id: "TP2"
       name: "Comprehensive Logging"
       description: "Detailed logging throughout the workflow"
@@ -375,7 +375,7 @@ workflow_connections:
         - "Processing steps are logged"
         - "Errors include detailed information"
         - "Log levels are appropriate for each message"
-    
+
     - id: "TP3"
       name: "Resource Management"
       description: "Proper management of external resources"
@@ -383,7 +383,7 @@ workflow_connections:
         - "HTTP client used within async context manager"
         - "Timeout settings prevent hanging requests"
         - "Database connections managed through sessions"
-    
+
     - id: "TP4"
       name: "Configuration Externalization"
       description: "Configuration values stored in settings"
@@ -391,7 +391,7 @@ workflow_connections:
         - "No hardcoded configuration values"
         - "All settings loaded from environment or config file"
         - "Settings have reasonable defaults"
-  
+
   # Tests covering this workflow
   tests:
     unit_tests:
@@ -399,11 +399,11 @@ workflow_connections:
         description: "Tests for the sitemap import service"
       - path: "tests/services/test_sitemap_import_scheduler.py"
         description: "Tests for the sitemap import scheduler"
-    
+
     integration_tests:
       - path: "tests/integration/test_sitemap_import_workflow.py"
         description: "End-to-end tests for the sitemap import workflow"
-  
+
   # Known issues or limitations with clear actionable TODOs
   known_issues:
     - id: "KI1"
@@ -415,7 +415,7 @@ workflow_connections:
       actionable_todo: "Implement exponential backoff retry mechanism in sitemap_import_service.py for HTTP requests"
       files_to_modify:
         - "src/services/sitemap_import_service.py"
-    
+
     - id: "KI2"
       description: "Limited validation of extracted URLs"
       severity: "low"
@@ -425,7 +425,7 @@ workflow_connections:
       actionable_todo: "Add URL validation logic before database insertion to filter invalid or malformed URLs"
       files_to_modify:
         - "src/services/sitemap_import_service.py"
-    
+
     - id: "KI3"
       description: "Transaction boundaries owned by service rather than router in dev tools endpoint"
       severity: "medium"
@@ -435,7 +435,7 @@ workflow_connections:
       actionable_todo: "Refactor dev_tools.py to follow 'Routers own transaction boundaries' pattern"
       files_to_modify:
         - "src/routers/dev_tools.py"
-    
+
     - id: "KI4"
       description: "Missing operational metrics for monitoring workflow health"
       severity: "low"
@@ -446,14 +446,14 @@ workflow_connections:
       files_to_modify:
         - "src/services/sitemap_import_service.py"
         - "src/services/sitemap_import_scheduler.py"
-  
+
   # Documentation TODOs
   documentation_todos:
     - id: "DT1"
       description: "Update 1.1-background-services.md with complete WF6 references"
       ticket: "SCRSKY-240"
       target_date: "2025-05-10"
-    
+
     - id: "DT2"
       description: "Update 3-python_file_status_map.md to include all WF6 components"
       ticket: "SCRSKY-241"

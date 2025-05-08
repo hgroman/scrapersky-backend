@@ -112,5 +112,5 @@ To perform a bulletproof, fully auditable documentation and artifact audit for t
 
 ---
 
-**Reviewer:** Cascade AI  
+**Reviewer:** Cascade AI
 **Date:** 2025-05-05T00:25:32-07:00

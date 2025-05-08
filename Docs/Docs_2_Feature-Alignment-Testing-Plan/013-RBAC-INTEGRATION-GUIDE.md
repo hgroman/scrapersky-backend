@@ -88,14 +88,14 @@ The Unified RBAC system consists of these key files:
       "SUPER_ADMIN": 3,
       "GLOBAL_ADMIN": 4
   }
-  
+
   # Features enabled by default for all tenants
   DEFAULT_FEATURES = [
       "control-center",
-      "discovery-scan", 
+      "discovery-scan",
       "localminer"  # Maps to google_maps_api in backend
   ]
-  
+
   # Frontend/backend feature name mapping
   FEATURE_MAP = {
       "google_maps_api": "localminer",
@@ -103,7 +103,7 @@ The Unified RBAC system consists of these key files:
       "contentmap": "discovery-scan"
       # Add other mappings as needed
   }
-  
+
   # Tab role requirements
   TAB_ROLE_REQUIREMENTS = {
       "discovery-scan": ROLE_HIERARCHY["USER"],
@@ -193,7 +193,7 @@ await require_tab_permission(
 async def route_handler(...):
     """
     Endpoint description.
-    
+
     Permissions required:
     - Basic permission: namespace:action
     - Feature: feature_name
@@ -215,7 +215,7 @@ async def analyze_domain(
 ) -> AnalysisResponse:
     """
     Analyze a domain using deep analysis tools.
-    
+
     Permissions required:
     - Basic permission: domain:analyze
     - Feature: contentmap
@@ -226,10 +226,10 @@ async def analyze_domain(
     tenant_id = request.tenant_id or current_user.get("tenant_id", "")
     if not tenant_id:
         tenant_id = DEFAULT_TENANT_ID
-    
+
     # 2. Check basic permission
     require_permission(current_user, "domain:analyze")
-    
+
     # 3. Check feature enablement
     await require_feature_enabled(
         tenant_id=tenant_id,
@@ -237,14 +237,14 @@ async def analyze_domain(
         session=session,
         user_permissions=current_user.get("permissions", [])
     )
-    
+
     # 4. Check role level
     await require_role_level(
         user=current_user,
         required_role_id=ROLE_HIERARCHY["ADMIN"],
         session=session
     )
-    
+
     # 5. Check tab permission
     await require_tab_permission(
         user=current_user,
@@ -252,7 +252,7 @@ async def analyze_domain(
         feature_name="contentmap",
         session=session
     )
-    
+
     # After all permission checks pass, proceed with actual route logic
     # Route logic will be wrapped in a transaction
     async with session.begin():
@@ -262,7 +262,7 @@ async def analyze_domain(
             tenant_id=tenant_id,
             options=request.options
         )
-    
+
     # Return response
     return AnalysisResponse(
         domain=request.domain,
@@ -343,7 +343,7 @@ Ensure your backend implementation aligns with frontend expectations:
 The frontend initializes RBAC information on login:
 ```typescript
 // Frontend pseudocode (React context)
-const { 
+const {
   userRole,        // The user's role (string)
   roleId,          // The user's role ID (number 1-4)
   tenantFeatures,  // Array of enabled feature names for tenant

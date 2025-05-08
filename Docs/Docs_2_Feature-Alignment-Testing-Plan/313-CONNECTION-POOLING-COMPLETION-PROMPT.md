@@ -16,7 +16,7 @@ Make a single, focused change to the database session factory that will ensure a
    - Locate where the SQLAlchemy async_session factory is created
    - Add the execution_options parameter with `postgresql_expert_mode=True` as shown in section 1 of the document
    - Leave all other code untouched
-   
+
 2. **Test Existing Endpoints**
    - Verify the profile endpoint works with the updated session factory
    - Verify the features endpoint works with the updated session factory

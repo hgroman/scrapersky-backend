@@ -2,7 +2,7 @@
 
 ## CONTEXT
 
-Our ScraperSky backend modernization is progressing well. We've fixed the database transaction issues as documented in `Docs/90.7-Database-Transaction-Issue-Resolution.md` and begun connection pooling standardization (see `Docs/90.9-Connection-Pooling-Implementation-Summary.md`). 
+Our ScraperSky backend modernization is progressing well. We've fixed the database transaction issues as documented in `Docs/90.7-Database-Transaction-Issue-Resolution.md` and begun connection pooling standardization (see `Docs/90.9-Connection-Pooling-Implementation-Summary.md`).
 
 However, our current approach to connection pooling has revealed a more efficient solution: enhancing the database session factory to automatically apply required Supavisor parameters, rather than passing parameters through multiple layers of the application.
 

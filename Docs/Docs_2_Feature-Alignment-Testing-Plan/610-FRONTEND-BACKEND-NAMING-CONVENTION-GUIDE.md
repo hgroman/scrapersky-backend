@@ -35,7 +35,7 @@ The static HTML pages used for development and testing have different naming con
    ```python
    # CORRECT:
    await require_feature_enabled(tenant_id, "contentmap", session)
-   
+
    # INCORRECT:
    await require_feature_enabled(tenant_id, "sitemap_analyzer", session)
    ```

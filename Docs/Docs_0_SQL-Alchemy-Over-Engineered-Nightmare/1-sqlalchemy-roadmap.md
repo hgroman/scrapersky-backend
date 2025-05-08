@@ -18,7 +18,7 @@ Rather than refactoring the existing architecture while preserving its raw SQL f
 - Create database connection in `src/db/engine.py`:
   ```python
   from sqlalchemy.ext.asyncio import create_async_engine
-  
+
   DATABASE_URL = f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{database}"
   engine = create_async_engine(DATABASE_URL, echo=False)
   ```
@@ -26,9 +26,9 @@ Rather than refactoring the existing architecture while preserving its raw SQL f
   ```python
   from sqlalchemy.ext.asyncio import AsyncSession
   from sqlalchemy.orm import sessionmaker
-  
+
   async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-  
+
   async def get_session():
       async with async_session() as session:
           yield session
@@ -65,7 +65,7 @@ Create a single generic service in `src/services/sqlalchemy_service.py`:
 class SQLAlchemyService:
     def __init__(self, model):
         self.model = model
-        
+
     async def get_by_id(self, id, tenant_id=None):
         async with async_session() as session:
             query = select(self.model).where(self.model.id == id)
@@ -73,7 +73,7 @@ class SQLAlchemyService:
                 query = query.where(self.model.tenant_id == tenant_id)
             result = await session.execute(query)
             return result.scalars().first()
-            
+
     async def get_all(self, tenant_id=None, **filters):
         async with async_session() as session:
             query = select(self.model)
@@ -84,7 +84,7 @@ class SQLAlchemyService:
                     query = query.where(getattr(self.model, field) == value)
             result = await session.execute(query)
             return result.scalars().all()
-            
+
     async def create(self, data):
         async with async_session() as session:
             async with session.begin():
@@ -93,7 +93,7 @@ class SQLAlchemyService:
                 await session.commit()
                 await session.refresh(obj)
                 return obj
-                
+
     # Add update and delete methods
 ```
 
@@ -127,9 +127,9 @@ async def analyze_domain(
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(auth_service.get_current_user)
 ):
-    # Validate tenant_id 
+    # Validate tenant_id
     tenant_id = auth_service.validate_tenant_id(request.tenant_id, current_user)
-    
+
     # Create domain using SQLAlchemy service
     domain = await domain_service.create({
         "domain": request.base_url,
@@ -137,7 +137,7 @@ async def analyze_domain(
         "created_by": current_user.get("id"),
         "status": "pending"
     })
-    
+
     # Create job using SQLAlchemy service
     job = await job_service.create({
         "job_type": "domain_scan",
@@ -145,7 +145,7 @@ async def analyze_domain(
         "tenant_id": tenant_id,
         "status": "pending"
     })
-    
+
     # Start background task
     background_tasks.add_task(
         process_domain_scan,
@@ -153,7 +153,7 @@ async def analyze_domain(
         str(domain.id),
         tenant_id
     )
-    
+
     return {
         "job_id": str(job.id),
         "domain_id": str(domain.id),
@@ -169,19 +169,19 @@ async def process_domain_scan(job_id, domain_id, tenant_id):
     try:
         # Update job status using SQLAlchemy
         await job_service.update(job_id, {"status": "running"})
-        
+
         # Get domain using SQLAlchemy
         domain = await domain_service.get_by_id(domain_id, tenant_id)
-        
+
         # Scraping logic remains the same
         results = await scrape_domain(domain.domain)
-        
+
         # Store results using SQLAlchemy
         await domain_service.update(domain_id, {
             "status": "complete",
             "metadata": results
         })
-        
+
         # Update job status using SQLAlchemy
         await job_service.update(job_id, {
             "status": "complete",
@@ -221,7 +221,7 @@ Simplify auth_service.py:
 class AuthService:
     async def get_current_user(self, token):
         # Implementation stays mostly the same
-        
+
     def validate_tenant_id(self, tenant_id, current_user):
         # Convert to UUID if needed
         try:
@@ -244,7 +244,7 @@ class JobManagerService:
             "status": "pending",
             "metadata": metadata or {}
         })
-    
+
     async def update_job_status(self, job_id, status, progress=None, error=None):
         updates = {"status": status}
         if progress is not None:
@@ -360,9 +360,9 @@ records = await domain_service.get_all(tenant_id=tenant_id)
 ```python
 # Before: Raw SQL with multiple conditions
 query = """
-    SELECT * FROM places_staging 
-    WHERE tenant_id = %(tenant_id)s 
-    AND status = %(status)s 
+    SELECT * FROM places_staging
+    WHERE tenant_id = %(tenant_id)s
+    AND status = %(status)s
     AND business_type = %(business_type)s
 """
 

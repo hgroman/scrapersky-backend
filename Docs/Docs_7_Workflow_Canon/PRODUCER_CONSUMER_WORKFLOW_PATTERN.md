@@ -1,7 +1,7 @@
 # Producer-Consumer Workflow Pattern
 
-_Created: 2025-05-05T08:50:00-07:00_  
-_Author: Cascade AI_  
+_Created: 2025-05-05T08:50:00-07:00_
+_Author: Cascade AI_
 _Status: AUTHORITATIVE_
 
 ## Overview
@@ -49,7 +49,7 @@ class EntityCurationStatusEnum(str, Enum):
 # Entity Table
 class Entity(Base):
     __tablename__ = "entities"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     # ... entity-specific fields ...
     entity_curation_status = Column(String, default=EntityCurationStatusEnum.New)
@@ -140,7 +140,7 @@ workflow_connections:
       consumed_value: EntityCurationStatusEnum.New
       # Explicit database operation that reads from the producer table
       consumption_query: "SELECT * FROM producer_entities WHERE entity_curation_status = 'New'"
-      
+
   as_producer:
     - consumer_workflow: WFZ-ConsumerWorkflow
       # Database table that this workflow writes to for the next workflow (MANDATORY)
@@ -223,6 +223,6 @@ The following workflows follow this pattern:
 
 ---
 
-**Author**: Cascade AI  
-**Creation Date**: 2025-05-05T08:50:00-07:00  
+**Author**: Cascade AI
+**Creation Date**: 2025-05-05T08:50:00-07:00
 **Status**: AUTHORITATIVE

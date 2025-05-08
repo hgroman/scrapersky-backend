@@ -3,7 +3,7 @@
 This document lists files that are not directly referenced by any active route handlers. These files may be candidates for archiving or removal.
 
 ## OBSOLETE ROUTER FILES
-- src/routers/page_scraper.py 
+- src/routers/page_scraper.py
 - src/routers/sitemap.py
 - src/routers/modernized_sitemap.bak.3.21.25.py
 
@@ -37,7 +37,7 @@ This document lists files that are not directly referenced by any active route h
 - src/middleware/tenant_middleware.py (tenant isolation was removed)
 - src/auth/tenant_isolation.py (tenant isolation was removed)
 
-## UNUSED MODEL FILES 
+## UNUSED MODEL FILES
 - src/models/sidebar.py (sidebar functionality is limited)
 
 ## SUMMARY

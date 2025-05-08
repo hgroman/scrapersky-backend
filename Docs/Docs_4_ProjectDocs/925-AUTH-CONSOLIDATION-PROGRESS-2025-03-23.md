@@ -56,7 +56,7 @@ The main challenge was that jwt_auth.py returns a Dict, while auth_service.py re
    ```python
    # Instead of user.id
    user_id = current_user.get("id")
-   
+
    # Instead of user.tenant_id
    tenant_id = current_user.get("tenant_id", DEFAULT_TENANT_ID)
    ```

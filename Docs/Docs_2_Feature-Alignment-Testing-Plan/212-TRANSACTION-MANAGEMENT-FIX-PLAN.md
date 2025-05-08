@@ -92,7 +92,7 @@ async def get_job_status(
     # IMPORTANT: Do not wrap service calls in session.begin() blocks.
     # Services should handle their own transaction management internally.
     # This ensures consistent transaction boundary ownership.
-    
+
     # Get job status without transaction context
     status = await page_processing_service.get_job_status(
         session=session,

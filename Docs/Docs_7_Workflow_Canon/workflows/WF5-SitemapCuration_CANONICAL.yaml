@@ -81,7 +81,7 @@ phases:
           Conn Mgmt: true # Uses get_db_session dependency
           Txn Boundary: true # Router manages transaction
           Code Org: true # Delegates to service layer
-          UUID Std: true # Proper UUID handling 
+          UUID Std: true # Proper UUID handling
           Enum Handling: true # Proper enum validation
         notes: "Router delegates to service layer following architecture pattern"
 
@@ -189,7 +189,7 @@ workflow_connections:
       connection_target_function: process_pending_sitemap_imports
       # Explicit database operation that updates the status field
       production_operation: "UPDATE sitemap_files SET sitemap_import_status = 'queued' WHERE id IN (...)"
-  
+
   as_consumer:
     - producer_workflow: WF4-DomainCuration
       # Database table that this workflow consumes data from (MANDATORY)
@@ -221,7 +221,7 @@ known_issues:
     files_to_modify:
       - "/Docs/Docs_7_Workflow_Canon/1.1-background-services.md"
       - "/Docs/Docs_7_Workflow_Canon/1-main_routers.md"
-  
+
   - id: "KI2"
     issue: "Status field naming inconsistency"
     severity: "LOW"
@@ -242,7 +242,7 @@ documentation_todos:
     target_date: "2025-05-12"
     files_to_modify:
       - "/Docs/Docs_4_Architecture/workflow-diagrams.md"
-  
+
   - id: "DT2"
     description: "Create producer-consumer pattern documentation to standardize across all workflows"
     ticket: "SCRSKY-244"

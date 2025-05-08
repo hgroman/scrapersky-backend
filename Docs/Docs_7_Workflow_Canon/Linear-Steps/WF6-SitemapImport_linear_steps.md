@@ -24,7 +24,7 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
    - Service imports settings to determine batch size
 
 3. **Database Polling**
-   - `run_job_loop()` from curation SDK executes 
+   - `run_job_loop()` from curation SDK executes
    - Service queries database for SitemapFile records with `sitemap_import_status = Queued`
    - Records are sorted by `updated_at` (oldest first)
    - Batch size is limited by configuration settings

@@ -96,10 +96,10 @@ async def test_transaction_rollback_on_error():
     """Test that transactions properly rollback on error."""
     # Setup test data
     test_data = generate_test_data()
-    
+
     # Create service with mock that will raise exception
     service = create_service_with_error_trigger()
-    
+
     # Execute service method within transaction
     async with get_test_session() as session:
         async with session.begin():
@@ -108,7 +108,7 @@ async def test_transaction_rollback_on_error():
                 assert False, "Method should have raised exception"
             except Exception:
                 pass
-    
+
     # Verify database state - transaction should have rolled back
     async with get_test_session() as verify_session:
         result = await verify_session.execute(
@@ -125,14 +125,14 @@ async def test_background_task_session_management():
     # Setup test data and tracking
     task_id = str(uuid.uuid4())
     test_data = generate_test_data()
-    
+
     # Execute background task
     await run_background_task(
         task_func=service.background_task,
         task_id=task_id,
         data=test_data
     )
-    
+
     # Verify database state - task should have completed
     async with get_test_session() as verify_session:
         result = await verify_session.execute(
@@ -198,19 +198,19 @@ async def verify_transaction_integrity():
     """Verify that transactions are working correctly."""
     # Setup test data
     test_id = str(uuid.uuid4())
-    
+
     # Test transaction commit
     async with get_session() as session:
         async with session.begin():
             session.add(TestModel(id=test_id, name="test"))
-    
+
     # Verify commit worked
     async with get_session() as verify_session:
         result = await verify_session.execute(
             select(TestModel).where(TestModel.id == test_id)
         )
         assert result.scalars().first() is not None, "Transaction commit failed"
-    
+
     # Test transaction rollback
     rollback_id = str(uuid.uuid4())
     try:
@@ -220,7 +220,7 @@ async def verify_transaction_integrity():
                 raise ValueError("Trigger rollback")
     except ValueError:
         pass
-    
+
     # Verify rollback worked
     async with get_session() as verify_session:
         result = await verify_session.execute(
@@ -237,15 +237,15 @@ async def verify_database_access_patterns():
     # Check service methods don't create transactions
     service = TestService()
     created_transaction = False
-    
+
     class MockSession:
         def begin(self):
             nonlocal created_transaction
             created_transaction = True
-    
+
     mock_session = MockSession()
     await service.read_method(mock_session, "test")
-    
+
     assert not created_transaction, "Service method created transaction"
 ```
 

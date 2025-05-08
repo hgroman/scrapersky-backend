@@ -36,13 +36,13 @@ async def test_get_all_features_does_not_use_transaction(mock_session, mock_feat
     with patch('src.routers.rbac_features.feature_service', mock_feature_service):
         # Create a mock user for the current_user dependency
         mock_user = {"id": "user1", "tenant_id": "tenant1"}
-        
+
         # Call the endpoint handler directly
         await get_all_features(mock_session, mock_user)
-        
+
         # Assert session.begin() was NOT called by the router
         mock_session.begin.assert_not_called()
-        
+
         # Assert feature_service.get_all_features was called with the session
         mock_feature_service.get_all_permissions.assert_called_once_with(mock_session)
 ```
@@ -63,17 +63,17 @@ async def test_update_tenant_feature_rolls_back_on_error(mock_session):
     # Create a mock user and feature data
     mock_user = {"id": "user1", "tenant_id": "tenant1"}
     feature_data = {"feature_id": "feature1", "is_enabled": True}
-    
+
     # Setup session.execute to raise an exception
     mock_session.execute.side_effect = SQLAlchemyError("Database error")
-    
+
     # Call the endpoint handler directly and expect an exception
     with pytest.raises(HTTPException) as excinfo:
         await update_tenant_feature(feature_data, mock_session, mock_user)
-    
+
     # Assert session.commit() was NOT called
     mock_session.commit.assert_not_called()
-    
+
     # Assert session.rollback() WAS called
     mock_session.rollback.assert_called_once()
 ```
@@ -95,16 +95,16 @@ async def test_concurrent_tenant_feature_updates(mock_session):
     mock_user = {"id": "user1", "tenant_id": "tenant1"}
     feature_data1 = {"feature_id": "feature1", "is_enabled": True}
     feature_data2 = {"feature_id": "feature2", "is_enabled": False}
-    
+
     # Execute two updates concurrently
     await asyncio.gather(
         update_tenant_feature(feature_data1, mock_session, mock_user),
         update_tenant_feature(feature_data2, mock_session, mock_user)
     )
-    
+
     # Assert session.begin() was NOT called
     mock_session.begin.assert_not_called()
-    
+
     # Assert session.commit() was called twice (once for each update)
     assert mock_session.commit.call_count == 2
 ```
@@ -125,21 +125,21 @@ async def test_feature_operations_integration(mock_session, mock_feature_service
     with patch('src.routers.rbac_features.feature_service', mock_feature_service):
         # Mock user
         mock_user = {"id": "user1", "tenant_id": "tenant1"}
-        
+
         # 1. Get all features
         await get_all_features(mock_session, mock_user)
-        
+
         # 2. Create a new feature
         feature_data = {"name": "test_feature", "description": "A test feature"}
         await create_feature(feature_data, mock_session, mock_user)
-        
+
         # 3. Get tenant features
         await get_tenant_features(None, mock_session, mock_user)
-        
+
         # 4. Update a tenant feature
         update_data = {"feature_id": "feature1", "is_enabled": True}
         await update_tenant_feature(update_data, mock_session, mock_user)
-        
+
         # Assert session.begin() was NOT called at any point
         mock_session.begin.assert_not_called()
 ```
@@ -155,22 +155,22 @@ For the `batch_page_scraper.py` router, special attention was given to testing b
 async def test_background_task_transaction_management(mock_session, mock_page_processing_service, mock_batch_processor_service):
     """Test that background task properly manages transactions."""
     # ... test implementation ...
-    
+
     # Test both transaction paths in the background task
     # Case 1: Session not in transaction
     mock_session.in_transaction.return_value = False
     await background_task_fn()
-    
+
     # Assert session.begin was called once (by the background task)
     mock_session.begin.assert_called_once()
-    
+
     # Reset mocks for second test
     mock_session.reset_mock()
-    
+
     # Case 2: Session already in transaction
     mock_session.in_transaction.return_value = True
     await background_task_fn()
-    
+
     # Assert session.begin was NOT called (because session was already in transaction)
     mock_session.begin.assert_not_called()
 ```
@@ -184,10 +184,10 @@ For the `dev_tools.py` router, special testing was implemented for multi-step tr
 async def test_setup_sidebar_transaction_handling(mock_session):
     """Test that setup_sidebar properly handles transactions."""
     # ... test implementation ...
-    
+
     # Assert session.execute was called 4 times (ADD_COLUMN_SQL, DELETE_SQL, POPULATE_SQL, VERIFY_SQL)
     assert mock_session.execute.call_count == 4
-    
+
     # Assert session.commit was called 3 times (after ADD_COLUMN_SQL, DELETE_SQL, POPULATE_SQL)
     assert mock_session.commit.call_count == 3
 ```
