@@ -164,6 +164,40 @@ scraper-sky-backend/
 └── static/                   # Static files
 ```
 
+## CI / Tooling
+
+We use a minimal approach to code quality tooling to maximize development velocity while still maintaining a clean codebase:
+
+### Pre-commit Configuration
+
+Only essential whitespace checks are enforced at commit time:
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: end-of-file-fixer       # Ensures files end with a newline
+      - id: trailing-whitespace     # Trims trailing whitespace
+```
+
+### Code Formatting
+
+Code formatting is handled at the editor level rather than as a commit-blocking check:
+
+- **IDE Integration**: Configure your editor to format on save using either Black or Ruff
+- **Manual Formatting**: Run formatters manually before pushing code
+
+### Code Quality
+
+To maintain code quality without blocking development velocity:
+
+- Code quality checks run in CI only (not at commit time)
+- Critical database connection parameters are reviewed in code review
+- Focus is on working code first, polishing second
+
+> Note: This approach was implemented in Work Order 49.1 to maximize development velocity for MVP work. After MVP completion, the team may revisit and add more stringent checks.
+
 ## Key Features
 
 ### FastAPI Endpoints
