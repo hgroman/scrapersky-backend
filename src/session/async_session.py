@@ -165,6 +165,8 @@ connect_args = {
 }
 
 # Create async engine with environment-specific settings
+# Connect args already contain statement_cache_size and prepared_statement_cache_size
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,  # Set to True for SQL query logging in development
@@ -174,8 +176,6 @@ engine = create_async_engine(
     max_overflow=5 if IS_DEVELOPMENT else 10,
     pool_timeout=settings.db_connection_timeout,
     pool_recycle=1800,  # Recycle connections after 30 minutes
-    # REQUIRED for Supavisor compatibility
-    statement_cache_size=0,
     # Apply Supavisor compatibility options at the engine level
     execution_options={
         "isolation_level": "READ COMMITTED",

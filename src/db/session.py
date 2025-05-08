@@ -87,12 +87,15 @@ def get_engine():
         f"recycle={pool_settings['pool_recycle']}s"
     )
 
+    # Update connection args with required Supavisor settings
+    connect_args["statement_cache_size"] = 0
+    connect_args["prepared_statement_cache_size"] = 0
+
     engine = create_async_engine(
         connection_string,
         **pool_settings,
         connect_args=connect_args,
         # REQUIRED for Supavisor compatibility
-        statement_cache_size=0,
         execution_options={
             "isolation_level": "READ COMMITTED",
             "raw_sql": True,  # REQUIRED for Supavisor
