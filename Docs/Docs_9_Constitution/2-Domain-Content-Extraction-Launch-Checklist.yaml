@@ -1,0 +1,106 @@
+# domain_content_extraction_launch_checklist.yaml
+source_of_truth: true        # Overrides summaries if conflicts arise
+title: "Domain Content Extraction – Launch Checklist"
+description: >
+  One‑page gatekeeper for any PR or AI‑generated job that implements the
+  Domain‑Content‑Extraction service. Tick every box *before* merging to main.
+  All file paths are repo‑relative.
+
+blockers:
+  - description: "Crawler & field‑list approval must be complete before any migration step."
+    enforced_by: pre‑merge CI job `check_crawler_output.sh`
+
+checklist:
+  - id: read_foundational_docs
+    text: "Read foundational docs"
+    references:
+      - Docs_6_Architecture_and_Status/00-30000-FT-PROJECT-OVERVIEW.md
+      - Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md
+      - Docs_9_Constitution/Domain-Content-Extraction-Constitution.md
+      - Docs_1_AI_GUIDES/32-PRODUCER_CONSUMER_WORKFLOW_PATTERN.md
+      - Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
+      - Docs_1_AI_GUIDES/28-SCHEDULER_AND_SETTINGS_PATTERNS.md
+
+  - id: run_exploratory_crawler
+    text: >
+      Run exploratory crawler (`python scripts/test_extraction.py --seed-list seed_domains.txt`)
+
+  - id: approve_field_list
+    text: >
+      Approve field list (`/tmp/domain_content/extraction_results.json` signed‑off by reviewer)
+
+  - id: create_db_migration
+    text: >
+      Create & apply DB migration named
+      migrations/2025-05-XX_domain_content.sql. Must add enum rows & tables
+      exactly as Constitution Phase 1 specifies.
+    references:
+      - Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
+      - Docs_9_Constitution/Domain-Content-Extraction-Constitution.md#phase-1
+
+  - id: scaffold_code
+    text: >
+      Scaffold code using filenames from Cheat‑Sheet stubs (do *not* invent new
+      names).
+    files:
+      - src/services/domain_content_service.py
+      - src/routers/domain_content.py
+      - src/schedulers/domain_content_scheduler.py
+    references:
+      - Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE-Enhanced.md
+
+  - id: import_runtime_constants
+    text: "Import runtime constants (no magic numbers)"
+    code_example: "from src.config.settings import settings"
+    references:
+      - src/config/settings.py
+
+  - id: setup_logging
+    text: "Set up logging via setup_logging()"
+    code_example: |
+      from src.config.logging_config import setup_logging
+      setup_logging()
+    references:
+      - src/config/logging_config.py
+
+  - id: api_routes
+    text: >
+      API routes live under /api/v3/domain-content, protected with JWT
+      boundary.
+    code_snippet: |
+      from fastapi import Depends
+      from core.security import jwt_required
+      router = APIRouter(
+          prefix="/domain-content",
+          dependencies=[Depends(jwt_required)]
+      )
+    references:
+      - Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md
+      - Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
+
+  - id: unit_tests
+    text: >
+      Unit tests prove:
+        1) dual‑status update;
+        2) scheduler picks up Queued rows;
+        3) failure writes last_error.
+    references:
+      - Docs_1_AI_GUIDES/22-TESTING_CONVENTIONS_GUIDE.md
+
+  - id: ci_checks
+    text: "`make lint` and `make test` pass locally *and* in CI."
+    references:
+      - Makefile
+
+verification_queries: |
+  -- Confirm enum rows
+  select * from pg_enum where enumlabel in
+    ('Processing', 'Queued', 'Failed', 'Completed');
+
+  -- Ensure no orphaned rows
+  select * from domain_content
+    where processing_status = 'Queued'
+      and curation_status != 'Selected';
+
+merge_commit_message_template: >
+  feat(domain-content): implement service, router & scheduler (Launch Checklist ✔)
