@@ -9,6 +9,7 @@ This document details the complete file cleanup operation performed on the Scrap
 ## 2. Methodology
 
 ### 2.1 Archive Strategy
+
 - Created dedicated archive structure at `/archive/cleanup` to preserve all removed files
 - Maintained original directory structure within the archive for traceability
 - Created special subdirectories for specific categories:
@@ -17,6 +18,7 @@ This document details the complete file cleanup operation performed on the Scrap
   - `/archive/cleanup/orphaned-services` - For completely unused service files
 
 ### 2.2 Analysis Techniques
+
 - **File Discovery**: Used glob patterns to locate target files
 - **Dependency Analysis**: Thoroughly analyzed import statements in `main.py` and router files
 - **Orphan Detection**: Performed secondary analysis of service-to-service dependencies to identify truly orphaned code
@@ -27,47 +29,55 @@ This document details the complete file cleanup operation performed on the Scrap
 ### 3.1 Phase 1: Backup Files Removal
 
 #### Files Located:
+
 ```
 /src/session/async_session.py.bak
 /src/services/sitemap/processing_service.py.bak
 ```
 
 #### Actions Taken:
+
 ```bash
 mv /src/session/async_session.py.bak /archive/cleanup/
 mv /src/services/sitemap/processing_service.py.bak /archive/cleanup/
 ```
 
 #### Verification:
+
 ```bash
 find /src -name "*.bak" # No results
 ```
 
 #### Result:
+
 All backup files successfully removed from active codebase and preserved in archive.
 
 ### 3.2 Phase 2: Duplicate Service Consolidation
 
 #### Database Services Analysis:
-| Path | Issues | Status |
-|------|--------|--------|
-| `/src/services/core/db_service.py` | Most comprehensive, kept | ✅ Kept |
-| `/src/services/db_service.py` | Older version, less functionality | ❌ Moved to archive |
+
+| Path                               | Issues                            | Status              |
+| ---------------------------------- | --------------------------------- | ------------------- |
+| `/src/services/core/db_service.py` | Most comprehensive, kept          | ✅ Kept             |
+| `/src/services/db_service.py`      | Older version, less functionality | ❌ Moved to archive |
 
 #### Database Services Actions:
+
 ```bash
 mkdir -p /archive/cleanup/services
 mv /src/services/db_service.py /archive/cleanup/services/
 ```
 
 #### Error Services Analysis:
-| Path | Issues | Status |
-|------|--------|--------|
-| `/src/services/core/error_service.py` | Standard implementation, referenced in main.py | ✅ Kept |
-| `/src/services/error/error_service.py` | Duplicate with minor differences | ❌ Moved to archive |
-| `/src/services/new/error_service.py` | Nearly identical to error/error_service.py | ❌ Moved to archive |
+
+| Path                                   | Issues                                         | Status              |
+| -------------------------------------- | ---------------------------------------------- | ------------------- |
+| `/src/services/core/error_service.py`  | Standard implementation, referenced in main.py | ✅ Kept             |
+| `/src/services/error/error_service.py` | Duplicate with minor differences               | ❌ Moved to archive |
+| `/src/services/new/error_service.py`   | Nearly identical to error/error_service.py     | ❌ Moved to archive |
 
 #### Error Services Actions:
+
 ```bash
 mkdir -p /archive/cleanup/services/error
 mkdir -p /archive/cleanup/services/new
@@ -77,13 +87,15 @@ mv /src/services/new/error_service.py /archive/cleanup/services/new/
 ```
 
 #### Validation Services Analysis:
-| Path | Issues | Status |
-|------|--------|--------|
-| `/src/services/core/validation_service.py` | Main implementation | ✅ Kept |
+
+| Path                                             | Issues                   | Status              |
+| ------------------------------------------------ | ------------------------ | ------------------- |
+| `/src/services/core/validation_service.py`       | Main implementation      | ✅ Kept             |
 | `/src/services/validation/validation_service.py` | Duplicate implementation | ❌ Moved to archive |
-| `/src/services/new/validation_service.py` | Duplicate implementation | ❌ Moved to archive |
+| `/src/services/new/validation_service.py`        | Duplicate implementation | ❌ Moved to archive |
 
 #### Validation Services Actions:
+
 ```bash
 mkdir -p /archive/cleanup/services/validation
 mv /src/services/validation/validation_service.py /archive/cleanup/services/validation/
@@ -93,6 +105,7 @@ mv /src/services/new/__init__.py /archive/cleanup/services/new/
 ```
 
 #### Main.py Analysis:
+
 Examined main.py and found it was actually importing from the error service path we were removing:
 
 ```python
@@ -105,19 +118,22 @@ This import needs to be updated to point to the core service in a future update.
 ### 3.3 Phase 3: Redundant/Obsolete Code Removal
 
 #### Redundant/Obsolete Analysis:
-| Path | Status in main.py | Actual Status | Action |
-|------|-------------------|---------------|--------|
-| `/src/routers/page_scraper.py` | Commented out as "removed (v2 API)" | File not found | Already removed |
-| `/src/routers/sitemap.py` | Commented out as "obsolete, to be removed in v4.0" | Found | Moved to archive |
-| `/src/db/sitemap_handler_fixed.py` | N/A | File not found | Already removed |
+
+| Path                               | Status in main.py                                  | Actual Status  | Action           |
+| ---------------------------------- | -------------------------------------------------- | -------------- | ---------------- |
+| `/src/routers/page_scraper.py`     | Commented out as "removed (v2 API)"                | File not found | Already removed  |
+| `/src/routers/sitemap.py`          | Commented out as "obsolete, to be removed in v4.0" | Found          | Moved to archive |
+| `/src/db/sitemap_handler_fixed.py` | N/A                                                | File not found | Already removed  |
 
 #### Actions Taken:
+
 ```bash
 mkdir -p /archive/cleanup/routers
 mv /src/routers/sitemap.py /archive/cleanup/routers/
 ```
 
 #### Main.py Router Imports:
+
 ```python
 from .routers import (
     # RBAC routers removed
@@ -138,13 +154,15 @@ from .routers import (
 ### 3.4 Phase 4: Service Directories Consolidation
 
 #### Directory Analysis:
-| Directory | Content Status | Action |
-|-----------|----------------|--------|
-| `/src/services/new/` | Files archived | Directory removed |
-| `/src/services/error/` | Files archived | Directory removed |
+
+| Directory                   | Content Status | Action            |
+| --------------------------- | -------------- | ----------------- |
+| `/src/services/new/`        | Files archived | Directory removed |
+| `/src/services/error/`      | Files archived | Directory removed |
 | `/src/services/validation/` | Files archived | Directory removed |
 
 #### Directory Actions:
+
 ```bash
 # Directories emptied during file movement and then removed:
 rm -rf /src/services/error/
@@ -153,6 +171,7 @@ rm -rf /src/services/validation/
 ```
 
 #### Empty Directory Check:
+
 ```bash
 find /src/services -type d -empty
 # No results - all empty directories removed
@@ -161,15 +180,18 @@ find /src/services -type d -empty
 ### 3.5 Extended Analysis: Orphaned Services
 
 #### Comprehensive Import Analysis:
+
 Performed deeper analysis to find truly orphaned services by checking all import statements throughout the codebase.
 
 #### Completely Unused Services:
-| Service File | Import Status | Action |
-|--------------|---------------|--------|
+
+| Service File                          | Import Status         | Action           |
+| ------------------------------------- | --------------------- | ---------------- |
 | `/src/services/sqlalchemy_service.py` | Not imported anywhere | Moved to archive |
-| `/src/services/metadata_service.py` | Not imported anywhere | Moved to archive |
+| `/src/services/metadata_service.py`   | Not imported anywhere | Moved to archive |
 
 #### Actions Taken:
+
 ```bash
 mkdir -p /archive/cleanup/orphaned-services
 mv /src/services/sqlalchemy_service.py /archive/cleanup/orphaned-services/
@@ -177,16 +199,18 @@ mv /src/services/metadata_service.py /archive/cleanup/orphaned-services/
 ```
 
 #### Partially Used or Unclear Services:
-| Service File | Import Status | Action |
-|--------------|---------------|--------|
+
+| Service File                       | Import Status                             | Action                    |
+| ---------------------------------- | ----------------------------------------- | ------------------------- |
 | `/src/services/sitemap_service.py` | Conflicts with sitemap/sitemap_service.py | Kept for further analysis |
-| `/src/services/domain_service.py` | Imported only in __init__.py | Kept for further analysis |
+| `/src/services/domain_service.py`  | Imported only in **init**.py              | Kept for further analysis |
 
 These files were left in place pending further analysis as they might have indirect dependencies.
 
 ## 4. Final Structure
 
 ### 4.1 Files Successfully Archived:
+
 ```
 /archive/cleanup/async_session.py.bak
 /archive/cleanup/orphaned-services/metadata_service.py
@@ -204,6 +228,7 @@ These files were left in place pending further analysis as they might have indir
 ```
 
 ### 4.2 Service Directory Structure After Cleanup:
+
 ```
 /src/services/
   core/
@@ -231,14 +256,15 @@ These files were left in place pending further analysis as they might have indir
 ## 5. Regression Testing
 
 ### 5.1 Test Results:
+
 ```
 ============================= test session starts ==============================
 platform darwin -- Python 3.13.2, pytest-8.3.4, pluggy-1.5.0
-rootdir: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend
+rootdir: .
 configfile: pytest.ini
 plugins: asyncio-0.25.3, anyio-4.8.0
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
-collecting ... collected 3 items
+collecting ... collected 16 items
 
 scripts/db/test_connection.py::test_direct_connection SKIPPED (async...) [ 33%]
 scripts/db/test_connection.py::test_sqlalchemy_connection SKIPPED (a...) [ 66%]
@@ -252,30 +278,38 @@ Note: Tests were skipped because they're async tests, but no test failures occur
 ## 6. Issues and Recommendations
 
 ### 6.1 Import Path Issue:
+
 The main.py file imports ErrorService from the old path:
+
 ```python
 from .services.error.error_service import ErrorService
 ```
+
 This needs to be updated to the core path:
+
 ```python
 from .services.core.error_service import ErrorService
 ```
 
 ### 6.2 Test Framework Issue:
+
 Tests are skipped due to async functionality. The pytest configuration should be updated to properly handle async tests.
 
 ### 6.3 Further Analysis Needed:
+
 - Domain service and sitemap service require further investigation to determine if they can be consolidated or archived
 - Error handling system needs holistic review to ensure all components reference the correct error service
 
 ## 7. Benefits Achieved
 
 ### 7.1 Quantitative Improvements:
+
 - 13 files moved to archive
 - 3 empty directories removed
 - Eliminated all backup (.bak) files from active codebase
 
 ### 7.2 Qualitative Improvements:
+
 - **Simplified Directory Structure**: Clear service organization with core services centralized
 - **Reduced Duplication**: Eliminated multiple implementations of the same services
 - **Enhanced Maintainability**: Changes only need to be made in one central location

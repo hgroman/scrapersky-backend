@@ -19,12 +19,14 @@ We will use a combination of tools to systematically identify and remove all Err
 ### Phase 1: Comprehensive Analysis
 
 1. Use Ruff to identify all imports of ErrorService
+
    ```bash
-   cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend
+   cd .
    ruff check --select=F401 src/ | grep "ErrorService"
    ```
 
 2. Use Grep to find all instances of ErrorService usage
+
    ```bash
    grep -r "ErrorService" src/
    grep -r "error_service" src/
@@ -38,10 +40,12 @@ We will use a combination of tools to systematically identify and remove all Err
 ### Phase 2: Router Modifications
 
 1. Update all router registrations in main.py (COMPLETED)
+
    - Remove all instances of ErrorService.route_error_handler
    - Use direct router registration
 
 2. Check for any additional router registration patterns in other files
+
    ```bash
    grep -r "include_router" --include="*.py" src/
    ```
@@ -51,6 +55,7 @@ We will use a combination of tools to systematically identify and remove all Err
 ### Phase 3: Service Layer Modifications
 
 1. Identify all service files that might use ErrorService
+
    ```bash
    grep -r "from.*error_service" --include="*.py" src/
    ```
@@ -62,6 +67,7 @@ We will use a combination of tools to systematically identify and remove all Err
 ### Phase 4: Remove Decorator Usage
 
 1. Find all instances of decorator usage
+
    ```bash
    grep -r "@.*error.*service" --include="*.py" src/
    grep -r "@.*exception.*handler" --include="*.py" src/
@@ -84,11 +90,13 @@ We will use a combination of tools to systematically identify and remove all Err
 ### Phase 6: Testing and Verification
 
 1. Restart Docker container after each major change
+
    ```bash
    docker-compose restart
    ```
 
 2. Test critical endpoints to ensure they work correctly
+
    - `/api/v3/sitemap/scan`
    - Other key endpoints
 
@@ -97,6 +105,7 @@ We will use a combination of tools to systematically identify and remove all Err
 ### Phase 7: Final Cleanup
 
 1. Remove the ErrorService implementation file
+
    ```bash
    rm src/services/core/error_service.py
    ```
@@ -117,6 +126,15 @@ We will use a combination of tools to systematically identify and remove all Err
 ## Rollback Plan
 
 If issues are encountered:
+
 1. Revert changes to specific files
 2. If major issues occur, restore from version control
 3. Document any issues encountered for future reference
+
+## Verification Steps
+
+1.  **Navigate to Project Root**: Ensure you are in the project root directory.
+    ```bash
+    cd .
+    ```
+2.  **Search for `ErrorService`**: Verify no occurrences remain in the `src` directory.

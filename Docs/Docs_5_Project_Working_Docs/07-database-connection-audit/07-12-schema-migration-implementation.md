@@ -131,8 +131,10 @@ url_count = Column(Integer, nullable=True, default=0, comment="Number of URLs fo
 Run the migrations to apply the changes:
 
 ```bash
-# Apply migrations
-alembic upgrade head
+cd .
+# alembic upgrade head
+# Use Supabase CLI instead
+supabase migration up --linked
 ```
 
 ### Step 6: Test the Changes
@@ -218,3 +220,12 @@ After these changes, the sitemap service should function properly with:
 - Proper database schema compatibility
 - Full end-to-end processing capability
 - No errors related to missing columns or type mismatches
+
+Execute the migration script:
+
+```bash
+cd .
+# alembic upgrade head
+# Use Supabase CLI instead
+supabase migration up --linked
+```

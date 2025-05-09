@@ -17,8 +17,9 @@ Before beginning testing, review these documents to understand the context:
 ## Test Environment Setup
 
 1. Start the Docker environment:
+
    ```bash
-   cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend
+   cd .
    docker-compose up -d
    ```
 
@@ -31,6 +32,7 @@ Before beginning testing, review these documents to understand the context:
 ### Phase 1: Application Startup Testing
 
 1. Start the docker environment and observe logs:
+
    ```bash
    docker-compose up -d
    docker-compose logs --tail=100
@@ -46,11 +48,13 @@ Before beginning testing, review these documents to understand the context:
 Test each of these cases and document results:
 
 1. **Valid JWT Token**:
+
    ```bash
    curl -v -H "Authorization: Bearer scraper_sky_2024" http://localhost:8000/api/health
    ```
 
 2. **Invalid JWT Token**:
+
    ```bash
    curl -v -H "Authorization: Bearer invalid_token" http://localhost:8000/api/health
    ```
@@ -67,6 +71,7 @@ Test each endpoint with valid and invalid authentication:
 #### 1. ContentMap (Sitemap) Endpoints
 
 **Create Scan Job**:
+
 ```bash
 curl -X POST "http://localhost:8000/api/v3/sitemap/scan" \
   -H "Authorization: Bearer scraper_sky_2024" \
@@ -76,6 +81,7 @@ curl -X POST "http://localhost:8000/api/v3/sitemap/scan" \
 ```
 
 **Check Job Status** (use job_id from previous response):
+
 ```bash
 curl -H "Authorization: Bearer scraper_sky_2024" \
   -H "X-Tenant-ID: 550e8400-e29b-41d4-a716-446655440000" \
@@ -85,6 +91,7 @@ curl -H "Authorization: Bearer scraper_sky_2024" \
 #### 2. Google Maps API Endpoints
 
 **Search Request**:
+
 ```bash
 curl -X POST "http://localhost:8000/api/v3/google_maps_api/search" \
   -H "Authorization: Bearer scraper_sky_2024" \
@@ -94,6 +101,7 @@ curl -X POST "http://localhost:8000/api/v3/google_maps_api/search" \
 ```
 
 **Status Check** (use job_id from previous response):
+
 ```bash
 curl -H "Authorization: Bearer scraper_sky_2024" \
   -H "X-Tenant-ID: 550e8400-e29b-41d4-a716-446655440000" \
@@ -101,6 +109,7 @@ curl -H "Authorization: Bearer scraper_sky_2024" \
 ```
 
 **Staging Request**:
+
 ```bash
 curl -X POST "http://localhost:8000/api/v3/google_maps_api/staging" \
   -H "Authorization: Bearer scraper_sky_2024" \
@@ -112,6 +121,7 @@ curl -X POST "http://localhost:8000/api/v3/google_maps_api/staging" \
 #### 3. Batch Page Scraper Endpoints
 
 **Create Batch Job**:
+
 ```bash
 curl -X POST "http://localhost:8000/api/v3/batch_page_scraper/scan" \
   -H "Authorization: Bearer scraper_sky_2024" \
@@ -121,6 +131,7 @@ curl -X POST "http://localhost:8000/api/v3/batch_page_scraper/scan" \
 ```
 
 **Check Job Status** (use job_id from previous response):
+
 ```bash
 curl -H "Authorization: Bearer scraper_sky_2024" \
   -H "X-Tenant-ID: 550e8400-e29b-41d4-a716-446655440000" \
@@ -130,6 +141,7 @@ curl -H "Authorization: Bearer scraper_sky_2024" \
 #### 4. Page Scraper Endpoints
 
 **Create Page Scraper Job**:
+
 ```bash
 curl -X POST "http://localhost:8000/api/v3/page_scraper/scan" \
   -H "Authorization: Bearer scraper_sky_2024" \
@@ -139,6 +151,7 @@ curl -X POST "http://localhost:8000/api/v3/page_scraper/scan" \
 ```
 
 **Check Job Status** (use job_id from previous response):
+
 ```bash
 curl -H "Authorization: Bearer scraper_sky_2024" \
   -H "X-Tenant-ID: 550e8400-e29b-41d4-a716-446655440000" \
@@ -188,6 +201,7 @@ Document your findings in a markdown file named `40-RBAC-Removal-Testing-Results
 # RBAC Removal Testing Results
 
 ## Phase 1: Application Startup Testing
+
 - **Status**: [Success/Failure]
 - **Docker Logs**: [Include relevant log snippets]
 - **RBAC-Related Errors**: [List any RBAC-related errors]
@@ -195,47 +209,55 @@ Document your findings in a markdown file named `40-RBAC-Removal-Testing-Results
 - **Analysis**: [Brief analysis of what the logs indicate]
 
 ## Phase 2: JWT Authentication Testing
-| Test Case | Expected Result | Actual Result | Notes |
-|-----------|-----------------|---------------|-------|
-| Valid JWT | 200 OK | [Result] | [Notes] |
-| Invalid JWT | 403 Forbidden | [Result] | [Notes] |
-| Missing JWT | 403 Forbidden | [Result] | [Notes] |
+
+| Test Case   | Expected Result | Actual Result | Notes   |
+| ----------- | --------------- | ------------- | ------- |
+| Valid JWT   | 200 OK          | [Result]      | [Notes] |
+| Invalid JWT | 403 Forbidden   | [Result]      | [Notes] |
+| Missing JWT | 403 Forbidden   | [Result]      | [Notes] |
 
 ## Phase 3: Core API Endpoint Testing
-| Endpoint | Method | Authentication | Expected Result | Actual Result | Notes |
-|----------|--------|----------------|-----------------|---------------|-------|
-| /api/v3/sitemap/scan | POST | Valid JWT | 202 Accepted | [Result] | [Notes] |
-| /api/v3/sitemap/status/{job_id} | GET | Valid JWT | 200 OK | [Result] | [Notes] |
-| [Add all other endpoints tested] | | | | | |
+
+| Endpoint                         | Method | Authentication | Expected Result | Actual Result | Notes   |
+| -------------------------------- | ------ | -------------- | --------------- | ------------- | ------- |
+| /api/v3/sitemap/scan             | POST   | Valid JWT      | 202 Accepted    | [Result]      | [Notes] |
+| /api/v3/sitemap/status/{job_id}  | GET    | Valid JWT      | 200 OK          | [Result]      | [Notes] |
+| [Add all other endpoints tested] |        |                |                 |               |         |
 
 ## Phase 4: Tenant Isolation Testing
-| Test Case | Expected Result | Actual Result | Notes |
-|-----------|-----------------|---------------|-------|
-| Cross-tenant access | 403 Forbidden | [Result] | [Notes] |
+
+| Test Case           | Expected Result | Actual Result | Notes   |
+| ------------------- | --------------- | ------------- | ------- |
+| Cross-tenant access | 403 Forbidden   | [Result]      | [Notes] |
 
 ## Phase 5: Former RBAC Router Testing
-| RBAC Endpoint | Expected Result | Actual Result | Notes |
-|---------------|-----------------|---------------|-------|
-| /api/v3/rbac-admin/stats | 404 Not Found | [Result] | [Notes] |
-| /api/v3/rbac-features | 404 Not Found | [Result] | [Notes] |
-| /api/v3/rbac-permissions | 404 Not Found | [Result] | [Notes] |
+
+| RBAC Endpoint            | Expected Result | Actual Result | Notes   |
+| ------------------------ | --------------- | ------------- | ------- |
+| /api/v3/rbac-admin/stats | 404 Not Found   | [Result]      | [Notes] |
+| /api/v3/rbac-features    | 404 Not Found   | [Result]      | [Notes] |
+| /api/v3/rbac-permissions | 404 Not Found   | [Result]      | [Notes] |
 
 ## Overall Assessment
+
 - **Is RBAC Successfully Removed?**: [Yes/No/Partially]
 - **Is JWT Authentication Working?**: [Yes/No/Partially]
 - **Is Tenant Isolation Maintained?**: [Yes/No/Partially]
 - **Are All API Endpoints Functional?**: [Yes/No/Partially]
 
 ## Identified Issues
+
 1. [Issue description, endpoint affected, and exact error message]
 2. [Issue description, endpoint affected, and exact error message]
-...
+   ...
 
 ## Recommendations
+
 This section should ONLY document issues found and NOT implement fixes.
+
 1. [Recommendation for issue 1]
 2. [Recommendation for issue 2]
-...
+   ...
 ```
 
 ## STRICT GUIDELINES FOR TESTING

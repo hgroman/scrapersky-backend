@@ -1,29 +1,29 @@
 Let's run the ContentMap transaction tests:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/transaction/test_transaction_contentmap.py
+Read file: tests/transaction/test_transaction_contentmap.py
 Now, let's examine the components being tested:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+Read file: src/services/sitemap/processing_service.py
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/modernized_sitemap.py
+Read file: src/routers/modernized_sitemap.py
 Let's look at the validation_service to understand the issue with the first failing test:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/core/validation_service.py
+Read file: src/services/core/validation_service.py
 Now, let's check the \_validate_scan_request method in processing_service.py to understand why it's failing:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+Read file: src/services/sitemap/processing_service.py
 Let's look at the validate_string_length method in the validation service to see what's missing:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/core/validation_service.py
+Read file: src/services/core/validation_service.py
 Now let's run the tests to confirm the issues:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/test_transaction_contentmap.py -v
+cd . && python -m pytest tests/transaction/test_transaction_contentmap.py -v
 ```
 
 Now let's check the \_process_domain function to understand the second issue:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+Read file: src/services/sitemap/processing_service.py
 Based on the code inspection and tests, we've found two issues:
 
 1. In the `_validate_scan_request` method, there's a call to `validation_service.validate_string_length()` missing the required `field_name` parameter.
@@ -34,7 +34,7 @@ Let's fix both issues:
 
 1. First, let's fix the `_validate_scan_request` method:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+```python:src/services/sitemap/processing_service.py
     def _validate_scan_request(self, request: SitemapScrapingRequest) -> None:
         """
         Validate scan request parameters.
@@ -61,10 +61,10 @@ Let's fix both issues:
 
 Now let's fix the `validate_string_length` method since it's returning a boolean but we're trying to extract two values from it:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/core/validation_service.py
+Read file: src/services/core/validation_service.py
 Let's fix how the validation method is used in the processing service:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+```python:src/services/sitemap/processing_service.py
     def _validate_scan_request(self, request: SitemapScrapingRequest) -> None:
         """
         Validate scan request parameters.
@@ -92,7 +92,7 @@ Let's fix how the validation method is used in the processing service:
 
 Now, let's fix the second issue with the test for the background task. We need to modify the test to patch the correct import path:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/transaction/test_transaction_contentmap.py
+```python:tests/transaction/test_transaction_contentmap.py
 @pytest.mark.asyncio
 async def test_process_domain_background_task_creates_own_session():
     """
@@ -135,15 +135,15 @@ async def test_process_domain_background_task_creates_own_session():
 Now let's run the tests again to see if our fixes resolved the issues:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/test_transaction_contentmap.py -v
+cd . && python -m pytest tests/transaction/test_transaction_contentmap.py -v
 ```
 
 We need to check the correct name of the session factory in the db.session module:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/db/session.py
+Read file: src/db/session.py
 Let's fix the test to use the correct session factory name:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/transaction/test_transaction_contentmap.py
+```python:tests/transaction/test_transaction_contentmap.py
 @pytest.mark.asyncio
 async def test_process_domain_background_task_creates_own_session():
     """
@@ -185,10 +185,10 @@ async def test_process_domain_background_task_creates_own_session():
 
 Now let's also check how the session is used in the \_process_domain method:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+Read file: src/services/sitemap/processing_service.py
 The method tries to use `async_session_factory` but imports it as `get_session, async_session_factory`. Let's fix our edit to the processing_service.py file:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap/processing_service.py
+```python:src/services/sitemap/processing_service.py
     async def _process_domain(
         self,
         domain: str,
@@ -234,13 +234,13 @@ The method tries to use `async_session_factory` but imports it as `get_session, 
 Let's run the tests again to see if our fixes resolved the issues:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/test_transaction_contentmap.py -v
+cd . && python -m pytest tests/transaction/test_transaction_contentmap.py -v
 ```
 
 Great! All tests are now passing. Let's run a final check to ensure all transaction tests are working:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/
+cd . && python -m pytest tests/transaction/
 ```
 
 ## Summary of ContentMap Transaction Tests

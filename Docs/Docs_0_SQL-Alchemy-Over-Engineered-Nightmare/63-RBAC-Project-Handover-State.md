@@ -4,7 +4,7 @@
 
 ### 1. Core Documentation Location
 
-All critical documentation is in the `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/` directory:
+All critical documentation is in the `./Docs/` directory:
 
 - `62-RBAC-Tables-Technical-Documentation.md`: Complete database schema
 - `52-Authentication Flow Documentation.md`: Authentication implementation
@@ -14,21 +14,21 @@ All critical documentation is in the `/Users/henrygroman/development/python-proj
 
 #### Database Population
 
-- Location: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/populate_rbac_sample_data.py`
+- Location: `./populate_rbac_sample_data.py`
 - Status: Ready for execution
 - Purpose: Populates all RBAC tables with initial data
 - WARNING: Requires careful execution to avoid duplicate data
 
 #### Dashboard Interface
 
-- Location: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/static/rbac-dashboard-fixed.html`
+- Location: `./static/rbac-dashboard-fixed.html`
 - Status: Implemented but needs testing
 - Dependencies: Requires active API endpoints
 - Testing Status: Pending full integration testing
 
 #### Environment Configuration
 
-- Location: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/.env`
+- Location: `./.env`
 - Status: CONFIGURED AND WORKING - DO NOT MODIFY
 - Contains all necessary credentials and configuration
 - WARNING: This file must be preserved exactly as is
@@ -65,7 +65,7 @@ User: postgres.ddfldwzhdhhzhxywqnyz
 
 ### 1. Docker Implementation
 
-- Current Location: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/docker-compose.yml`
+- Current Location: `./docker-compose.yml`
 - Tasks Needed:
   1. Verify container networking for RBAC services
   2. Implement health checks for RBAC endpoints

@@ -2,11 +2,11 @@
 
 ## Quick Reference Links
 
-- [Complete Naming Conventions Guide](/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md) - The definitive reference for all naming patterns
-- [Q&A Key Insights](/Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md) - Common questions and consensus answers
-- [Scheduler and Settings Patterns](/Docs/Docs_1_AI_GUIDES/28-SCHEDULER_AND_SETTINGS_PATTERNS.md) - Best practices for scheduler implementation
-- [Enum Handling Standards](/Docs/Docs_1_AI_GUIDES/27-ENUM_HANDLING_STANDARDS.md) - Guidelines for enum implementation
-- [Transaction Patterns Reference](/Docs/Docs_7_Reference/07-04-transaction-patterns-reference.md) - Standards for transaction management
+- [Complete Naming Conventions Guide](../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md) - The definitive reference for all naming patterns
+- [Q&A Key Insights](../Docs_6_Architecture_and_Status/Q&A_Key_Insights.md) - Common questions and consensus answers
+- [Scheduler and Settings Patterns](../Docs_1_AI_GUIDES/28-SCHEDULER_AND_SETTINGS_PATTERNS.md) - Best practices for scheduler implementation
+- [Enum Handling Standards](../Docs_1_AI_GUIDES/27-ENUM_HANDLING_STANDARDS.md) - Guidelines for enum implementation
+- [Transaction Patterns Reference](../Docs_7_Reference/07-04-transaction-patterns-reference.md) - Standards for transaction management
 
 > ## ⚠️ ENUM STANDARDIZATION MANDATE ⚠️
 >
@@ -828,10 +828,7 @@ Add to `templates/scraper-sky-mvp.html`:
           <div class="card-body">
             <!-- Table ID Convention: {workflowNameCamelCase}Table -->
             <!-- Example (page_curation): pageCurationTable -->
-            <table
-              id="{workflowNameCamelCase}Table"
-              class="table table-striped"
-            >
+            <table id="{workflowNameCamelCase}Table" class="table table-striped">
               <thead>
                 <tr>
                   <th>
@@ -958,8 +955,7 @@ $(document).ready(function () {
     items.forEach((item) => {
       const curationStatus =
         item[`${workflow_name}_curation_status`] || curationStatusEnum.New;
-      const processingStatus =
-        item[`${workflow_name}_processing_status`] || "N/A";
+      const processingStatus = item[`${workflow_name}_processing_status`] || "N/A";
       tableBody.append(`
         <tr>
             <td><input type="checkbox" class="${itemCheckboxClass}" data-id="${item.id}"></td>
@@ -1002,10 +998,7 @@ $(document).ready(function () {
         status: newCurationStatusValue, // Send the target {WorkflowNameTitleCase}CurationStatus string value
       }),
       success: function (response) {
-        showNotification(
-          "Success",
-          response.message || "Status updated successfully"
-        );
+        showNotification("Success", response.message || "Status updated successfully");
         loadData(); // Refresh the table
       },
       error: function (error) {

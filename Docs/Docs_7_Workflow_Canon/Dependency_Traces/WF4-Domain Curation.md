@@ -25,11 +25,12 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.1. Frontend (UI & JS)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/static/scraper-sky-mvp.html` [SHARED]
+1.  **File:** `../../static/scraper-sky-mvp.html` [SHARED]
+
     - **Role:** Contains the HTML structure for the "Domain Curation" tab, including the table, checkboxes, status dropdown (`domainCurationBatchStatusUpdate`), and update button (`applyDomainCurationBatchUpdateBtn`).
     - **UI Communication Point:** Tab "Domain Curation" displays domains ready for sitemap analysis
 
-2.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/static/js/domain-curation-tab.js` [NOVEL]
+2.  **File:** `../../static/js/domain-curation-tab.js` [NOVEL]
     - **Role:** Handles user interactions within the Domain Curation tab.
     - **Function:** `applyDomainCurationBatchUpdate()` (or similarly named function attached to the update button)
       - Triggered when the "Update X Selected" button is clicked.
@@ -40,7 +41,7 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.2. Backend (API Router)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/domains.py` [NOVEL]
+1.  **File:** `../../src/routers/domains.py` [NOVEL]
     - **Role:** Defines API endpoints for managing `Domain` entities.
     - **Function:** `update_domain_sitemap_curation_status_batch(...)`, handling `PUT /api/v3/domains/sitemap-curation/status`.
       - Receives `domain_ids` and `sitemap_curation_status` ("Selected") from the `request_body` (`DomainBatchCurationStatusUpdateRequest`).
@@ -61,7 +62,7 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.3. Backend (Services & Background Jobs)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/domain_sitemap_submission_scheduler.py` [NOVEL]
+1.  **File:** `../../src/services/domain_sitemap_submission_scheduler.py` [NOVEL]
     - **Role:** Contains the scheduled job that polls the database for domains that need sitemap analysis.
     - **Function:** `process_pending_sitemap_submissions()`
       - **Background Process:** Runs periodically based on `DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES`.
@@ -74,7 +75,7 @@ This document traces the full dependency chain for the user workflow where items
         - Instantiates `DomainToSitemapAdapterService`.
         - Calls `adapter_service.submit_domain_for_sitemap_scan(domain_id=domain.id, domain_url=domain.domain)`.
         - Updates `domain.sitemap_analysis_status` to `Processing`, `Completed`, or `Error` based on the outcome of the submission call.
-2.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/domain_to_sitemap_adapter_service.py` [NOVEL]
+2.  **File:** `../../src/services/domain_to_sitemap_adapter_service.py` [NOVEL]
     - **Role:** Acts as an adapter to potentially trigger a legacy or external sitemap scanning system/service.
     - **Class:** `DomainToSitemapAdapterService`
       - Instantiated by `domain_sitemap_submission_scheduler.py`.
@@ -94,7 +95,7 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.4. Database (Models & Enums)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/models/domain.py` [SHARED]
+1.  **File:** `../../src/models/domain.py` [SHARED]
     - **Role:** Defines the `Domain` SQLAlchemy model class and related enums.
     - **Schema Definition:** Defines the `domains` table structure
     - **Key Components:**
@@ -113,7 +114,7 @@ This document traces the full dependency chain for the user workflow where items
 
 1.  **File:** `docker-compose.yml`
     - **Variables:** `DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES`, `DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE`, `DOMAIN_SITEMAP_SCHEDULER_MAX_INSTANCES`. _(Note: There's a separate scheduler config for this vs. the sitemap_scheduler)_.
-2.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/main.py` [SHARED]
+2.  **File:** `../../src/main.py` [SHARED]
     - **Role:** Initializes and configures the background scheduler.
     - **Function:** Startup function (likely called `setup_domain_sitemap_scheduler` or similar)
       - **Scheduler Config:** Creates the APScheduler instance (or reuses an existing one).
@@ -122,16 +123,16 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.6. Testing
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/routers/test_domains.py` [NOVEL]
+1.  **File:** `../../tests/routers/test_domains.py` [NOVEL]
     - **Test Coverage:**
       - `test_update_domain_sitemap_curation_status_batch`: Verifies the API endpoint's behavior.
       - `test_update_sitemap_curation_status_to_selected_queues_sitemap_analysis`: Specifically verifies that setting sitemap_curation_status to `Selected` properly triggers the sitemap analysis queue by setting the sitemap_analysis_status.
-2.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/models/test_domain.py` [NOVEL]
+2.  **File:** `../../tests/models/test_domain.py` [NOVEL]
     - **Test Coverage:**
       - `test_sitemap_curation_status_enum`: Verifies the enum values.
       - `test_sitemap_analysis_status_enum`: Verifies the enum values.
       - `test_domain_model_sitemap_fields`: Verifies field presence/types.
-3.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/services/test_domain_sitemap_submission_scheduler.py` [NOVEL]
+3.  **File:** `../../tests/services/test_domain_sitemap_submission_scheduler.py` [NOVEL]
     - **Test Coverage:**
       - `test_process_pending_sitemap_submissions_picks_up_queued_domains`: Verify it finds `Domain` records with sitemap_analysis_status 'Queued' and calls the adapter service.
 
@@ -153,6 +154,7 @@ This document traces the full dependency chain for the user workflow where items
 ## 3. Key Logic Points & Unused Parameters
 
 - **Dual-Status Update Pattern:** If sitemap_curation_status is set to "Selected", two fields are updated:
+
   - `domain.sitemap_curation_status = SitemapCurationStatusEnum.Selected`
   - `domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Queued`
 
@@ -175,11 +177,13 @@ This document traces the full dependency chain for the user workflow where items
 ## 5. Workflow Connections
 
 ### As Producer
+
 - **Produces For:** WF5-SitemapCuration
 - **Production Signal:** Sets sitemap_analysis_status = "Queued" in domains table
 - **Connection Point:** src/routers/domains.py::update_domain_sitemap_curation_status_batch() → src/services/domain_sitemap_submission_scheduler.py::process_pending_sitemap_submissions()
 
 ### As Consumer
+
 - **Consumes From:** WF3-LocalBusinessCuration
 - **Consumption Signal:** Reads local_businesses records with domain_extraction_status = "Queued"
 - **Connection Point:** src/services/sitemap_scheduler.py::process_pending_jobs() → src/services/business_to_domain_service.py::process_single_business()

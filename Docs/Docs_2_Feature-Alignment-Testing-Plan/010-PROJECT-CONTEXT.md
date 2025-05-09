@@ -5,6 +5,7 @@
 **IMPORTANT: The Google Maps API implementation is the EXACT reference model to follow.**
 
 Study these ACTUAL, WORKING FILES in the codebase:
+
 - `/src/routers/google_maps_api.py` - Router implementation
 - `/src/services/places/places_service.py` - Primary service
 - `/src/services/places/places_search_service.py` - Search service
@@ -21,7 +22,7 @@ These are not theoretical examples - they are working code that shows the exact 
                         ▼
 ┌───────────────────────────────────────┐
 │            FastAPI Router             │◄────┐
-│   (/src/routers/google_maps_api.py)   │     │
+│   (`../../src/routers/google_maps_api.py`)   │     │
 └───────────────────────┬───────────────┘     │
                         │                      │
         ┌───────────────┴───────────────┐      │
@@ -35,7 +36,7 @@ These are not theoretical examples - they are working code that shows the exact 
                         ▼
 ┌───────────────────────────────────────┐
 │            Service Layer              │
-│    (/src/services/places/*.py)        │
+│    (`../../src/services/places/*.py`)        │
 └───────────────────────┬───────────────┘
                         ▼
 ┌───────────────────────────────────────┐
@@ -77,12 +78,14 @@ Our goal is to standardize 100% of the backend routes and services by applying t
 This standardization project is guided by three key documents:
 
 1. **01-REFERENCE-IMPLEMENTATION.md**
+
    - Documents the Google Maps API as our concrete reference implementation
    - Outlines 8 architectural patterns all components should follow
    - Provides concrete code examples for each pattern with exact file references
    - Includes implementation checklists
 
 2. **02-IMPLEMENTATION-PLAN.md**
+
    - Provides a detailed phase-by-phase implementation plan
    - Lists all components requiring standardization
    - Breaks down specific tasks for each component
@@ -99,16 +102,19 @@ This standardization project is guided by three key documents:
 We need to standardize the following components:
 
 ### High Priority
+
 - **Batch Page Scraper** - Needs RBAC integration following `/src/routers/google_maps_api.py` pattern
 - **RBAC Admin** - Needs transaction management standardization
 - **RBAC Features** - Needs transaction management standardization
 - **RBAC Permissions** - Needs transaction management standardization
 
 ### Medium Priority
+
 - **Domain Manager** - Needs service modularization
 - **DevTools** - Needs RBAC integration
 
 ### Low Priority
+
 - **Legacy routers** - Needs to be phased out
 
 ## Implementation Approach
@@ -116,16 +122,20 @@ We need to standardize the following components:
 We will follow a systematic phase-by-phase approach:
 
 1. Address transaction management in RBAC components
+
    - Follow `/src/routers/google_maps_api.py` (lines 301-377) for transaction boundaries
    - Follow `/src/services/places/places_service.py` for transaction awareness patterns
 
 2. Implement proper RBAC integration in batch scrapers
+
    - Follow `/src/routers/google_maps_api.py` (lines 323-345) for layered permission checks
 
 3. Modularize services where needed
+
    - Follow the Places services directory structure as a model
 
 4. Create comprehensive tests
+
    - Follow `/tests/transaction/test_transaction_*.py` patterns
 
 5. Update documentation
@@ -186,6 +196,7 @@ We will follow a systematic phase-by-phase approach:
 ## Success Criteria
 
 The project will be considered successful when:
+
 1. All routes follow the standardized architectural patterns
 2. All components have proper RBAC integration
 3. All services are properly modularized

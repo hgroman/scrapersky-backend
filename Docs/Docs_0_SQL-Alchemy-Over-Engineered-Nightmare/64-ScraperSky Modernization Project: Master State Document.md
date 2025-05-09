@@ -98,7 +98,7 @@ The RBAC system is the current focus of the project, providing comprehensive acc
 
 1. **Core Documentation**:
 
-   - `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/`
+   - `./Docs/`
    - Key files: `62-RBAC-Tables-Technical-Documentation.md`, `52-Authentication Flow Documentation.md`, `45-RBAC-Dashboard-Implementation.md`
 
 2. **Implementation Files**:

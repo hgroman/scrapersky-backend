@@ -105,7 +105,7 @@ Coding CRAFT PROMPT
 
 I've just completed a major phase of the ScraperSky backend modernization project and am now entering the final stage focused on the RBAC (Role-Based Access Control) implementation. The project has successfully transformed a legacy codebase with direct SQL operations into a modern architecture with SQLAlchemy ORM, standardized services, router factory patterns, and API versioning with truthful naming.
 
-I've compiled a comprehensive context document (located at `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/68-ScraperSky Modernization Project - Context Reset (Rev 2.0).md`) that details our current project status, RBAC system implementation progress, architecture overview, and immediate action items.
+I've compiled a comprehensive context document (located at `./Docs/68-ScraperSky Modernization Project - Context Reset (Rev 2.0).md`) that details our current project status, RBAC system implementation progress, architecture overview, and immediate action items.
 
 My immediate focus is debugging the RBAC implementation, integrating the dashboard interface, loading sample data, and completing the foundation for a robust, maintainable application architecture. Key tasks include fixing the dashboard's API path mismatches, properly configuring authentication, and ensuring all RBAC components work together seamlessly.
 

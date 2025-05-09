@@ -25,11 +25,12 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.1. Frontend (UI & JS)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/static/scraper-sky-mvp.html` [SHARED]
+1.  **File:** `../../static/scraper-sky-mvp.html` [SHARED]
+
     - **Role:** Contains the HTML structure for the "Local Business Curation" tab, including the table, checkboxes, status dropdown (`localBusinessBatchStatusUpdate`), and update button (`applyLocalBusinessBatchUpdate`).
     - **UI Communication Point:** Tab "Local Business Curation" displays businesses ready for domain extraction
 
-2.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/static/js/local-business-curation-tab.js` [NOVEL]
+2.  **File:** `../../static/js/local-business-curation-tab.js` [NOVEL]
     - **Role:** Handles user interactions within the Local Business Curation tab.
     - **Function:** `applyLocalBusinessBatchUpdate()` (or similarly named function attached to the update button)
       - Triggered when the "Update X Selected" button is clicked.
@@ -40,7 +41,7 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.2. Backend (API Router)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/local_businesses.py` [NOVEL]
+1.  **File:** `../../src/routers/local_businesses.py` [NOVEL]
     - **Role:** Defines API endpoints for managing `LocalBusiness` entities.
     - **Function:** `update_local_businesses_status_batch(...)`, handling `PUT /api/v3/local-businesses/status`.
       - Receives `local_business_ids` and `status` ("Selected") from the `update_request` (`LocalBusinessBatchStatusUpdateRequest`).
@@ -61,7 +62,7 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.3. Backend (Services & Background Jobs)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap_scheduler.py` [SHARED]
+1.  **File:** `../../src/services/sitemap_scheduler.py` [SHARED]
     - **Role:** Contains the scheduled job that polls the database. Although named "sitemap", it handles multiple types of pending jobs.
     - **Function:** `process_pending_jobs()`
       - **Background Process:** Runs periodically based on `SITEMAP_SCHEDULER_INTERVAL_MINUTES`.
@@ -90,7 +91,7 @@ This document traces the full dependency chain for the user workflow where items
 
 ### 1.4. Database (Models & Enums)
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/models/local_business.py` [SHARED]
+1.  **File:** `../../src/models/local_business.py` [SHARED]
     - **Role:** Defines the `LocalBusiness` SQLAlchemy model class and related enums.
     - **Schema Definition:** Defines the `local_businesses` table structure
     - **Key Components:**
@@ -119,17 +120,19 @@ _(Identical to the previous workflow as the same scheduler job handles multiple 
 
 ### 1.6. Testing
 
-1.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/routers/test_local_businesses.py` [NOVEL]
+1.  **File:** `../../tests/routers/test_local_businesses.py` [NOVEL]
+
     - **Test Coverage:**
       - `test_update_local_businesses_status_batch`: Verifies the API endpoint's behavior.
       - `test_update_status_to_selected_queues_domain_extraction`: Specifically verifies that setting status to `Selected` properly triggers the domain extraction queue by setting the domain_extraction_status.
 
-2.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/models/test_local_business.py` [NOVEL]
+2.  **File:** `../../tests/models/test_local_business.py` [NOVEL]
+
     - **Test Coverage:**
       - `test_domain_extraction_status_enum`: Verifies the enum values.
       - `test_local_business_model_domain_extraction_fields`: Verifies field presence/types.
 
-3.  **File:** `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/services/test_sitemap_scheduler.py` [NOVEL]
+3.  **File:** `../../tests/services/test_sitemap_scheduler.py` [NOVEL]
     - **Test Coverage:**
       - `test_process_pending_jobs_picks_up_queued_domain_extractions`: Verify it finds `LocalBusiness` with status 'Queued' and calls `LocalBusinessToDomainService`.
 
@@ -170,11 +173,13 @@ _(Identical to the previous workflow as the same scheduler job handles multiple 
 ## 5. Workflow Connections
 
 ### As Producer
+
 - **Produces For:** WF4-DomainCuration
 - **Production Signal:** Sets domain_extraction_status = "Queued" in local_businesses table
 - **Connection Point:** src/routers/local_businesses.py::update_local_businesses_status_batch() → src/services/sitemap_scheduler.py::process_pending_jobs()
 
 ### As Consumer
+
 - **Consumes From:** WF2-StagingEditor
 - **Consumption Signal:** Reads place records with status = "Selected"
 - **Connection Point:** src/routers/places_staging.py::update_places_status_batch() → src/routers/local_businesses.py::get_local_businesses()

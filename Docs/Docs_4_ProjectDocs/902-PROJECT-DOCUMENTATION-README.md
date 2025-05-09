@@ -43,7 +43,7 @@ See [**950-NEXT-STEPS-2025-03-25.md**](./950-NEXT-STEPS-2025-03-25.md) for detai
 1. Start by reviewing the [**901-PROJECT-TIMELINE.md**](./901-PROJECT-TIMELINE.md) to understand project evolution
 2. Review the [**951-ARCHITECTURAL-PRINCIPLES.md**](./951-ARCHITECTURAL-PRINCIPLES.md) document
 3. Check [**950-NEXT-STEPS-2025-03-25.md**](./950-NEXT-STEPS-2025-03-25.md) for current priorities
-4. See [AI_GUIDES](/Docs/Docs_1_AI_GUIDES/) directory for development guidance and patterns
+4. See [AI_GUIDES](../Docs_1_AI_GUIDES/) directory for development guidance and patterns
 
 ## Contributing
 
@@ -96,3 +96,12 @@ For understanding the overall architecture of the system, refer to these key doc
 - [02-ARCHITECTURE_QUICK_REFERENCE.md](../Docs_1_AI_GUIDES/02-ARCHITECTURE_QUICK_REFERENCE.md): High-level overview of the system architecture
 - [05-IMMEDIATE_ACTION_PLAN.md](../Docs_1_AI_GUIDES/05-IMMEDIATE_ACTION_PLAN.md): Current priorities and action items
 - [960-PROJECT-STATUS-UPDATE-2025-03-23.md](./960-PROJECT-STATUS-UPDATE-2025-03-23.md): Latest project status update
+
+#### Key AI Guide Documents
+
+1. See [00-INDEX.md](../Docs_1_AI_GUIDES/00-INDEX.md) for Master Index of AI Guides
+2. See [02-ARCHITECTURE_QUICK_REFERENCE.md](../Docs_1_AI_GUIDES/02-ARCHITECTURE_QUICK_REFERENCE.md) for architecture details.
+3. See [17-CORE_ARCHITECTURAL_PRINCIPLES.md](../Docs_1_AI_GUIDES/17-CORE_ARCHITECTURAL_PRINCIPLES.md) for detailed core principles.
+4. See [AI_GUIDES](../Docs_1_AI_GUIDES/) directory for development guidance and patterns
+
+#### Key Workflow Documents

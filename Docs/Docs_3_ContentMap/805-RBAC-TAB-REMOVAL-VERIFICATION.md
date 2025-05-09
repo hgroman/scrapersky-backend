@@ -16,7 +16,7 @@ The changes were successfully compiled without any errors:
 The Docker image was successfully built without any compilation errors:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && docker-compose build
+cd . && docker-compose build
 ```
 
 The build completed successfully, indicating that the removal of tab permissions didn't introduce any syntax errors or import problems.
@@ -26,24 +26,24 @@ The build completed successfully, indicating that the removal of tab permissions
 The Docker container was started to verify that the application runs correctly:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && docker-compose up -d
+cd . && docker-compose up -d
 ```
 
 The logs were checked to confirm successful startup:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && docker-compose logs
+cd . && docker-compose logs
 ```
 
 The application started without any errors related to the tab permission removal, confirming that the changes are compatible with the application's startup process.
 
 ## Verification Results
 
-| Test | Result | Notes |
-|------|--------|-------|
-| Code Changes | ✅ Pass | All tab permission code successfully removed |
-| Docker Build | ✅ Pass | No compilation errors during build |
-| Application Startup | ✅ Pass | Application starts normally without errors |
+| Test                | Result  | Notes                                        |
+| ------------------- | ------- | -------------------------------------------- |
+| Code Changes        | ✅ Pass | All tab permission code successfully removed |
+| Docker Build        | ✅ Pass | No compilation errors during build           |
+| Application Startup | ✅ Pass | Application starts normally without errors   |
 
 ## Next Steps
 

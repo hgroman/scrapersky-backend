@@ -1,21 +1,21 @@
 Let's run the ActionQueue transaction tests:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/transaction/test_transaction_actionqueue.py
+Read file: tests/transaction/test_transaction_actionqueue.py
 Now let's look at the components being tested:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/job_service.py
+Read file: src/services/job_service.py
 Let's look at the Google Maps API router as well for context:
 
-Read file: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/google_maps_api.py
+Read file: src/routers/google_maps_api.py
 Now let's run the tests to see if there are any failures:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/test_transaction_actionqueue.py -v
+cd . && python -m pytest tests/transaction/test_transaction_actionqueue.py -v
 ```
 
 We have two failing tests. The issues are related to SQLAlchemy model initialization. The tests are failing because of missing dependency with the 'Profile' model in the Tenant model. Let's fix these tests by mocking the Job model properly:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/transaction/test_transaction_actionqueue.py
+```python:tests/transaction/test_transaction_actionqueue.py
 @pytest.mark.asyncio
 async def test_job_service_create_transaction_awareness(mock_session, mock_session_in_transaction):
     """Test that create checks transaction state but doesn't create transactions."""
@@ -45,7 +45,7 @@ async def test_job_service_create_transaction_awareness(mock_session, mock_sessi
 
 Now let's fix the test_job_service_create_exception_propagation test:
 
-```python:/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tests/transaction/test_transaction_actionqueue.py
+```python:tests/transaction/test_transaction_actionqueue.py
 @pytest.mark.asyncio
 async def test_job_service_create_exception_propagation(mock_session):
     """Test that exceptions in create are propagated to the caller."""
@@ -67,19 +67,19 @@ async def test_job_service_create_exception_propagation(mock_session):
 Now let's run the tests again to see if our fixes resolved the issues:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/test_transaction_actionqueue.py -v
+cd . && python -m pytest tests/transaction/test_transaction_actionqueue.py -v
 ```
 
 Great! All the tests are now passing. Let's run a final check to make sure all transaction tests are consistent by running all transaction tests:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/
+cd . && python -m pytest tests/transaction/
 ```
 
 Let's run just our ActionQueue tests again to make sure they specifically are passing:
 
 ```bash
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend && python -m pytest tests/transaction/test_transaction_actionqueue.py -v
+cd . && python -m pytest tests/transaction/test_transaction_actionqueue.py -v
 ```
 
 ## Summary of ActionQueue Transaction Tests

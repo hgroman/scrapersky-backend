@@ -5,15 +5,19 @@
 We successfully removed the tab permission layer from the RBAC system, simplifying it from a four-layer to a three-layer system:
 
 1. **Constants Changes**:
+
    - Removed `TAB_ROLE_REQUIREMENTS` dictionary from `/src/constants/rbac.py`
 
 2. **Utility Function Changes**:
+
    - Removed `check_tab_permission()` and `require_tab_permission()` from `/src/utils/permissions.py`
 
 3. **Service Implementation Changes**:
+
    - Removed `has_tab_permission()` method from `/src/services/rbac/unified_rbac_service.py`
 
 4. **Router Changes**:
+
    - Updated imports in router files to remove tab permission references
    - Replaced tab permission checks with comments in:
      - `/src/routers/google_maps_api.py`
@@ -28,32 +32,35 @@ We successfully removed the tab permission layer from the RBAC system, simplifyi
 
 ## 2. Testing Results
 
-| Router | Endpoint | Status | Notes |
-|--------|----------|--------|-------|
-| modernized_sitemap.py | /api/v3/sitemap/scan | ✅ Success | Accepts jobs properly |
-| modernized_sitemap.py | /api/v3/sitemap/status/{job_id} | ✅ Success | Returns job status correctly |
-| google_maps_api.py | /api/v3/google_maps_api/search | ✅ Success | Initiates search properly |
-| google_maps_api.py | /api/v3/google_maps_api/status/{job_id} | ❌ Transaction Error | "transaction already begun" errors |
-| google_maps_api.py | /api/v3/google_maps_api/staging | ❌ Transaction Error | "transaction already begun" errors |
-| batch_page_scraper.py | /api/v3/batch_page_scraper/scan | ❌ Transaction Error | "transaction already begun" errors |
-| rbac_admin.py | /api/v3/rbac-admin/stats | ❌ 404 Not Found | Endpoint URL issue |
-| rbac_admin.py | /api/v3/rbac-admin/profiles | ❌ 404 Not Found | Endpoint URL issue |
+| Router                | Endpoint                                | Status               | Notes                              |
+| --------------------- | --------------------------------------- | -------------------- | ---------------------------------- |
+| modernized_sitemap.py | /api/v3/sitemap/scan                    | ✅ Success           | Accepts jobs properly              |
+| modernized_sitemap.py | /api/v3/sitemap/status/{job_id}         | ✅ Success           | Returns job status correctly       |
+| google_maps_api.py    | /api/v3/google_maps_api/search          | ✅ Success           | Initiates search properly          |
+| google_maps_api.py    | /api/v3/google_maps_api/status/{job_id} | ❌ Transaction Error | "transaction already begun" errors |
+| google_maps_api.py    | /api/v3/google_maps_api/staging         | ❌ Transaction Error | "transaction already begun" errors |
+| batch_page_scraper.py | /api/v3/batch_page_scraper/scan         | ❌ Transaction Error | "transaction already begun" errors |
+| rbac_admin.py         | /api/v3/rbac-admin/stats                | ❌ 404 Not Found     | Endpoint URL issue                 |
+| rbac_admin.py         | /api/v3/rbac-admin/profiles             | ❌ 404 Not Found     | Endpoint URL issue                 |
 
 **Key Finding**: The permission layer removal itself was successful. The errors encountered are unrelated to RBAC permissions and stem from transaction handling and endpoint URL configurations.
 
 ## 3. Marching Orders for Tomorrow
 
 ### Priority 1: Fix Google Maps API Transaction Errors
+
 Since Google Maps API was the "Golden Boy implementation," these errors are concerning and should be addressed first:
 
 1. **Investigate Transaction Context**:
+
    ```bash
-   grep -r "session.begin" /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/google_maps_api.py
+   grep -r "session.begin" ./src/routers/google_maps_api.py
    ```
 
 2. **Check Transaction Documentation**:
+
    ```bash
-   grep -r "transaction" /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Feature-Alignment-Testing-Plan/2*
+   grep -r "transaction" ./Feature-Alignment-Testing-Plan/2*
    ```
 
 3. **Fix Google Maps API Transaction Issues**:
@@ -64,6 +71,7 @@ Since Google Maps API was the "Golden Boy implementation," these errors are conc
 ### Priority 2: Fix Batch Page Scraper Transaction Errors
 
 1. **Review Transaction Implementation**:
+
    - Check `/src/routers/batch_page_scraper.py` for transaction boundary issues
    - The error is likely similar to the Google Maps API issue
 
@@ -73,13 +81,15 @@ Since Google Maps API was the "Golden Boy implementation," these errors are conc
 ### Priority 3: Correct RBAC Admin Endpoint URLs
 
 1. **Verify Router Configuration**:
+
    ```bash
-   grep -A 5 "APIRouter(" /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/rbac_admin.py
+   grep -A 5 "APIRouter(" ./src/routers/rbac_admin.py
    ```
 
 2. **Check Main App Route Registration**:
+
    ```bash
-   grep -A 3 "include_router" /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/main.py
+   grep -A 3 "include_router" ./src/main.py
    ```
 
 3. **Update Router Registration or URLs**:
@@ -97,12 +107,15 @@ Since Google Maps API was the "Golden Boy implementation," these errors are conc
 If you need to reimplement tab permissions in the future:
 
 1. **Add Constants**:
+
    - Restore `TAB_ROLE_REQUIREMENTS` dictionary to `/src/constants/rbac.py`
 
 2. **Add Utility Functions**:
+
    - Reimplement `check_tab_permission()` and `require_tab_permission()` in `/src/utils/permissions.py`
 
 3. **Add Service Method**:
+
    - Reimplement `has_tab_permission()` in `/src/services/rbac/unified_rbac_service.py`
 
 4. **Update Routers**:

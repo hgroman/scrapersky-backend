@@ -242,8 +242,8 @@ Implemented proper transaction management following architectural principles:
 ## 9. Reference Documents
 
 - [07-30-GOOGLE-MAPS-API-PROGRESS-AND-LINTER-FIX-WORK-ORDER.md](./07-30-GOOGLE-MAPS-API-PROGRESS-AND-LINTER-FIX-WORK-ORDER.md) - Previous work order with critical correction
-- [17-CORE_ARCHITECTURAL_PRINCIPLES.md](/Docs/Docs_1_AI_GUIDES/17-CORE_ARCHITECTURAL_PRINCIPLES.md) - Core architectural principles
-- [13-TRANSACTION_MANAGEMENT_GUIDE.md](/Docs/Docs_1_AI_GUIDES/13-TRANSACTION_MANAGEMENT_GUIDE.md) - Transaction management patterns
+- [17-CORE_ARCHITECTURAL_PRINCIPLES.md](../../../Docs_1_AI_GUIDES/17-CORE_ARCHITECTURAL_PRINCIPLES.md) - Core architectural principles
+- [13-TRANSACTION_MANAGEMENT_GUIDE.md](../../../Docs_1_AI_GUIDES/13-TRANSACTION_MANAGEMENT_GUIDE.md) - Transaction management patterns
 - [07-29-GOOGLE-MAPS-API-STANDARDIZATION-TEMPLATE.md](./07-29-GOOGLE-MAPS-API-STANDARDIZATION-TEMPLATE.md) - Standardization template
 
 ## 10. Final Verification

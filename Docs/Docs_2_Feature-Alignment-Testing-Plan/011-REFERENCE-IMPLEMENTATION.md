@@ -5,7 +5,8 @@
 **IMPORTANT: Examine these ACTUAL, WORKING implementation files directly:**
 
 1. **Router Implementation**:
-   - Actual file: [`/src/routers/google_maps_api.py`](/src/routers/google_maps_api.py)
+
+   - Actual file: [`/src/routers/google_maps_api.py`](../../src/routers/google_maps_api.py)
    - Key sections:
      - Transaction boundaries: lines 301-378 (search endpoint)
      - RBAC integration: lines 323-345 (full permission checks)
@@ -13,9 +14,10 @@
      - Background task: lines 154-300 (process_places_search)
 
 2. **Service Implementations**:
-   - Primary service: [`/src/services/places/places_service.py`](/src/services/places/places_service.py)
-   - Search service: [`/src/services/places/places_search_service.py`](/src/services/places/places_search_service.py)
-   - Storage service: [`/src/services/places/places_storage_service.py`](/src/services/places/places_storage_service.py)
+
+   - Primary service: [`/src/services/places/places_service.py`](../../src/services/places/places_service.py)
+   - Search service: [`/src/services/places/places_search_service.py`](../../src/services/places/places_search_service.py)
+   - Storage service: [`/src/services/places/places_storage_service.py`](../../src/services/places/places_storage_service.py)
 
 3. **Transaction Test Implementation**:
    - Actual file: [`/tests/transaction/test_transaction_frontendscout.py`](/tests/transaction/test_transaction_frontendscout.py)
@@ -29,7 +31,7 @@
                         ▼
 ┌───────────────────────────────────────┐
 │            FastAPI Router             │
-│   (/src/routers/google_maps_api.py)   │
+│   (`../../src/routers/google_maps_api.py`)   │
 └───────────────────────┬───────────────┘
                         │
         ┌───────────────┴───────────────┐
@@ -65,6 +67,7 @@ Router → Service → Repository
 ```
 
 ### Router Layer (`/src/routers/google_maps_api.py`)
+
 - Handles HTTP requests and responses
 - Manages transaction boundaries
 - Performs permission checks
@@ -72,6 +75,7 @@ Router → Service → Repository
 - Does not contain business logic
 
 ### Service Layer (`/src/services/places/places_service.py`, etc.)
+
 - Contains business logic
 - Is transaction-aware but doesn't manage transactions
 - Implements domain operations
@@ -79,6 +83,7 @@ Router → Service → Repository
 - Is independent of HTTP/REST concepts
 
 ### Repository Layer (ORM models and query methods)
+
 - Handles data access
 - Implements database operations
 - Uses SQLAlchemy ORM
@@ -89,6 +94,7 @@ Router → Service → Repository
 The Google Maps API component implements RBAC in a consistent manner:
 
 ### Permission Checking Pattern
+
 ```python
 # 1. Check basic permission
 require_permission(current_user, "places:search")
@@ -118,6 +124,7 @@ await require_tab_permission(
 ```
 
 ### Route-Level Permission Documentation
+
 ```python
 @router.post("/search", response_model=PlacesSearchResponse)
 async def search_places(
@@ -138,6 +145,7 @@ async def search_places(
 The Google Maps API follows the "Routers own transaction boundaries, services do not" pattern:
 
 ### Router Transaction Pattern
+
 ```python
 @router.get("/status/{job_id}")
 async def get_status(job_id, session: AsyncSession = Depends(get_session)):
@@ -148,6 +156,7 @@ async def get_status(job_id, session: AsyncSession = Depends(get_session)):
 ```
 
 ### Service Transaction Awareness Pattern
+
 ```python
 async def service_method(self, session: AsyncSession, ...):
     """Service method that is transaction-aware."""
@@ -159,6 +168,7 @@ async def service_method(self, session: AsyncSession, ...):
 ```
 
 ### Background Task Transaction Pattern
+
 ```python
 async def process_in_background(job_id: str, session: Optional[AsyncSession] = None):
     """Background task with proper transaction management."""
@@ -174,6 +184,7 @@ async def process_in_background(job_id: str, session: Optional[AsyncSession] = N
 Consistent error handling across the component:
 
 ### Router Error Handling
+
 ```python
 @router.post("/endpoint")
 async def route_handler():
@@ -200,6 +211,7 @@ async def route_handler():
 ```
 
 ### Service Error Handling
+
 ```python
 async def service_method(self, ...):
     try:
@@ -216,6 +228,7 @@ async def service_method(self, ...):
 Consistent tenant isolation throughout the component:
 
 ### Tenant ID Handling
+
 ```python
 # 1. Get tenant_id with proper fallbacks
 tenant_id = request.tenant_id or current_user.get("tenant_id", "")
@@ -238,6 +251,7 @@ result = await service.do_something(
 Clean dependency injection for easier testing and modularization:
 
 ### Router Dependencies
+
 ```python
 @router.get("/endpoint")
 async def route_handler(
@@ -253,6 +267,7 @@ async def route_handler(
 Consistent response formats:
 
 ### Response Models
+
 ```python
 class PlacesResponse(BaseModel):
     success: bool
@@ -307,21 +322,25 @@ async def process_data(
 When standardizing any ScraperSky component, use this checklist:
 
 1. **Layered Architecture**
+
    - [ ] Separate router, service, and repository concerns
    - [ ] Ensure business logic is in services, not routers
    - [ ] Make services independent of HTTP concepts
 
 2. **RBAC Integration**
+
    - [ ] Add all four levels of permission checks
    - [ ] Document permissions in route docstrings
    - [ ] Verify tenant isolation in database queries
 
 3. **Transaction Management**
+
    - [ ] Ensure routers own transaction boundaries
    - [ ] Make services transaction-aware
    - [ ] Handle background tasks properly
 
 4. **Error Handling**
+
    - [ ] Implement consistent error handling in routers
    - [ ] Add appropriate error logging
    - [ ] Convert exceptions to appropriate HTTP responses
@@ -337,9 +356,11 @@ When standardizing any ScraperSky component, use this checklist:
 To understand this reference implementation, examine these files:
 
 1. **Router Implementation**
+
    - `/src/routers/google_maps_api.py`
 
 2. **Service Implementations**
+
    - `/src/services/places/places_service.py`
    - `/src/services/places/places_search_service.py`
    - `/src/services/places/places_storage_service.py`

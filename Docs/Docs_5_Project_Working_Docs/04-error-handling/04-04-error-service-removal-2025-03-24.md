@@ -50,6 +50,7 @@ curl -v -X POST "http://localhost:8000/api/v3/sitemap/scan" -H "Content-Type: ap
 ```
 
 Response:
+
 ```json
 {
   "job_id": "sitemap_ccf22b8bbf7a43fd993e1f97ca720570",
@@ -72,6 +73,15 @@ Response:
 3. Add logging middleware for tracking errors if required.
 4. Update documentation to reflect the change in error handling approach.
 5. Consider removing the unused `ErrorService` implementation from the codebase.
+
+## Verification Steps
+
+1.  **Code Search**: Confirm no remaining imports or uses of `ErrorService` or `route_error_handler`.
+    ```bash
+    # Run from project root
+    grep -r "ErrorService" ./src
+    grep -r "route_error_handler" ./src
+    ```
 
 ## Tools Used for Implementation
 

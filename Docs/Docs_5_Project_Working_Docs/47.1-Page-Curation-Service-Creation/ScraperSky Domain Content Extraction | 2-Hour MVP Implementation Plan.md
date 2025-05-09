@@ -1,6 +1,6 @@
 > ⚠️ **SOURCE OF TRUTH**
-> This document overrides any conflicting information in summaries, dependency trees, or comparison files.
-> If code diverges from this document, update THIS document.
+> This document overrides any conflicting information in summaries.
+> Code is final authority; update THIS doc if it diverges.
 
 # ScraperSky Domain Content Extraction: 2-Hour MVP Implementation Plan
 
