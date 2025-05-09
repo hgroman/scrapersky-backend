@@ -1,3 +1,7 @@
+> ⚠️ **SOURCE OF TRUTH**
+> This document overrides any conflicting information in summaries, dependency trees, or comparison files.
+> If code diverges from this document, update THIS document.
+
 # ScraperSky Domain Content Extraction: 2-Hour MVP Implementation Plan
 
 ## Overview
@@ -7,7 +11,7 @@ This document outlines a rapid implementation plan for the ScraperSky Domain Con
 ## Core Architecture Principles
 
 - **Follow existing producer-consumer pattern**
-- **Use SQLAlchemy ORM exclusively** (no raw SQL)
+- **Use SQLAlchemy ORM exclusively** (no raw SQL) - See [ABSOLUTE ORM REQUIREMENT](../../../Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md)
 - **Connect via Supavisor** for proper connection pooling
 - **Implement as a standard workflow** within the ScraperSky ecosystem
 
@@ -16,6 +20,7 @@ This document outlines a rapid implementation plan for the ScraperSky Domain Con
 ### Phase 1: Quick Prototype (30 min)
 
 #### 1.1 Basic Crawler Setup
+
 ```python
 # src/services/domain_content_service.py
 
@@ -48,6 +53,7 @@ class DomainContentExtractor:
 ```
 
 #### 1.2 Data Extraction Functions
+
 ```python
 # src/services/extraction_utils.py
 
@@ -181,6 +187,7 @@ def extract_metadata(html_content, url):
 ```
 
 #### 1.3 Quick Test Script
+
 ```python
 # scripts/test_extraction.py
 
@@ -232,6 +239,7 @@ if __name__ == "__main__":
 ### Phase 2: Database Schema Implementation (20 min)
 
 #### 2.1 Database Models
+
 ```python
 # src/models/domain_content.py
 
@@ -308,6 +316,7 @@ class SocialMedia(Base):
 ```
 
 #### 2.2 Pydantic Schemas
+
 ```python
 # src/schemas/domain_content.py
 
@@ -401,6 +410,7 @@ class DomainContentExtraction(BaseModel):
 ### Phase 3: Core Service Implementation (40 min)
 
 #### 3.1 Main Service Class
+
 ```python
 # src/services/domain_content_service.py
 
@@ -544,6 +554,7 @@ class DomainContentService:
 ```
 
 #### 3.2 Scheduler Implementation
+
 ```python
 # src/schedulers/domain_content_scheduler.py
 
@@ -857,15 +868,18 @@ if __name__ == "__main__":
 ## Strategic Considerations
 
 1. **Deduplication Strategy**:
+
    - Contacts are deduplicated by email address per domain
    - Social media accounts are deduplicated by platform+URL per domain
    - Database constraints ensure uniqueness
 
 2. **JSON "Miscellaneous" Bucket**:
+
    - The `metadata` JSON field in the `domains` table stores all additional extracted data
    - This provides flexibility to store any additional information without schema changes
 
 3. **Phased Implementation**:
+
    - This MVP focuses on basic extraction without vector database integration
    - The metadata extraction provides a foundation for future vector embedding
 
@@ -877,16 +891,19 @@ if __name__ == "__main__":
 ## Future Expansion
 
 1. **Vector Database Integration**:
+
    - Add chunking and embedding of page content
    - Implement HNSW indexing for similarity search
    - Add vector search endpoints
 
 2. **Advanced Crawling**:
+
    - Extend to crawl multiple pages per domain
    - Add depth and breadth control parameters
    - Implement more sophisticated URL normalization
 
 3. **Enhanced Metadata Extraction**:
+
    - Implement schema.org structured data extraction
    - Add sentiment analysis for page content
    - Extract pricing information and product details

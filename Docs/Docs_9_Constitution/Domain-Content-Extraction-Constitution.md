@@ -1,3 +1,7 @@
+> ⚠️ **SOURCE OF TRUTH**
+> This document overrides any conflicting information in summaries, dependency trees, or comparison files.
+> If code diverges from this document, update THIS document.
+
 # Domain Content Extraction Service - Implementation Constitution
 
 ## 🔍 Zero Assumptions Mandate
@@ -126,7 +130,7 @@ logger.error(f"Error processing domain: {str(e)}")
 
 ### Phase 3: API Router Layer
 
-Implement `DomainContentRouter` in `/src/routers/domain_content.py` with:
+Implement `DomainContentRouter` in `src/routers/domain_content.py` with:
 
 1. `POST /api/v3/domain-content/process/{domain_id}`: Queue for processing
 2. `GET /api/v3/domain-content/status/{domain_id}`: Check status
