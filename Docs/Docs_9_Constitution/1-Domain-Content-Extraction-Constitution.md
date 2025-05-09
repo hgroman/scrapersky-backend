@@ -74,10 +74,11 @@ Implement the following database changes:
    - Primary key, domain reference, platform details fields
 
 4. **Required Enum Values**:
-   - `QUEUED_FOR_CONTENT_EXTRACTION`
-   - `PROCESSING_CONTENT_EXTRACTION`
-   - `CONTENT_EXTRACTION_COMPLETE`
-   - `CONTENT_EXTRACTION_ERROR`
+   - `Queued`
+   - `Processing`
+   - `Complete`
+   - `Error`
+   - `Skipped`
 
 #### Migration File
 

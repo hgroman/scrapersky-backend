@@ -95,7 +95,7 @@ checklist:
 verification_queries: |
   -- Confirm enum rows
   select * from pg_enum where enumlabel in
-    ('Processing', 'Queued', 'Failed', 'Completed');
+    ('New','Queued','Processing','Complete','Error','Skipped');
 
   -- Ensure no orphaned rows
   select * from domain_content

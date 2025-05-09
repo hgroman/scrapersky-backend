@@ -19,7 +19,7 @@ This document outlines a rapid implementation plan for the ScraperSky Domain Con
 
 ### Phase 0: Quick Prototype (30 min)
 
-#### 1.1 Basic Crawler Setup
+#### 0.1 Basic Crawler Setup
 
 ```python
 # src/services/domain_content_service.py
@@ -52,7 +52,7 @@ class DomainContentExtractor:
             return None
 ```
 
-#### 1.2 Data Extraction Functions
+#### 0.2 Data Extraction Functions
 
 ```python
 # src/services/extraction_utils.py
@@ -186,7 +186,7 @@ def extract_metadata(html_content, url):
     return metadata
 ```
 
-#### 1.3 Quick Test Script
+#### 0.3 Quick Test Script
 
 ```python
 # scripts/test_extraction.py
@@ -605,7 +605,7 @@ async def list_domains(
 
 ### Phase 4: Integration with Main App (10 min)
 
-#### 5.1 Register Router and Scheduler
+#### 4.1 Register Router and Scheduler
 
 ```python
 # src/main.py
