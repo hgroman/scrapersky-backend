@@ -88,7 +88,7 @@ Response:
 The changes were implemented using grep for efficient code search and analysis:
 
 ```bash
-grep -r "ErrorService.route_error_handler" /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src
+grep -r "ErrorService.route_error_handler" src
 ```
 
 This approach allowed for a quick identification of all instances where the custom error handler was being used, making the removal process more efficient than a manual file-by-file search.

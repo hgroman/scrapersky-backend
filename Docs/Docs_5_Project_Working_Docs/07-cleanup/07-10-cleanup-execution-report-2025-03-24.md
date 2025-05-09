@@ -260,7 +260,7 @@ These files were left in place pending further analysis as they might have indir
 ```
 ============================= test session starts ==============================
 platform darwin -- Python 3.13.2, pytest-8.3.4, pluggy-1.5.0
-rootdir: /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend
+rootdir: .
 configfile: pytest.ini
 plugins: asyncio-0.25.3, anyio-4.8.0
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None

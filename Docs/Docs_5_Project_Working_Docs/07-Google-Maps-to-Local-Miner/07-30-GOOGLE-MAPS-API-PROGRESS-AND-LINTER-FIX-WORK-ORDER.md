@@ -95,15 +95,15 @@ The UI clearly shows these status values in the Filter dropdown (New, Selected, 
 
 When working with this codebase, **always** adhere to these critical principles:
 
-1. **Transaction Management**: Routers own transactions, services are transaction-aware. See [13-TRANSACTION_MANAGEMENT_GUIDE.md](/Docs/Docs_1_AI_GUIDES/13-TRANSACTION_MANAGEMENT_GUIDE.md)
+1. **Transaction Management**: Routers own transactions, services are transaction-aware. See [13-TRANSACTION_MANAGEMENT_GUIDE.md](../../Docs_1_AI_GUIDES/13-TRANSACTION_MANAGEMENT_GUIDE.md)
 
-2. **Authentication Boundary**: JWT authentication must ONLY happen at the API router level. See [11-AUTHENTICATION_BOUNDARY.md](/Docs/Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md)
+2. **Authentication Boundary**: JWT authentication must ONLY happen at the API router level. See [11-AUTHENTICATION_BOUNDARY.md](../../Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md)
 
-3. **UUID Standardization**: Use proper UUID formats and handling. See [16-UUID_STANDARDIZATION_GUIDE.md](/Docs/Docs_1_AI_GUIDES/16-UUID_STANDARDIZATION_GUIDE.md)
+3. **UUID Standardization**: Use proper UUID formats and handling. See [16-UUID_STANDARDIZATION_GUIDE.md](../../Docs_1_AI_GUIDES/16-UUID_STANDARDIZATION_GUIDE.md)
 
-4. **API Standardization**: Follow API versioning and structure standards. See [15-API_STANDARDIZATION_GUIDE.md](/Docs/Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md)
+4. **API Standardization**: Follow API versioning and structure standards. See [15-API_STANDARDIZATION_GUIDE.md](../../Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md)
 
-5. **Database Connection Standards**: Follow the database connection standards. See [07-DATABASE_CONNECTION_STANDARDS.md](/Docs/Docs_1_AI_GUIDES/07-DATABASE_CONNECTION_STANDARDS.md)
+5. **Database Connection Standards**: Follow the database connection standards. See [07-DATABASE_CONNECTION_STANDARDS.md](../../Docs_1_AI_GUIDES/07-DATABASE_CONNECTION_STANDARDS.md)
 
 ## 4. Key Domain Understanding
 
@@ -173,8 +173,8 @@ When implementing new features or fixing issues:
 
 For detailed understanding, refer to these documents:
 
-- [00-INDEX.md](/Docs/Docs_1_AI_GUIDES/00-INDEX.md) - Master index for all AI guides
-- [02-ARCHITECTURE_QUICK_REFERENCE.md](/Docs/Docs_1_AI_GUIDES/02-ARCHITECTURE_QUICK_REFERENCE.md) - Architecture overview
+- [00-INDEX.md](../../Docs_1_AI_GUIDES/00-INDEX.md) - Master index for all AI guides
+- [02-ARCHITECTURE_QUICK_REFERENCE.md](../../Docs_1_AI_GUIDES/02-ARCHITECTURE_QUICK_REFERENCE.md) - Architecture overview
 - [07-29-GOOGLE-MAPS-API-STANDARDIZATION-TEMPLATE.md](/project-docs/07-database-connection-audit/07-29-GOOGLE-MAPS-API-STANDARDIZATION-TEMPLATE.md) - Standardization template
 - [07-28-SEARCH-HISTORY-UI-IMPLEMENTATION.md](/project-docs/07-database-connection-audit/07-28-SEARCH-HISTORY-UI-IMPLEMENTATION.md) - Search history implementation
 - [07-27-LOCALMINER-DISCOVERYSCAN-RESULTS-IMPLEMENTATION.md](/project-docs/07-database-connection-audit/07-27-LOCALMINER-DISCOVERYSCAN-RESULTS-IMPLEMENTATION.md) - Results implementation

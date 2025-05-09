@@ -17,7 +17,7 @@ Run the following command to create a new migration:
 
 ```bash
 # Navigate to project root
-cd /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend
+cd .
 
 # Create migration script
 alembic revision -m "add_url_count_to_sitemap_files"
