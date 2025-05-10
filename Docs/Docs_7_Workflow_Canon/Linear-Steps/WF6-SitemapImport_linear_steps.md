@@ -4,7 +4,7 @@ This document provides a detailed step-by-step breakdown of the Sitemap Import w
 
 ## Workflow Overview
 
-The Sitemap Import workflow automatically processes queued sitemap files (XML documents containing URLs), extracting the URLs and creating Page records for each. It operates as a background service and is triggered by status changes in the sitemap curation process.
+The Sitemap Import workflow automatically processes queued sitemap files (XML documents containing URLs), extracting the URLs and creating Page records for each. It operates as a background Layer 4: Service and is triggered by status changes in the sitemap curation process.
 
 ## Linear Steps
 
@@ -19,41 +19,47 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
 ### Phase 2: Polling for Queued Sitemap Files
 
 2. **Job Execution**
+
    - Scheduler triggers `process_pending_sitemap_imports()` at configured intervals
    - Log entry records job start with timestamp
    - Service imports settings to determine batch size
 
 3. **Database Polling**
    - `run_job_loop()` from curation SDK executes
-   - Service queries database for SitemapFile records with `sitemap_import_status = Queued`
+   - Layer 4: Service queries database for SitemapFile records with `sitemap_import_status = Queued`
    - Records are sorted by `updated_at` (oldest first)
-   - Batch size is limited by configuration settings
+   - Batch size is limited by Layer 5: Configuration settings
 
 ### Phase 3: Processing Individual Sitemap Files
 
 4. **Status Update - Processing**
+
    - For each queued SitemapFile:
      - `sitemap_import_status` is updated to `Processing`
      - `run_job_loop()` handles this state change automatically
 
 5. **Individual File Processing**
+
    - `SitemapImportService.process_single_sitemap_file()` is called with the sitemap file ID
-   - Service retrieves the SitemapFile record from the database
+   - Layer 4: Service retrieves the SitemapFile record from the database
    - Additional status validation performed as a safety check
 
 6. **HTTP Request - Fetch Sitemap Content**
-   - Service initiates HTTP request to the sitemap URL with httpx client
+
+   - Layer 4: Service initiates HTTP request to the sitemap URL with httpx client
    - Request includes timeout settings and redirect following
    - Response is validated (raises error for 4xx/5xx status codes)
    - Sitemap content is extracted from response
 
 7. **Sitemap Parsing**
+
    - Content is passed to SitemapParser to extract URLs
    - Parser identifies and extracts URLs (loc), lastmod, and other metadata
    - Returns list of SitemapURL objects with extracted data
 
 8. **URL Processing**
-   - Service creates a Page record for each extracted URL:
+
+   - Layer 4: Service creates a Page record for each extracted URL:
      - Maps URL to Page.url
      - Sets domain_id from parent sitemap
      - Sets last_modified from sitemap lastmod (if available)
@@ -63,7 +69,8 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
    - Records with missing URLs are logged and skipped
 
 9. **Database Operations**
-   - Service attempts bulk insert of Page records
+
+   - Layer 4: Service attempts bulk insert of Page records
    - On IntegrityError (e.g., duplicates), falls back to individual inserts
    - Counts successful inserts for logging
 
@@ -76,6 +83,7 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
 ### Phase 4: Error Handling
 
 11. **Error Handling - HTTP Errors**
+
     - On HTTP status errors (4xx, 5xx):
       - Transaction is rolled back
       - `sitemap_import_status` is set to `Error`
@@ -83,6 +91,7 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
       - Error is logged
 
 12. **Error Handling - Network Errors**
+
     - On request errors (timeouts, DNS failures, etc.):
       - Transaction is rolled back
       - `sitemap_import_status` is set to `Error`
@@ -99,7 +108,7 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
 ### Phase 5: Job Completion
 
 14. **Job Finalization**
-    - Service logs job completion
+    - Layer 4: Service logs job completion
     - Scheduler notes completion time
     - Next job execution is scheduled based on interval settings
 
@@ -111,6 +120,7 @@ The Sitemap Import workflow automatically processes queued sitemap files (XML do
 ## Observability
 
 The workflow provides detailed logging at each step:
+
 - Job start/end
 - File processing start/end
 - URL counts

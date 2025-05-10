@@ -71,7 +71,7 @@ This section tracks all CRITICAL and HIGH severity findings across all workflows
 ### [2025-05-04] Raw SQL in places_staging.py violates Absolute ORM Requirement
 
 - **Workflow**: WF2 - Staging Editor
-- **Files**: src/routers/places_staging.py
+- **Files**: src/routers/places_staging.py (Layer 3: Routers)
 - **Severity**: CRITICAL
 - **Type**: ORM Violation
 - **Discovered By**: Cascade AI
@@ -103,7 +103,7 @@ The `update_places_status_batch` function in places_staging.py uses raw SQL stat
 ### [2025-05-04] Unused trigger_deep_scan parameter creates misleading API contract
 
 - **Workflow**: WF2 - Staging Editor
-- **Files**: src/routers/places_staging.py
+- **Files**: src/routers/places_staging.py (Layer 3: Routers)
 - **Severity**: MEDIUM
 - **Type**: API Inconsistency
 - **Discovered By**: Cascade AI
@@ -143,7 +143,7 @@ Users initiate a business discovery search via the "Single Search" UI tab, resul
 #### [2025-05-05] Raw SQL Query in places_storage_service.py
 
 - **Workflow**: WF1 - Single Search Discovery
-- **Files**: src/services/places/places_storage_service.py
+- **Files**: src/services/places/places_storage_service.py (Layer 4: Services)
 - **Severity**: HIGH
 - **Type**: ORM Violation
 - **Discovered By**: Cascade AI
@@ -171,17 +171,17 @@ The storage service uses raw SQL queries for place data insertion and updates, v
 - Canonical YAML: /Docs_7_Workflow_Canon/workflows/WF1-SingleSearch_CANONICAL.yaml
 - Architectural Mandate: /Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
 
-#### [2025-05-05] Missing Transaction Boundary in API Router
+#### [2025-05-05] Missing Transaction Boundary in Layer 3: API Router
 
 - **Workflow**: WF1 - Single Search Discovery
-- **Files**: src/routers/google_maps_api.py
+- **Files**: src/routers/google_maps_api.py (Layer 3: Routers)
 - **Severity**: MEDIUM
 - **Type**: Transaction Management
 - **Discovered By**: Cascade AI
 - **Timestamp**: 2025-05-05T08:15:20-07:00
 
 **Description**:
-The API router lacks explicit transaction boundary using 'async with session.begin()' as required by architectural principles. According to our architectural guidelines, routers should own transaction boundaries while services should be transaction-aware but not create transactions themselves.
+The API router lacks explicit transaction boundary using 'async with session.begin()' as required by architectural principles. According to our architectural guidelines, Layer 3: Routers should own transaction boundaries while Layer 4: Services should be transaction-aware but not create transactions themselves.
 
 **Impact**:
 
@@ -204,7 +204,7 @@ The API router lacks explicit transaction boundary using 'async with session.beg
 #### [2025-05-05] Undocumented Workflow Connection
 
 - **Workflow**: WF1 - Single Search Discovery
-- **Files**: src/models/place.py
+- **Files**: src/models/place.py (Layer 1: Models & ENUMs)
 - **Severity**: MEDIUM
 - **Type**: Documentation
 - **Discovered By**: Cascade AI
@@ -236,7 +236,7 @@ The producer-consumer relationship between WF1 and WF2 was not documented in the
 #### [2025-05-04] JobService integration incomplete in PlacesDeepService
 
 - **Workflow**: WF2 - Staging Editor
-- **Files**: src/services/places_deep_service.py
+- **Files**: src/services/places_deep_service.py (Layer 4: Services)
 - **Severity**: LOW
 - **Type**: Integration Inconsistency
 - **Discovered By**: Cascade AI
@@ -405,12 +405,6 @@ Sitemap file objects are marked with `deep_scrape_curation_status` = 'Selected' 
 
 **Description**:
 During the audit of the WF5-Sitemap Curation workflow, a critical gap was discovered: there is no implementation for background processing of SitemapFile records that have been queued for URL extraction. The UI allows marking files for processing, but there is no scheduler job to pick up these queued files.
-
-**Impact**:
-
-- SitemapFile records marked for URL extraction remain in a queued state indefinitely
-- No URLs are extracted from sitemap files, breaking the data pipeline
-- The feature appears to be available in the UI but doesn't function
 
 **Investigation**:
 Reviewed sitemap_scheduler.py and found it handles domain extraction but not sitemap processing. The deep_scrape_curation_status field in SitemapFile model is properly implemented, but there is no corresponding consumer for the "Queued" status.

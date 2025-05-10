@@ -3,27 +3,32 @@
 _Last updated: 2025-05-05T00:40:15-07:00_
 
 ## Objective
-Map every atomic step in the Sitemap Curation workflow (WF5) from UI to DB and background, referencing all files and actions. Annotate each file as [NOVEL] or [SHARED].
+
+Map every atomic step in the Sitemap Curation workflow (WF5) from Layer 6: UI Components to DB and background, referencing all files and actions. Annotate each file as [NOVEL] or [SHARED].
 
 ---
 
-## 1. UI Initiation
+## 1. Layer 6: UI Components Initiation
+
 - **User Action:** Selects sitemap file(s) in the "Sitemap Curation" tab and sets status to "Selected".
   - File: `static/scraper-sky-mvp.html` [NOVEL]
   - File: `static/js/sitemap-curation-tab.js` [NOVEL]
   - Function: (Likely) `sitemapBatchUpdate()` [NOVEL]
 
 ## 2. API Request
+
 - **Action:** JS sends PUT request to `/api/v3/sitemap-files/status` with selected sitemap file IDs and new status.
   - File: `static/js/sitemap-curation-tab.js` [NOVEL]
 
-## 3. API Router
+## 3. API Layer 3: Routers
+
 - **Action:** FastAPI endpoint receives request and delegates to service.
   - File: `src/routers/sitemap_files.py` [NOVEL]
   - Function: `update_sitemap_files_status_batch` [NOVEL]
   - Depends: `SitemapFileBatchUpdate` [SHARED], `get_db_session` [SHARED], `get_current_user` [SHARED]
 
-## 4. Service Logic
+## 4. Layer 4: Services Logic
+
 - **Action:** Service updates status with Dual-Status Update Pattern.
   - File: `src/services/sitemap_files_service.py` [NOVEL]
   - Function: `update_curation_status_batch` [NOVEL]
@@ -31,12 +36,14 @@ Map every atomic step in the Sitemap Curation workflow (WF5) from UI to DB and b
   - If status is "Selected", also sets `sitemap_import_status` = "Queued".
 
 ## 5. Database Update
+
 - **Action:** ORM updates sitemap_files table with new statuses.
   - File: `src/services/sitemap_files_service.py` [NOVEL]
-  - Model: `SitemapFile` [SHARED]
-  - Enum: `SitemapImportCurationStatusEnum`, `SitemapImportProcessStatusEnum` [SHARED]
+  - Layer 1: Model: `SitemapFile` [SHARED]
+  - Layer 1: ENUM: `SitemapImportCurationStatusEnum`, `SitemapImportProcessStatusEnum` [SHARED]
 
 ## 6. Background Job Scheduler (CLARIFICATION - VERIFIED)
+
 - **Action:** Separate scheduler process handles the queued sitemap files
   - File: `src/services/sitemap_import_scheduler.py` [SHARED]
   - Function: `process_pending_sitemap_imports` specifically handles SitemapFile objects
@@ -46,6 +53,7 @@ Map every atomic step in the Sitemap Curation workflow (WF5) from UI to DB and b
     - This separation provides cleaner code organization but was not clearly documented
 
 ## 7. Deep Scrape Processing (VERIFIED)
+
 - **Action:** SitemapImportService processes queued sitemap files
   - File: `src/services/sitemap_import_service.py` [SHARED]
   - Function: `process_single_sitemap_file` fetches, parses and processes the sitemap file
@@ -55,25 +63,27 @@ Map every atomic step in the Sitemap Curation workflow (WF5) from UI to DB and b
 ---
 
 ## Atomic Steps Table
-| Step | File/Function | Annotation |
-|------|---------------|------------|
-| 1    | static/scraper-sky-mvp.html | [NOVEL] |
-| 1    | static/js/sitemap-curation-tab.js | [NOVEL] |
-| 2    | static/js/sitemap-curation-tab.js | [NOVEL] |
-| 3    | src/routers/sitemap_files.py:update_sitemap_files_status_batch | [NOVEL] |
-| 3    | src/routers/sitemap_files.py:get_db_session | [SHARED] |
-| 3    | src/routers/sitemap_files.py:get_current_user | [SHARED] |
-| 3    | src/models/sitemap_file.py:SitemapFileBatchUpdate | [SHARED] |
-| 4    | src/services/sitemap_files_service.py:update_curation_status_batch | [NOVEL] |
-| 5    | src/models/sitemap.py:SitemapFile | [SHARED] |
-| 5    | src/models/sitemap.py:SitemapImportCurationStatusEnum | [SHARED] |
-| 5    | src/models/sitemap.py:SitemapImportProcessStatusEnum | [SHARED] |
-| 6    | src/services/sitemap_scheduler.py:process_pending_jobs | [SHARED] |
-| 6    | src/scheduler_instance.py | [SHARED] |
+
+| Step | File/Function                                                      | Annotation |
+| ---- | ------------------------------------------------------------------ | ---------- |
+| 1    | static/scraper-sky-mvp.html                                        | [NOVEL]    |
+| 1    | static/js/sitemap-curation-tab.js                                  | [NOVEL]    |
+| 2    | static/js/sitemap-curation-tab.js                                  | [NOVEL]    |
+| 3    | src/routers/sitemap_files.py:update_sitemap_files_status_batch     | [NOVEL]    |
+| 3    | src/routers/sitemap_files.py:get_db_session                        | [SHARED]   |
+| 3    | src/routers/sitemap_files.py:get_current_user                      | [SHARED]   |
+| 3    | src/models/sitemap_file.py:SitemapFileBatchUpdate                  | [SHARED]   |
+| 4    | src/services/sitemap_files_service.py:update_curation_status_batch | [NOVEL]    |
+| 5    | src/models/sitemap.py:SitemapFile                                  | [SHARED]   |
+| 5    | src/models/sitemap.py:SitemapImportCurationStatusEnum              | [SHARED]   |
+| 5    | src/models/sitemap.py:SitemapImportProcessStatusEnum               | [SHARED]   |
+| 6    | src/services/sitemap_scheduler.py:process_pending_jobs             | [SHARED]   |
+| 6    | src/scheduler_instance.py                                          | [SHARED]   |
 
 ---
 
 ## Architectural Mandates & Principles
+
 - All DB status transitions are enforced via ORM.
 - All API endpoints use `/api/v3/` prefix as required.
 - Router owns transaction boundaries according to architecture mandate.
@@ -83,6 +93,7 @@ Map every atomic step in the Sitemap Curation workflow (WF5) from UI to DB and b
 ---
 
 ## Known Issues / To-Dos
+
 - [RESOLVED] The sitemap files with status "Queued" are picked up by a separate dedicated scheduler (`sitemap_import_scheduler.py`) as part of WF6.
 - [RESOLVED] The processing service exists as `sitemap_import_service.py` which is part of WF6-Sitemap Import workflow.
 - The transaction management in router appears correct but should be further verified.

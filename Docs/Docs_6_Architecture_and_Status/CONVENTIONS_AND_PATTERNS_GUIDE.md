@@ -59,7 +59,268 @@ These are the foundational names from which many others are derived. Every new w
 
 ---
 
-## 2. UI Components (`static/scraper-sky-mvp.html`)
+## Layer 1: Python Backend - Models & ENUMs
+
+- **File Names:**
+
+  - **Convention:** `source_table_name.py` (singular, snake_case).
+  - **Derivation:** Based on the primary data entity.
+  - **Example (`source_table_name = page`):** `page.py`.
+
+- **SQLAlchemy Model Class Names:**
+
+  - **Convention:** `{SourceTableTitleCase}`.
+  - **Derivation:** From `source_table_name`.
+  - **Example (`source_table_name = page`):** `Page`.
+
+- **Status Enum Python Class Names (e.g., CurationStatus, ProcessingStatus):**
+
+  - **Strict Convention:** Python Enum classes for workflow-specific statuses **MUST** always be named using the `{WorkflowNameTitleCase}` prefix.
+    - **Format:** `{WorkflowNameTitleCase}CurationStatus`, `{WorkflowNameTitleCase}ProcessingStatus`.
+    - **Base Class:** These enums should inherit from `(str, Enum)`.
+  - **Rationale:** This ensures clear association with the specific workflow and maintains universal consistency. Using `{SourceTableTitleCase}` as a prefix for these workflow-specific enums is incorrect.
+  - **Example (for `workflow_name = page_curation`):** `PageCurationStatus`, `PageProcessingStatus` (defined in `src/models/page.py`).
+  - **Technical Debt:** Existing deviations (e.g., `SitemapImportCurationStatusEnum` in `sitemap.py` using an "Enum" suffix and a different base class, or `SitemapCurationStatusEnum` in `domain.py` using a source table prefix) are considered technical debt and should be refactored.
+  - **Standard Values (Mandatory for New Workflows):**
+    - `{WorkflowNameTitleCase}CurationStatus`: Members **MUST** be `New = "New"`, `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`, `Skipped = "Skipped"`. No custom additions to this primary curation enum are permitted.
+    - `{WorkflowNameTitleCase}ProcessingStatus`: Members **MUST** be `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`.
+
+- **SQLAlchemy Column Names (Primary Status Fields on Model):**
+
+  - **Curation Status Column:**
+    - **Name:** `{workflow_name}_curation_status`.
+    - **Example (`workflow_name = page_curation`):** `page_curation_status`.
+    - **Type Definition Example:** `Column(PgEnum(PageCurationStatus, name="pagecurationstatus", create_type=False), nullable=False, server_default=PageCurationStatus.New.value, index=True)`
+  - **Processing Status Column:**
+    - **Name:** `{workflow_name}_processing_status`.
+    - **Example (`workflow_name = page_curation`):** `page_processing_status`.
+    - **Type Definition Example:** `Column(PgEnum(PageProcessingStatus, name="pageprocessingstatus", create_type=False), nullable=True, index=True)`
+  - **Processing Error Column:**
+    - **Name:** `{workflow_name}_processing_error`.
+    - **Example (`workflow_name = page_curation`):** `page_processing_error`.
+    - **Type Definition Example:** `Column(Text, nullable=True)`
+
+- **Handling Justified Non-Standard User States (Additional Status Fields):**
+  - **Context:** In rare, highly justified cases where a workflow requires an additional user-selectable state not covered by the standard `{WorkflowNameTitleCase}CurationStatus` Enum values (e.g., "On Hold," "Pending External Review") and this state does _not_ directly trigger the primary processing queue.
+  - **Strict Mandate:** Such additional states **MUST NOT** modify the standard `{WorkflowNameTitleCase}CurationStatus` or `{WorkflowNameTitleCase}ProcessingStatus` Enums or their primary columns.
+  - **Solution:** The additional state **MUST** be managed by:
+    1.  A **new, separate status field** on the SQLAlchemy model.
+    2.  A **new, dedicated Python Enum class** for this specific status purpose.
+  - **Naming Convention for Additional Status Field:**
+    - **Column Name:** `{workflow_name}_{status_purpose}_status` (e.g., `page_curation_review_status`).
+    - **Python Enum Class Name:** `{WorkflowNameTitleCase}{StatusPurpose}Status` (e.g., `PageCurationReviewStatus`). This Enum defines the values for the additional status.
+  - **Database ENUM Type:** A corresponding new PostgreSQL ENUM type would need to be manually created (e.g., `pagecurationreviewstatus`).
+  - **Integration:** The update logic for this additional status is managed independently of the primary dual-status (curation/processing) flow unless explicitly designed to interact in a controlled manner.
+  - **Discouragement & Justification:** Adding such fields is **strongly discouraged** to maintain simplicity. Implementation requires:
+    - Significant justification for its necessity.
+    - Formal review and approval.
+    - Clear documentation of its purpose, values, and interaction logic in the workflow's canonical YAML and the `CONVENTIONS_AND_PATTERNS_GUIDE.md` itself if it becomes a recurring pattern.
+
+---
+
+## Layer 2: Python Backend - Schemas
+
+Pydantic schemas are used to define the structure of API request and response bodies, ensuring data validation and clear contracts.
+
+- **File Names:**
+
+  - **Primary Convention (Mandatory for New Workflows):** For Pydantic schemas related to specific workflow actions (e.g., batch status updates, workflow-specific request/response models), the file **MUST** be named `src/schemas/{workflow_name}.py`.
+    - **Rationale:** This aligns with clear separation of concerns and emphasizes the workflow-specific nature of these operations.
+    - **Example (`workflow_name = page_curation`):** `src/schemas/page_curation.py` (contains `PageCurationUpdateRequest`, `PageCurationUpdateResponse`).
+  - **Secondary Convention (for Generic Entity Schemas):** If schemas are genuinely generic, intended for reuse by _other distinct workflows_, or define core CRUD operations for an entity (unrelated to a specific workflow's actions), they should be placed in `src/schemas/{source_table_name}.py`.
+    - **Example (`source_table_name = sitemap_file`):** `src/schemas/sitemap_file.py` (contains generic `SitemapFileBase`, `SitemapFileCreate`, `SitemapFileRead`).
+    - **Note:** Workflow-specific schemas (like batch updates) should _not_ reside in these entity-based files, even if they operate on that entity.
+
+- **Request & Response Model Naming (for Workflow-Specific Actions):**
+  - **Strict Naming Convention (Mandatory for New Workflows):**
+    - **Prefix:** Models **MUST** use the `{WorkflowNameTitleCase}` prefix. This ensures clarity and consistency with Python Enum naming (Section 4). Using `{SourceTableTitleCase}` for workflow-specific action schemas is generally incorrect unless the schema is truly generic and resides in a `{source_table_name}.py` file (see above).
+    - **Suffixes:** Request models **MUST** end with "Request". Response models **MUST** end with "Response".
+    - **Core Structure:**
+      - Request: `{WorkflowNameTitleCase}[ActionDescription][Batch]Request`
+      - Response: `{WorkflowNameTitleCase}[ActionDescription][Batch]Response`
+    - **Specific Example (Batch Status Update):**
+      - Request: `{WorkflowNameTitleCase}BatchStatusUpdateRequest`
+        - **Example (`workflow_name = page_curation`):** `PageCurationBatchStatusUpdateRequest`.
+      - Response: `{WorkflowNameTitleCase}BatchStatusUpdateResponse`
+        - **Example (`workflow_name = page_curation`):** `PageCurationBatchStatusUpdateResponse`.
+    - **Example (Single Item Update/Create - if needed specifically for a workflow beyond generic CRUD):**
+      - Request: `{WorkflowNameTitleCase}StatusUpdateRequest`, `{WorkflowNameTitleCase}CreateRequest`
+      - Response: `{WorkflowNameTitleCase}StatusUpdateResponse`, `{WorkflowNameTitleCase}CreateResponse`
+  - **Example (from `src/schemas/page_curation.py`):**
+    - `PageCurationUpdateRequest`
+    - `PageCurationUpdateResponse`
+  - **Technical Debt:** Existing schemas like `SitemapFileBatchUpdate` (in `sitemap_file.py`) that do not use the `{WorkflowNameTitleCase}` prefix for a workflow-specific action or omit the "Request"/"Response" suffix are considered technical debt. It should ideally be in a `sitemap_import.py` schema file and named `SitemapImportBatchUpdateRequest`.
+
+---
+
+## Layer 3: Python Backend - Routers
+
+Routers define the API endpoints, linking HTTP methods and paths to specific handler functions.
+
+- **File Names:**
+
+  - **Primary Convention (Mandatory for New Workflows):** For new routers primarily handling workflow-specific operations (e.g., batch status updates for a particular workflow), the file **MUST** be named `src/routers/{workflow_name}.py`.
+    - **Rationale:** Ensures clear separation of concerns and maintainability.
+    - **Example (`workflow_name = page_curation`):** `src/routers/page_curation.py`.
+  - **Secondary Convention (Adding to Existing Entity-Based Routers):** A workflow-specific endpoint may be added to an existing `src/routers/{source_table_plural_name}.py` file **only if ALL** of the following conditions are met:
+    1.  The file already exists and is actively maintained for that entity.
+    2.  The new endpoint is a minor addition, closely related to the entity's general management.
+    3.  The workflow is very tightly coupled to this single entity and doesn't involve complex inter-entity logic within this endpoint.
+    4.  Creating a separate `{workflow_name}.py` file would result in a trivially small file (e.g., only one very simple endpoint).
+    - **Example (`source_table_plural_name = sitemap_files`):** `src/routers/sitemap_files.py` (currently handles general CRUD for sitemap files and some workflow-specific operations, though new workflow-specific logic should ideally go into its own file).
+
+- **Router Variable Name (declared within the file):**
+
+  - **Convention:** `router = APIRouter()`.
+  - **Example (`router file = page_curation.py`):** `page_curation_router`.
+
+- **API Endpoint Path Construction (for batch status updates):**
+
+  - **Base Path:** All API v3 endpoints are prefixed with `/api/v3/`. This is typically applied at the application level (in `main.py`) or when including the main API router.
+  - **Router-Level Prefix:** Routers themselves are often grouped by the primary entity they operate on. This prefix is defined when the specific router (e.g., `page_curation_router` or `pages_router`) is included in a parent router or the main application.
+    - **Convention:** `/{source_table_plural_name}` (e.g., `/pages`, `/domains`).
+  - **Endpoint-Specific Path (Strict Rules for New Workflows):** This is the path defined on the `@router.put(...)` decorator.
+    - **If router file is `src/routers/{workflow_name}.py` (workflow-specific):**
+      - **Path:** `/status` (or other direct action like `/submit`, `/analyze`).
+      - **Rationale:** The workflow context is already defined by the router file and its inclusion prefix.
+      - **Full Example (`workflow_name = page_curation`, `source_table_plural_name = pages`):**
+        - Router file: `src/routers/page_curation.py`
+        - Router included with prefix `/pages` (e.g., `app.include_router(page_curation_router, prefix="/pages")`)
+        - Endpoint decorator: `@router.put("/status")`
+        - Resulting Full Path: `PUT /api/v3/pages/status`
+    - **If router file is `src/routers/{source_table_plural_name}.py` (entity-specific):**
+      - **Path:** `/{workflow_name}/status` (or other workflow-specific action).
+      - **Rationale:** The workflow context needs to be specified in the path to differentiate actions for this entity that belong to different workflows.
+      - **Full Example (`workflow_name = page_curation`, `source_table_plural_name = pages`):**
+        - Router file: `src/routers/pages.py`
+        - Router included with prefix (if any, often none if it's a primary entity router included directly)
+        - Endpoint decorator: `@router.put("/page_curation/status")` (assuming router prefix for `/pages` is handled during its inclusion or this router handles multiple entities)
+        - Resulting Full Path: `PUT /api/v3/pages/page_curation/status` (if `pages.py` router is mounted at `/pages`).
+  - **Technical Debt:** Existing endpoint paths that do not strictly follow this logic (e.g., `src/routers/page_curation.py` using `/pages/curation-status` or `src/routers/sitemap_files.py` using `/status` for a workflow action) should be noted as deviations and potential candidates for refactoring to align with these stricter conventions.
+
+- **Endpoint Function Names (for batch status updates):**
+  - **Default (Most Explicit):** `update_{source_table_name}_{workflow_name}_status_batch`.
+  - **Strict Shortening Rules (Mandatory for New Workflows):**
+    - **In `src/routers/{workflow_name}.py` (Workflow-Specific Router):** Omit the `_{workflow_name}_` part from the default.
+      - **Convention:** `update_{source_table_name}_status_batch`.
+      - **Example (`workflow_name = page_curation`, `source_table_name = page` in `src/routers/page_curation.py`):** `update_page_status_batch`.
+    - **In `src/routers/{source_table_plural_name}.py` (Entity-Specific Router):** Omit the `_{source_table_name}_` part from the default.
+      - **Convention:** `update_{workflow_name}_status_batch`.
+      - **Example (`workflow_name = page_curation`, `source_table_name = page` in `src/routers/pages.py`):** `update_page_curation_status_batch`.
+  - **Rationale for Shortening:** Avoids redundancy with the context provided by the router's file name and purpose, while maintaining clarity.
+  - **Technical Debt:** Existing function names that don't align with this default or the strict shortening rules (e.g., `update_page_curation_status_batch` found in `src/routers/page_curation.py`, which should be `update_page_status_batch` by the strict rule) are considered deviations.
+
+---
+
+## Layer 4: Python Backend - Services
+
+Services encapsulate the business logic for workflows, including schedulers for background tasks and the core processing logic.
+
+- **Scheduler File Names & Structure:**
+
+  - **Strict Convention (Absolute Rule):** For _any_ new workflow that includes a background processing component initiated by a scheduler (e.g., polling for a `_processing_status` of `Queued`), a new, dedicated scheduler file **MUST** be created in `src/services/` and named `{workflow_name}_scheduler.py`.
+    - **Rationale:** This ensures clear separation of concerns, allows for independent deployment/scaling of workflows, provides centralized error handling per workflow, and simplifies maintenance. Sharing scheduler files is strongly discouraged and would create technical debt.
+    - **Examples:** `src/services/sitemap_import_scheduler.py`, `src/services/domain_scheduler.py`.
+    - **Deviation Protocol:** Exceptions are extremely discouraged. Any consideration requires written justification, technical lead approval, explicit code comments, and documentation in canonical YAMLs and the technical debt register.
+  - **Standard Helper:** Schedulers typically utilize the `run_job_loop` helper function (from `src/common/curation_sdk/scheduler_loop.py`) for the standard polling pattern.
+
+- **Processing Service File Names:**
+
+  - **Strict Convention:** Core processing logic for a workflow **MUST** reside in a dedicated service file named `src/services/{workflow_name}_service.py`.
+  - **Derivation:** From `workflow_name`.
+  - **Example (`workflow_name = page_curation`):** `src/services/page_curation_service.py`.
+
+- **Scheduler Job Function Names (main polling function within `{workflow_name}_scheduler.py`):**
+
+  - **Strong Guideline (Default):** `async def process_{workflow_name}_queue():`
+  - **Alternative (Less Preferred for New Work):** An existing pattern is `async def process_pending_{entity_plural}():` (e.g., `process_pending_sitemap_imports()`).
+  - **Rules for Deviation:** If deviating from the default for significant clarity:
+    1.  MUST start with `process_`.
+    2.  MUST include the entity being processed.
+    3.  MUST clearly describe the action.
+    4.  SHOULD end with a collective noun or plural form.
+    5.  MUST have a docstring explaining its purpose and any deviation from the standard name.
+  - **Example (`workflow_name = page_curation`):** Default is `async def process_page_curation_queue():`.
+
+- **Processing Service Function Names (within `{workflow_name}_service.py` for processing a single item):**
+
+  - **Strict Convention (Mandatory):** `async def process_single_{source_table_name}_for_{workflow_name}(session: AsyncSession, record_id: UUID) -> None:`
+  - **Rationale:** Provides maximum clarity on the action (processing a single item), the entity involved (`source_table_name`), and the specific workflow context (`for_{workflow_name}`).
+  - **Example (`workflow_name = page_curation`, `source_table_name = page`):** `async def process_single_page_for_page_curation(...)`.
+  - **Technical Debt:** Existing deviations are considered technical debt:
+    - E.g., `process_single_sitemap_file` in `sitemap_import_service.py` (missing `_for_sitemap_import`).
+    - Workflows handling batch processing directly in the scheduler instead of delegating single item processing to a service function with this naming convention.
+    - Workflows lacking a dedicated processing service file and function.
+
+- **Scheduler Registration & Settings Pattern (Mandatory for New Workflows):**
+  - **Setup Function:** Each `src/services/{workflow_name}_scheduler.py` file **MUST** implement a setup function: `def setup_{workflow_name}_scheduler() -> None:`. This function is responsible for adding the workflow's job(s) to the shared APScheduler instance.
+    - **Example (`workflow_name = page_curation`):** `def setup_page_curation_scheduler() -> None:`
+  - **Registration in `main.py`:** The `setup_{workflow_name}_scheduler()` function **MUST** be imported into `src/main.py` and called within the `lifespan` context manager to register the job(s) upon application startup.
+  - **Settings Import:** Configuration values within service/scheduler files **MUST** be accessed by importing the `settings` instance: `from ..config.settings import settings` (then `settings.YOUR_SETTING`).
+  - **Job Configuration Settings Variables:** Parameters for scheduler jobs (e.g., interval, batch size) **MUST** be defined in `src/config/settings.py` and `.env.example` using the convention: `{WORKFLOW_NAME_UPPERCASE}_SCHEDULER_{PARAMETER_NAME}`.
+    - **Examples:** `PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES`, `PAGE_CURATION_SCHEDULER_BATCH_SIZE`.
+
+---
+
+## Layer 5: Python Backend - Configuration
+
+Proper configuration management is essential for application stability, security, and adaptability across different environments.
+
+- **Environment Variable Naming:**
+
+  - **Strict Convention (for New Workflow-Specific Settings):** All new environment variables specific to a ScraperSky workflow **MUST** use the `SCS_` prefix, followed by the `WORKFLOW_NAME_UPPERCASE`, and then a descriptive `SETTING_NAME`.
+    - **Format:** `SCS_{WORKFLOW_NAME_UPPERCASE}_{SETTING_NAME}`
+    - **Example (`workflow_name = page_curation`, setting for batch size):** `SCS_PAGE_CURATION_BATCH_SIZE`
+    - **Rationale:** Provides a clear namespace for all ScraperSky variables, prevents collisions, and improves discoverability.
+  - **Existing/Legacy Patterns (to be aware of, for refactoring):**
+    - Scheduler settings currently often follow `{WORKFLOW_NAME_UPPERCASE}_SCHEDULER_{PARAMETER}` (e.g., `DOMAIN_SCHEDULER_INTERVAL_MINUTES`). While functional, new settings should adopt the `SCS_` prefix.
+  - **General Rules:**
+    - Always use `UPPERCASE_WITH_UNDERSCORES`.
+    - Ensure names are descriptive enough to avoid ambiguity, especially if not using the `SCS_` prefix for legacy variables.
+
+- **Defining and Loading Settings:**
+
+  - **`.env` and `.env.example`:** All environment variables MUST be defined in `.env` for local development (and managed appropriately for deployed environments) and **MUST** have a corresponding entry (with a default or placeholder value) in `.env.example`.
+  - **Pydantic Settings (`src/config/settings.py`):** Environment variables are loaded into the application using Pydantic's `BaseSettings` class in `src/config/settings.py`.
+
+    - Each configurable variable must be defined as an attribute on the `Settings` class with its type hint.
+    - **Example (in `src/config/settings.py`):**
+
+      ```python
+      class Settings(BaseSettings):
+          # ... other settings ...
+          SCS_PAGE_CURATION_BATCH_SIZE: int = Field(default=10, description="Batch size for page curation processing.")
+          # Legacy example:
+          DOMAIN_SCHEDULER_INTERVAL_MINUTES: int = 1
+
+          model_config = SettingsConfigDict(
+              env_file=".env", case_sensitive=False, extra="allow"
+          )
+
+      settings = Settings() # Singleton instance
+      ```
+
+  - **Accessing Settings in Code:** Settings **MUST** be accessed by importing the singleton `settings` instance from `src/config/settings.py`.
+    - **Correct Usage:**
+      ```python
+      from src.config.settings import settings
+      # ...
+      batch_size = settings.SCS_PAGE_CURATION_BATCH_SIZE
+      ```
+    - **Incorrect Usage:** Do not import the `Settings` class directly for accessing values.
+
+- **Workflow-Specific Initializations (at Application Startup):**
+  - **Location:** Workflow-specific initializations that need to occur at application startup (beyond router inclusion or basic scheduler job registration covered in Section 8) are managed via setup functions called from the FastAPI `lifespan` context manager in `src/main.py`.
+  - **Pattern:**
+    1.  Define a dedicated setup function within the relevant workflow module (e.g., in its `_scheduler.py` or `_service.py` file if it's closely related to service initialization).
+    2.  Import this setup function into `src/main.py`.
+    3.  Call the setup function within the `async def lifespan(app: FastAPI):` context manager.
+  - **Example Usage:** This pattern is primarily used for registering scheduler jobs (see Section 8). If a workflow requires initializing a unique client, setting specific Sentry tags at startup, or other one-time setup routines, this is the place to integrate it. Ensure any such custom initialization is clearly documented.
+  - **Refer to Section 8:** The detailed pattern for scheduler job registration (`setup_{workflow_name}_scheduler()`) provides the primary example of this startup integration.
+
+---
+
+## Layer 6: UI - Components
 
 User interface component identifiers are primarily derived from `{workflowNameCamelCase}` to ensure uniqueness and predictability. **All new workflows MUST adhere strictly to these naming conventions to ensure consistency and proper functioning of associated JavaScript.**
 
@@ -132,394 +393,7 @@ User interface component identifiers are primarily derived from `{workflowNameCa
 
 ---
 
-## 3. JavaScript Files & Variables (`static/js/`)
-
-**All new workflows with a UI component MUST include a dedicated JavaScript file adhering to these conventions.**
-
-- **File Names:**
-
-  - **Strict Convention:** `{workflow_name_with_hyphens}-tab.js` (kebab-case of `workflow_name`).
-  - **Derivation:** Replace all underscores in `workflow_name` with hyphens and append `-tab.js`. This pattern is universally applied.
-  - **Example (`workflow_name = page_curation`):** `page-curation-tab.js`.
-  - **Examples (from codebase):**
-    - `domain-curation-tab.js` (from `domain_curation`)
-    - `sitemap-curation-tab.js` (from `sitemap_curation`)
-    - `local-business-curation-tab.js` (from `local_business_curation`)
-
-- **Internal Variable/Function Naming (Scoping):**
-
-  - **Strict Requirement:** To avoid global namespace collisions and ensure clarity, all workflow-specific variables and functions within a tab's JS file MUST use a consistent scoping mechanism derived from the `workflow_name`.
-  - **Primary Scoping Mechanism:** Use the full `{workflowNameCamelCase}` prefix for most variables and functions.
-    - **Variable Examples (from `domain-curation-tab.js`):** `domainCurationTab`, `domainCurationStatusFilter`, `domainCurationTableBody`.
-    - **Function Examples (from `domain-curation-tab.js`):** `fetchDomainCurationData()`, `renderDomainCurationTable()`, `clearDomainCurationSelection()`.
-  - **Secondary Scoping Mechanism (for common utilities or very long names):** An abbreviation (typically 2-4 characters, e.g., `_DC` for Domain Curation) can be used.
-    - **Convention:**
-      - Document the chosen abbreviation clearly at the top of the JS file with a comment.
-      - Use consistently: often as a suffix for utility functions (e.g., `getJwtTokenDC()`, `showStatusDC()`) or as a prefix for constants (e.g., `API_BASE_URL_DC`).
-    - **Handling Long Workflow Names:** If the full `{workflowNameCamelCase}` prefix becomes excessively long (e.g., for `automated_detailed_sitemap_analysis_curation`), this abbreviation method (e.g., `_ADSAC`) is the preferred approach and MUST be documented in the file.
-  - **Example (Combined usage in `domain-curation-tab.js`):**
-    - Full prefix: `domainCurationStatusFilter`
-    - Abbreviation suffix: `getJwtTokenDC()`
-    - Abbreviation prefix (constant): `API_BASE_URL_DC`
-    - Shorthand (variable type + abbreviation): `panelDC`
-
-- **Creating New JS Files (Cloning & Customization):**
-  - **Standard Process:** New workflow JS files **MUST** be created by cloning an existing one and then meticulously customizing it.
-  - **Recommended Template:** The `static/js/domain-curation-tab.js` file serves as the **de facto standard template** due to its comprehensive structure, clear organization, error handling, and adherence to current conventions. Developers should start by cloning this file for new workflows.
-  - **Mandatory Updates During Cloning:** The following elements **MUST** be updated to reflect the new workflow's naming conventions (derived from its `workflow_name`):
-    - **All DOM Selectors & References:** Tab selectors (e.g., `document.querySelector('.tab[data-panel="newWorkflowPanel"]`) ), panel IDs (e.g., `document.getElementById('newWorkflowPanel')`), and all form control selectors (status filters, name filters, buttons, batch update controls, etc., as defined in Section 2).
-    - **State Variables:** Any variables holding workflow-specific data (e.g., `selectedNewWorkflowItemIds`, `currentNewWorkflowPage`).
-    - **All Function Names with Workflow Prefix/Suffix:** (e.g., `fetchNewWorkflowData()`, `getJwtTokenNW()`).
-    - **Module Abbreviation (if used):** Update the chosen abbreviation (e.g., `_DC` -> `_NW`).
-    - **API Endpoint References:** All URLs and payload structures must be updated to target the new workflow's API endpoints.
-    - **Event Listeners:** Ensure all event bindings reference the correct new DOM element IDs.
-    - **Log Messages & Comments:** Update all `console.log` statements and code comments that reference the old workflow name or its specifics.
-  - **Preserved Core Patterns (from `domain-curation-tab.js` template):**
-    - Data loading pattern (e.g., `fetch...Data()` structure for API requests, error handling, data parsing).
-    - Status filtering logic.
-    - Batch selection and update pattern.
-    - Pagination handling.
-  - **Sections Requiring Significant Modification:**
-    - Data structure specific logic (e.g., table column definitions reflecting new entity properties).
-    - Workflow-specific triggers or special status handling logic.
-    - Custom UI interactions (specialized dialogs, unique tooltips).
-
----
-
-## 4. Python Backend - Models (`src/models/`)
-
-- **File Names:**
-
-  - **Convention:** `source_table_name.py` (singular, snake_case).
-  - **Derivation:** Based on the primary data entity.
-  - **Example (`source_table_name = page`):** `page.py`.
-
-- **SQLAlchemy Model Class Names:**
-
-  - **Convention:** `{SourceTableTitleCase}`.
-  - **Derivation:** From `source_table_name`.
-  - **Example (`source_table_name = page`):** `Page`.
-
-- **Status Enum Python Class Names (e.g., CurationStatus, ProcessingStatus):**
-
-  - **Strict Convention:** Python Enum classes for workflow-specific statuses **MUST** always be named using the `{WorkflowNameTitleCase}` prefix.
-    - **Format:** `{WorkflowNameTitleCase}CurationStatus`, `{WorkflowNameTitleCase}ProcessingStatus`.
-    - **Base Class:** These enums should inherit from `(str, Enum)`.
-  - **Rationale:** This ensures clear association with the specific workflow and maintains universal consistency. Using `{SourceTableTitleCase}` as a prefix for these workflow-specific enums is incorrect.
-  - **Example (for `workflow_name = page_curation`):** `PageCurationStatus`, `PageProcessingStatus` (defined in `src/models/page.py`).
-  - **Technical Debt:** Existing deviations (e.g., `SitemapImportCurationStatusEnum` in `sitemap.py` using an "Enum" suffix and a different base class, or `SitemapCurationStatusEnum` in `domain.py` using a source table prefix) are considered technical debt and should be refactored.
-  - **Standard Values (Mandatory for New Workflows):**
-    - `{WorkflowNameTitleCase}CurationStatus`: Members **MUST** be `New = "New"`, `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`, `Skipped = "Skipped"`. No custom additions to this primary curation enum are permitted.
-    - `{WorkflowNameTitleCase}ProcessingStatus`: Members **MUST** be `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`.
-
-- **SQLAlchemy Column Names (Primary Status Fields on Model):**
-
-  - **Curation Status Column:**
-    - **Name:** `{workflow_name}_curation_status`.
-    - **Example (`workflow_name = page_curation`):** `page_curation_status`.
-    - **Type Definition Example:** `Column(PgEnum(PageCurationStatus, name="pagecurationstatus", create_type=False), nullable=False, server_default=PageCurationStatus.New.value, index=True)`
-  - **Processing Status Column:**
-    - **Name:** `{workflow_name}_processing_status`.
-    - **Example (`workflow_name = page_curation`):** `page_processing_status`.
-    - **Type Definition Example:** `Column(PgEnum(PageProcessingStatus, name="pageprocessingstatus", create_type=False), nullable=True, index=True)`
-  - **Processing Error Column:**
-    - **Name:** `{workflow_name}_processing_error`.
-    - **Example (`workflow_name = page_curation`):** `page_processing_error`.
-    - **Type Definition Example:** `Column(Text, nullable=True)`
-
-- **Handling Justified Non-Standard User States (Additional Status Fields):**
-  - **Context:** In rare, highly justified cases where a workflow requires an additional user-selectable state not covered by the standard `{WorkflowNameTitleCase}CurationStatus` Enum values (e.g., "On Hold," "Pending External Review") and this state does _not_ directly trigger the primary processing queue.
-  - **Strict Mandate:** Such additional states **MUST NOT** modify the standard `{WorkflowNameTitleCase}CurationStatus` or `{WorkflowNameTitleCase}ProcessingStatus` Enums or their primary columns.
-  - **Solution:** The additional state **MUST** be managed by:
-    1.  A **new, separate status field** on the SQLAlchemy model.
-    2.  A **new, dedicated Python Enum class** for this specific status purpose.
-  - **Naming Convention for Additional Status Field:**
-    - **Column Name:** `{workflow_name}_{status_purpose}_status` (e.g., `page_curation_review_status`).
-    - **Python Enum Class Name:** `{WorkflowNameTitleCase}{StatusPurpose}Status` (e.g., `PageCurationReviewStatus`). This Enum defines the values for the additional status.
-  - **Database ENUM Type:** A corresponding new PostgreSQL ENUM type would need to be manually created (e.g., `pagecurationreviewstatus`).
-  - **Integration:** The update logic for this additional status is managed independently of the primary dual-status (curation/processing) flow unless explicitly designed to interact in a controlled manner.
-  - **Discouragement & Justification:** Adding such fields is **strongly discouraged** to maintain simplicity. Implementation requires:
-    - Significant justification for its necessity.
-    - Formal review and approval.
-    - Clear documentation of its purpose, values, and interaction logic in the workflow's canonical YAML and the `CONVENTIONS_AND_PATTERNS_GUIDE.md` itself if it becomes a recurring pattern.
-
----
-
-## 5. Python Backend - Database ENUM Types (PostgreSQL)
-
-**Crucial Prerequisite: Manual Database Creation.** All PostgreSQL ENUM types used by workflows **MUST be manually created in the database** (e.g., via direct SQL execution or migration scripts) _before_ the application attempts to use them. This is why the `create_type=False` parameter is mandatory in the SQLAlchemy `PgEnum` definitions within the Python models (see Section 4).
-
-Database ENUM type names are derived from `workflow_name` (as defined in Section 1) and are typically all lowercase.
-
-- **Curation Status DB ENUM Type Name:**
-
-  - **Strict Convention:** `{workflow_name}curationstatus` (all lowercase, no separators between the `workflow_name` and "curationstatus").
-  - **Derivation:** Concatenate the `workflow_name` (retaining any internal underscores it may have) directly with the string "curationstatus".
-  - **Example (`workflow_name = page_curation`):** `pagecurationstatus`.
-  - **Example (Multi-word `workflow_name = complex_page_data_curation`):** `complex_page_data_curationcurationstatus`.
-  - **Technical Debt:** Existing DB ENUM types that deviate significantly from this (e.g., using CamelCase or different naming structures not directly derived from `workflow_name`) should be identified and marked for refactoring. For example, the legacy `SitemapCurationStatusEnum` (DB name) should ideally be `sitemap_importcurationstatus` if its associated `workflow_name` is `sitemap_import`.
-
-- **Processing Status DB ENUM Type Name:**
-
-  - **Strict Convention:** `{workflow_name}processingstatus` (all lowercase, no separators).
-  - **Derivation:** Concatenate the `workflow_name` (retaining any internal underscores) directly with the string "processingstatus".
-  - **Example (`workflow_name = page_curation`):** `pageprocessingstatus`.
-  - **Example (Multi-word `workflow_name = complex_page_data_curation`):** `complex_page_data_curationprocessingstatus`.
-
-- **Values within the DB ENUM Type:**
-
-  - **Strict Requirement:** The defined string values within the PostgreSQL ENUM type **MUST precisely match** the string values of the members in the corresponding Python Enum classes (detailed in Section 4 under "Status Enum Python Class Names - Standard Values").
-    - **Example (for `pagecurationstatus`):** The DB ENUM type must be created with values `'New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped'`.
-    - **Example (for `pageprocessingstatus`):** The DB ENUM type must be created with values `'Queued', 'Processing', 'Complete', 'Error'`.
-
-- **ENUMs for Additional Status Fields:**
-  - If an additional status field is justified (as per Section 4 guidelines for "Handling Justified Non-Standard User States"), its corresponding PostgreSQL ENUM type will also need to be manually created.
-  - **Naming Convention:** Following the pattern `{workflow_name}{status_purpose}status`.
-  - **Example (`workflow_name = page_curation`, `status_purpose = review`):** `pagecurationreviewstatus`.
-
----
-
-## 6. Python Backend - Schemas (Pydantic - `src/schemas/`)
-
-Pydantic schemas are used to define the structure of API request and response bodies, ensuring data validation and clear contracts.
-
-- **File Names:**
-
-  - **Primary Convention (Mandatory for New Workflows):** For Pydantic schemas related to specific workflow actions (e.g., batch status updates, workflow-specific request/response models), the file **MUST** be named `src/schemas/{workflow_name}.py`.
-    - **Rationale:** This aligns with clear separation of concerns and emphasizes the workflow-specific nature of these operations.
-    - **Example (`workflow_name = page_curation`):** `src/schemas/page_curation.py` (contains `PageCurationUpdateRequest`, `PageCurationUpdateResponse`).
-  - **Secondary Convention (for Generic Entity Schemas):** If schemas are genuinely generic, intended for reuse by _other distinct workflows_, or define core CRUD operations for an entity (unrelated to a specific workflow's actions), they should be placed in `src/schemas/{source_table_name}.py`.
-    - **Example (`source_table_name = sitemap_file`):** `src/schemas/sitemap_file.py` (contains generic `SitemapFileBase`, `SitemapFileCreate`, `SitemapFileRead`).
-    - **Note:** Workflow-specific schemas (like batch updates) should _not_ reside in these entity-based files, even if they operate on that entity.
-
-- **Request & Response Model Naming (for Workflow-Specific Actions):**
-  - **Strict Naming Convention (Mandatory for New Workflows):**
-    - **Prefix:** Models **MUST** use the `{WorkflowNameTitleCase}` prefix. This ensures clarity and consistency with Python Enum naming (Section 4). Using `{SourceTableTitleCase}` for workflow-specific action schemas is generally incorrect unless the schema is truly generic and resides in a `{source_table_name}.py` file (see above).
-    - **Suffixes:** Request models **MUST** end with "Request". Response models **MUST** end with "Response".
-    - **Core Structure:**
-      - Request: `{WorkflowNameTitleCase}[ActionDescription][Batch]Request`
-      - Response: `{WorkflowNameTitleCase}[ActionDescription][Batch]Response`
-    - **Specific Example (Batch Status Update):**
-      - Request: `{WorkflowNameTitleCase}BatchStatusUpdateRequest`
-        - **Example (`workflow_name = page_curation`):** `PageCurationBatchStatusUpdateRequest`.
-      - Response: `{WorkflowNameTitleCase}BatchStatusUpdateResponse`
-        - **Example (`workflow_name = page_curation`):** `PageCurationBatchStatusUpdateResponse`.
-    - **Example (Single Item Update/Create - if needed specifically for a workflow beyond generic CRUD):**
-      - Request: `{WorkflowNameTitleCase}StatusUpdateRequest`, `{WorkflowNameTitleCase}CreateRequest`
-      - Response: `{WorkflowNameTitleCase}StatusUpdateResponse`, `{WorkflowNameTitleCase}CreateResponse`
-  - **Example (from `src/schemas/page_curation.py`):**
-    - `PageCurationUpdateRequest`
-    - `PageCurationUpdateResponse`
-  - **Technical Debt:** Existing schemas like `SitemapFileBatchUpdate` (in `sitemap_file.py`) that do not use the `{WorkflowNameTitleCase}` prefix for a workflow-specific action or omit the "Request"/"Response" suffix are considered technical debt. It should ideally be in a `sitemap_import.py` schema file and named `SitemapImportBatchUpdateRequest`.
-
----
-
-## 7. Python Backend - Routers (`src/routers/`)
-
-Routers define the API endpoints, linking HTTP methods and paths to specific handler functions.
-
-- **File Names:**
-
-  - **Primary Convention (Mandatory for New Workflows):** For new routers primarily handling workflow-specific operations (e.g., batch status updates for a particular workflow), the file **MUST** be named `src/routers/{workflow_name}.py`.
-    - **Rationale:** Ensures clear separation of concerns and maintainability.
-    - **Example (`workflow_name = page_curation`):** `src/routers/page_curation.py`.
-  - **Secondary Convention (Adding to Existing Entity-Based Routers):** A workflow-specific endpoint may be added to an existing `src/routers/{source_table_plural_name}.py` file **only if ALL** of the following conditions are met:
-    1.  The file already exists and is actively maintained for that entity.
-    2.  The new endpoint is a minor addition, closely related to the entity's general management.
-    3.  The workflow is very tightly coupled to this single entity and doesn't involve complex inter-entity logic within this endpoint.
-    4.  Creating a separate `{workflow_name}.py` file would result in a trivially small file (e.g., only one very simple endpoint).
-    - **Example (`source_table_plural_name = sitemap_files`):** `src/routers/sitemap_files.py` (currently handles general CRUD for sitemap files and some workflow-specific operations, though new workflow-specific logic should ideally go into its own file).
-
-- **Router Variable Name (declared within the file):**
-
-  - **Convention:** `router = APIRouter()`.
-  - **Example (`router file = page_curation.py`):** `page_curation_router`.
-
-- **API Endpoint Path Construction (for batch status updates):**
-
-  - **Base Path:** All API v3 endpoints are prefixed with `/api/v3/`. This is typically applied at the application level (in `main.py`) or when including the main API router.
-  - **Router-Level Prefix:** Routers themselves are often grouped by the primary entity they operate on. This prefix is defined when the specific router (e.g., `page_curation_router` or `pages_router`) is included in a parent router or the main application.
-    - **Convention:** `/{source_table_plural_name}` (e.g., `/pages`, `/domains`).
-  - **Endpoint-Specific Path (Strict Rules for New Workflows):** This is the path defined on the `@router.put(...)` decorator.
-    - **If router file is `src/routers/{workflow_name}.py` (workflow-specific):**
-      - **Path:** `/status` (or other direct action like `/submit`, `/analyze`).
-      - **Rationale:** The workflow context is already defined by the router file and its inclusion prefix.
-      - **Full Example (`workflow_name = page_curation`, `source_table_plural_name = pages`):**
-        - Router file: `src/routers/page_curation.py`
-        - Router included with prefix `/pages` (e.g., `app.include_router(page_curation_router, prefix="/pages")`)
-        - Endpoint decorator: `@router.put("/status")`
-        - Resulting Full Path: `PUT /api/v3/pages/status`
-    - **If router file is `src/routers/{source_table_plural_name}.py` (entity-specific):**
-      - **Path:** `/{workflow_name}/status` (or other workflow-specific action).
-      - **Rationale:** The workflow context needs to be specified in the path to differentiate actions for this entity that belong to different workflows.
-      - **Full Example (`workflow_name = page_curation`, `source_table_plural_name = pages`):**
-        - Router file: `src/routers/pages.py`
-        - Router included with prefix (if any, often none if it's a primary entity router included directly)
-        - Endpoint decorator: `@router.put("/page_curation/status")` (assuming router prefix for `/pages` is handled during its inclusion or this router handles multiple entities)
-        - Resulting Full Path: `PUT /api/v3/pages/page_curation/status` (if `pages.py` router is mounted at `/pages`).
-  - **Technical Debt:** Existing endpoint paths that do not strictly follow this logic (e.g., `src/routers/page_curation.py` using `/pages/curation-status` or `src/routers/sitemap_files.py` using `/status` for a workflow action) should be noted as deviations and potential candidates for refactoring to align with these stricter conventions.
-
-- **Endpoint Function Names (for batch status updates):**
-  - **Default (Most Explicit):** `update_{source_table_name}_{workflow_name}_status_batch`.
-  - **Strict Shortening Rules (Mandatory for New Workflows):**
-    - **In `src/routers/{workflow_name}.py` (Workflow-Specific Router):** Omit the `_{workflow_name}_` part from the default.
-      - **Convention:** `update_{source_table_name}_status_batch`.
-      - **Example (`workflow_name = page_curation`, `source_table_name = page` in `src/routers/page_curation.py`):** `update_page_status_batch`.
-    - **In `src/routers/{source_table_plural_name}.py` (Entity-Specific Router):** Omit the `_{source_table_name}_` part from the default.
-      - **Convention:** `update_{workflow_name}_status_batch`.
-      - **Example (`workflow_name = page_curation`, `source_table_name = page` in `src/routers/pages.py`):** `update_page_curation_status_batch`.
-  - **Rationale for Shortening:** Avoids redundancy with the context provided by the router's file name and purpose, while maintaining clarity.
-  - **Technical Debt:** Existing function names that don't align with this default or the strict shortening rules (e.g., `update_page_curation_status_batch` found in `src/routers/page_curation.py`, which should be `update_page_status_batch` by the strict rule) are considered deviations.
-
----
-
-## 8. Python Backend - Services (`src/services/`)
-
-Services encapsulate the business logic for workflows, including schedulers for background tasks and the core processing logic.
-
-- **Scheduler File Names & Structure:**
-
-  - **Strict Convention (Absolute Rule):** For _any_ new workflow that includes a background processing component initiated by a scheduler (e.g., polling for a `_processing_status` of `Queued`), a new, dedicated scheduler file **MUST** be created in `src/services/` and named `{workflow_name}_scheduler.py`.
-    - **Rationale:** This ensures clear separation of concerns, allows for independent deployment/scaling of workflows, provides centralized error handling per workflow, and simplifies maintenance. Sharing scheduler files is strongly discouraged and would create technical debt.
-    - **Examples:** `src/services/sitemap_import_scheduler.py`, `src/services/domain_scheduler.py`.
-    - **Deviation Protocol:** Exceptions are extremely discouraged. Any consideration requires written justification, technical lead approval, explicit code comments, and documentation in canonical YAMLs and the technical debt register.
-  - **Standard Helper:** Schedulers typically utilize the `run_job_loop` helper function (from `src/common/curation_sdk/scheduler_loop.py`) for the standard polling pattern.
-
-- **Processing Service File Names:**
-
-  - **Strict Convention:** Core processing logic for a workflow **MUST** reside in a dedicated service file named `src/services/{workflow_name}_service.py`.
-  - **Derivation:** From `workflow_name`.
-  - **Example (`workflow_name = page_curation`):** `src/services/page_curation_service.py`.
-
-- **Scheduler Job Function Names (main polling function within `{workflow_name}_scheduler.py`):**
-
-  - **Strong Guideline (Default):** `async def process_{workflow_name}_queue():`
-  - **Alternative (Less Preferred for New Work):** An existing pattern is `async def process_pending_{entity_plural}():` (e.g., `process_pending_sitemap_imports()`).
-  - **Rules for Deviation:** If deviating from the default for significant clarity:
-    1.  MUST start with `process_`.
-    2.  MUST include the entity being processed.
-    3.  MUST clearly describe the action.
-    4.  SHOULD end with a collective noun or plural form.
-    5.  MUST have a docstring explaining its purpose and any deviation from the standard name.
-  - **Example (`workflow_name = page_curation`):** Default is `async def process_page_curation_queue():`.
-
-- **Processing Service Function Names (within `{workflow_name}_service.py` for processing a single item):**
-
-  - **Strict Convention (Mandatory):** `async def process_single_{source_table_name}_for_{workflow_name}(session: AsyncSession, record_id: UUID) -> None:`
-  - **Rationale:** Provides maximum clarity on the action (processing a single item), the entity involved (`source_table_name`), and the specific workflow context (`for_{workflow_name}`).
-  - **Example (`workflow_name = page_curation`, `source_table_name = page`):** `async def process_single_page_for_page_curation(...)`.
-  - **Technical Debt:** Existing deviations are considered technical debt:
-    - E.g., `process_single_sitemap_file` in `sitemap_import_service.py` (missing `_for_sitemap_import`).
-    - Workflows handling batch processing directly in the scheduler instead of delegating single item processing to a service function with this naming convention.
-    - Workflows lacking a dedicated processing service file and function.
-
-- **Scheduler Registration & Settings Pattern (Mandatory for New Workflows):**
-  - **Setup Function:** Each `src/services/{workflow_name}_scheduler.py` file **MUST** implement a setup function: `def setup_{workflow_name}_scheduler() -> None:`. This function is responsible for adding the workflow's job(s) to the shared APScheduler instance.
-    - **Example (`workflow_name = page_curation`):** `def setup_page_curation_scheduler() -> None:`
-  - **Registration in `main.py`:** The `setup_{workflow_name}_scheduler()` function **MUST** be imported into `src/main.py` and called within the `lifespan` context manager to register the job(s) upon application startup.
-  - **Settings Import:** Configuration values within service/scheduler files **MUST** be accessed by importing the `settings` instance: `from ..config.settings import settings` (then `settings.YOUR_SETTING`).
-  - **Job Configuration Settings Variables:** Parameters for scheduler jobs (e.g., interval, batch size) **MUST** be defined in `src/config/settings.py` and `.env.example` using the convention: `{WORKFLOW_NAME_UPPERCASE}_SCHEDULER_{PARAMETER_NAME}`.
-    - **Examples:** `PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES`, `PAGE_CURATION_SCHEDULER_BATCH_SIZE`.
-
----
-
-## 9. Configuration & Environment Variables
-
-Proper configuration management is essential for application stability, security, and adaptability across different environments.
-
-- **Environment Variable Naming:**
-
-  - **Strict Convention (for New Workflow-Specific Settings):** All new environment variables specific to a ScraperSky workflow **MUST** use the `SCS_` prefix, followed by the `WORKFLOW_NAME_UPPERCASE`, and then a descriptive `SETTING_NAME`.
-    - **Format:** `SCS_{WORKFLOW_NAME_UPPERCASE}_{SETTING_NAME}`
-    - **Example (`workflow_name = page_curation`, setting for batch size):** `SCS_PAGE_CURATION_BATCH_SIZE`
-    - **Rationale:** Provides a clear namespace for all ScraperSky variables, prevents collisions, and improves discoverability.
-  - **Existing/Legacy Patterns (to be aware of, for refactoring):**
-    - Scheduler settings currently often follow `{WORKFLOW_NAME_UPPERCASE}_SCHEDULER_{PARAMETER}` (e.g., `DOMAIN_SCHEDULER_INTERVAL_MINUTES`). While functional, new settings should adopt the `SCS_` prefix.
-  - **General Rules:**
-    - Always use `UPPERCASE_WITH_UNDERSCORES`.
-    - Ensure names are descriptive enough to avoid ambiguity, especially if not using the `SCS_` prefix for legacy variables.
-
-- **Defining and Loading Settings:**
-
-  - **`.env` and `.env.example`:** All environment variables MUST be defined in `.env` for local development (and managed appropriately for deployed environments) and **MUST** have a corresponding entry (with a default or placeholder value) in `.env.example`.
-  - **Pydantic Settings (`src/config/settings.py`):** Environment variables are loaded into the application using Pydantic's `BaseSettings` class in `src/config/settings.py`.
-
-    - Each configurable variable must be defined as an attribute on the `Settings` class with its type hint.
-    - **Example (in `src/config/settings.py`):**
-
-      ```python
-      class Settings(BaseSettings):
-          # ... other settings ...
-          SCS_PAGE_CURATION_BATCH_SIZE: int = Field(default=10, description="Batch size for page curation processing.")
-          # Legacy example:
-          DOMAIN_SCHEDULER_INTERVAL_MINUTES: int = 1
-
-          model_config = SettingsConfigDict(
-              env_file=".env", case_sensitive=False, extra="allow"
-          )
-
-      settings = Settings() # Singleton instance
-      ```
-
-  - **Accessing Settings in Code:** Settings **MUST** be accessed by importing the singleton `settings` instance from `src/config/settings.py`.
-    - **Correct Usage:**
-      ```python
-      from src.config.settings import settings
-      # ...
-      batch_size = settings.SCS_PAGE_CURATION_BATCH_SIZE
-      ```
-    - **Incorrect Usage:** Do not import the `Settings` class directly for accessing values.
-
-- **Workflow-Specific Initializations (at Application Startup):**
-  - **Location:** Workflow-specific initializations that need to occur at application startup (beyond router inclusion or basic scheduler job registration covered in Section 8) are managed via setup functions called from the FastAPI `lifespan` context manager in `src/main.py`.
-  - **Pattern:**
-    1.  Define a dedicated setup function within the relevant workflow module (e.g., in its `_scheduler.py` or `_service.py` file if it's closely related to service initialization).
-    2.  Import this setup function into `src/main.py`.
-    3.  Call the setup function within the `async def lifespan(app: FastAPI):` context manager.
-  - **Example Usage:** This pattern is primarily used for registering scheduler jobs (see Section 8). If a workflow requires initializing a unique client, setting specific Sentry tags at startup, or other one-time setup routines, this is the place to integrate it. Ensure any such custom initialization is clearly documented.
-  - **Refer to Section 8:** The detailed pattern for scheduler job registration (`setup_{workflow_name}_scheduler()`) provides the primary example of this startup integration.
-
----
-
-## 10. Documentation Files (`Docs/Docs_7_Workflow_Canon/` and subdirectories)
-
-- **General Prefix:** `WF{Number}-` (e.g., `WF1-`, `WF5-`). The number should be assigned sequentially or based on an established system.
-- **Main Workflow Identifier Segment:** Often `{WorkflowNameNoSpacesTitleCase}` or a slightly abbreviated but clear `TitleCase` version of the workflow's core theme.
-
-- **Canonical YAMLs (`workflows/`):**
-
-  - **Format:** `WF{Number}-{WorkflowNameNoSpacesTitleCase}_CANONICAL.yaml`.
-  - **Example:** `WF1-SingleSearch_CANONICAL.yaml`, `WF5-SitemapCuration_CANONICAL.yaml`.
-
-- **Linear Steps (`Linear-Steps/`):**
-
-  - **Format:** `WF{Number}-{WorkflowNameForFile}_linear_steps.md`. `WorkflowNameForFile` is often `TitleCaseNoSpaces` or `TitleCase_With_Underscores` if spaces were originally present.
-  - **Example:** `WF5-SitemapCuration_linear_steps.md`, `WF6-SitemapImport_linear_steps.md`.
-
-- **Dependency Traces (`Dependency_Traces/`):**
-
-  - **Format:** `WF{Number}-{Workflow Name Title Case With Spaces}.md` or `WF{Number}-{WorkflowNameForFile}_dependency_trace.md`.
-  - **Example:** `WF4-Domain Curation.md`, `WF6-SitemapImport_dependency_trace.md`.
-
-- **Micro Work Orders (`Micro-Work-Orders/`):**
-  - **Format:** `WF{Number}-{Workflow Name Title Case With Spaces}_micro_work_order.md`.
-  - **Example:** `WF5-Sitemap Curation_micro_work_order.md`.
-
----
-
-## 11. Key Architectural Patterns to Document/Reference
-
-When using this guide or creating new workflow documentation (like Canonical YAMLs or Linear Steps), explicitly reference or detail the application of these patterns:
-
-- **Dual-Status Update Pattern:** Clearly explain how a user-driven "Curation Status" update triggers a "Processing Status" update to 'Queued'. Specify which Curation Status values trigger this.
-- **Producer-Consumer Relationships:** If the workflow produces data/status changes that another workflow consumes, or vice-versa, document this in the `workflow_connections` section of Canonical YAMLs.
-- **ORM Exclusivity:** Reiterate that all database interactions must use SQLAlchemy ORM.
-- **Transaction Boundaries:** Specify where transaction boundaries lie (typically within API Routers for user-initiated actions, and within individual processing units in Schedulers/Services for background tasks).
-- **Authentication Boundaries:** Note that JWT authentication is handled at the API Router level.
-
----
-
-## 12. Testing
+## Layer 7: Testing
 
 Robust testing is crucial for ensuring workflow reliability and maintainability. A combination of component-focused tests and workflow integration tests should be implemented.
 

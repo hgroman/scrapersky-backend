@@ -1,15 +1,15 @@
 # Python Files in ScraperSky Project
 
-This is a comprehensive list of all Python files in the ScraperSky project as documented across:
+This is a comprehensive list of all Python files in the ScraperSky project, aligned with the 7-layer architectural standard, superseding previous categorizations such as:
 
-- System Infrastructure Layer (`1.0-System-Infrastructure-Layer.md`)
-- API Router Layer (`1.1-API-Router-Layer.md`)
-- Background Processing Layer (`1.2-Background Processing Layer.md`)
-- Workflow documentation (`workflows/*.yaml`)
+- System Infrastructure Layer (`1.0-System-Infrastructure-Layer.md`) (Note: This document describes foundational components not directly mapped to a single one of the 7 application layers and has been flagged for review)
+- API Router Layer (now Layer 3: Routers, see `1.1-API-Router-Layer.md` - proposed rename `Layer-3_Routers_Audit-and-Dependencies.md`)
+- Background Processing Layer (now primarily Layer 4: Services, see `1.2-Background Processing Layer.md` - proposed rename `Layer-4_Services_Background-Processing_Audit-and-Dependencies.md`)
+  Files are documented in workflow documentation (`workflows/*.yaml`) and should be mapped to one of the 7 layers.
 
 All files are properly documented, with no orphaned files remaining.
 
-## Core Models and Base Files
+## Layer 1: Core Models & ENUMs (and Base Files)
 
 - src/models/api_models.py
 - src/models/base.py
@@ -28,7 +28,7 @@ All files are properly documented, with no orphaned files remaining.
 - src/models/tenant.py
 - src/models/**init**.py
 
-## Routers
+## Layer 3: Routers
 
 - src/routers/batch_page_scraper.py
 - src/routers/batch_sitemap.py
@@ -45,7 +45,7 @@ All files are properly documented, with no orphaned files remaining.
 - src/routers/sitemap_files.py
 - src/routers/sqlalchemy/**init**.py
 
-## Services
+## Layer 4: Services
 
 - src/services/batch/batch_functions.py
 - src/services/batch/batch_processor_service.py
@@ -73,7 +73,7 @@ All files are properly documented, with no orphaned files remaining.
 - src/services/sitemap_import_service.py
 - src/services/sitemap_scheduler.py
 
-## Utilities & Configuration
+## Layer 5: Configuration (and Utilities)
 
 - src/auth/jwt_auth.py
 - src/common/curation_sdk/scheduler_loop.py
@@ -93,7 +93,7 @@ All files are properly documented, with no orphaned files remaining.
 - src/utils/db_helpers.py
 - src/utils/scraper_api.py
 
-## System Infrastructure Files
+## System Infrastructure Files (Cross-Cutting Concerns)
 
 - src/**init**.py
 - src/auth/**init**.py
@@ -114,11 +114,11 @@ All files are properly documented, with no orphaned files remaining.
 - src/services/sitemap/**init**.py
 - src/services/storage/**init**.py
 
-## Tasks
+## Layer 4: Tasks (Typically run by Services)
 
 - src/tasks/email_scraper.py
 
-## Schemas
+## Layer 2: Schemas
 
 - src/schemas/email_scan.py
 - src/schemas/job.py

@@ -10,117 +10,117 @@ workflow_version: 1.0
 # Key cross-references to architectural documentation
 architecture_reference:
   - path: Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
-    description: Enforces ORM usage for all database operations
+    description: Enforces ORM usage (Layer 1: Models & ENUMs) for all database operations
   - path: Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
-    description: JWT authentication must only occur at API router level
+    description: JWT authentication must only occur at API Layer 3: Router level
   - path: Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md
-    description: All API endpoints must follow v3 prefix format
+    description: All API Layer 3: Routers endpoints must follow v3 prefix format
   - path: Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
-    description: Routers own transaction boundaries, services are transaction-aware
+    description: Layer 3: Routers own transaction boundaries, Layer 4: Services are transaction-aware
   - path: Docs_3_Project_Design/background_task_patterns.md
-    description: Background task scheduling and execution patterns
+    description: Background task scheduling and execution patterns (often involving Layer 4: Services)
 
-# Database models this workflow depends on
+# Database Layer 1: Models & ENUMs this workflow depends on
 depends_on_models:
   - name: LocalBusiness
-    file_path: src/models/local_business.py
+    file_path: src/models/local_business.py # Part of Layer 1: Models & ENUMs
     table: local_businesses
-    description: Primary model containing status, domain_extraction_status fields
+    description: Primary Layer 1: Model containing status, domain_extraction_status fields
   - name: Domain
-    file_path: src/models/domain.py
+    file_path: src/models/domain.py # Part of Layer 1: Models & ENUMs
     table: domains
-    description: Secondary model that gets created/updated during domain extraction
+    description: Secondary Layer 1: Model that gets created/updated during domain extraction
   - name: Base
-    file_path: src/models/base.py
-    description: SQLAlchemy base model class
+    file_path: src/models/base.py # Part of Layer 1: Models & ENUMs
+    description: SQLAlchemy base Layer 1: Model class
 
-# Enums this workflow depends on
+# Layer 1: Models & ENUMs (Enums) this workflow depends on
 depends_on_enums:
   - name: PlaceStatusEnum
-    file_path: src/models/place.py  # Enum is defined directly in the place.py model file
+    file_path: src/models/place.py  # Enum is defined directly in the place.py Layer 1: Model file
     values: [New, Selected, Rejected, Processed]
-    description: Reused enum for local_business.status field (no dedicated LocalBusinessStatusEnum exists)
+    description: Reused Layer 1: Enum for local_business.status field (no dedicated LocalBusinessStatusEnum exists)
   - name: DomainExtractionStatusEnum
-    file_path: src/models/local_business.py  # Enum is defined directly in the local_business.py model file
+    file_path: src/models/local_business.py  # Enum is defined directly in the local_business.py Layer 1: Model file
     values: [None, Queued, InProgress, Complete, Error]
-    description: Enum for local_business.domain_extraction_status field
+    description: Layer 1: Enum for local_business.domain_extraction_status field
   - name: LocalBusinessBatchStatusUpdateRequest
-    file_path: src/models/api_models.py  # Correct location for API models
-    description: API validation model for batch status updates
+    file_path: src/models/api_models.py  # Correct location for API Layer 2: Schemas (Pydantic Models)
+    description: API Layer 2: Schema (validation model) for batch status updates
 
 # Trigger patterns and table details
 trigger_patterns:
   - source_table: local_businesses
     source_status_field: status
-    source_status_value: PlaceStatusEnum.Selected
+    source_status_value: PlaceStatusEnum.Selected # Layer 1: Models & ENUMs
     destination_table: local_businesses
     destination_status_field: domain_extraction_status
-    destination_status_value: DomainExtractionStatusEnum.Queued
-    scheduler_file: src/services/sitemap_scheduler.py
+    destination_status_value: DomainExtractionStatusEnum.Queued # Layer 1: Models & ENUMs
+    scheduler_file: src/services/sitemap_scheduler.py # Part of Layer 4: Services
     scheduler_function: process_pending_jobs
   - destination_table: domains
-    creation_condition: "When domain extraction succeeds and domain doesn't exist"
-    update_condition: "When domain extraction succeeds and domain already exists"
+    creation_condition: "When domain extraction succeeds and domain (Layer 1: Model) doesn\'t exist"
+    update_condition: "When domain extraction succeeds and domain (Layer 1: Model) already exists"
 
 description: |
-  This workflow covers the process where a user marks local businesses as "Selected" in the UI,
+  This workflow covers the process where a user marks local businesses as "Selected" in the Layer 6: UI Components,
   resulting in those businesses being queued for domain extraction in the backend.
-  The workflow enforces architectural mandates such as ORM-only DB access, strict transaction boundaries,
-  and background job compliance. It follows the Dual-Status Update pattern identified in WF2.
+  The workflow enforces architectural mandates such as ORM-only (Layer 1: Models & ENUMs) DB access, strict transaction boundaries (Layer 3: Routers),
+  and background job compliance (Layer 4: Services). It follows the Dual-Status Update pattern identified in WF2.
 
 phases:
   - phase: UI Interaction
-    description: User selects businesses in UI and sets status to Selected
+    description: User selects businesses in Layer 6: UI Components and sets status to Selected
     steps:
       - step_id: 3.1
-        file: static/scraper-sky-mvp.html [NOVEL]
+        file: static/scraper-sky-mvp.html [NOVEL] # Layer 6: UI Components
         action: User selects businesses, sets status to "Selected", clicks "Update X Selected" button
         source_table: N/A
         destination_table: N/A
         principles:
           Clear UI Feedback: true
           guideline: |
-            UI provides visual indication of selection and status update process
+            Layer 6: UI Components provides visual indication of selection and status update process
             Displays Toast notification on success/failure
           API Endpoint Consistency: true
           guideline: |
-            Form targets standardized endpoint PUT /api/v3/local-businesses/status
+            Form targets standardized endpoint PUT /api/v3/local-businesses/status (Layer 3: Routers)
             Follows API Standardization Guide for endpoint format
         notes: |
-          VERIFIED 2025-05-05T00:10:30-07:00: UI properly includes selection checkboxes,
+          VERIFIED 2025-05-05T00:10:30-07:00: Layer 6: UI Components properly includes selection checkboxes,
           status dropdown with "Selected" option, and "Update X Selected" button that
           triggers the JavaScript function.
 
       - step_id: 3.2
-        file: static/js/local-business-curation-tab.js [NOVEL]
-        action: JavaScript collects selected IDs and status, triggers API call
+        file: static/js/local-business-curation-tab.js [NOVEL] # Layer 6: UI Components (JavaScript)
+        action: JavaScript collects selected IDs and status, triggers API call (to Layer 3: Routers)
         source_table: N/A
         destination_table: N/A
         principles:
           User Intent Mapping: true
           guideline: |
             JS accurately collects all selected IDs and user-chosen status
-            Properly formats request payload for API endpoint
+            Properly formats request payload for API endpoint (Layer 3: Routers)
           Error Handling: true
           guideline: |
             Provides user feedback on request success/failure
             Handles network errors and invalid responses
         notes: |
           VERIFIED 2025-05-05T00:10:45-07:00: JavaScript function correctly collects all
-          checked items and sends request to the proper v3 API endpoint with correct JSON payload.
+          checked items and sends request to the proper v3 API endpoint (Layer 3: Routers) with correct JSON payload.
 
   - phase: API Routing
-    description: API router receives and validates request, then processes updates
+    description: API Layer 3: Router receives and validates request (Layer 2: Schemas), then processes updates
     steps:
       - step_id: 3.3
-        file: src/routers/local_businesses.py [NOVEL]
-        action: JWT authentication and request validation
+        file: src/routers/local_businesses.py [NOVEL] # Layer 3: Routers
+        action: JWT authentication and request validation (using Layer 2: Schemas)
         source_table: N/A
         destination_table: N/A
         principles:
           Auth Boundary: true
           guideline: |
-            JWT authentication occurs ONLY at the API router level using dependency injection
+            JWT authentication occurs ONLY at the API Layer 3: Router level using dependency injection
             Follows /Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
           API Standardization: true
           guideline: |
@@ -128,46 +128,46 @@ phases:
             Proper versioning in URL structure
           Input Validation: true
           guideline: |
-            Validates request body against LocalBusinessBatchStatusUpdateRequest Pydantic model
+            Validates request body against LocalBusinessBatchStatusUpdateRequest Pydantic Layer 2: Schema
             Ensures required fields (local_business_ids, status) are present and valid
         notes: |
-          VERIFIED 2025-05-05T00:11:00-07:00: Router correctly implements JWT authentication
-          using FastAPI dependency injection. Request validation properly checks for required
+          VERIFIED 2025-05-05T00:11:00-07:00: Layer 3: Router correctly implements JWT authentication
+          using FastAPI dependency injection. Request validation (Layer 2: Schemas) properly checks for required
           fields and valid status values.
 
       - step_id: 3.4
-        file: src/routers/local_businesses.py [NOVEL]
-        action: Status mapping and Dual-Status Update logic
+        file: src/routers/local_businesses.py [NOVEL] # Layer 3: Routers
+        action: Status mapping and Dual-Status Update logic (using Layer 1: Models & ENUMs)
         source_table: local_businesses
         destination_table: local_businesses
         principles:
           Business Logic Encapsulation: true
           guideline: |
-            Logic to determine when domain extraction should be triggered is properly encapsulated
-            Follows clear conditional pattern: if status == PlaceStatusEnum.Selected
+            Logic to determine when domain extraction should be triggered is properly encapsulated in Layer 3: Router (or delegated to Layer 4: Services)
+            Follows clear conditional pattern: if status == PlaceStatusEnum.Selected (Layer 1: Models & ENUMs)
           Atomic Update: true
           guideline: |
             Both status fields updated in single transaction
             Either all updates succeed or all are rolled back
           Enum Handling: true
           guideline: |
-            Properly maps API status to database enum PlaceStatusEnum
-            Correctly uses DomainExtractionStatusEnum.Queued for triggering
+            Properly maps API status to database Layer 1: Enum PlaceStatusEnum
+            Correctly uses DomainExtractionStatusEnum.Queued (Layer 1: Models & ENUMs) for triggering
         notes: |
           VERIFIED 2025-05-05T00:11:15-07:00: This follows the same Dual-Status Update pattern
           identified in WF2. When status is set to "Selected", domain_extraction_status is automatically
-          set to "Queued". The code properly clears any previous domain_extraction_error and updates
+          set to "Queued" (Layer 1: Models & ENUMs). The code properly clears any previous domain_extraction_error and updates
           timestamps. Currently, all selected items are queued without additional eligibility checks.
 
       - step_id: 3.5
-        file: src/routers/local_businesses.py [NOVEL]
-        action: Transaction management and commit
+        file: src/routers/local_businesses.py [NOVEL] # Layer 3: Routers
+        action: Transaction management and commit (using Layer 1: Models & ENUMs via ORM)
         source_table: local_businesses
         destination_table: local_businesses
         principles:
           Transaction Boundary: true
           guideline: |
-            Router owns transaction boundary with 'async with session.begin()' pattern
+            Layer 3: Router owns transaction boundary with \'async with session.begin()\' pattern
             Follows transaction management standard in /Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
           Error Handling: true
           guideline: |
@@ -175,19 +175,19 @@ phases:
             Transaction is rolled back on failure
           ORM Required: true
           guideline: |
-            All database operations use SQLAlchemy ORM
+            All database operations use SQLAlchemy ORM (Layer 1: Models & ENUMs)
             No raw SQL statements - complies with Absolute ORM Requirement
         notes: |
           VERIFIED 2025-05-05T00:11:30-07:00: Transaction boundary is correctly implemented using
-          session.begin() context manager. All database operations use SQLAlchemy ORM, with no
+          session.begin() context manager. All database operations use SQLAlchemy ORM (Layer 1: Models & ENUMs), with no
           raw SQL detected. This is compliant with architectural standards.
 
   - phase: Background Processing
-    description: Background scheduler picks up queued items for processing
+    description: Background scheduler (Layer 4: Services) picks up queued items for processing
     steps:
       - step_id: 3.6
-        file: src/services/sitemap_scheduler.py [SHARED]
-        action: Scheduler polls for local_business.domain_extraction_status = Queued
+        file: src/services/sitemap_scheduler.py [SHARED] # Layer 4: Services
+        action: Scheduler polls for local_business.domain_extraction_status = Queued (Layer 1: Models & ENUMs)
         source_table: local_businesses
         destination_table: local_businesses
         principles:
@@ -205,23 +205,23 @@ phases:
             Follows connection pooling standards
           ORM Required: true
           guideline: |
-            Uses proper ORM queries to find queued items
+            Uses proper ORM queries (Layer 1: Models & ENUMs) to find queued items
             No raw SQL detected
         notes: |
           VERIFIED 2025-05-05T00:11:45-07:00: Despite being named "sitemap_scheduler", this
-          file handles multiple types of background processing, including domain extraction.
-          The scheduler correctly polls for local_businesses with domain_extraction_status='Queued'
-          and processes them in batches. All database operations use SQLAlchemy ORM.
+          file (part of Layer 4: Services) handles multiple types of background processing, including domain extraction.
+          The scheduler correctly polls for local_businesses with domain_extraction_status=\'Queued\' (Layer 1: Models & ENUMs)
+          and processes them in batches. All database operations use SQLAlchemy ORM (Layer 1: Models & ENUMs).
 
       - step_id: 3.7
-        file: src/services/business_to_domain_service.py [SHARED]
-        action: Process domain extraction for each queued business
+        file: src/services/business_to_domain_service.py [SHARED] # Layer 4: Services
+        action: Process domain extraction for each queued business (interacting with Layer 1: Models & ENUMs)
         source_table: local_businesses
         destination_table: domains
         principles:
           ORM Required: true
           guideline: |
-            Uses SQLAlchemy ORM for all database operations
+            Uses SQLAlchemy ORM (Layer 1: Models & ENUMs) for all database operations
             No raw SQL detected
           Error Handling: true
           guideline: |
@@ -229,35 +229,35 @@ phases:
             Updates status to reflect errors for retry
           Txn Boundary: true
           guideline: |
-            Owns its transaction boundaries as a service called by background task
+            Owns its transaction boundaries as a Layer 4: Service called by background task
             Uses proper session management
         notes: |
-          VERIFIED 2025-05-05T00:12:00-07:00: This service correctly handles the domain extraction
+          VERIFIED 2025-05-05T00:12:00-07:00: This Layer 4: Service correctly handles the domain extraction
           process. It extracts the domain from the local_business.website_url, validates it, and either
-          creates a new Domain record or updates an existing one. All operations use SQLAlchemy ORM,
-          with no raw SQL detected. Error handling properly updates local_business.domain_extraction_status
+          creates a new Domain Layer 1: Model record or updates an existing one. All operations use SQLAlchemy ORM (Layer 1: Models & ENUMs),
+          with no raw SQL detected. Error handling properly updates local_business.domain_extraction_status (Layer 1: Models & ENUMs)
           and local_business.domain_extraction_error on failure.
 
   - phase: Domain Model Management
-    description: Domain records are created or updated during extraction
+    description: Domain Layer 1: Model records are created or updated during extraction
     steps:
       - step_id: 3.8
-        file: src/models/domain.py [SHARED]
-        action: Domain model creation or update during extraction
+        file: src/models/domain.py [SHARED] # Layer 1: Models & ENUMs
+        action: Domain Layer 1: Model creation or update during extraction
         source_table: local_businesses
         destination_table: domains
         principles:
           ORM Required: true
           guideline: |
-            Domain model follows SQLAlchemy ORM patterns
+            Domain Layer 1: Model follows SQLAlchemy ORM patterns
             All fields have proper types and constraints
           Model Relationships: true
           guideline: |
-            Proper relationship between LocalBusiness and Domain models
+            Proper relationship between LocalBusiness and Domain Layer 1: Models
             Relationships follow SQLAlchemy best practices
         notes: |
-          VERIFIED 2025-05-05T00:12:15-07:00: The Domain model is correctly defined with all
-          required fields and relationship to LocalBusiness. New Domain records are correctly
+          VERIFIED 2025-05-05T00:12:15-07:00: The Domain Layer 1: Model is correctly defined with all
+          required fields and relationship to LocalBusiness. New Domain Layer 1: Model records are correctly
           created when extracted domain doesn't exist, or existing records are updated if already
           present. This follows correct SQLAlchemy ORM patterns.
 

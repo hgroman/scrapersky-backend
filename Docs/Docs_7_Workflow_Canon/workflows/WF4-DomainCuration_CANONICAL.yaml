@@ -3,225 +3,225 @@ date_reviewed: 2025-05-05
 reviewed_by: Cascade AI
 
 # Dependencies section with standardized format
-depends_on_models:
+depends_on_models: # These are Layer 1: Models & ENUMs
   - name: Domain
-    file_path: src/models/domain.py
+    file_path: src/models/domain.py # Layer 1: Models & ENUMs
     table: domains
-    description: Primary model for domain curation and sitemap analysis status tracking
+    description: Primary Layer 1: Model for domain curation and sitemap analysis status tracking
     fields:
       - id: UUID
       - domain: String
-      - sitemap_curation_status: SitemapCurationStatusEnum
-      - sitemap_analysis_status: SitemapAnalysisStatusEnum
+      - sitemap_curation_status: SitemapCurationStatusEnum # Layer 1: Models & ENUMs (Enum)
+      - sitemap_analysis_status: SitemapAnalysisStatusEnum # Layer 1: Models & ENUMs (Enum)
       - sitemap_analysis_error: String
       - updated_at: DateTime
   - name: LocalBusiness
-    file_path: src/models/local_business.py
+    file_path: src/models/local_business.py # Layer 1: Models & ENUMs
     table: local_businesses
-    description: Source model containing business data with domain extraction status
+    description: Source Layer 1: Model containing business data with domain extraction status
   - name: DomainBatchCurationStatusUpdateRequest
-    file_path: src/models/api_models.py
-    description: API model for batch updates to domain curation status
+    file_path: src/models/api_models.py # Layer 2: Schemas (Pydantic Model for API)
+    description: API Layer 2: Schema for batch updates to domain curation status
     fields:
       - domain_ids: List[UUID4]
-      - sitemap_curation_status: SitemapCurationStatusApiEnum
+      - sitemap_curation_status: SitemapCurationStatusApiEnum # Layer 1: Models & ENUMs (Enum, for API schema)
 
-depends_on_enums:
+depends_on_enums: # These are Layer 1: Models & ENUMs (Enums)
   - name: SitemapCurationStatusEnum
-    file_path: src/models/domain.py  # Enum is defined directly in the domain.py model file
+    file_path: src/models/domain.py  # Enum is defined directly in the domain.py Layer 1: Model file
     values: [New, Selected, Maybe, Not_a_Fit, Archived]
-    description: Status values for the domain curation process
+    description: Status values for the domain curation process (Layer 1: Models & ENUMs)
   - name: SitemapAnalysisStatusEnum
-    file_path: src/models/domain.py  # Enum is defined directly in the domain.py model file
+    file_path: src/models/domain.py  # Enum is defined directly in the domain.py Layer 1: Model file
     values: [Queued, Processing, Completed, Error]
-    description: Status values for the sitemap analysis process
+    description: Status values for the sitemap analysis process (Layer 1: Models & ENUMs)
   - name: SitemapCurationStatusApiEnum
-    file_path: src/models/api_models.py  # Correct location for API models
+    file_path: src/models/api_models.py  # Correct location for API Layer 2: Schemas (contains Enums for validation)
     values: [New, Selected, Maybe, Not_a_Fit, Archived]
-    description: API enum for validating sitemap curation status updates
+    description: API Layer 1: Enum for validating sitemap curation status updates (used in Layer 2: Schemas)
 
 # Architectural References
 arch_references:
   - doc: /Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
-    description: Mandates ORM usage for all DB operations
+    description: Mandates ORM usage (Layer 1: Models & ENUMs) for all DB operations
   - doc: /Docs_1_AI_GUIDES/02-JWT_AUTH_BOUNDARY.md
-    description: JWT authentication happens only at API gateway endpoints
+    description: JWT authentication happens only at API Layer 3: Router endpoints
   - doc: /Docs_1_AI_GUIDES/03-ROUTER_TRANSACTION_BOUNDARY.md
-    description: Routers own transaction boundaries
+    description: Layer 3: Routers own transaction boundaries
 
 phases:
   - phase: UI Interaction
     steps:
       - step_id: 1.1
-        file: static/scraper-sky-mvp.html [NOVEL]
+        file: static/scraper-sky-mvp.html [NOVEL] # Layer 6: UI Components
         action: Contains Domain Curation tab HTML structure with status dropdown and update button
         principles:
           API Std: true
           Clear User Feedback: true
-        notes: "HTML structure verified - contains table, checkboxes, dropdown, and update button"
+        notes: "HTML structure (Layer 6: UI Components) verified - contains table, checkboxes, dropdown, and update button"
       - step_id: 1.2
-        file: static/js/domain-curation-tab.js [NOVEL]
+        file: static/js/domain-curation-tab.js [NOVEL] # Layer 6: UI Components (JavaScript)
         action: User selects rows, sets sitemap_curation_status="Selected", clicks "Update X Selected"
         principles:
           API Std: true
           Clear User Feedback: true
-        notes: "JS sends PUT request to /api/v3/domains/sitemap-curation/status with domain_ids and status"
+        notes: "JS (Layer 6: UI Components) sends PUT request to /api/v3/domains/sitemap-curation/status (Layer 3: Routers) with domain_ids and status"
 
   - phase: API Routing
     steps:
       - step_id: 2.1
-        file: src/routers/domains.py [NOVEL]
-        action: Endpoint PUT /api/v3/domains/sitemap-curation/status receives request, validates
+        file: src/routers/domains.py [NOVEL] # Layer 3: Routers
+        action: Endpoint PUT /api/v3/domains/sitemap-curation/status receives request, validates (using Layer 2: Schemas)
         principles:
           API Std: true # Uses v3 prefix as required
           Auth Boundary: true # Uses get_current_user dependency
           Conn Mgmt: true # Uses get_db_session dependency
           Txn Boundary: false # Covered in later step
           Code Org: true
-          UUID Std: true # Proper UUID handling in DomainBatchCurationStatusUpdateRequest
-          Enum Handling: true # Maps API enum to DB enum
-        notes: "Router follows proper API standards and authentication patterns"
+          UUID Std: true # Proper UUID handling in DomainBatchCurationStatusUpdateRequest (Layer 2: Schema)
+          Enum Handling: true # Maps API Layer 1: Enum to DB Layer 1: Enum
+        notes: "Layer 3: Router follows proper API standards and authentication patterns"
       - step_id: 2.2
-        file: src/routers/domains.py [NOVEL]
-        action: Maps API enum to DB enum, validates, fetches Domain objects
+        file: src/routers/domains.py [NOVEL] # Layer 3: Routers
+        action: Maps API Layer 1: Enum to DB Layer 1: Enum, validates, fetches Domain Layer 1: Model objects
         principles:
-          Enum Handling: true # Uses API status.name for reliable mapping
+          Enum Handling: true # Uses API status.name for reliable mapping (Layer 1: Models & ENUMs)
           Code Org: true # Proper error handling for KeyError
           Txn Boundary: false # Covered in later step
-        notes: "Proper enum mapping using SitemapCurationStatusEnum[api_status.name]"
+        notes: "Proper Layer 1: Enum mapping using SitemapCurationStatusEnum[api_status.name]"
 
   - phase: Database Interaction
     steps:
       - step_id: 3.1
-        file: src/routers/domains.py [NOVEL]
+        file: src/routers/domains.py [NOVEL] # Layer 3: Routers (interacting with Layer 1: Models & ENUMs)
         action: Updates domain.sitemap_curation_status=Selected
         principles:
-          ORM Req: true # Uses SQLAlchemy ORM objects
-          Models: true # Domain model used correctly
-          Enums: true # Proper enum usage
+          ORM Req: true # Uses SQLAlchemy ORM objects (Layer 1: Models & ENUMs)
+          Models: true # Domain Layer 1: Model used correctly
+          Enums: true # Proper Layer 1: Enum usage
           UUIDs: true # Correct UUID handling
-        notes: "All database updates use proper ORM with domain models"
+        notes: "All database updates use proper ORM with Domain Layer 1: Models & ENUMs"
       - step_id: 3.2
-        file: src/routers/domains.py [NOVEL]
-        action: Implements Dual-Status update logic - if status is 'Selected', sets sitemap_analysis_status='Queued'
+        file: src/routers/domains.py [NOVEL] # Layer 3: Routers (interacting with Layer 1: Models & ENUMs)
+        action: Implements Dual-Status update logic - if status is \'Selected\', sets sitemap_analysis_status=\'Queued\' (Layer 1: Models & ENUMs)
         principles:
-          ORM Req: true # Uses SQLAlchemy ORM
+          ORM Req: true # Uses SQLAlchemy ORM (Layer 1: Models & ENUMs)
           Txn Boundary: false # Covered in later step
           Atomicity: true # Both updates in same transaction
-        notes: "Implements Dual-Status Update Pattern consistently with other workflows"
+        notes: "Implements Dual-Status Update Pattern consistently with other workflows (using Layer 1: Models & ENUMs)"
       - step_id: 3.3
-        file: src/routers/domains.py [NOVEL]
+        file: src/routers/domains.py [NOVEL] # Layer 3: Routers
         action: Commits transaction
         principles:
           Txn Boundary: true # Explicit await session.commit()
           Error Handling: true # try/except with rollback
-        notes: "Proper transaction management with explicit commit and rollback"
+        notes: "Proper transaction management with explicit commit and rollback on Layer 3: Router"
 
   - phase: Background Task Triggering
     steps:
       - step_id: 4.1
-        file: src/routers/domains.py [NOVEL]
-        action: Setting sitemap_analysis_status = 'Queued' acts as trigger
+        file: src/routers/domains.py [NOVEL] # Layer 3: Routers (status update triggers background task via Layer 4: Services)
+        action: Setting sitemap_analysis_status = \'Queued\' (Layer 1: Models & ENUMs) acts as trigger
         principles:
           Decoupling: true # No direct function call
           Atomicity: true # Status update in same transaction
-        notes: "Status-based queuing pattern consistent with other workflows"
+        notes: "Status-based queuing pattern (Layer 1: Models & ENUMs) consistent with other workflows for Layer 4: Services"
 
   - phase: Background Task Execution
     steps:
       - step_id: 5.1
-        file: src/services/domain_sitemap_submission_scheduler.py [NOVEL]
-        action: Polls DB for Domains with sitemap_analysis_status='Queued'
+        file: src/services/domain_sitemap_submission_scheduler.py [NOVEL] # Layer 4: Services
+        action: Polls DB for Domains (Layer 1: Models & ENUMs) with sitemap_analysis_status=\'Queued\'
         principles:
-          Bg Task Pattern: true # Proper scheduler setup
+          Bg Task Pattern: true # Proper scheduler setup (Layer 4: Services)
           Conn Mgmt: true # Uses get_background_session
           Txn Boundary: true # Per-domain transactions
-          ORM Req: true # Proper ORM usage
+          ORM Req: true # Proper ORM usage (Layer 1: Models & ENUMs)
           Code Org: true # Clear structure
           Error Handling: true # try/except with logging
-        notes: "Well-structured background job with proper transaction boundaries"
+        notes: "Well-structured background job (Layer 4: Services) with proper transaction boundaries"
       - step_id: 5.2
-        file: src/services/domain_to_sitemap_adapter_service.py [NOVEL]
+        file: src/services/domain_to_sitemap_adapter_service.py [NOVEL] # Layer 4: Services
         action: Submits domain to sitemap analysis API
         principles:
-          Bg Task Pattern: true # Called by scheduler
+          Bg Task Pattern: true # Called by scheduler (Layer 4: Services)
           Txn Boundary: true # Transaction managed by caller
-          ORM Req: true # Proper ORM usage
+          ORM Req: true # Proper ORM usage (Layer 1: Models & ENUMs)
           Error Handling: true # Comprehensive error handling
-        notes: "Well-implemented adapter pattern to legacy sitemap API"
+        notes: "Well-implemented adapter pattern (Layer 4: Services) to legacy sitemap API"
       - step_id: 5.3
-        file: src/services/domain_sitemap_submission_scheduler.py [NOVEL]
-        action: Updates domain.sitemap_analysis_status based on submission result
+        file: src/services/domain_sitemap_submission_scheduler.py [NOVEL] # Layer 4: Services
+        action: Updates domain.sitemap_analysis_status (Layer 1: Models & ENUMs) based on submission result
         principles:
-          ORM Req: true # Proper ORM updates
+          ORM Req: true # Proper ORM updates (Layer 1: Models & ENUMs)
           Txn Boundary: true # Per-domain transaction commit
-        notes: "Proper status updates with transaction management"
+        notes: "Proper status updates (Layer 1: Models & ENUMs) with transaction management in Layer 4: Services"
 
 # Workflow connections with other workflows
 workflow_connections:
   as_producer:
     - consumer_workflow: WF5-SitemapCuration
       # Database table that this workflow writes to for the next workflow (MANDATORY)
-      interface_table: domains  # Explicit table name from database schema
+      interface_table: domains  # Explicit table name from database Layer 2: Schema
       # Field that contains the status signal for the next workflow
-      handoff_field: sitemap_analysis_status
+      handoff_field: sitemap_analysis_status # Layer 1: Models & ENUMs
       # Value that signals readiness for the next workflow
-      produced_value: SitemapAnalysisStatusEnum.Queued
+      produced_value: SitemapAnalysisStatusEnum.Queued # Layer 1: Models & ENUMs
       connection_details: |
-        WF4 produces records in the domains table with sitemap_analysis_status = "Queued" that
+        WF4 produces records in the domains table (Layer 1: Models & ENUMs) with sitemap_analysis_status = "Queued" that
         are then consumed by WF5-SitemapCuration. The workflow emits this signal by updating the
-        sitemap_analysis_status field in the domains table to "Queued".
-      connection_source_file: src/routers/domains.py
+        sitemap_analysis_status field in the domains table to "Queued" (Layer 1: Models & ENUMs).
+      connection_source_file: src/routers/domains.py # Layer 3: Routers
       connection_source_function: update_domains_batch_status
-      connection_target_file: src/services/domain_sitemap_submission_scheduler.py
+      connection_target_file: src/services/domain_sitemap_submission_scheduler.py # Layer 4: Services
       connection_target_function: process_pending_sitemap_submissions
       # Explicit database operation that updates the status field
-      production_operation: "UPDATE domains SET sitemap_analysis_status = 'queued', sitemap_analysis_error = NULL WHERE id IN (...)"
+      production_operation: "UPDATE domains SET sitemap_analysis_status = \'queued\', sitemap_analysis_error = NULL WHERE id IN (...)" # Interacts with Layer 1: Models & ENUMs
 
   as_consumer:
     - producer_workflow: WF3-LocalBusinessCuration
       # Database table that this workflow consumes data from (MANDATORY)
-      interface_table: local_businesses  # Explicit table name from database schema
+      interface_table: local_businesses  # Explicit table name from database Layer 2: Schema
       # Field that contains the status signal this workflow looks for
-      handoff_field: domain_extraction_status
+      handoff_field: domain_extraction_status # Layer 1: Models & ENUMs
       # Value that triggers consumption
-      consumed_value: DomainExtractionStatusEnum.Queued
+      consumed_value: DomainExtractionStatusEnum.Queued # Layer 1: Models & ENUMs
       connection_details: |
-        WF4 consumes records from the local_businesses table when records have domain_extraction_status = "Queued".
-        The sitemap_scheduler polls these records and triggers the domain extraction process which
-        creates or updates domain records in the database.
-      connection_source_file: src/routers/local_businesses.py
+        WF4 consumes records from the local_businesses table (Layer 1: Models & ENUMs) when records have domain_extraction_status = "Queued".
+        The sitemap_scheduler (Layer 4: Services) polls these records and triggers the domain extraction process which
+        creates or updates domain records (Layer 1: Models & ENUMs) in the database.
+      connection_source_file: src/routers/local_businesses.py # Layer 3: Routers
       connection_source_function: update_local_businesses_status_batch
-      connection_target_file: src/services/sitemap_scheduler.py
+      connection_target_file: src/services/sitemap_scheduler.py # Layer 4: Services
       connection_target_function: process_pending_jobs
       # Explicit database operation that reads from the producer table
-      consumption_query: "SELECT * FROM local_businesses WHERE domain_extraction_status = 'queued' ORDER BY updated_at LIMIT 10"
+      consumption_query: "SELECT * FROM local_businesses WHERE domain_extraction_status = \'queued\' ORDER BY updated_at LIMIT 10" # Interacts with Layer 1: Models & ENUMs
 
 # Compliance Verification
 verification:
   api_versioning:
     compliant: true
-    reason: "All endpoints use /api/v3/ prefix as required"
+    reason: "All Layer 3: Router endpoints use /api/v3/ prefix as required"
   orm_usage:
     compliant: true
-    reason: "All database operations use SQLAlchemy ORM"
+    reason: "All database operations use SQLAlchemy ORM (Layer 1: Models & ENUMs)"
   transaction_boundaries:
     compliant: true
-    reason: "Router owns transaction boundaries with explicit commit/rollback"
+    reason: "Layer 3: Router owns transaction boundaries with explicit commit/rollback"
   jwt_auth_boundary:
     compliant: true
-    reason: "Authentication happens only at API gateway with get_current_user dependency"
+    reason: "Authentication happens only at API gateway (Layer 3: Router) with get_current_user dependency"
   background_job_patterns:
     compliant: true
-    reason: "Scheduler implements proper error handling, retry logic, and transaction boundaries"
+    reason: "Scheduler (Layer 4: Services) implements proper error handling, retry logic, and transaction boundaries"
 
 # Known Issues
 known_issues:
   - issue: Direct API call to internal endpoint
     severity: LOW
-    remediation: "Consider moving from direct API call to service-to-service communication"
+    remediation: "Consider moving from direct API call to Layer 4: Service-to-Layer 4: Service communication"
     jira: "SCRSKY-232"
   - issue: Hardcoded internal API URL
     severity: LOW
-    remediation: "Move INTERNAL_API_BASE_URL to configuration settings"
+    remediation: "Move INTERNAL_API_BASE_URL to Layer 5: Configuration settings"
     jira: "SCRSKY-233"

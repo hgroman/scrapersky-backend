@@ -4,27 +4,27 @@ progress_tracker:
     - file: src/models/place.py
       table: places
       workflows: [WF1, WF2]
-      description: Primary model for place data
+      description: Primary Layer 1: Model for place data
     - file: src/models/place_search.py
       table: place_searches
       workflows: [WF1]
-      description: Model for search queries
+      description: Layer 1: Model for search queries
     - file: src/models/local_business.py
       table: local_businesses
       workflows: [WF2, WF3, WF4]
-      description: Model for local business data
+      description: Layer 1: Model for local business data
     - file: src/models/domain.py
       table: domains
       workflows: [WF3, WF4, WF5, WF6]
-      description: Model for domain data
+      description: Layer 1: Model for domain data
     - file: src/models/sitemap.py
       table: sitemap_files
       workflows: [WF5, WF6]
-      description: Model for sitemap files
+      description: Layer 1: Model for sitemap files
     - file: src/models/page.py
       table: pages
       workflows: [WF6]
-      description: Model for pages extracted from sitemaps
+      description: Layer 1: Model for pages extracted from sitemaps
 
   enum_files:
     - file: src/models/place.py
@@ -50,16 +50,16 @@ progress_tracker:
     - file: src/models/enums.py
       enums: [SitemapAnalysisStatusEnum, DomainStatusEnum]
       workflows: [Multiple]
-      notes: "This file contains some duplicate enum definitions that are also defined in their respective model files"
+      notes: "This file contains some duplicate Layer 1: ENUM definitions that are also defined in their respective Layer 1: Model files"
 
   # List of files whose imports have been checked
   evaluated_files:
-    - src/routers/batch_page_scraper.py # (1)
+    - src/routers/batch_page_scraper.py (Layer 3: Routers) # (1)
     - src/auth/jwt_auth.py # (1.1, 4.4, 4.6.1, 5.1, 6.1, 7.1, 8.1, 9.1, 10.1, 11.1, 12.1, 13.1)
-    - src/config/settings.py # (1.2, 1.1.1, 1.6.2.1, 4.5, 4.1.1, 4.3.1, 6.9.1, 7.2, 7.4.1, 9.2, 10.2)
-    - src/models/__init__.py # (1.3, 1.6.3.1, 1.9.2.1, 1.9.2.4.1, 6.2, 6.9.2, 7.3, 9.3, 10.5.1.1)
-    - src/models/api_models.py # (1.3.1, 5.3, 8.3, 10.3, 11.3)
-    - src/models/base.py # (1.3.2, 1.3.3.1, 1.3.4.1, 1.3.5.1, 1.3.6.1, 1.3.7.1, 1.3.8.1, 1.3.9.1, 1.3.10.1, 8.4.2, 8.4.3, 12.3.1)
+    - src/config/settings.py (Layer 5: Configuration) # (1.2, 1.1.1, 1.6.2.1, 4.5, 4.1.1, 4.3.1, 6.9.1, 7.2, 7.4.1, 9.2, 10.2)
+    - src/models/__init__.py (Layer 1: Models & ENUMs) # (1.3, 1.6.3.1, 1.9.2.1, 1.9.2.4.1, 6.2, 6.9.2, 7.3, 9.3, 10.5.1.1)
+    - src/models/api_models.py (Layer 1: Models & ENUMs) # (1.3.1, 5.3, 8.3, 10.3, 11.3)
+    - src/models/base.py (Layer 1: Models & ENUMs) # (1.3.2, 1.3.3.1, 1.3.4.1, 1.3.5.1, 1.3.6.1, 1.3.7.1, 1.3.8.1, 1.3.9.1, 1.3.10.1, 8.4.2, 8.4.3, 12.3.1)
     - src/models/batch_job.py # (1.3.3, 1.6.1)
     - src/models/tenant.py # (1.3.3.2, 1.4, 1.3.11, 1.3.5.2, 1.3.6.2, 1.3.8.2, 1.3.9.2, 1.6.3.2, 1.9.2.4.2, 6.4, 12.4, 12.3.2, 2.5.5)
     - src/models/contact.py # (1.3.4, 6.9.3)
@@ -69,8 +69,8 @@ progress_tracker:
     - src/models/place.py # (1.3.8, 7.4.3.1, 7.5.1, 8.5, 8.4.1, 11.4)
     - src/models/place_search.py # (1.3.9, 7.8, 7.4.2, 7.5.2)
     - src/models/sitemap.py # (1.3.10, 13.3, 13.4.1, 13.5.1, 2.5.4)
-    - src/schemas/job.py # (1.5, 6.6, 9.4, 10.4)
-    - src/services/batch/batch_functions.py # (1.6, 1.7.1)
+    - src/schemas/job.py (Layer 2: Schemas) # (1.5, 6.6, 9.4, 10.4)
+    - src/services/batch/batch_functions.py (Layer 4: Services) # (1.6, 1.7.1)
     - src/session/async_session.py # (1.6.2, 1.10, 1.6.3.5, 3.2, 4.9, 6.7, 6.9.7, 7.7, 9.7, 10.6, 12.6)
     - src/services/page_scraper/domain_processor.py # (1.6.3, 1.9.1, 9.8)
     - src/scraper/domain_utils.py # (1.6.3.3, 1.9.2.2, 10.5.1.2)
@@ -123,45 +123,45 @@ progress_tracker:
   # List of all unique files/directories mentioned in main_routers.md so far
   discovered_files:
     # Main Routers (from src/main.py)
-    - src/routers/batch_page_scraper.py
-    - src/routers/batch_sitemap.py
-    - src/routers/db_portal.py
-    - src/routers/dev_tools.py
-    - src/routers/domains.py
-    - src/routers/email_scanner.py
-    - src/routers/google_maps_api.py
-    - src/routers/local_businesses.py
-    - src/routers/modernized_page_scraper.py
-    - src/routers/modernized_sitemap.py
-    - src/routers/places_staging.py
-    - src/routers/profile.py
-    - src/routers/sitemap_files.py
+    - src/routers/batch_page_scraper.py (Layer 3: Routers)
+    - src/routers/batch_sitemap.py (Layer 3: Routers)
+    - src/routers/db_portal.py (Layer 3: Routers)
+    - src/routers/dev_tools.py (Layer 3: Routers)
+    - src/routers/domains.py (Layer 3: Routers)
+    - src/routers/email_scanner.py (Layer 3: Routers)
+    - src/routers/google_maps_api.py (Layer 3: Routers)
+    - src/routers/local_businesses.py (Layer 3: Routers)
+    - src/routers/modernized_page_scraper.py (Layer 3: Routers)
+    - src/routers/modernized_sitemap.py (Layer 3: Routers)
+    - src/routers/places_staging.py (Layer 3: Routers)
+    - src/routers/profile.py (Layer 3: Routers)
+    - src/routers/sitemap_files.py (Layer 3: Routers)
     - src/routers/sqlalchemy/ # Directory
     # Imports of (1) src/routers/batch_page_scraper.py
     - src/auth/jwt_auth.py
-    - src/config/settings.py
-    - src/models/__init__.py
-    - src/models/tenant.py
-    - src/schemas/job.py
-    - src/services/batch/batch_functions.py
-    - src/services/batch/batch_processor_service.py
-    - src/services/batch/types.py
-    - src/services/page_scraper/__init__.py
-    - src/session/async_session.py
-    - src/utils/db_helpers.py
+    - src/config/settings.py (Layer 5: Configuration)
+    - src/models/__init__.py (Layer 1: Models & ENUMs)
+    - src/models/tenant.py (Layer 1: Models & ENUMs)
+    - src/schemas/job.py (Layer 2: Schemas)
+    - src/services/batch/batch_functions.py (Layer 4: Services)
+    - src/services/batch/batch_processor_service.py (Layer 4: Services)
+    - src/services/batch/types.py (Layer 4: Services)
+    - src/services/page_scraper/__init__.py (Layer 4: Services)
+    - src/session/async_session.py (Layer 1: Models & ENUMs)
+    - src/utils/db_helpers.py (Layer 1: Models & ENUMs)
     # Imports of (1.1) src/auth/jwt_auth.py - already listed
     # Imports of (1.1.1) src/config/settings.py - no internal imports
     # Imports of (1.3) src/models/__init__.py
-    - src/models/api_models.py
-    - src/models/base.py
-    - src/models/batch_job.py
-    - src/models/contact.py
-    - src/models/domain.py
-    - src/models/job.py
-    - src/models/page.py
-    - src/models/place.py
-    - src/models/place_search.py
-    - src/models/sitemap.py
+    - src/models/api_models.py (Layer 1: Models & ENUMs)
+    - src/models/base.py (Layer 1: Models & ENUMs)
+    - src/models/batch_job.py # (1.3.3, 1.6.1)
+    - src/models/contact.py # (1.3.4, 6.9.3)
+    - src/models/domain.py # (1.3.5, 4.2, 4.3.2, 5.4, 6.8, 6.9.4, 2.5.2)
+    - src/models/job.py # (1.3.6, 6.3, 6.9.5, 2.5.3)
+    - src/models/page.py # (1.3.7, 6.9.6)
+    - src/models/place.py # (1.3.8, 7.4.3.1, 7.5.1, 8.5, 8.4.1, 11.4)
+    - src/models/place_search.py # (1.3.9, 7.8, 7.4.2, 7.5.2)
+    - src/models/sitemap.py # (1.3.10, 13.3, 13.4.1, 13.5.1, 2.5.4)
     # Imports of (1.3.3) src/models/batch_job.py - already listed
     # Imports of (1.3.4) src/models/contact.py - already listed
     # Imports of (1.3.5) src/models/domain.py - already listed
@@ -172,10 +172,8 @@ progress_tracker:
     # Imports of (1.3.10) src/models/sitemap.py - already listed
     # Imports of (1.4) src/models/tenant.py - already listed
     # Imports of (1.5) src/schemas/job.py - no internal imports
-    # Imports of (1.6) src/services/batch/batch_functions.py
     - src/services/page_scraper/domain_processor.py # Added
-    # Imports of (1.6.2) src/session/async_session.py - already listed
-    # Imports of (1.6.3) src/services/page_scraper/domain_processor.py
+    # Imports of (1.6) src/services/batch/batch_functions.py
     - src/scraper/domain_utils.py # Added
     - src/scraper/metadata_extractor.py # Added
     # Imports of (1.6.3.4) src/scraper/metadata_extractor.py

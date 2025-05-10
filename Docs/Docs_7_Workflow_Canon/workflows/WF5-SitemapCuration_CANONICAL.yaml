@@ -3,211 +3,211 @@ date_reviewed: 2025-05-05
 reviewed_by: Cascade AI
 
 # Dependencies section with standardized format
-depends_on_models:
+depends_on_models: # These are Layer 1: Models & ENUMs
   - name: SitemapFile
-    file_path: src/models/sitemap.py
+    file_path: src/models/sitemap.py # Layer 1: Models & ENUMs
     table: sitemap_files
-    description: Primary model for sitemap file curation and import status tracking
+    description: Primary Layer 1: Model for sitemap file curation and import status tracking
     fields:
       - id: UUID
       - domain_id: UUID
       - url: Text
-      - deep_scrape_curation_status: SitemapImportCurationStatusEnum
-      - sitemap_import_status: SitemapImportProcessStatusEnum
+      - deep_scrape_curation_status: SitemapImportCurationStatusEnum # Layer 1: Models & ENUMs (Enum)
+      - sitemap_import_status: SitemapImportProcessStatusEnum # Layer 1: Models & ENUMs (Enum)
       - sitemap_import_error: Text
       - updated_at: DateTime
   - name: Domain
-    file_path: src/models/domain.py
+    file_path: src/models/domain.py # Layer 1: Models & ENUMs
     table: domains
-    description: Parent model containing domain information for sitemaps
+    description: Parent Layer 1: Model containing domain information for sitemaps
   - name: SitemapFileBatchUpdate
-    file_path: src/models/sitemap_file.py
-    description: API model for batch updates to sitemap file curation status
+    file_path: src/models/sitemap_file.py # Layer 2: Schemas (Pydantic Model for API, though located in models dir)
+    description: API Layer 2: Schema for batch updates to sitemap file curation status
     fields:
       - sitemap_file_ids: List[UUID]
-      - deep_scrape_curation_status: SitemapDeepCurationStatusEnum
+      - deep_scrape_curation_status: SitemapDeepCurationStatusEnum # Layer 1: Models & ENUMs (Enum, for API schema)
 
-depends_on_enums:
+depends_on_enums: # These are Layer 1: Models & ENUMs (Enums)
   - name: SitemapImportCurationStatusEnum
-    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py model file
+    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py Layer 1: Model file
     values: [New, Selected, Maybe, Not_a_Fit, Archived]
-    description: Status values for the sitemap file curation process
+    description: Status values for the sitemap file curation process (Layer 1: Models & ENUMs)
   - name: SitemapImportProcessStatusEnum
-    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py model file
+    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py Layer 1: Model file
     values: [Queued, Processing, Completed, Error, Submitted]
-    description: Status values for the sitemap file import process
+    description: Status values for the sitemap file import process (Layer 1: Models & ENUMs)
   - name: SitemapDeepCurationStatusEnum
-    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py model file
+    file_path: src/models/sitemap.py  # Enum is defined directly in the sitemap.py Layer 1: Model file
     values: [New, Selected, Rejected]
-    description: Status values for the deep scrape curation process
+    description: Status values for the deep scrape curation process (Layer 1: Models & ENUMs)
 
 # Architectural References
 arch_references:
   - doc: /Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
-    description: Mandates ORM usage for all DB operations
+    description: Mandates ORM usage (Layer 1: Models & ENUMs) for all DB operations
   - doc: /Docs_1_AI_GUIDES/02-JWT_AUTH_BOUNDARY.md
-    description: JWT authentication happens only at API gateway endpoints
+    description: JWT authentication happens only at API Layer 3: Router gateway endpoints
   - doc: /Docs_1_AI_GUIDES/03-ROUTER_TRANSACTION_BOUNDARY.md
-    description: Routers own transaction boundaries
+    description: Layer 3: Routers own transaction boundaries
   - doc: /Docs_1_AI_GUIDES/04-API_VERSIONING_STANDARDIZATION.md
-    description: All endpoints must use /api/v3/ prefix
+    description: All Layer 3: Router endpoints must use /api/v3/ prefix
 
 phases:
   - phase: UI Interaction
     steps:
       - step_id: 1.1
-        file: static/scraper-sky-mvp.html [NOVEL]
+        file: static/scraper-sky-mvp.html [NOVEL] # Layer 6: UI Components
         action: Contains Sitemap Curation tab HTML structure with status dropdown and update button
         principles:
           API Std: true
           Clear User Feedback: true
-        notes: "HTML includes table, checkboxes, dropdown, and update button for batch operations"
+        notes: "HTML (Layer 6: UI Components) includes table, checkboxes, dropdown, and update button for batch operations"
       - step_id: 1.2
-        file: static/js/sitemap-curation-tab.js [NOVEL]
+        file: static/js/sitemap-curation-tab.js [NOVEL] # Layer 6: UI Components (JavaScript)
         action: User selects rows, sets deep_scrape_curation_status="Selected", clicks "Update X Selected"
         principles:
           API Std: true
           Clear User Feedback: true
-        notes: "JS sends PUT request to /api/v3/sitemap-files/status with sitemap_file_ids and status"
+        notes: "JS (Layer 6: UI Components) sends PUT request to /api/v3/sitemap-files/status (Layer 3: Routers) with sitemap_file_ids and status"
 
   - phase: API Routing
     steps:
       - step_id: 2.1
-        file: src/routers/sitemap_files.py [NOVEL]
-        action: Endpoint PUT /api/v3/sitemap-files/status receives request, validates
+        file: src/routers/sitemap_files.py [NOVEL] # Layer 3: Routers
+        action: Endpoint PUT /api/v3/sitemap-files/status receives request, validates (using Layer 2: Schemas)
         principles:
           API Std: true # Uses v3 prefix as required
           Auth Boundary: true # Uses get_current_user dependency
           Conn Mgmt: true # Uses get_db_session dependency
-          Txn Boundary: true # Router manages transaction
-          Code Org: true # Delegates to service layer
+          Txn Boundary: true # Layer 3: Router manages transaction
+          Code Org: true # Delegates to Layer 4: Service layer
           UUID Std: true # Proper UUID handling
-          Enum Handling: true # Proper enum validation
-        notes: "Router delegates to service layer following architecture pattern"
+          Enum Handling: true # Proper Layer 1: Enum validation
+        notes: "Layer 3: Router delegates to Layer 4: Service layer following architecture pattern"
 
   - phase: Service Layer Logic
     steps:
       - step_id: 3.1
-        file: src/services/sitemap_files_service.py [NOVEL]
-        action: update_curation_status_batch fetches SitemapFile objects and prepares update
+        file: src/services/sitemap_files_service.py [NOVEL] # Layer 4: Services
+        action: update_curation_status_batch fetches SitemapFile Layer 1: Model objects and prepares update
         principles:
-          Auth Boundary: true # No JWT handling in service
-          Txn Boundary: true # Transaction managed by router
-          ORM Req: true # Uses SQLAlchemy ORM
+          Auth Boundary: true # No JWT handling in Layer 4: Service
+          Txn Boundary: true # Transaction managed by Layer 3: Router
+          ORM Req: true # Uses SQLAlchemy ORM (Layer 1: Models & ENUMs)
           Code Org: true # Clear method structure
           UUID Std: true # Proper UUID handling
-          Enum Handling: true # Proper enum validation
-        notes: "Service follows transaction-aware pattern without owning transaction boundaries"
+          Enum Handling: true # Proper Layer 1: Enum validation
+        notes: "Layer 4: Service follows transaction-aware pattern without owning transaction boundaries"
 
   - phase: Database Interaction
     steps:
       - step_id: 4.1
-        file: src/services/sitemap_files_service.py [NOVEL]
+        file: src/services/sitemap_files_service.py [NOVEL] # Layer 4: Services (interacting with Layer 1: Models & ENUMs)
         action: Updates deep_scrape_curation_status=Selected
         principles:
-          ORM Req: true # Uses SQLAlchemy ORM update statement
-          Models: true # Proper model reference
-          Enums: true # Uses enum values
+          ORM Req: true # Uses SQLAlchemy ORM update statement (Layer 1: Models & ENUMs)
+          Models: true # Proper Layer 1: Model reference
+          Enums: true # Uses Layer 1: Enum values
           UUIDs: true # Handles UUIDs correctly
-        notes: "Service uses bulk update pattern with ORM syntax"
+        notes: "Layer 4: Service uses bulk update pattern with ORM syntax for Layer 1: Models & ENUMs"
       - step_id: 4.2
-        file: src/services/sitemap_files_service.py [NOVEL]
-        action: Implements Dual-Status update logic - if status is 'Selected', sets sitemap_import_status='Queued'
+        file: src/services/sitemap_files_service.py [NOVEL] # Layer 4: Services (interacting with Layer 1: Models & ENUMs)
+        action: Implements Dual-Status update logic - if status is \'Selected\', sets sitemap_import_status=\'Queued\' (Layer 1: Models & ENUMs)
         principles:
-          ORM Req: true # Uses proper ORM
+          ORM Req: true # Uses proper ORM (Layer 1: Models & ENUMs)
           Atomicity: true # Both updates in same transaction
-        notes: "Dual-Status Update Pattern consistent with other workflows"
+        notes: "Dual-Status Update Pattern consistent with other workflows (using Layer 1: Models & ENUMs)"
 
   - phase: Background Task Triggering
     steps:
       - step_id: 5.1
-        file: src/services/sitemap_files_service.py [NOVEL]
-        action: Setting sitemap_import_status = 'Queued' acts as producer trigger for WF6
+        file: src/services/sitemap_files_service.py [NOVEL] # Layer 4: Services
+        action: Setting sitemap_import_status = \'Queued\' (Layer 1: Models & ENUMs) acts as producer trigger for WF6
         principles:
           Decoupling: true # No direct function call
           Atomicity: true # Status update in same transaction
           Producer-Consumer: true # Follows established pattern
-        notes: "Producer side of the Dual-Status Update Pattern consistent across workflows"
+        notes: "Producer side of the Dual-Status Update Pattern (using Layer 1: Models & ENUMs) consistent across workflows for Layer 4: Services"
 
   - phase: Background Task Execution (VERIFIED - LEADS TO WF6)
     steps:
       - step_id: 6.1
-        file: src/services/sitemap_import_scheduler.py [SHARED]
-        action: A dedicated scheduler polls for SitemapFiles with sitemap_import_status='Queued'
+        file: src/services/sitemap_import_scheduler.py [SHARED] # Layer 4: Services
+        action: A dedicated scheduler polls for SitemapFiles (Layer 1: Models & ENUMs) with sitemap_import_status=\'Queued\'
         principles:
-          Bg Task Pattern: true # Proper implementation in separate component
+          Bg Task Pattern: true # Proper implementation in separate component (Layer 4: Services)
           Conn Mgmt: true # Uses proper database session management
           Txn Boundary: true # Has proper transaction boundaries
-          ORM Req: true # Uses SQLAlchemy ORM correctly
+          ORM Req: true # Uses SQLAlchemy ORM (Layer 1: Models & ENUMs) correctly
           Code Org: true # Organized in a dedicated module
           Error Handling: true # Proper error handling and logging
-        notes: "CLARIFIED: The sitemap_scheduler.py is NOT supposed to handle this - instead, a dedicated scheduler in sitemap_import_scheduler.py handles this as part of WF6-Sitemap Import workflow."
+        notes: "CLARIFIED: The sitemap_scheduler.py is NOT supposed to handle this - instead, a dedicated scheduler in sitemap_import_scheduler.py (Layer 4: Services) handles this as part of WF6-Sitemap Import workflow."
       - step_id: 6.2
-        file: src/services/sitemap_import_service.py [SHARED]
-        action: Processes queued sitemap file for URL extraction and database import
+        file: src/services/sitemap_import_service.py [SHARED] # Layer 4: Services
+        action: Processes queued sitemap file for URL extraction and database import (Layer 1: Models & ENUMs)
         principles:
-          Bg Task Pattern: true # Proper implementation in WF6
+          Bg Task Pattern: true # Proper implementation in WF6 (Layer 4: Services)
           Txn Boundary: true # Has proper transaction boundaries
-          ORM Req: true # Uses SQLAlchemy ORM
-        notes: "This step is reached through WF6-Sitemap Import workflow, which begins where WF5 ends. The separation of WF5 and WF6 provides clean workflow boundaries."
+          ORM Req: true # Uses SQLAlchemy ORM (Layer 1: Models & ENUMs)
+        notes: "This step is reached through WF6-Sitemap Import workflow, which begins where WF5 ends. The separation of WF5 and WF6 provides clean workflow boundaries between Layer 4: Services components."
 
 # Compliance Verification
 verification:
   api_versioning:
     compliant: true
-    reason: "API endpoint uses /api/v3/ prefix as required"
+    reason: "API Layer 3: Router endpoint uses /api/v3/ prefix as required"
   orm_usage:
     compliant: true
-    reason: "All implemented database operations use SQLAlchemy ORM"
+    reason: "All implemented database operations use SQLAlchemy ORM (Layer 1: Models & ENUMs)"
   transaction_boundaries:
     compliant: true
-    reason: "Router correctly owns transaction boundaries"
+    reason: "Layer 3: Router correctly owns transaction boundaries"
   jwt_auth_boundary:
     compliant: true
-    reason: "Authentication happens only at API gateway with get_current_user dependency"
+    reason: "Authentication happens only at API gateway (Layer 3: Router) with get_current_user dependency"
   background_job_patterns:
     compliant: true
-    reason: "Processing is handled by a dedicated scheduler in WF6-Sitemap Import workflow"
+    reason: "Processing is handled by a dedicated scheduler (Layer 4: Services) in WF6-Sitemap Import workflow"
 
 # Dependencies
 workflow_connections:
   as_producer:
     - consumer_workflow: WF6-SitemapImport
       # Database table that this workflow writes to for the next workflow (MANDATORY)
-      interface_table: sitemap_files  # Explicit table name from database schema
+      interface_table: sitemap_files  # Explicit table name from database Layer 2: Schema
       # Field that contains the status signal for the next workflow
-      handoff_field: sitemap_import_status
+      handoff_field: sitemap_import_status # Layer 1: Models & ENUMs
       # Value that signals readiness for the next workflow
-      produced_value: SitemapFileImportStatusEnum.Queued
+      produced_value: SitemapFileImportStatusEnum.Queued # Layer 1: Models & ENUMs
       connection_details: |
-        WF5 produces records in the sitemap_files table with sitemap_import_status = "Queued" that
-        are then consumed by WF6-SitemapImport. This status change triggers the background processing
+        WF5 produces records in the sitemap_files table (Layer 1: Models & ENUMs) with sitemap_import_status = "Queued" that
+        are then consumed by WF6-SitemapImport. This status change triggers the background processing (Layer 4: Services)
         of the sitemap file to extract URLs.
-      connection_source_file: src/routers/sitemap_files.py
+      connection_source_file: src/routers/sitemap_files.py # Layer 3: Routers
       connection_source_function: update_sitemap_files_status_batch
-      connection_target_file: src/services/sitemap_import_scheduler.py
+      connection_target_file: src/services/sitemap_import_scheduler.py # Layer 4: Services
       connection_target_function: process_pending_sitemap_imports
       # Explicit database operation that updates the status field
-      production_operation: "UPDATE sitemap_files SET sitemap_import_status = 'queued' WHERE id IN (...)"
+      production_operation: "UPDATE sitemap_files SET sitemap_import_status = \'queued\' WHERE id IN (...)" # Interacts with Layer 1: Models & ENUMs
 
   as_consumer:
     - producer_workflow: WF4-DomainCuration
       # Database table that this workflow consumes data from (MANDATORY)
-      interface_table: domains  # Explicit table name from database schema
+      interface_table: domains  # Explicit table name from database Layer 2: Schema
       # Field that contains the status signal this workflow looks for
-      handoff_field: sitemap_analysis_status
+      handoff_field: sitemap_analysis_status # Layer 1: Models & ENUMs
       # Value that triggers consumption
-      consumed_value: SitemapAnalysisStatusEnum.Queued
+      consumed_value: SitemapAnalysisStatusEnum.Queued # Layer 1: Models & ENUMs
       connection_details: |
-        WF5 consumes records from the domains table when records have sitemap_analysis_status = "Queued".
-        The domain_sitemap_submission_scheduler polls these records and initiates the sitemap discovery
+        WF5 consumes records from the domains table (Layer 1: Models & ENUMs) when records have sitemap_analysis_status = "Queued".
+        The domain_sitemap_submission_scheduler (Layer 4: Services) polls these records and initiates the sitemap discovery
         and extraction process.
-      connection_source_file: src/routers/domains.py
+      connection_source_file: src/routers/domains.py # Layer 3: Routers
       connection_source_function: update_domains_batch_status
-      connection_target_file: src/services/domain_sitemap_submission_scheduler.py
+      connection_target_file: src/services/domain_sitemap_submission_scheduler.py # Layer 4: Services
       connection_target_function: process_pending_sitemap_submissions
       # Explicit database operation that reads from the producer table
-      consumption_query: "SELECT * FROM domains WHERE sitemap_analysis_status = 'queued' ORDER BY updated_at LIMIT 10"
+      consumption_query: "SELECT * FROM domains WHERE sitemap_analysis_status = \'queued\' ORDER BY updated_at LIMIT 10" # Interacts with Layer 1: Models & ENUMs
 
 # Known Issues and Actionable TODOs
 known_issues:
@@ -216,19 +216,19 @@ known_issues:
     severity: "MEDIUM"
     ticket: "SCRSKY-240"
     target_date: "2025-05-10"
-    remediation: "Add explicit documentation about the handoff between WF5-Sitemap Curation and WF6-Sitemap Import"
+    remediation: "Add explicit documentation about the handoff between WF5-Sitemap Curation and WF6-Sitemap Import (Layer 4: Services interactions)"
     actionable_todo: "Update 1.1-background-services.md and 1-main_routers.md to clearly document WF5→WF6 connection"
     files_to_modify:
       - "/Docs/Docs_7_Workflow_Canon/1.1-background-services.md"
       - "/Docs/Docs_7_Workflow_Canon/1-main_routers.md"
 
   - id: "KI2"
-    issue: "Status field naming inconsistency"
+    issue: "Status field naming inconsistency in Layer 1: Models & ENUMs"
     severity: "LOW"
     ticket: "SCRSKY-242"
     target_date: "2025-06-15"
-    remediation: "Consider standardizing field names from 'deep_scrape_curation_status' to 'sitemap_import_curation_status' for clarity"
-    actionable_todo: "Create database migration script to rename field and update all references in code"
+    remediation: "Consider standardizing field names from \'deep_scrape_curation_status\' to \'sitemap_import_curation_status\' for clarity in Layer 1: Models & ENUMs"
+    actionable_todo: "Create database migration script to rename field and update all references in code (Layer 1: Models & ENUMs, Layer 3: Routers, Layer 4: Services)"
     files_to_modify:
       - "src/models/sitemap.py"
       - "src/routers/sitemap_files.py"
@@ -244,7 +244,7 @@ documentation_todos:
       - "/Docs/Docs_4_Architecture/workflow-diagrams.md"
 
   - id: "DT2"
-    description: "Create producer-consumer pattern documentation to standardize across all workflows"
+    description: "Create producer-consumer pattern documentation to standardize across all workflows (Layer 4: Services focus)"
     ticket: "SCRSKY-244"
     target_date: "2025-05-15"
     files_to_modify:

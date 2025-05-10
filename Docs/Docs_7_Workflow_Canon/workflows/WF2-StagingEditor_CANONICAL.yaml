@@ -12,11 +12,11 @@ architecture_reference:
   - path: Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
     description: Enforces ORM usage for all database operations
   - path: Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
-    description: JWT authentication must only occur at API router level
+    description: JWT authentication must only occur at API Layer 3: Routers level
   - path: Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md
     description: All API endpoints must follow v3 prefix format
   - path: Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
-    description: Routers own transaction boundaries, services are transaction-aware
+    description: Layer 3: Routers own transaction boundaries, Layer 4: Services are transaction-aware
   - path: Docs_3_Project_Design/background_task_patterns.md
     description: Background task scheduling and execution patterns
 
@@ -25,7 +25,7 @@ depends_on_models:
   - name: Place
     file_path: src/models/place.py
     table: places
-    description: Primary model containing status, deep_scan_status fields
+    description: Primary Layer 1: Model containing status, deep_scan_status fields
   - name: Base
     file_path: src/models/base.py
     description: SQLAlchemy base model class
@@ -62,7 +62,7 @@ workflow_connections:
       connection_details: |
         WF2 consumes place records from the places table with status="New" produced by
         WF1-SingleSearch workflow. These records are queried from the places table and
-        displayed in the Staging Editor UI for human review and selection.
+        displayed in the Staging Editor Layer 6: UI Components for human review and selection.
       connection_source_file: src/services/places_service.py
       connection_source_function: create_place_from_search
       connection_target_file: src/routers/places_staging.py
@@ -80,7 +80,7 @@ workflow_connections:
       produced_value: PlaceStatusEnum.Selected
       connection_details: |
         WF2 produces local_business records in the local_businesses table when places are marked
-        as "Selected" in the UI. These records are created with status="Selected" and are
+        as "Selected" in the Layer 6: UI Components. These records are created with status="Selected" and are
         then consumed by WF3-LocalBusinessCuration for domain extraction processing.
       connection_source_file: src/routers/places_staging.py
       connection_source_function: update_places_status_batch
@@ -103,8 +103,8 @@ trigger_patterns:
     scheduler_function: process_pending_jobs
 
 phases:
-  - phase: UI Interaction
-    description: User selects items in Staging Editor UI and updates status
+  - phase: Layer 6: UI Components Interaction
+    description: User selects items in Staging Editor Layer 6: UI Components and updates status
     steps:
       - step_id: 2.1
         file: static/js/staging-editor-tab.js
@@ -126,8 +126,8 @@ phases:
           design. Note that the critical trigger_deep_scan parameter is NEVER sent from frontend, which
           aligns with the actual backend behavior discovered in the audit.
 
-  - phase: API Routing
-    description: Initial request handling at API router level
+  - phase: API Layer 3: Routers
+    description: Initial request handling at API Layer 3: Routers level
     steps:
       - step_id: 2.2
         file: src/routers/places_staging.py [NOVEL]
@@ -137,7 +137,7 @@ phases:
         principles:
           Auth Boundary: true
           guideline: |
-            JWT authentication occurs ONLY at the API router level using dependency injection
+            JWT authentication occurs ONLY at the API Layer 3: Routers level using dependency injection
             Follows /Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
           API Std: true
           guideline: |
@@ -159,8 +159,8 @@ phases:
             Maps API enum to database enum correctly
           Code Org: true
           guideline: |
-            Follows Router-Service-Model pattern
-            Router only handles request validation and delegation
+            Follows Layer 3: Routers - Layer 4: Services - Layer 1: Models & ENUMs pattern
+            Layer 3: Routers only handles request validation and delegation
         notes: |
           VERIFIED 2025-05-04T23:43:00-07:00: Pydantic model validation properly implemented
           for PlaceBatchStatusUpdateRequest. ENUM validation correctly checks status values.
@@ -173,15 +173,15 @@ phases:
         principles:
           Txn Boundary: true
           guideline: |
-            Router owns transaction boundary with 'async with session.begin()' pattern
+            Layer 3: Routers owns transaction boundary with 'async with session.begin()' pattern
             Follows transaction management standard in /Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
           ORM Req: false
           guideline: |
             CRITICAL NON-COMPLIANCE: Raw SQL used in update_places_status_batch function (lines ~121-180)
             Violates Absolute ORM Requirement
         notes: |
-          VERIFIED 2025-05-04T23:43:15-07:00: Transaction boundary correctly implemented in router.
-          ISSUE FOUND: Despite proper transaction boundaries, this router contains raw SQL statements
+          VERIFIED 2025-05-04T23:43:15-07:00: Transaction boundary correctly implemented in Layer 3: Routers.
+          ISSUE FOUND: Despite proper transaction boundaries, this Layer 3: Routers contains raw SQL statements
           that violate the Absolute ORM Requirement. This is a critical compliance issue that requires
           immediate refactoring. The raw SQL implementation bypasses the ORM safeguards and type checking.
 
@@ -227,7 +227,7 @@ phases:
         principles:
           Decoupling: true
           guideline: |
-            Status-based queuing decouples UI action from background processing
+            Status-based queuing decouples Layer 6: UI Components action from background processing
             Follows asynchronous processing principles
           Atomicity: true
           guideline: |

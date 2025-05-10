@@ -15,6 +15,7 @@ All audit steps, checklist items, and documentation standards apply.
 _Last updated: 2025-05-04T10:22:01-07:00_
 
 ## Objective
+
 To perform a bulletproof, fully auditable documentation and artifact audit for a workflow, using Workflow 1 as the template and ensuring all steps are explicit, repeatable, and context-free for any future AI or human auditor.
 
 ---
@@ -22,6 +23,7 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 ## Step-by-Step Protocol
 
 ### 1. Reference Templates
+
 - Use this template for every workflow audit.
 - Reference completed examples for structure and rigor.
 - All timestamps must use ISO8601 format with timezone for audit traceability.
@@ -33,20 +35,23 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
   - Canonical YAML: `Docs_7_Workflow_Canon/workflows/WF3-LocalBusinessCuration_CANONICAL.yaml`
 
 ### 2. Dependency Trace Audit
+
 - [x] Open: `Docs_7_Workflow_Canon/Dependency_Traces/3-Local Business Curation.md`
-- [x] Confirm all files, functions, and components are listed and described (UI, routers, services, models, background jobs, etc.)
+- [x] Confirm all files, functions, and components are listed and described (Layer 6: UI Components, Layer 3: Routers, Layer 4: Services, Layer 1: Models & ENUMs, background jobs, etc.)
 - [x] Annotate each referenced file as [NOVEL] or [SHARED] (see python_file_status_map.md for authoritative status)
-- [x] Ensure the dependency trace covers the workflow from UI to DB and background jobs
+- [x] Ensure the dependency trace covers the workflow from Layer 6: UI Components to DB and background jobs
 - [x] If any files are missing, update the dependency trace to match the template structure
 
 ### 3. Create or Update Linear Steps Document
+
 - [x] If not present, create: `Docs_5_Project_Working_Docs/44-Bulletproof-Workflow-YAMLs/WF3-LocalBusinessCuration_linear_steps.md` using the WF1 linear steps doc as a template
-- [x] Map each step in the workflow from UI to DB, referencing all files and actions
+- [x] Map each step in the workflow from Layer 6: UI Components to DB, referencing all files and actions
 - [x] Annotate each file as [NOVEL] or [SHARED]
 - [x] Reference all architectural principles and guides as in WF1
 - [x] Ensure the atomic steps table is up to date and complete
 
 ### 4. Canonical YAML Audit
+
 - [x] Open: `Docs_7_Workflow_Canon/workflows/WF3-LocalBusinessCuration_CANONICAL.yaml`
 - [x] Ensure all steps, files, and principles are in 1:1 sync with the linear steps doc
 - [x] Verify producer-consumer relationship documentation in the workflow_connections section
@@ -54,12 +59,13 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 - [x] Reference all relevant architectural guides
 - [x] Validate the YAML against the established schema (see CI enforcement work order)
 - [x] Checklist for background task compliance:
-    - [x] Idempotency
-    - [x] Retry Logic
-    - [x] Explicit transaction boundaries
-    - [x] Logging and error handling
+  - [x] Idempotency
+  - [x] Retry Logic
+  - [x] Explicit transaction boundaries
+  - [x] Logging and error handling
 
 ### 5. Producer-Consumer Pattern Verification
+
 - [x] Verify that WF3 follows the producer-consumer pattern documented in PRODUCER_CONSUMER_WORKFLOW_PATTERN.md
 - [x] Validate that WF3 acts as a producer for WF4-DomainCuration
   - Production signal: Setting domain_extraction_status = "Queued" in local_businesses table
@@ -70,15 +76,18 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 - [x] Ensure connection points are explicitly documented in both canonical YAML and dependency trace
 
 ### 6. Cross-Reference and Sync
+
 - [x] Confirm all files and principles are mirrored across dependency trace, linear steps, and YAML
 - [x] Ensure there are no orphaned or ambiguous files
 - [x] Update `Docs_7_Workflow_Canon/python_file_status_map.md` with any new or changed files, annotating [NOVEL]/[SHARED] as appropriate
 
 ### 6. Artifact Tracker and Progress Log
+
 - [x] Mark artifact completion for this workflow in `WORK_ORDER.md`
 - [x] Add a timestamped progress entry summarizing the audit in `WORK_ORDER.md`
 
 ### 7. Signoff
+
 - [x] All steps above are checked/completed, or exceptions are documented
 - [x] Reviewer signs and dates the micro work order
 
@@ -87,15 +96,17 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 ## Known Issues / Exception Log (as of 2025-05-05T00:15:30-07:00)
 
 ### 1. No eligibility check before queueing domain extraction (MEDIUM)
+
 - **Description**: Currently, all local businesses with status="Selected" are automatically queued for domain extraction, regardless of whether they have a valid website_url. This could lead to unnecessary processing and errors.
 - **Remediation Plan**:
-  1. Add preliminary validation in the router to check if website_url exists
+  1. Add preliminary validation in Layer 3: Routers to check if website_url exists
   2. Only queue items with a non-empty website_url
   3. Add appropriate error message for items without website URLs
 - **JIRA Ticket**: SCRSKY-230
 - **Target Date**: 2025-05-20
 
 ### 2. Naming confusion in sitemap_scheduler.py (LOW)
+
 - **Description**: Despite being named "sitemap_scheduler.py", this file handles multiple types of background processing, including domain extraction. This naming can be confusing for new developers.
 - **Remediation Plan**:
   1. Consider renaming to "background_scheduler.py" or similar
@@ -105,20 +116,21 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 - **Target Date**: 2025-05-30
 
 ### 3. Architectural Pattern Observation: Dual-Status Update Pattern
+
 - **Description**: This workflow uses the same Dual-Status Update pattern identified in WF2 (where setting a primary status field automatically triggers an update to a secondary status field for background processing). This appears to be a standardized pattern in the codebase.
-- **Recommendation**: Consider formalizing this pattern in the architectural guides or creating a helper function to standardize implementation across different routers.
+- **Recommendation**: Consider formalizing this pattern in the architectural guides or creating a helper function to standardize implementation across different Layer 3: Routers.
 
 ---
 
 ## DB/ORM Audit Findings (2025-05-05T00:16:00-07:00)
 
-| File                               | ORM Only | Raw SQL Present | Notes                |
-|-------------------------------------|----------|-----------------|----------------------|
-| src/routers/local_businesses.py     | ✅        | ❌              | Router compliant     |
-| src/services/business_to_domain_service.py | ✅        | ❌              | Service compliant    |
-| src/services/sitemap_scheduler.py   | ✅        | ❌              | Scheduler compliant  |
-| src/models/local_business.py        | ✅        | ❌              | Models only          |
-| src/models/domain.py                | ✅        | ❌              | Models only          |
+| File                                       | ORM Only | Raw SQL Present | Notes               |
+| ------------------------------------------ | -------- | --------------- | ------------------- |
+| src/routers/local_businesses.py            | ✅       | ❌              | Router compliant    |
+| src/services/business_to_domain_service.py | ✅       | ❌              | Service compliant   |
+| src/services/sitemap_scheduler.py          | ✅       | ❌              | Scheduler compliant |
+| src/models/local_business.py               | ✅       | ❌              | Models only         |
+| src/models/domain.py                       | ✅       | ❌              | Models only         |
 
 - **Finding**: Unlike WF2, all database operations in this workflow use SQLAlchemy ORM properly. No raw SQL was detected in any of the files.
 - **Pattern**: This workflow uses the same "Dual-Status Update" pattern as WF2 but with proper ORM implementation.
@@ -127,6 +139,7 @@ To perform a bulletproof, fully auditable documentation and artifact audit for a
 - **Timestamp**: 2025-05-05T00:16:00-07:00
 
 ## Notes for Future Auditors
+
 - **No context is assumed**—all instructions are explicit and reference authoritative templates and mapping files
 - The Dual-Status Update pattern is a key architectural pattern that appears in both WF2 and WF3 workflows
 - Unlike WF2, this workflow is fully ORM-compliant with no raw SQL present

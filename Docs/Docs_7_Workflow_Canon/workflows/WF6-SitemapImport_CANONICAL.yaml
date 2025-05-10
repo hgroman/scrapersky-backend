@@ -10,15 +10,15 @@ depends_on_models:
   - name: SitemapFile
     file_path: src/models/sitemap.py
     table: sitemap_files
-    description: Primary model containing sitemap URLs and import status
+    description: Primary Layer 1: Model containing sitemap URLs and import status
   - name: Page
     file_path: src/models/page.py
     table: pages
-    description: Model for storing extracted URLs from sitemaps
+    description: Layer 1: Model for storing extracted URLs from sitemaps
   - name: Domain
     file_path: src/models/domain.py
     table: domains
-    description: Parent model for sitemap files
+    description: Parent Layer 1: Model for sitemap files
 
 depends_on_enums:
   - name: SitemapImportProcessStatusEnum
@@ -38,7 +38,7 @@ depends_on_enums:
 
   # Entry points into this workflow
   entry_points:
-    - type: "background_service"
+    - type: "background Layer 4: Service"
       description: "Automatic scheduler polls for queued sitemap files"
       component: "src/services/sitemap_import_scheduler.py"
     - type: "api"
@@ -110,7 +110,7 @@ workflow_connections:
   components:
     - id: "13A"
       name: "Sitemap Import Scheduler"
-      type: "background_service"
+      type: "background Layer 4: Service"
       description: "Background job to process queued sitemap files"
       file_path: "src/services/sitemap_import_scheduler.py"
       primary: true
@@ -122,7 +122,7 @@ workflow_connections:
 
     - id: "13A.1"
       name: "Sitemap Import Service"
-      type: "service"
+      type: "Layer 4: Service"
       description: "Core processing logic for sitemap imports"
       file_path: "src/services/sitemap_import_service.py"
       primary: true
@@ -131,26 +131,26 @@ workflow_connections:
           description: "Processes an individual sitemap file, extracting URLs and creating Page records"
 
     - id: "13A.2"
-      name: "Sitemap Models"
-      type: "data_model"
-      description: "Database models for sitemap files and status enums"
+      name: "Sitemap Layer 1: Models"
+      type: "Layer 1: Model"
+      description: "Database Layer 1: Models for sitemap files and status Layer 1: ENUMs"
       file_path: "src/models/sitemap.py"
       primary: true
       data_structures:
         - name: "SitemapFile"
-          description: "Model representing sitemap files with their processing status"
+          description: "Layer 1: Model representing sitemap files with their processing status"
         - name: "SitemapImportProcessStatusEnum"
           description: "Status values for the import process"
 
     - id: "13A.3"
-      name: "Page Model"
-      type: "data_model"
-      description: "Database model for pages extracted from sitemaps"
+      name: "Page Layer 1: Model"
+      type: "Layer 1: Model"
+      description: "Database Layer 1: Model for pages extracted from sitemaps"
       file_path: "src/models/page.py"
       primary: false
       data_structures:
         - name: "Page"
-          description: "Model representing a web page URL with metadata"
+          description: "Layer 1: Model representing a web page URL with metadata"
 
     - id: "13A.4"
       name: "Sitemap Parser"
@@ -175,7 +175,7 @@ workflow_connections:
     - id: "13A.6"
       name: "Development Tools"
       type: "api"
-      description: "Endpoints for manual testing"
+      description: "Endpoints for manual Layer 7: Testing"
       file_path: "src/routers/dev_tools.py"
       primary: false
       endpoints:
@@ -231,7 +231,7 @@ workflow_connections:
             - "src/common/curation_sdk/scheduler_loop.py:run_job_loop"
         - id: "S3.2"
           name: "Service Invocation"
-          description: "Call import service to process the file"
+          description: "Call import Layer 4: Service to process the file"
           components: ["13A", "13A.1", "13A.5"]
           code_references:
             - "src/services/sitemap_import_service.py:process_single_sitemap_file"

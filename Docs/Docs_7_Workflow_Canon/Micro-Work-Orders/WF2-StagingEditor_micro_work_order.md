@@ -3,6 +3,7 @@
 _Last updated: 2025-05-05T08:55:23-07:00_
 
 ## Objective
+
 Perform a comprehensive audit of the WF2-StagingEditor workflow to document its producer-consumer relationships with other workflows, identify architectural compliance issues, and ensure all documentation follows the enhanced standards established in recent workflow audits.
 
 ---
@@ -12,6 +13,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 ## Protocol Followed
 
 ### 1. Code Analysis
+
 - [x] Examined `src/routers/places_staging.py` to understand the API endpoints and database interactions
 - [x] Analyzed `src/services/sitemap_scheduler.py` to verify background job processing
 - [x] Reviewed `src/services/places/places_deep_service.py` to understand the deep scan process
@@ -19,6 +21,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 - [x] Verified transaction management and ORM usage patterns
 
 ### 2. Documentation Review and Enhancement
+
 - [x] Updated workflow name consistency (fixed WF-StagingEditor → WF2-StagingEditor)
 - [x] Added workflow_connections section documenting relationships with WF1 and WF3
 - [x] Added actionable_todos section with specific ticket references and line numbers
@@ -26,6 +29,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 - [x] Updated timestamp and reviewer information
 
 ### 3. Cross-System Analysis
+
 - [x] Traced data flow from WF1-SingleSearch → WF2-StagingEditor → WF3-LocalBusinessCuration
 - [x] Identified status fields used as workflow triggers (status, deep_scan_status)
 - [x] Verified scheduler polling mechanism for background processing
@@ -35,21 +39,19 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 
 ## DB/ORM Audit Findings (2025-05-04T23:46:15-07:00)
 
-| File                               | ORM Only | Raw SQL Present | Notes                |
-|-------------------------------------|----------|-----------------|----------------------|
-| src/services/places_staging_service.py | ✅        | ❌              | Service layer, clean |
-| src/services/sitemap_scheduler.py      | ✅        | ❌              | Scheduler, clean     |
-| src/services/places_deep_service.py    | ✅        | ❌              | Deep scan, clean     |
-| src/routers/places_staging.py          | ❌        | ✅              | Raw SQL in router    |
-| src/models/place.py                    | ✅        | ❌              | Models only          |
-| src/models/api_models.py               | ✅        | ❌              | API validation models|
+| File                                   | ORM Only | Raw SQL Present | Notes                 |
+| -------------------------------------- | -------- | --------------- | --------------------- |
+| src/services/places_staging_service.py | ✅       | ❌              | Service layer, clean  |
+| src/services/sitemap_scheduler.py      | ✅       | ❌              | Scheduler, clean      |
+| src/services/places_deep_service.py    | ✅       | ❌              | Deep scan, clean      |
+| src/routers/places_staging.py          | ❌       | ✅              | Raw SQL in router     |
+| src/models/place.py                    | ✅       | ❌              | Models only           |
+| src/models/api_models.py               | ✅       | ❌              | API validation models |
 
 - **Action:** Raw SQL in `src/routers/places_staging.py` has been documented in the canonical YAML with a detailed remediation plan. This includes JIRA ticket SCRSKY-224 for tracking the ORM refactoring work.
 - **Issue:** The `trigger_deep_scan` parameter in the API is completely ignored in the implementation, creating a potentially misleading API contract. This has been documented as SCRSKY-225.
 - **Next:** Implement ORM refactoring for places_staging.py by 2025-05-15 and address the parameter mismatch issue.
 - **Timestamp:** 2025-05-04T23:46:15-07:00
-
-
 
 ---
 
@@ -58,8 +60,9 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 ### Producer-Consumer Pattern Analysis
 
 1. **Consumer Relationship with WF1**
+
    - WF2 directly consumes Place records with status='New' created by WF1
-   - The Staging Editor UI displays these records for human review
+   - The Staging Editor Layer 6: UI Components displays these records for human review
    - The handoff occurs via the Place.status field in the places table
    - **Evidence**: Found in places_staging.py where it queries for Place records
 
@@ -72,6 +75,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 ### Critical Issues
 
 1. **Raw SQL Violation**: (Added to Known Issues)
+
    - **Severity**: CRITICAL
    - **Description**: Direct SQL used to update Place status instead of proper ORM
    - **Location**: src/routers/places_staging.py:300-350
@@ -80,6 +84,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
    - **Target Date**: 2025-05-15
 
 2. **Misleading API Parameter**: (Added to Known Issues)
+
    - **Severity**: MEDIUM
    - **Description**: API defines trigger_deep_scan parameter, but implementation ignores it
    - **Location**: src/routers/places_staging.py:240-243
@@ -98,12 +103,14 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 ### Implementation Strengths
 
 1. **Transaction Management**
+
    - **Status**: EXCELLENT
-   - **Description**: Router correctly uses async with session.begin() pattern
+   - **Description**: Layer 3: Routers correctly uses async with session.begin() pattern
    - **Location**: src/routers/places_staging.py:305
    - **Evidence**: Follows transaction boundary ownership pattern perfectly
 
 2. **Dual Status Update Pattern**
+
    - **Status**: WELL-IMPLEMENTED
    - **Description**: Status updates correctly set both status and deep_scan_status
    - **Location**: src/routers/places_staging.py:335-342
@@ -118,6 +125,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 ## Documentation Improvements Made
 
 1. **Enhanced Canonical YAML**
+
    - Added workflow_connections section documenting producer-consumer relationships
    - Added structured actionable_todos with ticket references
    - Fixed workflow name consistency throughout documentation
@@ -137,6 +145,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 ---
 
 ## Notes for Future Auditors
+
 - **No context is assumed**—all instructions are explicit and reference authoritative templates and mapping files
 - The "Dual-Status Update" pattern (where updating status to Selected automatically triggers deep_scan_status=Queued) is a key architectural pattern that appears in multiple workflows
 - Raw SQL in places_staging.py needs priority attention as it violates the Absolute ORM Requirement

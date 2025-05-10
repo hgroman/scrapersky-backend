@@ -14,17 +14,20 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 ---
 
 ## 1. Dependency Trace
+
 - [ ] Review and update dependency trace document
 - [ ] Ensure all files are referenced
 - [ ] Annotate each file as [NOVEL] or [SHARED]
 
 ## 2. Linear Steps Document
+
 - [ ] Create or update linear steps doc
 - [ ] Map all steps from UI to DB
 - [ ] Reference all files, actions, principles, and guides
 - [ ] Annotate each file as [NOVEL] or [SHARED]
 
 ## 3. Canonical YAML
+
 - [ ] Create or update canonical YAML for workflow
 - [ ] Ensure all steps, files, and principles match linear steps
 - [ ] Explicitly annotate ORM enforcement and architectural mandates
@@ -32,23 +35,28 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 - [ ] Validate YAML against schema
 
 ## 4. Cross-Reference Artifacts
+
 - [ ] Ensure dependency trace, linear steps, and YAML are in sync
 - [ ] Confirm all files and principles are mirrored across docs
 - [ ] No orphaned or ambiguous files
 
 ## 5. Update python_file_status_map.md
-- [ ] Add or confirm each file’s status and references
+
+- [ ] Add or confirm each file's status and references
 - [ ] Flag any orphaned files for review/removal
 
 ## 6. Update Workflow Artifact Completion Tracker
+
 - [ ] Mark checkboxes for completed artifacts in WORK_ORDER.md
 
 ## 7. Log Progress
+
 - [ ] Add a timestamped progress log in WORK_ORDER.md
 
 ---
 
 ## General Audit Tips & Common Pitfalls
+
 - Always use the [NOVEL]/[SHARED] designation from 1-main_routers.md as the authoritative source
 - Pause and update python_file_status_map.md in parallel as you work
 - Watch for raw SQL or non-ORM DB usage (must be flagged and remediated)
@@ -59,16 +67,17 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 
 ---
 
-**Notes/Exceptions:**
--
+## **Notes/Exceptions:**
 
 ---
 
 **Signoff:**
+
 - [ ] All boxes checked, or exceptions documented
 - [ ] Signed by reviewer
 
 ## 2. Step Actions & Code Mapping
+
 - [ ] Each step action references a real service method or file
 - [ ] Steps follow a linear, phase-by-phase structure
 - [ ] Naming conventions match project standards
@@ -76,13 +85,15 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 - [ ] Dependency trace is up to date and matches codebase
 
 ## 3. Architectural Principles Alignment
-- [ ] Router phase: transaction boundaries, auth boundary, thin router
-- [ ] Service phase: transaction-awareness, no session creation, no auth logic
-- [ ] Model phase: schema alignment, enum source of truth
-- [ ] Background task phase: session management, ORM usage only
+
+- [ ] Layer 3: Router phase: transaction boundaries, auth boundary, thin router
+- [ ] Layer 4: Service phase: transaction-awareness, no session creation, no auth logic
+- [ ] Layer 1: Model phase: schema alignment, enum source of truth (Models & ENUMs)
+- [ ] Layer 4: Background task phase (Services): session management, ORM usage only
 - [ ] Each phase mapped to a principle from 07-17-ARCHITECTURAL_PRINCIPLES.md
 
 ## 4. Documentation & Traceability
+
 - [ ] Canonical YAML cross-referenced with dependency trace
 - [ ] Blueprint/cheat sheet updated if new lessons learned
 - [ ] Progress log updated with timestamp and summary
@@ -91,11 +102,9 @@ Use this bulletproof checklist for every workflow. This protocol ensures full au
 
 **Notes/Exceptions:**
 
--
+- ***
 
----
-
-**Signoff:**
+  **Signoff:**
 
 - [ ] All boxes checked, or exceptions documented
 - [ ] Signed by reviewer

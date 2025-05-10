@@ -8,12 +8,13 @@
 
 ## Step-by-Step Workflow Breakdown
 
-### 1. UI Interaction
+### 1. Layer 6: UI Components Interaction
+
 - **Files:**
   - `static/scraper-sky-mvp.html` [NOVEL]
   - `static/js/local-business-curation-tab.js` [NOVEL]
 - **Action:**
-  - User selects local businesses in the UI, sets status to "Selected", clicks "Update X Selected".
+  - User selects local businesses in the Layer 6: UI Components, sets status to "Selected", clicks "Update X Selected".
   - JavaScript gathers selected IDs and new status, triggers API call.
 - **Principles:**
   - Clear UI feedback
@@ -22,7 +23,8 @@
 - **Notes:**
   - Ensure JS correctly collects IDs and status, and provides user feedback on success/failure.
 
-### 2. API Routing
+### 2. API Layer 3: Routers
+
 - **File:** `src/routers/local_businesses.py`
 - **Action:**
   - PUT `/api/v3/local-businesses/status` receives IDs and status, validates input, maps status to enum.
@@ -35,6 +37,7 @@
   - Ensure request model matches expected schema. Log and handle invalid input.
 
 ### 3. Domain Extraction Trigger
+
 - **File:** `src/routers/local_businesses.py`
 - **Action:**
   - If status is "Selected", set `domain_extraction_status = Queued`, clear errors, update timestamps.
@@ -46,6 +49,7 @@
   - Confirm logic for eligibility (currently, all selected are queued).
 
 ### 4. Commit Transaction
+
 - **File:** `src/routers/local_businesses.py`
 - **Action:**
   - Commit all changes in a transaction context.
@@ -56,6 +60,7 @@
   - Ensure rollback on failure and correct use of `session.begin()`.
 
 ### 5. Background Processing
+
 - **File:** `src/services/sitemap_scheduler.py` [SHARED]
 - **Action:**
   - Scheduler polls for `domain_extraction_status = Queued`, triggers extraction process.
@@ -66,7 +71,8 @@
 - **Notes:**
   - Confirm scheduler picks up all eligible items and logs failures/retries.
 
-### 6. Testing & Verification
+### 6. Layer 7: Testing & Verification
+
 - **File:** `tests/services/test_sitemap_scheduler.py` [NOVEL]
 - **Action:**
   - Tests ensure queued items are picked up and processed.
@@ -79,6 +85,7 @@
 ---
 
 ## Audit/Compliance Checklist
+
 - [ ] All steps above are implemented and referenced in canonical YAML
 - [ ] All files are annotated in python_file_status_map.md
 - [ ] All exceptions and issues are logged in the micro work order and master log
