@@ -11,7 +11,7 @@ This document outlines a rapid implementation plan for the ScraperSky Domain Con
 ## Core Architecture Principles
 
 - **Follow existing producer-consumer pattern**
-- **Use SQLAlchemy ORM exclusively** (no raw SQL) - See [ABSOLUTE ORM REQUIREMENT](../../../Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md)
+- **Use SQLAlchemy Layer 1: Models & ENUMs (via ORM) exclusively** (no raw SQL) - See [ABSOLUTE ORM REQUIREMENT](../../../Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md)
 - **Connect via Supavisor** for proper connection pooling
 - **Implement as a standard workflow** within the ScraperSky ecosystem
 
@@ -240,7 +240,8 @@ if __name__ == "__main__":
   The full SQLAlchemy model definitions are now in appendix A.
   Developers must NOT create migrations until Phase 0 produces approved fields.
 -->
-### Phase 1: Database Schema Implementation (20 min)
+
+### Phase 1: Layer 1 & 2: Database Schema Implementation (20 min)
 
 #### 1.1 Schema Requirements
 

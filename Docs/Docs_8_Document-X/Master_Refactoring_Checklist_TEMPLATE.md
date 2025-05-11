@@ -24,7 +24,7 @@
 
 ---
 
-## 1. UI Components (HTML Templates / Jinja2)
+## 1. Layer 6: UI Components (HTML Templates / Jinja2)
 
 **Relevant Files:**
 
@@ -72,7 +72,7 @@
 
 ---
 
-## 3. Python Backend Models (SQLAlchemy)
+## 3. Layer 1: Models & ENUMs (SQLAlchemy)
 
 **Relevant Files:**
 
@@ -103,7 +103,7 @@
 
 ---
 
-## 4. Database ENUM Types (if not in Model)
+## 4. Layer 1: Models & ENUMs (Database ENUM Types - if not in Model)
 
 **Note:** Standard is to define ENUMs within their respective model files. This section is for auditing any deviations.
 
@@ -126,7 +126,7 @@
 
 ---
 
-## 5. Pydantic Schemas (Data Validation)
+## 5. Layer 2: Schemas (Data Validation)
 
 **Relevant Files:**
 
@@ -153,7 +153,7 @@
 
 ---
 
-## 6. API Routers (FastAPI)
+## 6. Layer 3: Routers (FastAPI)
 
 **Relevant Files:**
 
@@ -190,7 +190,7 @@
 
 ---
 
-## 7. Service Layer (Business Logic, Orchestration)
+## 7. Layer 4: Services (Business Logic, Orchestration)
 
 **Relevant Files:**
 

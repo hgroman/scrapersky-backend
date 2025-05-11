@@ -18,13 +18,13 @@ These enhancements were identified during a review process comparing the previou
 
 ### Phase 2: Consumer Endpoint Construction
 
-- **Section 2.1 (API Request Schema):**
+- **Section 2.1 (Layer 2: API Request Schema):**
 
   - **File Location:** Clarified that workflow-specific action schemas (like batch updates) **MUST** reside in `src/schemas/{workflow_name}.py`, aligning with Section 6 of the Guide.
   - **Schema Naming:** Updated example class names to the mandatory convention `{WorkflowNameTitleCase}BatchStatusUpdateRequest` and `{WorkflowNameTitleCase}BatchStatusUpdateResponse` (per Section 6 of the Guide). Added an example for the response schema.
   - **Reference:** Added explicit reference to Section 6 of the Guide.
 
-- **Section 2.2 (API Router Implementation):**
+- **Section 2.2 (Layer 3: API Router Implementation):**
 
   - **Dual-Status Trigger:** Corrected the trigger condition to use `{WorkflowNameTitleCase}CurationStatus.Queued` (instead of `Selected`), aligning with the standardization mandate in Sections 2 & 4 of the Guide.
   - **File Location:** Updated example router file location to the primary convention `src/routers/{workflow_name}.py` (per Section 7 of the Guide).
@@ -53,16 +53,16 @@ These enhancements were identified during a review process comparing the previou
 
 ### Phase 4: Curation Service Development
 
-- **Section 4.1 (Data Enrichment/Processing Service):**
+- **Section 4.1 (Layer 4: Data Enrichment/Processing Service):**
 
   - Primarily placeholder standardization (`{SourceTableTitleCase}`, `{WorkflowNameTitleCase}ProcessingStatus`, `{source_table_name}`, etc.) for strict alignment with the Guide.
 
-- **Section 4.5.1 (HTML Tab):**
+- **Section 4.5.1 (Layer 6: HTML Tab):**
 
   - **ID Standardization:** Updated example IDs for Table, Table Body, and Select All Checkbox to match conventions from Section 2 of the Guide (`{workflowNameCamelCase}Table`, `{workflowNameCamelCase}TableBody`, `selectAll{WorkflowNameTitleCase}Checkbox`).
   - **Button Clarity:** Adjusted example button ID/Text for the primary action ("Queue Selected...") to use the `Queued` status, aligning with the backend trigger status.
 
-- **Section 4.5.2 (JavaScript File):**
+- **Section 4.5.2 (Layer 6: JavaScript File):**
   - **File Naming:** Clarified kebab-case convention (`{workflow_name_kebab_case}-tab.js`) per Section 3 of the Guide.
   - **Selectors/Constants:** Added JS constants (`workflowNameCamelCase`, etc.) for maintainability and updated DOM selectors to match standardized HTML IDs.
   - **JS Enum:** Ensured the example `curationStatusEnum` lists standard values.

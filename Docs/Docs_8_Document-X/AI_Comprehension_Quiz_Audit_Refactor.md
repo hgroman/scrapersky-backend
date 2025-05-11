@@ -32,9 +32,9 @@
     - If you are tasked to start auditing a new workflow, say "UserActivityTracking", what is the very first version-controlled document you would expect to be created or instantiated specifically for this audit task, according to the protocol in `52.0-Draft-Work-Order.md` and the templates available?
     - What information would you record in Section 1 ("Workflow Overview & Initial Assessment") of this document for the "UserActivityTracking" workflow before diving into component-level analysis?
 
-6.  \*\*Component-Level Audit (Example: Models & ENUMs):
+6.  \*\*Component-Level Audit (Example: Layer 1: Models & ENUMs):
 
-    - You are auditing the Models & ENUMs for an existing workflow. The `Audit_And_Refactor_Workflow_Cheat_Sheet.md` has a table for this. What are the key pieces of information you need to gather and compare for an existing model file (e.g., `src/models/user_activity.py`) to determine if it meets the standards?
+    - You are auditing Layer 1: Models & ENUMs for an existing workflow. The `Audit_And_Refactor_Workflow_Cheat_Sheet.md` has a table for this. What are the key pieces of information you need to gather and compare for an existing model file (e.g., `src/models/user_activity.py`) to determine if it meets the standards?
     - If you find that an ENUM class is defined in `src/models/enums.py` instead of within `src/models/user_activity.py`, what standard from the `CONVENTIONS_AND_PATTERNS_GUIDE.md` (or Q&A, or an instantiated cheat sheet template) does this violate, and what would be the prescribed refactoring action?
 
 7.  **Dual-Status Update Pattern:**

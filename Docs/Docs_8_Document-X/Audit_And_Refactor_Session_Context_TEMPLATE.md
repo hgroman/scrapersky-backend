@@ -30,8 +30,8 @@
 
 **1.2. Secondary Goal (Specific Focus for This Session):**
 
-- {e.g., "Complete the audit of the Model layer for `{WorkflowName}` as per Section 2.1 of its Active Audit & Refactor Cheat Sheet."}
-- {e.g., "Implement the planned refactoring for the Router layer of `{WorkflowName}` based on the agreed actions in Section 2.3 of its Active Audit & Refactor Cheat Sheet."}
+- {e.g., "Complete the audit of Layer 1: Models & ENUMs for `{WorkflowName}` as per Section 2.1 of its Active Audit & Refactor Cheat Sheet."}
+- {e.g., "Implement the planned refactoring for Layer 3: Routers of `{WorkflowName}` based on the agreed actions in Section 2.3 of its Active Audit & Refactor Cheat Sheet."}
 - {e.g., "Begin initial population of the Active Audit & Refactor Cheat Sheet for `{WorkflowName}`, starting with Section 1: Workflow Overview."}
 
 ---
@@ -42,13 +42,13 @@
 
   - **Active Audit & Refactor Cheat Sheet:** `{Link to the specific instantiated cheat sheet for this workflow, e.g., Docs/Docs_8_Document-X/INSTANCES/Audit_And_Refactor_Page_Curation_Cheat_Sheet.md}` - _Current status of completion: {e.g., "Partially filled for Model and Schema layers." or "Newly instantiated."}_
   - **Section 1 (Overview & Initial Assessment):** {Status: To Do / In Progress / Done}
-  - **Section 2.1 (Models & ENUMs Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
-  - **Section 2.2 (Schemas Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
-  - **Section 2.3 (Routers Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
-  - **Section 2.4 (Services & Schedulers Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
-  - **Section 2.5 (Config & Env Vars Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
-  - **Section 2.6 (UI Components Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
-  - **Section 2.7 (Testing Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.1 (Layer 1: Models & ENUMs Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.2 (Layer 2: Schemas Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.3 (Layer 3: Routers Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.4 (Layer 4: Services & Schedulers Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.5 (Layer 5: Configuration & Env Vars Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.6 (Layer 6: UI Components Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
+  - **Section 2.7 (Layer 7: Testing Audit):** {Status: To Do / In Progress / Gap Analysis Done / Refactoring Planned / Refactoring Done}
   - **Previous Commits related to this specific workflow's refactor (if any):** {Links or SHAs}
 
 - **Key Supporting Documents (Already Reviewed or To Be Referenced):**
@@ -63,7 +63,7 @@
 1.  **Internalize Core Guiding Documents:** AI must confirm it has processed and understands the documents listed in Section 0, especially the **AI Collaboration Constitution**, the overall **Project Work Order**, the **Golden Standard Blueprint**, and the purpose of the **Active Audit & Refactor Cheat Sheet** for `{WorkflowName}`.
 2.  **Confirm Understanding of Core Principles:** Verbally confirm understanding of the Core Mandate and Fundamental Operational Directives (especially "Zero Assumptions" and "Document-First Iteration") from the Constitution.
 3.  **Proceed with Task:**
-    - **Current Focus:** {Reiterate the specific goal from 1.2, e.g., "Focus on auditing the Model layer: `src/models/{current_model_file_for_workflowName}.py`."}
+    - **Current Focus:** {Reiterate the specific goal from 1.2, e.g., "Focus on auditing Layer 1: Models & ENUMs: `src/models/{current_model_file_for_workflowName}.py`."}
     - **Action:** {e.g., "Review the specified model file(s) against Section 4 of the `CONVENTIONS_AND_PATTERNS_GUIDE.md` and the 'Python Backend - Models' section of `Q&A_Key_Insights.md`. Document all findings, deviations, and proposed refactoring actions in Section 2.1 of `Audit_And_Refactor_{WorkflowName}_Cheat_Sheet.md`."}
     - **Output Location:** All detailed findings and plans go into the **Active Audit & Refactor Cheat Sheet** for `{WorkflowName}`.
 

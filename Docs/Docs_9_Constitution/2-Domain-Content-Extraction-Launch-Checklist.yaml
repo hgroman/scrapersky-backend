@@ -1,5 +1,5 @@
 # domain_content_extraction_launch_checklist.yaml
-source_of_truth: true        # Overrides summaries if conflicts arise
+source_of_truth: true # Overrides summaries if conflicts arise
 title: "Domain Content Extraction – Launch Checklist"
 description: >
   One‑page gatekeeper for any PR or AI‑generated job that implements the
@@ -65,7 +65,7 @@ checklist:
 
   - id: api_routes
     text: >
-      API routes live under /api/v3/domain-content, protected with JWT
+      Layer 3: API routes live under /api/v3/domain-content, protected with JWT
       boundary.
     code_snippet: |
       from fastapi import Depends
@@ -103,4 +103,4 @@ verification_queries: |
       and curation_status != 'Selected';
 
 merge_commit_message_template: >
-  feat(domain-content): implement service, router & scheduler (Launch Checklist ✔)
+  feat(domain-content): implement Layer 4: Service, Layer 3: Router & Layer 4: Scheduler (part of Services) (Launch Checklist ✔)

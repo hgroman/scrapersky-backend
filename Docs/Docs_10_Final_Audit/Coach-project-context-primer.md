@@ -17,12 +17,13 @@ After extensive analysis and planning, we've arrived at a document-first, workfl
 
 We enforce two HTML comment tokens inside cheat-sheets:
 
-- `<!-- STOP_FOR_REVIEW -->`  ↠ Windsurf pauses; await user/Claude approval.
-- `<!-- NEED_CLARITY -->`    ↠ Unresolved ambiguity; do not proceed until clarified.
+- `<!-- STOP_FOR_REVIEW -->` ↠ Windsurf pauses; await user/Claude approval.
+- `<!-- NEED_CLARITY -->` ↠ Unresolved ambiguity; do not proceed until clarified.
 
 ## Current Status
 
 We've created a comprehensive **ScraperSky Standardization Master Workflow** artifact (located at `Docs/Docs_8_Document-X/INSTANCES/ScraperSky_Standardization_Master_Workflow.md`) that:
+
 - Outlines the step-by-step process for each workflow standardization
 - Provides copy-paste-ready prompts for each phase
 - Builds in review checkpoints and safety measures
@@ -38,11 +39,12 @@ We're now ready to execute the workflow for WF1-SingleSearch as our pilot.
 4. **Project Overview:** Docs/Docs_5_Project_Working_Docs/52-Gold-Standard-Blue-Print/52.0-Draft-Work-Order.md - broader context and strategy
 5. **Collaboration Rules:** Docs/Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md - operational principles for AI collaboration
 6. **Cheat Sheet Template:** Docs/Docs_8_Document-X/Audit_And_Refactor_Workflow_Cheat_Sheet_TEMPLATE.md - template for workflow-specific cheat sheets
-7. **Template Snapshot:** Docs/Docs_8_Document-X/_archive/Cheat_Sheet_TEMPLATE_v1_*.md - immutable copy of the template that should not be edited
+7. **Template Snapshot:** Docs/Docs*8_Document-X/\_archive/Cheat_Sheet_TEMPLATE_v1*\*.md - immutable copy of the template that should not be edited
 
 ## Execution Method
 
 We'll follow the Master Workflow artifact exactly, which implements a "need-to-know" methodology:
+
 1. Only work on one workflow at a time
 2. For each workflow, work on one section at a time
 3. Fully document each section before implementation
@@ -55,6 +57,7 @@ This approach drastically reduces cognitive overhead by focusing only on what's 
 Our workflow incorporates distinct professional roles to bring clarity and structure:
 
 1. **Technical Lead Role**: Used for all documentation and analysis phases
+
    - Responsible for auditing code against standards
    - Creates and refines the cheat sheet sections
    - Prescribes specific refactoring actions
@@ -71,6 +74,7 @@ The Master Workflow explicitly specifies which role to assume for each task, ens
 ### Claude's Standing Role
 
 Unless explicitly reassigned, you operate as a hybrid **Documentarian ∧ Project Manager**:
+
 - Track progress lines, cross-link docs, flag process drift.
 - Never modify source code; suggest next Windsurf prompts when asked.
 - Keep responses concise unless deep analysis is requested.
@@ -78,11 +82,12 @@ Unless explicitly reassigned, you operate as a hybrid **Documentarian ∧ Projec
 ## Next Immediate Steps
 
 1. Prime Windsurf with the key documents (Phase 0 of the Master Workflow)
-2. Create a cheat sheet for WF1-SingleSearch and complete the Models & ENUMs section
+2. Create a cheat sheet for WF1-SingleSearch and complete the Layer 1: Models & ENUMs section
 3. Review findings and continue section by section
 4. Only after full documentation is complete, implement changes
 
 #### Ready-to-Send Prompt for Task 0.2
+
 ```
 Windsurf, I need you to read these key documents to understand our codebase standardization project:
 
@@ -95,7 +100,7 @@ Windsurf, I need you to read these key documents to understand our codebase stan
 
 ## The Journey That Got Us Here
 
-*Note: This section provides historical context and is not essential for the current task execution.*
+_Note: This section provides historical context and is not essential for the current task execution._
 
 This approach represents the synthesis of multiple strategies we explored for tackling this complex standardization challenge:
 
@@ -114,15 +119,18 @@ This primer represents our current understanding and direction based on that jou
 While not yet implemented, we've identified the value of organizing our documentation in a hierarchical tree structure:
 
 1. **Level 1: Root Node (High-Level Overview)**
+
    - Entry point document providing big picture and navigation
    - Visual mind map of related documents
 
 2. **Level 2: Primary Branches (Core Implementation Guides)**
+
    - Standards reference (conventions and patterns)
    - Workflow standardization process
    - Common patterns library
 
 3. **Level 3: Secondary Branches (Workflow-Specific Materials)**
+
    - Workflow-specific cheat sheets
    - Technical debt inventory for that workflow
    - Specific code examples
@@ -142,4 +150,4 @@ We could further enhance our approach by incorporating these additional roles:
 2. **Documentarian Role**: For refining the information organization itself
 3. **Project Manager Role**: For progress tracking and prioritization
 
-*Note: These enhancements are informational only and out-of-scope for the WF1-SingleSearch implementation. Focus should remain on executing the current Master Workflow plan.*
+_Note: These enhancements are informational only and out-of-scope for the WF1-SingleSearch implementation. Focus should remain on executing the current Master Workflow plan._
