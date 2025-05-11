@@ -59,7 +59,7 @@ These are the foundational names from which many others are derived. Every new w
 
 ---
 
-## Layer 1: Python Backend - Models & ENUMs
+## 2. Layer 1: Models & ENUMs
 
 - **File Names:**
 
@@ -118,7 +118,7 @@ These are the foundational names from which many others are derived. Every new w
 
 ---
 
-## Layer 2: Python Backend - Schemas
+## 3. Layer 2: Schemas
 
 Pydantic schemas are used to define the structure of API request and response bodies, ensuring data validation and clear contracts.
 
@@ -153,7 +153,7 @@ Pydantic schemas are used to define the structure of API request and response bo
 
 ---
 
-## Layer 3: Python Backend - Routers
+## 4. Layer 3: Routers
 
 Routers define the API endpoints, linking HTTP methods and paths to specific handler functions.
 
@@ -212,7 +212,7 @@ Routers define the API endpoints, linking HTTP methods and paths to specific han
 
 ---
 
-## Layer 4: Python Backend - Services
+## 5. Layer 4: Services
 
 Services encapsulate the business logic for workflows, including schedulers for background tasks and the core processing logic.
 
@@ -262,65 +262,18 @@ Services encapsulate the business logic for workflows, including schedulers for 
 
 ---
 
-## Layer 5: Python Backend - Configuration
+## 6. Layer 5: Configuration
 
 Proper configuration management is essential for application stability, security, and adaptability across different environments.
 
 - **Environment Variable Naming:**
 
-  - **Strict Convention (for New Workflow-Specific Settings):** All new environment variables specific to a ScraperSky workflow **MUST** use the `SCS_` prefix, followed by the `WORKFLOW_NAME_UPPERCASE`, and then a descriptive `SETTING_NAME`.
-    - **Format:** `SCS_{WORKFLOW_NAME_UPPERCASE}_{SETTING_NAME}`
-    - **Example (`workflow_name = page_curation`, setting for batch size):** `SCS_PAGE_CURATION_BATCH_SIZE`
-    - **Rationale:** Provides a clear namespace for all ScraperSky variables, prevents collisions, and improves discoverability.
-  - **Existing/Legacy Patterns (to be aware of, for refactoring):**
-    - Scheduler settings currently often follow `{WORKFLOW_NAME_UPPERCASE}_SCHEDULER_{PARAMETER}` (e.g., `DOMAIN_SCHEDULER_INTERVAL_MINUTES`). While functional, new settings should adopt the `SCS_` prefix.
-  - **General Rules:**
-    - Always use `UPPERCASE_WITH_UNDERSCORES`.
-    - Ensure names are descriptive enough to avoid ambiguity, especially if not using the `SCS_` prefix for legacy variables.
-
-- **Defining and Loading Settings:**
-
-  - **`.env` and `.env.example`:** All environment variables MUST be defined in `.env` for local development (and managed appropriately for deployed environments) and **MUST** have a corresponding entry (with a default or placeholder value) in `.env.example`.
-  - **Pydantic Settings (`src/config/settings.py`):** Environment variables are loaded into the application using Pydantic's `BaseSettings` class in `src/config/settings.py`.
-
-    - Each configurable variable must be defined as an attribute on the `Settings` class with its type hint.
-    - **Example (in `src/config/settings.py`):**
-
-      ```python
-      class Settings(BaseSettings):
-          # ... other settings ...
-          SCS_PAGE_CURATION_BATCH_SIZE: int = Field(default=10, description="Batch size for page curation processing.")
-          # Legacy example:
-          DOMAIN_SCHEDULER_INTERVAL_MINUTES: int = 1
-
-          model_config = SettingsConfigDict(
-              env_file=".env", case_sensitive=False, extra="allow"
-          )
-
-      settings = Settings() # Singleton instance
-      ```
-
-  - **Accessing Settings in Code:** Settings **MUST** be accessed by importing the singleton `settings` instance from `src/config/settings.py`.
-    - **Correct Usage:**
-      ```python
-      from src.config.settings import settings
-      # ...
-      batch_size = settings.SCS_PAGE_CURATION_BATCH_SIZE
-      ```
-    - **Incorrect Usage:** Do not import the `Settings` class directly for accessing values.
-
-- **Workflow-Specific Initializations (at Application Startup):**
-  - **Location:** Workflow-specific initializations that need to occur at application startup (beyond router inclusion or basic scheduler job registration covered in Section 8) are managed via setup functions called from the FastAPI `lifespan` context manager in `src/main.py`.
-  - **Pattern:**
-    1.  Define a dedicated setup function within the relevant workflow module (e.g., in its `_scheduler.py` or `_service.py` file if it's closely related to service initialization).
-    2.  Import this setup function into `src/main.py`.
-    3.  Call the setup function within the `async def lifespan(app: FastAPI):` context manager.
-  - **Example Usage:** This pattern is primarily used for registering scheduler jobs (see Section 8). If a workflow requires initializing a unique client, setting specific Sentry tags at startup, or other one-time setup routines, this is the place to integrate it. Ensure any such custom initialization is clearly documented.
-  - **Refer to Section 8:** The detailed pattern for scheduler job registration (`setup_{workflow_name}_scheduler()`) provides the primary example of this startup integration.
+  - **Strict Convention:** Environment variables **MUST** be named using uppercase letters with underscores separating words.
+  - **Example:** `DATABASE_URL`, `PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES`.
 
 ---
 
-## Layer 6: UI - Components
+## 7. Layer 6: UI Components
 
 User interface component identifiers are primarily derived from `{workflowNameCamelCase}` to ensure uniqueness and predictability. **All new workflows MUST adhere strictly to these naming conventions to ensure consistency and proper functioning of associated JavaScript.**
 
@@ -393,7 +346,7 @@ User interface component identifiers are primarily derived from `{workflowNameCa
 
 ---
 
-## Layer 7: Testing
+## 8. Layer 7: Testing
 
 Robust testing is crucial for ensuring workflow reliability and maintainability. A combination of component-focused tests and workflow integration tests should be implemented.
 

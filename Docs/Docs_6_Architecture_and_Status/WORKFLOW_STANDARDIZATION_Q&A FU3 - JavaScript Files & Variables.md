@@ -13,10 +13,12 @@ The answer states: "The naming convention is consistently `{workflow-name-kebab-
 Examining the `/static/js/` directory confirms that all workflow JavaScript files follow the `{workflow-name-kebab-case}-tab.js` convention. Here are three direct examples with their corresponding `workflow_name`:
 
 1. **domain-curation-tab.js** → `domain_curation`
+
    - Directly converts the `snake_case` workflow name to kebab-case in the filename
    - Evidence: The file references the tab with data attribute `data-panel="domainCurationPanel"` (Line 18)
 
 2. **sitemap-curation-tab.js** → `sitemap_curation`
+
    - Direct derivation from the workflow name to kebab-case
    - Evidence: The file references the tab with `data-panel="sitemapCurationPanel"` (Line 16)
 
@@ -38,7 +40,9 @@ The answer states: "The JS files follow a consistent pattern where workflow-spec
 Examining `static/js/domain-curation-tab.js`, the file demonstrates two distinct scoping approaches:
 
 1. **Full `{workflowNameCamelCase}` prefix** for most variables:
+
    - **Variables:**
+
      - `domainCurationTab` (Line 18): References the DOM tab element
      - `domainCurationStatusFilter` (Line 20): References the status filter dropdown
      - `domainCurationTableBody` (Line 21): References the table body element
@@ -59,6 +63,7 @@ The file also demonstrates a shorthand prefix technique with `panelDC` (Line 19)
 For workflows with exceptionally long names, there is an established pattern to use abbreviation-based scoping rather than the full camelCase prefix. The approach is documented through code comments:
 
 1. The domain-curation-tab.js explicitly notes this with comments:
+
    - Line 8: `const API_BASE_URL_DC = '/api/v3'; // Use unique prefix if needed`
    - Line 19: `const panelDC = document.getElementById('domainCurationPanel'); // Renamed to avoid conflict`
    - Line 55: `function getJwtTokenDC() { // Renamed`
@@ -76,7 +81,7 @@ This abbreviation approach is preferred over excessively long variable names to 
 ---
 
 **Regarding Answer Q3.3 (Cloning vs. New JS):**
-The answer states: "New workflow JS files should be created by cloning an existing one (typically the most similar workflow) and then customizing: API endpoint paths, Table column definitions, Status enum values, Specific functionality unique to the workflow."
+The answer states: "New workflow JS files should be created by cloning an existing one (typically the most similar workflow) and then customizing: API endpoint paths (Layer 3: Routers), Table column definitions, Status enum values (Layer 1: Models & ENUMs), Specific functionality unique to the workflow."
 
 - **Follow-up Question 3.3.1:** When cloning an existing JS file (e.g., `domain-curation-tab.js` to create `page-curation-tab.js`), beyond the listed items, what other specific, commonly recurring sections or DOM ID references _must_ typically be updated to reflect the new workflow's naming conventions (as defined in Section 2 of the `CONVENTIONS_AND_PATTERNS_GUIDE.md`)? For instance:
   - References to panel IDs (e.g., `domainCurationPanel` -> `pageCurationPanel`).
@@ -90,35 +95,41 @@ The answer states: "New workflow JS files should be created by cloning an existi
 When cloning a JavaScript file for a new workflow, the following elements **must** be updated to reflect the new workflow's naming conventions:
 
 1. **All DOM selectors and references** including:
+
    - Tab selector: `document.querySelector('.tab[data-panel="domainCurationPanel"]')` → `document.querySelector('.tab[data-panel="pageCurationPanel"]')`
    - Panel reference: `document.getElementById('domainCurationPanel')` → `document.getElementById('pageCurationPanel')`
    - All form control selectors (must be comprehensive, no exceptions):
      ```javascript
      // From domain-curation-tab.js lines 29-42
-     domainCurationStatusFilter = panelDC.querySelector('#domainCurationStatusFilter');
-     domainCurationNameFilter = panelDC.querySelector('#domainCurationNameFilter');
+     domainCurationStatusFilter = panelDC.querySelector("#domainCurationStatusFilter");
+     domainCurationNameFilter = panelDC.querySelector("#domainCurationNameFilter");
      // ... and so on for all DOM element references
      ```
 
 2. **State variables** that hold workflow-specific data:
+
    - `selectedDomainIds` → `selectedPageIds`
    - `currentDomainCurationPage` → `currentPageCurationPage`
    - `totalDomainCurationItems` → `totalPageCurationItems`
 
 3. **All function names with workflow prefix**:
+
    - `fetchDomainCurationData()` → `fetchPageCurationData()`
    - `renderDomainCurationTable()` → `renderPageCurationTable()`
    - `clearDomainCurationSelection()` → `clearPageCurationSelection()`
 
 4. **Module abbreviation for utility functions**:
+
    - Suffix-based: `getJwtTokenDC()` → `getJwtTokenPC()`
    - Constants: `API_BASE_URL_DC` → `API_BASE_URL_PC`
 
-5. **API endpoint references**:
-   - `/api/v3/domains/sitemap-curation/status` → `/api/v3/pages/curation/status`
+5. **API endpoint references (Layer 3: Routers)**:
+
+   - `/api/v3/domains/sitemap-curation/status` (Layer 3: Routers) → `/api/v3/pages/curation/status` (Layer 3: Routers)
    - All other URLs and payload structures
 
 6. **Event listeners**:
+
    - All references to DOM elements with workflow-specific IDs in event bindings
 
 7. **Log messages and comments**:
@@ -147,15 +158,17 @@ If a new workflow has unique requirements not represented in existing files, mul
 In the `domain-curation-tab.js` file, the following represent core, reusable patterns that would be largely preserved during cloning:
 
 1. **Data loading pattern**:
+
    ```javascript
    // Lines 94-161 in domain-curation-tab.js
    async function fetchDomainCurationData(page = 1) {
-       // Standard pattern for API requests, error handling, and data parsing
-       // This structure remains consistent across workflows
+     // Standard pattern for API requests (Layer 3: Routers), error handling, and data parsing
+     // This structure remains consistent across workflows
    }
    ```
 
 2. **Status filtering pattern**:
+
    ```javascript
    // Pattern visible in the applyDomainCurationFilters function
    // Collects filter values and refreshes data with appropriate criteria
@@ -163,13 +176,14 @@ In the `domain-curation-tab.js` file, the following represent core, reusable pat
    ```
 
 3. **Batch selection and update pattern**:
+
    ```javascript
    // Lines ~367-441 based on function references
    async function batchUpdateDomainCurationStatus() {
-       // Takes selected IDs
-       // Passes to API with new status
-       // Updates UI based on response
-       // This fundamental pattern is consistent
+     // Takes selected IDs
+     // Passes to API (Layer 3: Routers) with new status
+     // Updates UI based on response
+     // This fundamental pattern is consistent
    }
    ```
 
@@ -182,10 +196,12 @@ In the `domain-curation-tab.js` file, the following represent core, reusable pat
 Sections that would need significant modification include:
 
 1. **Data structure specific logic**:
+
    - Table column definitions that reflect entity-specific properties
    - Entity-specific validation rules
 
 2. **Workflow-specific triggers**:
+
    - Special status handling unique to the workflow
    - Custom business rules for valid state transitions
 

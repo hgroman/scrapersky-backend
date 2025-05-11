@@ -5,11 +5,11 @@
 ---
 
 **Regarding Answer Q4.1 (Status Enum Naming - `{WorkflowNameTitleCase}CurationStatus` vs. `{SourceTableTitleCase}CurationStatus`):**
-The answer states: "The standard pattern is `{WorkflowNameTitleCase}CurationStatus` and `{WorkflowNameTitleCase}ProcessingStatus`. For example: `PageCurationStatus` and `PageProcessingStatus` in `src/models/page.py`... This ensures clear association with the specific workflow rather than the more general source table, especially important when multiple workflows might operate on the same table."
+The answer states: "The standard pattern is `{WorkflowNameTitleCase}CurationStatus` and `{WorkflowNameTitleCase}ProcessingStatus`. For example: `PageCurationStatus` and `PageProcessingStatus` in `src/models/page.py` (Layer 1: Models & ENUMs)... This ensures clear association with the specific workflow rather than the more general source table, especially important when multiple workflows might operate on the same table."
 
 - **Follow-up Question 4.1.1:** The rationale provided ("ensures clear association with the specific workflow... especially important when multiple workflows might operate on the same table") is clear. To make this an explicit rule in the `CONVENTIONS_AND_PATTERNS_GUIDE.md`:
   - Should the rule state: "Python Status Enum classes (e.g., for CurationStatus, ProcessingStatus) **must** always be named using the `{WorkflowNameTitleCase}` prefix (e.g., `{WorkflowNameTitleCase}CurationStatus`) and _not_ the `{SourceTableTitleCase}` prefix, regardless of whether other workflows operate on the same table, to maintain universal consistency?"
-  - Are there _any_ existing counter-examples in `src/models/` where a status Enum directly associated with a specific workflow (and not a generic entity status) uses the `{SourceTableTitleCase}` prefix for its name? If so, should these be considered technical debt?
+  - Are there _any_ existing counter-examples in `src/models/` (Layer 1: Models & ENUMs) where a status Enum directly associated with a specific workflow (and not a generic entity status) uses the `{SourceTableTitleCase}` prefix for its name? If so, should these be considered technical debt?
 
 **ANSWER:**
 
@@ -17,7 +17,8 @@ Yes, the rule in the `CONVENTIONS_AND_PATTERNS_GUIDE.md` should explicitly state
 
 There are indeed counter-examples in the codebase that should be considered technical debt:
 
-1. In `src/models/sitemap.py`, the workflow-specific enums use inconsistent naming patterns:
+1. In `src/models/sitemap.py` (Layer 1: Models & ENUMs), the workflow-specific enums use inconsistent naming patterns:
+
    ```python
    # Lines 44-51
    class SitemapImportCurationStatusEnum(enum.Enum):
@@ -28,9 +29,10 @@ There are indeed counter-examples in the codebase that should be considered tech
        Not_a_Fit = "Not a Fit"
        Archived = "Archived"
    ```
+
    This should ideally be named `SitemapImportCurationStatus` (without the "Enum" suffix) to match the standardized pattern seen in `PageCurationStatus`.
 
-2. In `src/models/domain.py`, another inconsistency is found:
+2. In `src/models/domain.py` (Layer 1: Models & ENUMs), another inconsistency is found:
    ```python
    # Lines 34-39
    class SitemapCurationStatusEnum(enum.Enum):
@@ -51,14 +53,15 @@ These counter-examples should definitely be classified as technical debt that sh
 **Regarding Answer Q4.2 (Standard Enum Values - Strictness):**
 The answer states: "For new workflows, the mandated standard values should be strictly followed with no custom additions to maintain consistency." The mandated standard values are Curation: `New, Queued, Processing, Complete, Error, Skipped` and Processing: `Queued, Processing, Complete, Error`. It also notes some legacy models have different values.
 
-- **Follow-up Question 4.2.1:** The answer mentions `sitemap.py` and `domain.py` have "workflow-specific values for historical reasons (e.g., Selected, Maybe, Not_a_Fit)."
-  - Could you specify which Enums within `src/models/sitemap.py` and `src/models/domain.py` exhibit these non-standard values?
+- **Follow-up Question 4.2.1:** The answer mentions `sitemap.py` (Layer 1: Models & ENUMs) and `domain.py` (Layer 1: Models & ENUMs) have "workflow-specific values for historical reasons (e.g., Selected, Maybe, Not_a_Fit)."
+  - Could you specify which Enums within `src/models/sitemap.py` (Layer 1: Models & ENUMs) and `src/models/domain.py` (Layer 1: Models & ENUMs) exhibit these non-standard values?
 
 **ANSWER:**
 
 Examining the code, I can identify the specific enums with non-standard values:
 
-1. In `src/models/sitemap.py`:
+1. In `src/models/sitemap.py` (Layer 1: Models & ENUMs):
+
    - `SitemapImportCurationStatusEnum` (lines 44-51) uses non-standard values:
      ```python
      class SitemapImportCurationStatusEnum(enum.Enum):
@@ -79,7 +82,7 @@ Examining the code, I can identify the specific enums with non-standard values:
          Submitted = "Submitted"   # Non-standard (not in standard set)
      ```
 
-2. In `src/models/domain.py`:
+2. In `src/models/domain.py` (Layer 1: Models & ENUMs):
    - `SitemapCurationStatusEnum` (lines 34-39) deviates from the standard set:
      ```python
      class SitemapCurationStatusEnum(enum.Enum):
@@ -106,9 +109,10 @@ These deviations from the standard enum values demonstrate historical inconsiste
 4. Adding additional status `Submitted` beyond the standard set
 
 These inconsistencies are particularly notable in the curation status enums, where the standard values (`New, Queued, Processing, Complete, Error, Skipped`) are significantly different from the legacy implementations.
-  - Are these specific non-standard Enums documented as technical debt or exceptions in their respective canonical YAML files (e.g., under `known_issues`)?
+
+- Are these specific non-standard Enums documented as technical debt or exceptions in their respective canonical YAML files (e.g., under `known_issues`)?
 - **Follow-up Question 4.2.2:** If a new workflow _absolutely requires_ a user-selectable state that is not covered by the standard CurationStatus Enum values (e.g., an "On Hold" or "Pending Review" state that is distinct from `New` or `Queued` and does not trigger processing), what is the mandated approach?
-  - Is the standard CurationStatus Enum still used, and this additional state is managed by a _separate, new status field_ on the model (as per Q4.3)?
+  - Is the standard CurationStatus Enum still used, and this additional state is managed by a _separate, new status field_ on the model (Layer 1: Models & ENUMs) (as per Q4.3)?
   - Or, in such a rare, justified case, would a deviation to extend the _standard_ CurationStatus Enum itself be permissible (following the deviation protocol from Q11.1)?
 
 ---
@@ -116,8 +120,8 @@ These inconsistencies are particularly notable in the curation status enums, whe
 **Regarding Answer Q4.3 (Column Naming for Non-Standard Statuses):**
 The answer suggests: "If additional status fields are absolutely necessary, they should follow the pattern: `{workflow_name}_{status_purpose}_status`. The corresponding enum would be named `{WorkflowName}{StatusPurpose}Status." It also notes "the architecture strongly discourages additional status fields."
 
-- **Follow-up Question 4.3.1:** Can you provide a concrete, existing code example from `src/models/` where such an additional, non-standard status field (i.e., not the primary `_curation_status` or `_processing_status`) has been implemented on a model? Please include:
-  - The model file path.
+- **Follow-up Question 4.3.1:** Can you provide a concrete, existing code example from `src/models/` (Layer 1: Models & ENUMs) where such an additional, non-standard status field (i.e., not the primary `_curation_status` or `_processing_status`) has been implemented on a model? Please include:
+  - The model (Layer 1: Models & ENUMs) file path.
   - The exact column name.
   - The name of its Python Enum class.
   - The name of its PostgreSQL ENUM type.

@@ -5,12 +5,12 @@
 ---
 
 **Regarding Answer Q10.1 (New Environment Variables):**
-The answer states: "New environment variables are typically added to `.env.example` and `config.py`... Documentation is crucial... There isn't a strict naming prefix like `{WORKFLOW_NAME}_` but variables should be descriptive (e.g., `PAGE_CURATION_BATCH_SIZE`)."
+The answer states: "New environment variables are typically added to `.env.example` (Layer 5: Configuration) and `config.py` (Layer 5: Configuration)... Documentation is crucial... There isn't a strict naming prefix like `{WORKFLOW_NAME}_` but variables should be descriptive (e.g., `PAGE_CURATION_BATCH_SIZE`)."
 
 - **Follow-up Question 10.1.1 (Naming Prefix Reconsideration for Clarity):**
   - Given the goal of maximum clarity and preventing naming collisions for workflow-specific settings (e.g., batch sizes, specific API keys for a workflow), would it be beneficial to **now establish a stricter convention** for new workflow-specific environment variables, such as `SCS_{WORKFLOW_NAME_UPPERCASE}_SETTING_NAME` (e.g., `SCS_PAGE_CURATION_BATCH_SIZE`)? `SCS_` for ScraperSky.
   - If not a strict prefix, what definitive guidelines can be provided to ensure names are "descriptive enough" to avoid ambiguity when multiple workflows might have similar-sounding settings (e.g., batch size for `page_curation` vs. batch size for `sitemap_import`)?
-  - Where in `config.py` (or `src/core/config.py`) are these variables loaded and transformed into Pydantic `BaseSettings`? Can you point to an existing workflow-specific setting there and its corresponding `.env.example` entry?
+  - Where in `config.py` (Layer 5: Configuration) (or `src/core/config.py` (Layer 5: Configuration if it existed, but the primary is `src/config/settings.py`)) are these variables loaded and transformed into Pydantic `BaseSettings`? Can you point to an existing workflow-specific setting there and its corresponding `.env.example` (Layer 5: Configuration) entry?
 
 **ANSWER:**
 
@@ -18,7 +18,7 @@ Examining the codebase reveals an established pattern for workflow-specific envi
 
 1. **Naming Convention Assessment**:
 
-   Currently, workflow-specific settings for scheduler-related parameters follow a pattern of `{WORKFLOW_NAME}_SCHEDULER_{PARAMETER}`. Examples from `src/config/settings.py`:
+   Currently, workflow-specific settings for scheduler-related parameters follow a pattern of `{WORKFLOW_NAME}_SCHEDULER_{PARAMETER}`. Examples from `src/config/settings.py` (Layer 5: Configuration):
 
    ```python
    # Domain Scheduler settings
@@ -57,7 +57,7 @@ Examining the codebase reveals an established pattern for workflow-specific envi
 
 4. **Configuration Loading**:
 
-   The environment variables are loaded in `src/config/settings.py` using Pydantic's `BaseSettings` class:
+   The environment variables are loaded in `src/config/settings.py` (Layer 5: Configuration) using Pydantic's `BaseSettings` class:
 
    ```python
    class Settings(BaseSettings):
@@ -75,7 +75,7 @@ Examining the codebase reveals an established pattern for workflow-specific envi
        )
    ```
 
-   The corresponding `.env.example` entries are:
+   The corresponding `.env.example` (Layer 5: Configuration) entries are:
 
    ```
    # Domain Scheduler Configuration
@@ -84,10 +84,10 @@ Examining the codebase reveals an established pattern for workflow-specific envi
    DOMAIN_SCHEDULER_MAX_INSTANCES=1
    ```
 
-   The settings are then accessed throughout the application by importing the `settings` instance (not the class) from `src/config/settings.py`:
+   The settings are then accessed throughout the application by importing the `settings` instance (not the class) from `src/config/settings.py` (Layer 5: Configuration):
 
    ```python
-   from ..config.settings import settings
+   from ..config.settings import settings # (Layer 5: Configuration)
 
    batch_size = settings.DOMAIN_SCHEDULER_BATCH_SIZE
    ```
@@ -97,12 +97,12 @@ Based on the existing patterns and best practices, implementing a `SCS_` prefix 
 ---
 
 **Regarding Answer Q10.2 (Workflow-Specific Config in `main.py` / `app_setup.py`):**
-The answer states: "Workflow-specific setup (like Sentry tags or specialized logging) is typically done in `main.py` or a dedicated `app_setup.py`... the current `main.py` has examples."
+The answer states: "Workflow-specific setup (like Sentry tags or specialized logging) is typically done in `main.py` (Layer 3: Routers) or a dedicated `app_setup.py`... the current `main.py` (Layer 3: Routers) has examples."
 
 - **Follow-up Question 10.2.1 (Centralized vs. Decentralized Setup):**
-  - Is there a preferred location between `main.py` and a potential `src/core/app_setup.py` for workflow-specific initializations that need to happen at application startup (beyond just router inclusion)?
-  - For a new workflow, if it requires, for example, setting a unique Sentry tag based on `workflow_name`, or initializing a specific client/resource it uses, what's the precise recommended way to integrate this into the app's startup sequence?
-  - Can you cite an example from `main.py` where a _workflow-specific_ (not general like DB, Sentry globally) setup is performed?
+  - Is there a preferred location between `main.py` (Layer 3: Routers) and a potential `src/core/app_setup.py` (conceptually Layer 3 if for app setup) for workflow-specific initializations that need to happen at application startup (beyond just router inclusion)?
+  - For a new workflow, if it requires, for example, setting a unique Sentry tag based on `workflow_name`, or initializing a specific client/resource it uses, what's the precise recommended way to integrate this into the app's (Layer 3: Routers) startup sequence?
+  - Can you cite an example from `main.py` (Layer 3: Routers) where a _workflow-specific_ (not general like DB, Sentry globally) setup is performed?
 
 **ANSWER:**
 
@@ -110,12 +110,12 @@ Examining the codebase reveals a clear pattern for workflow-specific initializat
 
 1. **Preferred Location for Workflow-Specific Initializations**:
 
-   The codebase consistently uses the FastAPI `lifespan` context manager in `main.py` as the centralized location for initializing all application components, including workflow-specific elements. There is no separate `src/core/app_setup.py` file; instead, each workflow module provides its own setup function that gets called from the lifespan event.
+   The codebase consistently uses the FastAPI `lifespan` context manager in `main.py` (Layer 3: Routers) as the centralized location for initializing all application components, including workflow-specific elements. There is no separate `src/core/app_setup.py` (conceptually Layer 3) file; instead, each workflow module provides its own setup function that gets called from the lifespan event.
 
    The pattern is:
 
-   a. Define a setup function in the workflow's scheduler file (e.g., `setup_workflow_scheduler()` in `src/services/workflow_scheduler.py`)
-   b. Import and call this setup function in the `lifespan` function in `main.py`
+   a. Define a setup function in the workflow's scheduler file (e.g., `setup_workflow_scheduler()` in `src/services/workflow_scheduler.py` (Layer 4: Services & Schedulers))
+   b. Import and call this setup function in the `lifespan` function in `main.py` (Layer 3: Routers)
 
    This approach strikes a balance between centralization (all setup functions are called from one place) and decentralization (each workflow defines its own setup logic).
 
@@ -124,30 +124,30 @@ Examining the codebase reveals a clear pattern for workflow-specific initializat
    For a new workflow requiring specific initialization:
 
    ```python
-   # 1. In src/services/new_workflow_scheduler.py
+   # 1. In src/services/new_workflow_scheduler.py (Layer 4: Services & Schedulers)
    def setup_new_workflow_scheduler():
        """Setup function for the new workflow's scheduler and resources."""
        # Initialize any workflow-specific resources
        client = initialize_special_client()
 
-       # Set up scheduler job with the shared scheduler instance
+       # Set up scheduler job with the shared scheduler instance (Layer 4: Services & Schedulers)
        try:
            scheduler.add_job(
                process_pending_new_workflow_items,
-               trigger=IntervalTrigger(minutes=settings.NEW_WORKFLOW_SCHEDULER_INTERVAL_MINUTES),
+               trigger=IntervalTrigger(minutes=settings.NEW_WORKFLOW_SCHEDULER_INTERVAL_MINUTES), # (Layer 5: Configuration)
                id="process_new_workflow",
                name="Process New Workflow",
                replace_existing=True,
-               max_instances=settings.NEW_WORKFLOW_SCHEDULER_MAX_INSTANCES,
+               max_instances=settings.NEW_WORKFLOW_SCHEDULER_MAX_INSTANCES, # (Layer 5: Configuration)
            )
            logger.info("Added New Workflow scheduler job to shared scheduler")
        except Exception as e:
            logger.error(f"Failed to setup New Workflow scheduler job: {e}", exc_info=True)
 
-   # 2. In src/main.py - Import the setup function
-   from .services.new_workflow_scheduler import setup_new_workflow_scheduler
+   # 2. In src/main.py (Layer 3: Routers) - Import the setup function
+   from .services.new_workflow_scheduler import setup_new_workflow_scheduler # (Layer 4: Services & Schedulers)
 
-   # 3. Then add to the lifespan context manager in main.py
+   # 3. Then add to the lifespan context manager in main.py (Layer 3: Routers)
    @asynccontextmanager
    async def lifespan(app: FastAPI):
        # ... existing code ...
@@ -161,9 +161,9 @@ Examining the codebase reveals a clear pattern for workflow-specific initializat
        # ... rest of function ...
    ```
 
-3. **Examples of Workflow-Specific Setup in `main.py`**:
+3. **Examples of Workflow-Specific Setup in `main.py` (Layer 3: Routers)**:
 
-   The clearest examples of workflow-specific initialization in `main.py` are the scheduler setup calls in the `lifespan` function:
+   The clearest examples of workflow-specific initialization in `main.py` (Layer 3: Routers) are the scheduler setup calls (from Layer 4: Services & Schedulers) in the `lifespan` function:
 
    ```python
    @asynccontextmanager
@@ -205,8 +205,8 @@ Examining the codebase reveals a clear pattern for workflow-specific initializat
 
 The established approach in the codebase has several advantages:
 
-1. It keeps workflow-specific setup logic in the workflow's own files
-2. It centralizes the actual initialization calls in a single place (`main.py`)
+1. It keeps workflow-specific setup logic in the workflow's own files (Layer 4: Services & Schedulers)
+2. It centralizes the actual initialization calls in a single place (`main.py` (Layer 3: Routers))
 3. It provides consistent error handling for each setup step
 4. It makes it easy to temporarily disable specific workflows by commenting out their setup calls
 

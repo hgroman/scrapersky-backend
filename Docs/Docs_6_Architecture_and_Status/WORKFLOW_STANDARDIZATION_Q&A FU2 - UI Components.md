@@ -15,13 +15,16 @@ The answer states: "Standard conversion examples: `single_search` → "Single Se
   - Could you point to the exact line in `static/scraper-sky-mvp.html` for both "Sitemap Deep Scrape Curation" and "Domain Curation for Sitemap Analysis" to confirm these specific modified texts are in use, and if possible, the original `workflow_name` they correspond to (e.g. `sitemap_curation`, `domain_curation`)?
 
 **ANSWER:**
+
 - The guiding principle for tab button text modifications is function disambiguation. Modifications are made when:
+
   1. Multiple workflows operate on the same entity type but with different purposes
   2. The core purpose of the workflow isn't immediately clear from the direct title-casing
 
 - There is no explicit character limit, but examining the HTML shows that tab buttons with modifications tend to display shorter text in the button itself (e.g., "Sitemap Curation") while placing the descriptive text in the panel header.
 
 - **Exact lines in `static/scraper-sky-mvp.html`:**
+
   - "Sitemap Deep Scrape Curation" appears on line 899: `<h3>Sitemap Deep Scrape Curation</h3>` in the panel header
   - The tab text is shorter: Line 578: `<div class="tab" data-panel="sitemapCurationPanel">Sitemap Curation</div>`
   - "Domain Curation for Sitemap Analysis" appears on line 811: `<h4>Domain Curation for Sitemap Analysis</h4>` in the panel header
@@ -43,7 +46,9 @@ The answer notes: "The preferred standard is `{workflowNameCamelCase}Panel` for 
   - Could you identify the most recently implemented workflow tab in `static/scraper-sky-mvp.html` (e.g., by looking at commit history or your knowledge) that strictly follows this `{workflowNameCamelCase}Panel` convention for both attributes, to serve as a definitive current example?
 
 **ANSWER:**
+
 - Yes, for all new workflows, adherence to `{workflowNameCamelCase}Panel` for both the `data-panel` attribute and the panel `div` `id` is a **strict requirement**. This is evidenced by:
+
   1. The "Domain Curation" tab implementation, which has code comments explicitly reinforcing this standard:
      - Line 808: `<!-- Note: ID matches the data-panel attribute in the tab button -->`
      - Line 809: `<div id="domainCurationPanel" class="panel card"> <!-- ID changed to match data-panel -->`
@@ -53,8 +58,9 @@ The answer notes: "The preferred standard is `{workflowNameCamelCase}Panel` for 
   - Panel div (Line 809): `<div id="domainCurationPanel" class="panel card">`
 
 This implementation is newer than the "Sitemap Curation" tab which also follows the convention:
-  - Tab element (Line 578): `<div class="tab" data-panel="sitemapCurationPanel">Sitemap Curation</div>`
-  - Panel div (Line 897): `<div id="sitemapCurationPanel" class="panel card">`
+
+- Tab element (Line 578): `<div class="tab" data-panel="sitemapCurationPanel">Sitemap Curation</div>`
+- Panel div (Line 897): `<div id="sitemapCurationPanel" class="panel card">`
 
 Both examples demonstrate strict adherence to the `{workflowNameCamelCase}Panel` convention.
 
@@ -75,9 +81,11 @@ The answer confirms patterns like `{workflowNameCamelCase}StatusFilter` and `app
 - **Follow-up Question 2.3.2:** Can you confirm these exact `id` patterns (or their close adherence) are present in the HTML structure for either the `domainCurationPanel` or `sitemapCurationPanel` in `static/scraper-sky-mvp.html` by citing a few specific element IDs from the file for these components?
 
 **ANSWER:**
+
 - Yes, these patterns are the **exact and mandatory** `id` conventions for all new workflows. The only variation allowed is for the item type (e.g., `domainCurationNameFilter` vs `sitemapUrlFilter`), which may need to reflect the specific entity property being filtered.
 
 - Confirmation from `domainCurationPanel` in `static/scraper-sky-mvp.html`:
+
   - Status Filter: `domainCurationStatusFilter` (Line 818-819)
   - Name/Identifier Search: `domainCurationNameFilter` (Line 829-830)
   - Apply Filters button: `applyDomainCurationFilters` (Line 835)
@@ -107,7 +115,9 @@ This is a "grab a fork too" moment, as the UI display directly relates to how th
   - If such descriptive text is used, what is the standard format? `"{EnumValueTitleCase} (Queue for {ProcessDescription})"`?
 
 **ANSWER:**
+
 - Descriptive context should be added when:
+
   1. The status selection directly triggers a workflow action (e.g., queuing for processing)
   2. This action may not be immediately obvious to the user from the status name alone
 
@@ -124,40 +134,45 @@ The domain curation panel's dropdown clearly shows this pattern, where "Selected
     - **A)** Should the UI dropdown for this new workflow _avoid_ offering "Selected" and instead offer "Queued" as the option to trigger processing, to directly match the Enum member that triggers the dual update?
     - **B)** If "Selected" is the strongly preferred UI term:
       - Does the JavaScript for this new workflow (e.g., `page-curation-tab.js`) need to explicitly translate the user's choice of "Selected" (from the UI dropdown) into the string value `"Queued"` before sending it in the `status` field of the API payload? (e.g., `if (uiChoice === "Selected") apiPayload.status = "Queued"; else apiPayload.status = uiChoice;`)
-      - OR, should the API endpoint (e.g., in `src/routers/page_curation.py`) for this new workflow be designed to receive `"Selected"` as a valid string for the `status` parameter (even if `PageCurationStatus` Enum doesn't have a `Selected` member, which would be problematic for Pydantic validation if `status` is typed to `PageCurationStatus`), and then the API internally maps this "Selected" to set `page_curation_status` to `PageCurationStatus.Queued` AND also sets `page_processing_status` to `PageProcessingStatus.Queued`? This seems to deviate from Pydantic typing.
+      - OR, should the API endpoint (e.g., in `src/routers/page_curation.py` (Layer 3: Routers)) for this new workflow be designed to receive `"Selected"` as a valid string for the `status` parameter (even if `PageCurationStatus` Enum doesn't have a `Selected` member, which would be problematic for Pydantic validation (Layer 2: Schemas) if `status` is typed to `PageCurationStatus` (Layer 1: Models & ENUMs)), and then the API internally maps this "Selected" to set `page_curation_status` to `PageCurationStatus.Queued` AND also sets `page_processing_status` to `PageProcessingStatus.Queued`? This seems to deviate from Pydantic typing.
   - **Clarification Request:** Please detail the **standard, code-grounded procedure** for handling a user selecting a UI term like "Mark as Selected" (which implies queueing) for a _new_ workflow that is correctly using the standard `PageCurationStatus` Enum (where `Queued` is the actual Enum member that should trigger the backend processing queue).
-    - Reference the `static/js/domain-curation-tab.js` code that handles `"Selected (Queue for Sitemap)"` and its interaction with the API as an example of _current practice for an existing (non-standard enum) workflow_.
-    - Then, explicitly state how this should be implemented for a _new workflow adhering to the standard `PageCurationStatus` enum_ where "Queued" is the trigger. Where does the mapping/translation happen if the UI uses a term like "Selected" but the backend needs to see "Queued" for the `curation_status` to trigger the `processing_status`?
+    - Reference the `static/js/domain-curation-tab.js` code that handles `"Selected (Queue for Sitemap)"` and its interaction with the API (Layer 3: Routers) as an example of _current practice for an existing (non-standard enum) workflow_.
 
 **ANSWER:**
+
 - For new workflows using the standard `PageCurationStatus` Enum, the correct approach is **A**: The UI dropdown should use "Queued" rather than "Selected", with appropriate descriptive text: `"Queued (Start Processing)"`.
 
 - This conclusion is based on examining the `domain-curation-tab.js` file, which shows that:
+
   1. No translation occurs in the JavaScript - the exact value from the dropdown is sent to the API
   2. Line 391: `sitemap_curation_status: targetStatus` shows the UI value is directly used in the API payload
 
 - The Domain Curation implementation does **not** have JavaScript code that maps "Selected" to "Queued" - it simply sends "Selected" to the API. The API itself must be expecting this value.
 
 - **Standard Procedure for New Workflows:**
+
   1. **UI Layer**: Use the actual enum values in the dropdown options, with descriptive text for clarity:
+
      ```html
      <option value="Queued">Queued (Start Processing)</option>
      ```
 
   2. **JavaScript**: Send the exact dropdown value to the API:
+
      ```javascript
      const payload = {
-         item_ids: selectedItemIds,
-         page_curation_status: targetStatus // "Queued" from dropdown
+       item_ids: selectedItemIds,
+       page_curation_status: targetStatus, // "Queued" from dropdown
      };
      ```
 
-  3. **API Endpoint**: Receive the standard enum value ("Queued") and implement the dual-status update pattern:
+  3. **API Endpoint (Layer 3: Routers)**: Receive the standard enum value ("Queued") and implement the dual-status update pattern:
+
      ```python
-     # In router/page_curation.py
+     # In router/page_curation.py (Layer 3: Routers)
      @router.put("/status")
      async def update_page_curation_status(
-         request: PageCurationUpdateRequest,
+         request: PageCurationUpdateRequest, # (Layer 2: Schemas)
          session: AsyncSession = Depends(get_session_dependency)
      ):
          async with session.begin():
@@ -168,8 +183,8 @@ The domain curation panel's dropdown clearly shows this pattern, where "Selected
                      page.page_curation_status = request.page_curation_status
 
                      # Dual-status update pattern
-                     if request.page_curation_status == PageCurationStatus.Queued:
-                         page.page_processing_status = PageProcessingStatus.Queued
+                     if request.page_curation_status == PageCurationStatus.Queued: # (Layer 1: Models & ENUMs)
+                         page.page_processing_status = PageProcessingStatus.Queued # (Layer 1: Models & ENUMs)
      ```
 
 This approach maintains type safety with Pydantic validation and ensures the dual-status update pattern is correctly implemented without requiring client-side mapping or backend exceptions to the Enum types.

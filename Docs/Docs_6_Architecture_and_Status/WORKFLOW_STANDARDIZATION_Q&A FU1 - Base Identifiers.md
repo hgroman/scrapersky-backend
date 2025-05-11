@@ -28,21 +28,21 @@ FU Q1.2.1 (New tables):
 When a new workflow requires a new entity/table, there's a preliminary database design phase that happens before formal workflow implementation begins. This isn't explicitly documented in the cheat sheet, but in practice:
 
 The database model is designed and created first
-The SQLAlchemy model file is created (e.g., src/models/new_entity.py)
+The SQLAlchemy model file (Layer 1: Models & ENUMs) is created (e.g., src/models/new_entity.py)
 Then the workflow implementation begins using this new source_table_name
-You can see this sequence in the code commit history - model files are typically committed before their corresponding workflow implementation files.
+You can see this sequence in the code commit history - model files (Layer 1: Models & ENUMs) are typically committed before their corresponding workflow implementation files.
 
 FU Q1.2.2 (source_table_name example):
 A clear example is sitemap from WF6-SitemapImport_CANONICAL.yaml:
 
-Corresponds directly to src/models/sitemap.py
-This file contains the Sitemap class (SQLAlchemy model)
+Corresponds directly to src/models/sitemap.py (Layer 1: Models & ENUMs)
+This file contains the Sitemap class (SQLAlchemy model) (Layer 1: Models & ENUMs)
 The table name in the database is sitemaps (plural form)
 This demonstrates the direct mapping between source_table_name and the model file/class.
 
 Regarding reserved/prohibited patterns (FU Q1.3):
 FU Q1.3.1 (Naming pattern recommendation):
-The {entity}_curation or {entity}_import pattern is a recommended convention, not merely observed. This is evident in:
+The {entity}\_curation or {entity}\_import pattern is a recommended convention, not merely observed. This is evident in:
 
 All newer workflows following this pattern
 The template examples in the cheat sheet using these patterns
@@ -66,9 +66,9 @@ FU Q1.4.1 (Pluralization consistency):
 Yes, pluralization is consistently reflected across database tables, API endpoints, and router filenames. For example:
 
 local_business → local_businesses in the database
-/api/v3/local_businesses/... in the API endpoints
-src/routers/local_businesses.py for the router
-This consistency is evident in src/routers/modernized_sitemap.py which creates endpoints at /api/v3/sitemap/... (not pluralized to match the model name), while the database table is sitemaps (pluralized).
+/api/v3/local_businesses/... in the API endpoints (Layer 3: Routers)
+src/routers/local_businesses.py for the router (Layer 3: Routers)
+This consistency is evident in src/routers/modernized_sitemap.py which creates endpoints at /api/v3/sitemap/... (Layer 3: Routers) (not pluralized to match the model name (Layer 1: Models & ENUMs)), while the database table is sitemaps (pluralized).
 
 FU Q1.4.2 (Ambiguous pluralizations):
 For ambiguous pluralizations, there's no documented fallback rule or dictionary. The team relies on common conventions:

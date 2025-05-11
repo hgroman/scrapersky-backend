@@ -45,12 +45,13 @@ ScraperSky's progressive data enrichment follows a defined workflow sequence:
 Follow the standard 6-phase implementation process from the Workflow Builder Cheat Sheet:
 
 **Phase 0: Exploratory Crawling & Field Discovery**
+
 1. Run the quick‑prototype crawler against ≤ 10 domains.
 2. Save raw HTML + parsed JSON to `./tmp/domain_content/extraction_results.json`.
 3. Human (or higher‑context AI) reviews the JSON and approves a canonical field list.
 4. ONLY AFTER approval, proceed to Phase 1.
 
-**Phase 1: Database Schema**
+**Phase 1: Layer 1 & 2: Database Schema**
 
 • All DB code MUST follow the [ABSOLUTE ORM REQUIREMENT](../Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md)
 
@@ -92,7 +93,7 @@ supabase/migrations/YYYYMMDDHHMMSS_domain_content_extraction_schema.sql
 
 > Authority: Constitution > Session Context > Cheat-Sheet > This Section
 
-### Phase 2: Service Layer
+### Phase 2: Layer 4: Service Layer
 
 • All DB code MUST follow the [ABSOLUTE ORM REQUIREMENT](../Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md)
 
@@ -135,7 +136,7 @@ logger.error(f"Error processing domain: {str(e)}")
 
 > Authority: Constitution > Session Context > Cheat-Sheet > This Section
 
-### Phase 3: API Router Layer
+### Phase 3: Layer 3: API Router Layer
 
 Implement `DomainContentRouter` in `src/routers/domain_content.py` with:
 
@@ -151,7 +152,7 @@ Implement `DomainContentRouter` in `src/routers/domain_content.py` with:
 
 > Authority: Constitution > Session Context > Cheat-Sheet > This Section
 
-### Phase 4: Background Scheduler
+### Phase 4: Layer 4: Background Scheduler (part of Services)
 
 Implement `DomainContentScheduler` in `/src/schedulers/domain_content_scheduler.py` with:
 
@@ -177,14 +178,14 @@ concurrency_limit = settings.DOMAIN_SCHEDULER_CONCURRENCY_LIMIT    # Default: 5
 
 ### Phase 5: Application Integration
 
-1. Register router in [`../../src/main.py`](../../src/main.py):
+1. Register Layer 3: Router in [`../../src/main.py`](../../src/main.py):
 
    ```python
    from src.routers.domain_content import router as domain_content_router
    app.include_router(domain_content_router)
    ```
 
-2. Register scheduler in [`../../src/schedulers/__init__.py`](../../src/schedulers/__init__.py):
+2. Register Layer 4: Scheduler (part of Services) in [`../../src/schedulers/__init__.py`](../../src/schedulers/__init__.py):
    ```python
    from src.schedulers.domain_content_scheduler import DomainContentScheduler
    domain_content_scheduler = DomainContentScheduler()
@@ -212,9 +213,9 @@ For this specific implementation:
 Before completion, verify:
 
 - [ ] All database changes occur only after Phase 0 field‑list approval
-- [ ] Service methods accept session parameters
-- [ ] Routers own transaction boundaries
-- [ ] Background scheduler creates its own sessions
+- [ ] Layer 4: Service methods accept session parameters
+- [ ] Layer 3: Routers own transaction boundaries
+- [ ] Layer 4: Background scheduler (part of Services) creates its own sessions
 - [ ] API endpoints follow v3 prefix standard
 - [ ] All architectural patterns are followed
 
