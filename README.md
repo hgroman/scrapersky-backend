@@ -177,8 +177,8 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      - id: end-of-file-fixer       # Ensures files end with a newline
-      - id: trailing-whitespace     # Trims trailing whitespace
+      - id: end-of-file-fixer # Ensures files end with a newline
+      - id: trailing-whitespace # Trims trailing whitespace
 ```
 
 ### Code Formatting
@@ -326,6 +326,26 @@ SITEMAP_SCHEDULER_MAX_INSTANCES=${SITEMAP_SCHEDULER_MAX_INSTANCES:-1}
 These settings can be configured in the `.env` file or directly in the Docker environment variables to override the defaults.
 
 ## Development Tips
+
+### Editor Configuration for Smooth Commits
+
+To ensure pre-commit hooks for whitespace and newlines pass seamlessly without interrupting your workflow, add these settings to your VS Code/Cursor settings (`settings.json`):
+
+```json
+{
+  // Ensure these settings are enabled:
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.formatOnSave": true // Optional but recommended if using a formatter
+}
+```
+
+_Why?_ This automatically cleans files on save, preventing hook failures during commits.
+
+### Committing Changes Effectively
+
+- **Multi-line Messages**: Use VS Code's **Source Control Panel UI** (recommended) or run `git commit` (with no flags) in the terminal to open your configured editor. Avoid `git commit -m` for multi-line messages due to shell quoting complexities.
+- **Bypassing Hooks**: If you absolutely need to bypass pre-commit checks (use sparingly, e.g., for WIP commits), use `git commit --no-verify` or the shorthand `git commit -n`.
 
 ### Handling Multi-line Git Commits
 
