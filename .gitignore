@@ -70,8 +70,8 @@ inspect_table.py
 # Project specific directories to ignore
 # Docs/
 # project-docs/
-scripts/
-tests/
+# scripts/
+# tests/
 
 # Ignore archive directory
 _Archive_4.13.25/
