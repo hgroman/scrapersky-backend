@@ -1,4 +1,22 @@
 entries:
+  - file: Journal/JE_20250519_085300_Database-Connection-Fix.md
+    date: "2025-05-19"
+    time: "08:53:00"
+    timezone: "PT"
+    participants:
+      - Henry Groman
+      - AI Assistant (Cascade)
+    summary_brief: "Fixed database connection issues with Supabase in the ScraperSky backend by updating the DATABASE_URL environment variable to use parameters compatible with asyncpg 0.30.0."
+    tags:
+      - database
+      - bugfix
+      - supabase
+      - connection_string
+      - asyncpg
+      - critical_fix
+      - api_endpoints
+    related_task_id: "TASK_SS_007"
+
   - file: Journal/JE_20250519_080624_Personas-Directory-Migration.md
     date: "2025-05-19"
     time: "08:06:24"

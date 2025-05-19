@@ -80,3 +80,17 @@
     - "workflow/Personas/"
     - "update_persona_references.sh"
   latest_journal_entry: "Journal/JE_20250519_080624_Personas-Directory-Migration.md"
+
+- id: TASK_SS_007
+  title: "Fix Database Connection Issues in ScraperSky Backend"
+  status: done
+  completed: "2025-05-19"
+  due: "2025-05-19"
+  description: "Diagnosed and fixed database connection issues with Supabase in the ScraperSky backend. The problem was related to incompatible connection parameters in the DATABASE_URL environment variable. Updated the connection string to use parameters compatible with asyncpg 0.30.0."
+  assigned_to: Henry Groman & AI Assistant (Cascade)
+  priority: critical
+  related_files:
+    - ".env"
+    - "debug_api.py"
+    - "docker-compose.yml"
+  latest_journal_entry: "workflow/Journal/JE_20250519_085300_Database-Connection-Fix.md"
