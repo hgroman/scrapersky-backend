@@ -88,3 +88,5 @@ reports/
 
 # Ignore specific folders moved out during refactoring
 Z-Curation-Workflow-Process-Build/
+# SpecStory explanation file
+.specstory/.what-is-this.md

@@ -1,0 +1,151 @@
+entries:
+  - file: Journal/JE_20250519_080624_Personas-Directory-Migration.md
+    date: "2025-05-19"
+    time: "08:06:24"
+    timezone: "PT"
+    participants:
+      - Henry Groman
+      - AI Assistant (Workflow Specialist)
+    summary_brief: "Migrated Personas directory to workflow/ and updated all internal references. Created update script for future reference maintenance."
+    tags:
+      - workflow
+      - directory_restructure
+      - documentation
+      - standardization
+      - personas
+
+  - file: Journal/JE_20250519_075819_Workflow-Directory-Restructure.md
+    date: "2025-05-19"
+    time: "07:58:19"
+    timezone: "PT"
+    participants:
+      - Henry Groman
+      - AI Assistant (Workflow Specialist)
+    summary_brief: "Consolidated workflow directory structure, standardized naming conventions, and updated all references to reflect the new organization."
+    tags:
+      - workflow
+      - directory_restructure
+      - documentation
+      - standardization
+  - file: JE_20250518_220800_TASKAUDIT_Documentation-Clarification.md
+    date: "2025-05-18"
+    time: "22:08:00"
+    timezone: "PT"
+    participants:
+      - Henry Groman
+      - David Shepherd (AI Director Persona)
+    summary_brief: "Identified and resolved documentation inconsistencies, clarified the layer-by-layer audit approach, and created a Layer 4 Audit Report template."
+    tags:
+      - documentation
+      - audit_process
+      - layer_report
+      - technical_debt
+      - process_clarification
+  - file: JE_20250515_120630_TASK006_Mgmt-Setup.md
+    date: "2025-05-15"
+    time: "19:06:19"
+    timezone: "UTC"
+    participants:
+      - Hank Groman
+      - AI Assistant (MJML Component Architect Persona)
+    summary_brief: "Established new PM system, defined Architect persona, outlined multi-persona AI workflow strategy, and planned documentation cleanup."
+    tags:
+      - project_management
+      - documentation
+      - workflow_setup
+      - persona_definition
+      - ai_strategy
+      - mjml_architect
+  - file: JE_20250515_131849_TASK005_Review-Analysis-Report.md
+    date: "2025-05-15"
+    time: "20:18:42"
+    timezone: "UTC"
+    participants:
+      - MJML Component Architect (AI)
+    summary_brief: "Reviewed mjml_component_analysis_report.md and decided to create a new Work Order for component implementation."
+    tags:
+      - review
+      - planning
+      - mjml_components
+      - work_order_followup
+  - file: JE_20250515_164649_TASK004_Std-WO-Guide.md
+    date: "2025-05-15"
+    time: "23:46:32"
+    timezone: "UTC"
+    participants:
+      - User
+      - AI Assistant (Gemini)
+    summary_brief: "Defined and documented the Standard Work Order Process guide and updated README.md."
+    tags:
+      - process_definition
+      - project_management
+      - documentation
+      - work_order
+      - workflow_improvement
+      - readme_update
+  - file: JE_20250516_080117_TASK001_MJML-Comp-Done.md
+    date: "2025-05-16"
+    time: "15:01:02"
+    timezone: "UTC"
+    participants:
+      - AI Assistant (MJML Developer Persona)
+    summary_brief: "Completed WO_MJML_Component_Creation_Initial_Doc.md: Created/validated 13 components & docs, cleaned up legacy artifacts."
+    tags:
+      - mjml_components
+      - documentation
+      - cleanup
+      - work_order_completion
+      - va-header-logo
+      - va-hero-banner
+      - va-text-intro
+      - va-callout-highlight
+      - va-title-divider
+      - va-feature-card
+      - va-feature-list-item
+      - va-offer-box
+      - va-button-cta
+      - va-cta-dual-button
+      - va-divider-simple
+      - va-text-conclusion
+      - va-footer-standard
+  - date: "2025-05-17"
+    title: "Completed WO_Legacy_System_Doc_001 - Legacy System Documentation"
+    file: JE_20250516_132253_TASK003_Legacy-Doc.md
+    description: "Documentation of the legacy (non-MJML) email template system completed and archived as per WO_Legacy_System_Doc_001."
+    work_order_id: "WO_Legacy_System_Doc_001"
+    participants:
+      - "Legacy System Analyst & Documenter (AI)"
+      - "User"
+    summary_brief: "Documented and organized legacy email system assets for historical reference."
+    tags:
+      - legacy_documentation
+      - archive
+      - work_order_completion
+      - historical_reference
+  - file: JE_20250516_230523_TASK_META_Meta-Rules-Applied.md
+    date: "2025-05-16"
+    time: "23:05:23"
+    timezone: "UTC"
+    participants:
+      - AI Assistant
+    summary_brief: "Executed WO_TASK_META_CONSOLIDATION_20250517: Renamed JEs, updated docs to new naming conventions."
+    tags:
+      - project_management
+      - documentation
+      - file_naming
+      - task_meta
+      - cleanup
+  - date: "2025-05-17"
+    title: "MJML Project Structure Consolidation & Asset Relocation"
+    file: "20250517110000_TASK_Refactor_MJML-Structure-Cleanup.md"
+    participants:
+      - "AI Assistant"
+      - "User"
+    summary_brief: "Cleaned up MJML directory structure (templates/, src/mjml_components/) and organized mjml_assets/ into canonical locations per README.md."
+    tags:
+      - mjml_structure
+      - refactor
+      - file_organization
+      - project_cleanup
+    related_task_id: "TASK_Refactor" # Conceptual
+    description: "Consolidated MJML component library and relocated mjml_assets files to align with README.md project structure. Ensured src/mjml-source/ is the primary location for MJML development assets."

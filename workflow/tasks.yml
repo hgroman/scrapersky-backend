@@ -1,0 +1,82 @@
+- id: TASK_SS_001
+  title: "Define Director AI Persona, Operational Guide, Motivation, and Guardrails"
+  status: done
+  due: "2025-05-17"
+  description: "Created and refined the core documentation suite for the Director AI, including Director_AI_Persona.md, Director_AI_Operational_Guide.md, Director_AI_Motivation.md, and Director_AI_Guardrails.md. This involved multiple iterations to clarify the Director AI's role, mandate, and operational procedures."
+  assigned_to: Director AI (Self) & User
+  priority: critical
+  related_files:
+    - "Docs/Docs_11_AI_Personas/Director_AI_Persona.md"
+    - "Docs/Docs_11_AI_Personas/Director_AI_Operational_Guide.md"
+    - "Docs/Docs_11_AI_Personas/Director_AI_Motivation.md" # Assuming this was created/renamed alongside
+    - "Docs/Docs_11_AI_Personas/Director_AI_Guardrails.md" # Assuming this was created/renamed alongside
+  latest_journal_entry: null # Will be updated by TASK_SS_004
+
+- id: TASK_SS_002
+  title: "Establish Layer Persona Base Set Template"
+  status: done
+  due: "2025-05-17"
+  description: "Created the Persona-Base-Set directory template for Layer Specialist AIs, including neutralized versions of persona, motivation, guardrails, and memory snapshot documents. Also created a comprehensive README.md within this set to guide its usage."
+  assigned_to: Director AI (Self) & User
+  priority: high
+  related_files:
+    - "Docs/Docs_11_AI_Personas/Persona-Base-Set/"
+    - "Docs/Docs_11_AI_Personas/Persona-Base-Set/README.md"
+    - "Docs/Docs_11_AI_Personas/Layer1/" # As an example of its application
+  latest_journal_entry: null # Will be updated by TASK_SS_004
+
+- id: TASK_SS_003
+  title: "Create and Refine Standardized Workflow README (README_WORKFLOW.md)"
+  status: done
+  due: "2025-05-17"
+  description: "Adapted a workflow system (inspired by EmailForge) into a generic README_WORKFLOW.md. Iteratively refined it to clearly define the roles of tasks_master.yml, journal entries, journal_index.yml, work orders, and handoff documents."
+  assigned_to: Director AI (Self) & User
+  priority: high
+  related_files:
+    - "README_WORKFLOW.md"
+  latest_journal_entry: null # Will be updated by TASK_SS_004
+
+- id: TASK_SS_004
+  title: "Live out Workflow: Document Tonight's Efforts (Tasks, Journal)"
+  status: done
+  completed: "2025-05-19"
+  due: "2025-05-17"
+  description: "Update tasks.yml with tonight's accomplishments, create a new journal entry summarizing this session, update journal_index.yml, and prepare for handoff/session end."
+  assigned_to: Director AI (Self) & User
+  priority: critical
+  related_files:
+    - "tasks.yml"
+    - "journal_index.yml"
+    - "Journal/"
+  latest_journal_entry: "Journal/JE_20250519_075819_Workflow-Directory-Restructure.md"
+
+- id: TASK_SS_005
+  title: "Workflow Directory Restructuring and Standardization"
+  status: done
+  completed: "2025-05-19"
+  due: "2025-05-19"
+  description: "Consolidate and standardize the workflow directory structure by moving all related files into a single workflow directory, ensuring consistent naming conventions, and updating all references to reflect the new structure."
+  assigned_to: AI Assistant (Workflow Specialist) & Henry Groman
+  priority: high
+  related_files:
+    - "workflow/README_WORKFLOW.md"
+    - "workflow/Work_Order_Process.md"
+    - "workflow/Personas/"
+    - "workflow/Journal/"
+    - "workflow/Work_Orders/"
+    - "workflow/Handoff/"
+    - "workflow/Guides/"
+  latest_journal_entry: "Journal/JE_20250519_075819_Workflow-Directory-Restructure.md"
+
+- id: TASK_SS_006
+  title: "Personas Directory Migration and Reference Updates"
+  status: done
+  completed: "2025-05-19"
+  due: "2025-05-19"
+  description: "Moved the Personas directory from Docs/ to workflow/ and updated all internal references to reflect the new location. Created a script to automate reference updates and verified all links."
+  assigned_to: AI Assistant (Workflow Specialist) & Henry Groman
+  priority: high
+  related_files:
+    - "workflow/Personas/"
+    - "update_persona_references.sh"
+  latest_journal_entry: "Journal/JE_20250519_080624_Personas-Directory-Migration.md"

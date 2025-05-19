@@ -6,17 +6,17 @@
 
 **Current Operational Phase:**
 
-| Phase Description                                    | Status    |
-| :--------------------------------------------------- | :-------- |
-| **Phase 1: Cheat Sheet Creation (All WFs: WF1-WF7)** | **To Do** |
-| Phase 2: Implementation (WF1-SingleSearch)           | To Do     |
-| Phase 2: Implementation (WF2-StagingEditor)          | To Do     |
-| Phase 2: Implementation (WF3-LocalBusinessCuration)  | To Do     |
-| Phase 2: Implementation (WF4-DomainCuration)         | To Do     |
-| Phase 2: Implementation (WF5-SitemapCuration)        | To Do     |
-| Phase 2: Implementation (WF6-SitemapImport)          | To Do     |
-| Phase 2: Implementation (WF7-PageCuration)           | To Do     |
-| Final System-Wide Review                             | To Do     |
+| Phase Description                                    | Status      |
+| :--------------------------------------------------- | :---------- |
+| **Phase 1: Cheat Sheet Creation (All WFs: WF1-WF7)** | **Complete**|
+| Phase 2: Layer-by-Layer Audit (Layer 4: Services)    | **Active**  |
+| Phase 2: Layer-by-Layer Audit (Layer 1: Models)      | To Do       |
+| Phase 2: Layer-by-Layer Audit (Layer 2: Schemas)     | To Do       |
+| Phase 2: Layer-by-Layer Audit (Layer 3: Routers)     | To Do       |
+| Phase 2: Layer-by-Layer Audit (Layer 5: Config)      | To Do       |
+| Phase 2: Layer-by-Layer Audit (Layer 6: UI)          | To Do       |
+| Phase 2: Layer-by-Layer Audit (Layer 7: Testing)     | To Do       |
+| Phase 3: Cross-Workflow Analysis & Pattern Review    | To Do       |
 
 _(This table will be updated as we complete each major phase/sub-phase)._
 
@@ -32,12 +32,14 @@ This document outlines the complete process for standardizing the ScraperSky cod
   - `Layer-X-{LayerName}_Blueprint.md`: This document defines the architectural standard, quality bar, and "what good looks like" for the layer. It is the definitive reference for compliance.
   - `Layer-X-{LayerName}_AI_Audit_SOP.md`: This document is a Standard Operating Procedure specifically for AI assistants, detailing the step-by-step process to audit the layer against its Blueprint and populate the workflow-specific cheat sheet.
 
-**Overarching Strategy Note:** We will complete Phase 1 (Cheat Sheet creation and assessment) for all workflows (WF1 through WF7) before commencing any Phase 2 (Implementation) activities. This 'breadth-first' documentation approach will provide a comprehensive understanding of the system-wide refactoring effort.
+**Overarching Strategy Note:** We will complete Phase 1 (Cheat Sheet creation and assessment) for all workflows (WF1 through WF7) before commencing any Phase 2 (Layer-by-Layer Audit) activities. This 'breadth-first' documentation approach provides a comprehensive understanding of the system-wide technical debt landscape. In Phase 2, we will systematically audit each architectural layer across all workflows, rather than auditing entire workflows one by one.
 
 ## Current Status
 
-- Active Workflow: WF1-SingleSearch
-- Progress: Initial setup
+- Active Phase: Layer-by-Layer Audit (Phase 2)
+- Current Layer: Layer 4 (Services)
+- Current Activity: Analyzing service implementations across all workflows
+- Progress: Gathering information about implementation patterns and technical debt
 
 ### Automation hint
 
@@ -82,7 +84,24 @@ This preserves the exact Git commit hash in the filename for future reference.
 
 ## Phase 1: WF1-SingleSearch Cheat Sheet Creation
 
-**Strategic Note on Layer Prioritization for Phase 1:** To better inform the analysis of all architectural layers, we will begin Phase 1 for each workflow by first auditing Layer 4 (Services). The understanding gained from the service layer's logic and data handling will provide critical context for subsequently auditing Models, Schemas, Routers, and other components. The AI assistant should follow the `Docs/Docs_10_Final_Audit/Layer-4-Services_AI_Audit_SOP.md`, which references the `Docs/Docs_10_Final_Audit/Layer-4-Services_Blueprint.md` as the definitive standard.
+**Layer-by-Layer Audit Process (Phase 2):** In Phase 2, we audit each architectural layer across all workflows systematically. For each layer:
+
+1. **Layer Report Creation:** Create a dedicated Layer Report document (`Layer-X-{LayerName}_Audit_Report.md`) that will serve as the consolidated findings document.
+
+2. **Cross-Workflow Analysis:** For each workflow (WF1-WF7):
+   - Review the corresponding sections in the workflow's cheat sheet
+   - Use the layer's Blueprint (`Layer-X-{LayerName}_Blueprint.md`) and SOP (`Layer-X-{LayerName}_AI_Audit_SOP.md`) as reference
+   - Analyze the actual code implementation
+   - Document findings in BOTH the workflow cheat sheet AND the layer report
+   - Include full file paths in both documents for clear reference
+
+3. **Good Pattern Identification:** Throughout the audit, identify implementations that follow the CONVENTIONS_AND_PATTERNS_GUIDE.md with no technical debt. These will be highlighted in the Layer Report as exemplary patterns to follow in future remediation efforts.
+
+4. **Code Mapping:** Each Layer Report will include a clear mapping between workflows and their code files at the top, plus detailed file paths in the workflow-specific sections.
+
+5. **Future Remediation Planning:** The actual fixing of identified technical debt will be planned in a future phase after all Layer Reports are complete.
+
+We will begin with Layer 4 (Services) as it provides critical context for understanding other layers. The format established for the Layer 4 report will serve as a template for subsequent layer reports.
 
 ### Task 1.1: Prioritized - Complete Layer 4 (Services Audit)
 
