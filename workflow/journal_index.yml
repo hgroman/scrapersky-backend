@@ -1,4 +1,35 @@
 entries:
+  - file: workflow/Journal/2025/05/20/JE_20250520_145233_TASK_SS_017_Disable-Precommit-Hooks.md
+    date: "2025-05-20"
+    time: "14:52:33"
+    timezone: "PT"
+    participants:
+      - User (Henry Groman)
+      - AI Assistant (Cascade)
+    summary_brief: "Temporarily disabled pre-commit hooks in .pre-commit-config.yaml by commenting them out to alleviate workflow friction, as per user directive."
+    tags:
+      - git
+      - pre-commit-hooks
+      - developer-workflow
+      - configuration
+      - friction-reduction
+    related_task_id: "TASK_SS_017"
+  - file: workflow/Journal/2025/05/20/JE_20250520_144201_TASK_SS_016_Workflow-Docs-Clarity.md
+    date: "2025-05-20"
+    time: "14:42:01"
+    timezone: "PT"
+    participants:
+      - User (Henry Groman)
+      - AI Assistant (Cascade)
+    summary_brief: "Refined workflow documents (README_WORKFLOW.md, Work_Order_Process.md) for enhanced clarity on WO initiation, Handoff purpose, and natural workflow progression (Task->Journal->WO->Handoff)."
+    tags:
+      - workflow_documentation
+      - process_refinement
+      - clarity
+      - readme_update
+      - work_order_process
+      - documentation_evolution
+    related_task_id: "TASK_SS_016"
   - file: Journal/JE_20250519_085300_TASK_SS_007_Database-Connection-Fix.md
     date: "2025-05-19"
     time: "08:53:00"
@@ -193,3 +224,11 @@ entries:
       - documentation
       - layer2_audit
     related_task_id: "TASK_SS_014"
+  - timestamp: "2025-05-20 20:36:31"
+    task_id: "TASK_SS_015"
+    wo_id: "WO_TASK_SS_015_20250520_L2-Summary-L3-Plan-Persona"
+    summary: "Collaborative Documentation and Layer 3 Audit Preparation for Routers, including L2 summary, L3 plan, and L3 persona co-creation."
+    file: "JE_20250520_203631_TASK_SS_015_Session-Docs.md"
+    participants:
+      - "User (Henry Groman)"
+      - "Cascade AI"

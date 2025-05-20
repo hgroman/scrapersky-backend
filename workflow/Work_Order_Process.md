@@ -29,12 +29,13 @@ Different project personas interact with Work Orders at various stages:
     *   Specific user requests.
     *   Outputs or plans from another persona (e.g., a Content Strategist's email plan requiring new components).
     *   Follow-up actions from a previous Work Order or journal entry.
-*   **Responsibility:** Typically an Architect, Lead, or designated planning persona.
-*   **Action:**
+*   **Responsibility:** Typically an Architect, Lead, or designated planning persona, acting upon USER direction.
+*   **Prerequisite:** A corresponding Task **must** already exist in `tasks.yml` (see Section 6.1 for Task creation protocol, typically USER-directed). The `Task ID` from this existing task will be used in the Work Order.
+*   **Action (Typically USER-directed, or by a designated planning persona):**
     1.  Create a new Work Order Markdown file in the `work_orders/active/` directory.
-        *   **Filename Convention:** `WO_<TASKID>_<YYYYMMDD>_<3-5-word-label>.md` (e.g., `WO_TASK007_20250517_New-Hero-Variants.md`). `<TASKID>` is the ID from `tasks.yml`, and `<YYYYMMDD>` is the creation date.
+        *   **Filename Convention:** `WO_<TASKID>_<YYYYMMDD>_<3-5-word-label>.md` (e.g., `WO_TASK007_20250517_New-Hero-Variants.md`). `<TASKID>` is the ID from the **pre-existing Task** in `tasks.yml`, and `<YYYYMMDD>` is the WO creation date.
     2.  Populate the WO document with all mandatory contents (see Section 5).
-    3.  Create a corresponding task in `tasks.yml` (see Section 6.1).
+    3.  Ensure the `tasks.yml` entry for the related Task is updated to reflect the Work Order's existence and assignment if necessary (e.g., adding the WO ID to `related_files` or updating status to `in_progress_wo`).
 
 ### 4.2. Work Order Assignment
 
@@ -68,15 +69,20 @@ The completion of a Work Order is not just the creation of its primary deliverab
         *   If a review stage is required by a different persona, the status may first be set to `review`.
         *   The task entry in `tasks.yml` should, if possible, be updated to include a reference to the `Work Order ID` and the filename of the completion `Journal Entry`.
 4.  **Handoff Document Creation:**
-    *   **Responsibility:** Executing Persona.
-    *   **Action:** Create a new Markdown handoff file in the `Handoff/` directory.
-        *   **Filename:** `HO_<YYYYMMDD_HHMMSS>_<TASKID>_<1-3-word-summary>.md` (e.g., `HO_20250516_103500_TASK007_WO-Done.md`). `<YYYYMMDD_HHMMSS>` is the UTC timestamp, and `<TASKID>` is from `tasks.yml`.
-        *   **Content:** Must include:
-            *   Timestamp.
-            *   **Explicit reference to the completed `Work Order ID`.**
-            *   **Explicit reference to the detailed `Journal Entry file` created in step 4.4.2.**
-            *   A concise summary of the WO's outcome and the current project status.
-            *   Clear pointers for the next AI assistant or session (e.g., "Awaiting new Work Order," "Proceed to next planned WO," etc.).
+    *   **Trigger:** A Handoff Document is created if the completion of the current Work Order (WO1) has led to the USER-directed identification and creation of new, subsequent Work Order(s) (WO2, WO3, etc., each tied to a newly created Task).
+    *   **Purpose:** To provide essential context, outputs, and a "note to self" from the AI completing WO1 to the AI/session that will execute the subsequent WO(s).
+    *   **Responsibility:** Executing Persona for WO1.
+    *   **Action:**
+        1.  Ensure the new follow-on Task(s) and corresponding Work Order(s) have been created as per USER direction (following protocol in 4.1).
+        2.  Create a new Markdown handoff file in the `Handoff/` directory.
+            *   **Filename:** `HO_<YYYYMMDD_HHMMSS>_<TASKID_of_WO1>_<summary_of_WO1_completion>.md` (e.g., `HO_20250516_103500_TASK007_WO1-Done_Prep-For-WO2.md`). `<YYYYMMDD_HHMMSS>` is the UTC timestamp of HO creation.
+    *   **Content:** Must include:
+        *   Timestamp of HO creation.
+        *   **Explicit reference to the completed `Work Order ID` (WO1).**
+        *   **Explicit reference to the `Journal Entry file` created for WO1's completion (as per step 4.4.2).**
+        *   A concise summary of WO1's key outcomes, learnings, and the current project status relevant to the follow-on work.
+        *   **Crucially, clear pointers to the newly created subsequent Work Order ID(s) (WO2, WO3, etc.) and their respective Task ID(s).**
+        *   Any specific advice, data, or context from WO1 that is vital for the successful execution of the subsequent WO(s).
 5.  **Work Order Archival (Optional but Recommended):**
     *   Move the completed WO document from `work_orders/active/` to `work_orders/completed/`. This keeps the active WO directory focused.
 

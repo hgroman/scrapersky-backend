@@ -204,3 +204,50 @@
     - "workflow/journal_index.yml"
     - "workflow/Journal/JE_20250520_125927_TASK_SS_014_Refine_L2_Audit_Persona.md"
   latest_journal_entry: "workflow/Journal/JE_20250520_125927_TASK_SS_014_Refine_L2_Audit_Persona.md"
+
+- id: TASK_SS_015
+  title: "Finalize L2 Audit, Create L3 Audit Plan & L3 Persona"
+  status: done
+  completed: "2025-05-20"
+  due: "2025-05-20"
+  description: |
+    Completed several documentation and planning efforts in a collaborative session:
+    1. Added a comprehensive summary to the Layer 2 Schemas Audit Report.
+    2. Created the Layer 3 Routers Audit Plan, including a process for AI-generated summaries.
+    3. Collaboratively designed and created a standalone, enhanced persona document for the 'Cascade Router Guardian' (Layer 3 Auditor).
+    4. Updated the Layer 3 Audit Plan to reference the new standalone persona document.
+  assigned_to: "Cascade AI & User (Henry Groman)"
+  priority: high
+  related_files:
+    - "Docs/Docs_10_Final_Audit/Audit Reports Layer 2/Layer2_Schemas_Audit_Report.md"
+    - "Docs/Docs_10_Final_Audit/Layer-3.2-Routers_Audit-Plan.md"
+    - "workflow/Personas/Layer-3_Cascade_Router_Guardian_Persona.md"
+  latest_journal_entry: "workflow/Journal/2025/05/20/JE_20250520_203631_TASK_SS_015_Session-Docs.md"
+  related_wo_id: "WO_TASK_SS_015_20250520_L2-Summary-L3-Plan-Persona"
+
+- id: TASK_SS_016
+  title: "Refine Workflow Documentation for Clarity (README_WORKFLOW.md & Work_Order_Process.md)"
+  status: done
+  completed: "2025-05-20"
+  due: "2025-05-20"
+  description: |
+    Refined `README_WORKFLOW.md` and `Work_Order_Process.md` to enhance clarity on Work Order initiation (USER-directed, Task prerequisite), the primary purpose of Handoff Documents (linking sequential WOs), and the natural workflow progression (Task -> Journal -> Work Order -> Handoff). This effort aims to improve onboarding and consistent application of the workflow.
+  assigned_to: "User (Henry Groman) & AI Assistant (Cascade)"
+  priority: medium
+  related_files:
+    - "workflow/README_WORKFLOW.md"
+    - "workflow/Work_Order_Process.md"
+  latest_journal_entry: "workflow/Journal/2025/05/20/JE_20250520_144201_TASK_SS_016_Workflow-Docs-Clarity.md"
+
+- id: TASK_SS_017
+  title: "Temporarily Disable Pre-commit Hooks"
+  status: done
+  completed: "2025-05-20"
+  due: "2025-05-20"
+  description: |
+    Temporarily disabled all pre-commit hooks by commenting them out in `.pre-commit-config.yaml`. This action was taken due to user directive to alleviate workflow friction caused by repeated interference from the hooks during the commit process. The hooks can be re-enabled by uncommenting them in the configuration file when desired.
+  assigned_to: "AI Assistant (Cascade)"
+  priority: high
+  related_files:
+    - ".pre-commit-config.yaml"
+  latest_journal_entry: "workflow/Journal/2025/05/20/JE_20250520_145233_TASK_SS_017_Disable-Precommit-Hooks.md"

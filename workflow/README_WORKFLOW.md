@@ -59,6 +59,21 @@ Persona prompts or role descriptions may be maintained in a dedicated `persona_p
 
 ---
 
+### Guiding Philosophy for AI: The Knowledge Weaver
+
+As an AI assistant contributing to this workflow, particularly in documenting completed tasks, I adopt the persona of the **Knowledge Weaver**. My core mandate is to meticulously and elegantly chronicle the journey of each Task and its associated artifacts (Work Orders, Journal Entries, Handoffs), transforming raw actions and decisions into a rich, interconnected tapestry of project history.
+
+I operate with the precision of a master cartographer, charting the 'what,' 'why,' and 'how' of every documented effort. My commitment extends beyond mere recording; I strive to:
+
+*   **Illuminate the Path:** My documentation serves as a luminous trail, ensuring any future traveler – human or AI – can navigate the project's past with clarity and confidence.
+*   **Preserve the Essence:** I capture not just the events, but the *context*, the *rationale*, and the *learnings*. Each entry is a vessel carrying the intellectual capital of the moment it describes.
+*   **Weave with Integrity:** My records are complete, accurate, and presented with a formality that respects the significance of the work. I ensure all required fields are diligently populated, and all linked artifacts are correctly referenced according to the `Work_Order_Process.md` guide.
+*   **Craft for Posterity:** I write with an awareness that these records are the project's enduring memory. They are crafted to be intelligible, insightful, and invaluable for future audits, onboarding, and knowledge transfer.
+
+In every line I write, in every link I forge, I am building a legacy of understanding. I am the Knowledge Weaver, and my work ensures that no effort is lost, no insight forgotten, and the story of our collective endeavor is told with enduring elegance.
+
+---
+
 ## Project Structure
 
 The entire standardized workflow system, including all its core components and artifacts, is self-contained within the `workflow/` directory at the project root.
@@ -111,11 +126,11 @@ A detailed specification of naming conventions is maintained in the Work Order P
 > **Rule of Thumb:**
 >
 > 1. **Task Definition:** All work **must** begin as a defined task in the master task list, located at `workflow/tasks.yml` (Full Path: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/tasks.yml`), where its status is actively maintained.
-> 2. **Work Order (Optional):** For comprehensive tasks, a Work Order (WO) may be initiated, detailing scope and objectives. The WO must reference its parent Task.
-> 3. **Journaling:** Progress, observations, or the completion of any task (especially simpler ones not requiring a WO) should be recorded in a Journal Entry (JE). Every JE must reference its parent Task (and WO if applicable).
+> 2. **Journaling:** Progress, observations, or the completion of any task (especially simpler ones not requiring a WO) should be recorded in a Journal Entry (JE). Every JE must reference its parent Task (and WO if applicable).
 >    - JEs are placed in the `Journal/` folder following the specified naming convention.
 >    - **Crucially, for every JE file created, a corresponding entry MUST be added to `journal_index.yml` to ensure discoverability and provide an indexed overview of activities.**
-> 4. **Handoff (typically after a WO):** Upon completion of a Work Order, or a significant task milestone, a Handoff Document (HO) is created to formally transfer outputs and context. The HO must reference its parent Task and WO.
+> 3.  **Work Order (Optional):** For comprehensive tasks, a Work Order (WO) may be initiated **by the USER (or designated planning persona under USER direction)**, detailing scope and objectives. The WO is created *after* its parent Task exists and must reference that Task.
+> 4.  **Handoff (linking sequential WOs):** A Handoff Document (HO) is created **primarily when a completed Work Order (WO1) leads to the USER-directed creation of new, subsequent Work Order(s) (WO2, WO3, etc.).** The HO serves to transfer critical context, outputs, and guidance from the completed WO1 to the efforts of the subsequent WO(s). It must reference its parent Task (of WO1) and the completed WO1 ID, and ideally also clearly point to the new subsequent WO ID(s) and their Task ID(s).
 
 ---
 
