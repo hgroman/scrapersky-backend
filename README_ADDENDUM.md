@@ -8,17 +8,18 @@
 
 **How to navigate**
 
-| Section | Jump |
-|---------|------|
-| Docker cheats | [Docker](#docker) |
-| Environment variables | [Environment](#environment) |
-| Supabase connection | [Database](#database) |
-| Scheduler tuning | [Schedulers](#schedulers) |
-| Local dev workflow | [Workflow](#workflow) |
-| CI / tooling rationale | [CI](#ci-tooling) |
-| Git commit tips | [Git](#git-commit-tips) |
-| Deployment (Render) | [Deployment](#deployment) |
-| Architecture diagram | [Architecture](#architecture) |
+| Section                | Jump                          |
+| ---------------------- | ----------------------------- |
+| Docker cheats          | [Docker](#docker)             |
+| Environment variables  | [Environment](#environment)   |
+| Supabase connection    | [Database](#database)         |
+| Scheduler tuning       | [Schedulers](#schedulers)     |
+| Local dev workflow     | [Workflow](#workflow)         |
+| CI / tooling rationale | [CI](#ci-tooling)             |
+| Git commit tips        | [Git](#git-commit-tips)       |
+| Deployment (Render)    | [Deployment](#deployment)     |
+| Architecture diagram   | [Architecture](#architecture) |
+
 ## Docker
 
 ```bash
@@ -31,20 +32,22 @@ docker compose logs -f app
 # Shut down
 docker compose down
 ```
+
 ## Environment
 
 Full `.env.example` reference:
 
-| Variable | Purpose |
-|----------|---------|
-| `SUPABASE_URL` | Base URL of your Supabase project |
-| `SUPABASE_POOLER_HOST` | Supavisor host (connection pooler) |
-| `SUPABASE_POOLER_PORT` | Usually **6543** for Supavisor |
-| `SUPABASE_POOLER_USER` | Database user with row-level RBAC |
-| `SUPABASE_DB_PASSWORD` | Password for above user |
-| `DATABASE_URL` | Full SQLAlchemy URL (often constructed) |
-| `JWT_SECRET_KEY` | Secret used for auth tokens |
-| `PORT` | FastAPI port (default 8000) |
+| Variable               | Purpose                                 |
+| ---------------------- | --------------------------------------- |
+| `SUPABASE_URL`         | Base URL of your Supabase project       |
+| `SUPABASE_POOLER_HOST` | Supavisor host (connection pooler)      |
+| `SUPABASE_POOLER_PORT` | Usually **6543** for Supavisor          |
+| `SUPABASE_POOLER_USER` | Database user with row-level RBAC       |
+| `SUPABASE_DB_PASSWORD` | Password for above user                 |
+| `DATABASE_URL`         | Full SQLAlchemy URL (often constructed) |
+| `JWT_SECRET_KEY`       | Secret used for auth tokens             |
+| `PORT`                 | FastAPI port (default 8000)             |
+
 ## Database
 
 **Use Supavisor, not port 5432**
@@ -55,15 +58,17 @@ postgresql+asyncpg://<user>:<password>@<project>.supabase.co:6543/postgres?sslmo
 
 - Port **6543** goes through the pooler and prevents connection exhaustion.
 - `application_name=scrapersky_backend` helps with query tracing.
+
 ## Schedulers
 
-| Variable | Default | What it does |
-|----------|---------|--------------|
-| `DOMAIN_SCHEDULER_INTERVAL_MINUTES` | `1` | How often domain scheduler runs |
-| `DOMAIN_SCHEDULER_BATCH_SIZE` | `10` | Domains processed per run |
-| `DOMAIN_SCHEDULER_MAX_INSTANCES` | `1` | Concurrency guard |
-| `SITEMAP_SCHEDULER_INTERVAL_MINUTES` | `1` | How often sitemap scheduler runs |
-| `SITEMAP_SCHEDULER_BATCH_SIZE` | `20` | Sitemaps per run |
+| Variable                             | Default | What it does                     |
+| ------------------------------------ | ------- | -------------------------------- |
+| `DOMAIN_SCHEDULER_INTERVAL_MINUTES`  | `1`     | How often domain scheduler runs  |
+| `DOMAIN_SCHEDULER_BATCH_SIZE`        | `10`    | Domains processed per run        |
+| `DOMAIN_SCHEDULER_MAX_INSTANCES`     | `1`     | Concurrency guard                |
+| `SITEMAP_SCHEDULER_INTERVAL_MINUTES` | `1`     | How often sitemap scheduler runs |
+| `SITEMAP_SCHEDULER_BATCH_SIZE`       | `20`    | Sitemaps per run                 |
+
 ## Workflow
 
 ```bash
@@ -80,16 +85,34 @@ pytest -q
 ruff check .
 ruff format .
 ```
+
 ## CI / Tooling
 
-| Tool | Reason |
-|------|--------|
-| **Ruff** | Linter + formatter, zero config |
-| **MyPy** | Type-checking async code |
-| **pytest** | Async-friendly tests |
+| Tool           | Reason                             |
+| -------------- | ---------------------------------- |
+| **Ruff**       | Linter + formatter, zero config    |
+| **MyPy**       | Type-checking async code           |
+| **pytest**     | Async-friendly tests               |
 | **pre-commit** | Enforces newline / whitespace only |
 
 CI runs full checks; local hooks stay minimal to keep velocity high.
+
+## File Audit System
+
+Quick file system sanity checks:
+
+```bash
+# Run file discovery to check for orphans/phantoms
+python tools/file_discovery.py
+
+# See tools/file_audit_cheat_sheet.md for full guide
+```
+
+- Identifies orphaned files (in filesystem but not DB)
+- Finds phantom files (in DB but not filesystem)
+- Helps maintain single source of truth
+- Weekly audits recommended
+
 ## Git Commit Tips
 
 Multi-line messages via temp file:
@@ -105,6 +128,7 @@ Bypass hooks if necessary:
 ```bash
 git commit --no-verify -m "hotfix"
 ```
+
 ## Deployment
 
 Render blueprint lives at `render.yaml`.
@@ -112,6 +136,7 @@ Render blueprint lives at `render.yaml`.
 ```bash
 render deploy
 ```
+
 ## Architecture
 
 See [`Docs/ScraperSky-Backend-Architecture-Summary.md`](Docs/ScraperSky-Backend-Architecture-Summary.md) for a Mermaid diagram and full folder map.

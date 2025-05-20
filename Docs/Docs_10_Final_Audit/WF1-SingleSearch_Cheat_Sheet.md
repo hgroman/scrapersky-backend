@@ -64,6 +64,20 @@
 
 <!-- STOP_FOR_REVIEW -->
 
+### 2.2 Layer 3: API Routers (Pattern B - Router-Handled CRUD & Dual-Status Updates)
+
+- **Relevant `CONVENTIONS_AND_PATTERNS_GUIDE.md` Section(s):** Section 3.2 (Routers - Pattern B: {workflow}_CRUD.py)
+- **Relevant `Q&A_Key_Insights.md` Section(s):** "Python Backend - API Routers"
+- **Current Progress:** [0/1] components standardized.
+
+#### Component Inventory & Gap Analysis
+
+| Router File & Path                          | Current State Assessment (Endpoints, Logic, DB Interaction, Tenant Handling, Transactions, JIRA Tickets) | Standard Comparison & Gap Analysis (Deviations from Blueprint Section 3.2) | Prescribed Refactoring Actions | Verification Checklist (from Blueprint 3.2 & Conventions) | Status |
+| :------------------------------------------ | :------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- | :----------------------------- | :------------------------------------------------------------------ | :----- |
+| **`src/routers/places_staging.py`**         | - Handles `Place` entity staging, relevant to `single_search`.<br>- `list_all_staged_places()`: Uses **Raw SQL**. Re-introduces `tenant_id` from token with **hardcoded default**.<br>- `update_places_status_batch()`: Good ORM object manipulation. Uses `session.begin()`. No tenant issues.<br>- `queue_places_for_deep_scan()`: Uses `session.execute(update())`. Explicit commit/rollback. No tenant issues.<br>- `list_staged_places()`: Good ORM `select()`. No tenant issues. | - **Naming**: File name `places_staging.py` is descriptive. Acceptable for its role.<br>- **ORM/Raw SQL**: `list_all_staged_places` uses Raw SQL (**Major Violation**). Other update methods are compliant/conditionally compliant.<br>- **Tenant ID Isolation**: `list_all_staged_places` re-introduces `tenant_id` logic and hardcoded default (**Major Violation**). Other endpoints are compliant.<br>- **Transaction Mgmt**: `queue_places_for_deep_scan` uses explicit commit/rollback (**Minor Deviation**). `update_places_status_batch` is compliant.<br>- **Hardcoding**: Default `tenant_id` in `list_all_staged_places` (**Major Violation**). | - **`list_all_staged_places`**: <br>  1. Replace Raw SQL with SQLAlchemy ORM/Core `select()`.<br>  2. Remove all `tenant_id` retrieval (from token) and filtering logic.<br>  3. Remove hardcoded default `tenant_id`.<br>- **`queue_places_for_deep_scan`**: <br>  1. Refactor explicit `session.commit()` / `session.rollback()` to use `async with session.begin():`. | `[ ] No raw SQL in list_all_staged_places`<br>`[ ] No tenant_id filtering or hardcoded tenant_id in list_all_staged_places`<br>`[ ] queue_places_for_deep_scan uses async with session.begin()`<br>`[ ] Session mgmt, ORM usage in updates, error handling correct.` | `To Do` |
+
+<!-- STOP_FOR_REVIEW -->
+
 ### 2.4 Python Backend - Services (Processing Logic & Schedulers)
 
 - **Relevant `CONVENTIONS_AND_PATTERNS_GUIDE.md` Section(s):** Section 5 (Services), Section 9 (Schedulers & Background Tasks) in older guide version, now primarily Section 5 in unified guide.

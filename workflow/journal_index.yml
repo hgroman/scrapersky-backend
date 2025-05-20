@@ -1,5 +1,5 @@
 entries:
-  - file: Journal/JE_20250519_085300_Database-Connection-Fix.md
+  - file: Journal/JE_20250519_085300_TASK_SS_007_Database-Connection-Fix.md
     date: "2025-05-19"
     time: "08:53:00"
     timezone: "PT"
@@ -17,7 +17,7 @@ entries:
       - api_endpoints
     related_task_id: "TASK_SS_007"
 
-  - file: Journal/JE_20250519_080624_Personas-Directory-Migration.md
+  - file: Journal/JE_20250519_080624_TASK_SS_006_Personas-Directory-Migration.md
     date: "2025-05-19"
     time: "08:06:24"
     timezone: "PT"
@@ -31,8 +31,9 @@ entries:
       - documentation
       - standardization
       - personas
+    related_task_id: "TASK_SS_006"
 
-  - file: Journal/JE_20250519_075819_Workflow-Directory-Restructure.md
+  - file: Journal/JE_20250519_075819_TASK_SS_005_Workflow-Directory-Restructure.md
     date: "2025-05-19"
     time: "07:58:19"
     timezone: "PT"
@@ -45,7 +46,9 @@ entries:
       - directory_restructure
       - documentation
       - standardization
-  - file: JE_20250518_220800_TASKAUDIT_Documentation-Clarification.md
+    related_task_id: "TASK_SS_005"
+
+  - file: Journal/JE_20250518_220800_TASKAUDIT_Documentation-Clarification.md
     date: "2025-05-18"
     time: "22:08:00"
     timezone: "PT"
@@ -59,7 +62,8 @@ entries:
       - layer_report
       - technical_debt
       - process_clarification
-  - file: JE_20250515_120630_TASK006_Mgmt-Setup.md
+    related_task_id: "TASKAUDIT"
+  - file: Journal/JE_20250515_120630_TASK006_Mgmt-Setup.md
     date: "2025-05-15"
     time: "19:06:19"
     timezone: "UTC"
@@ -74,7 +78,8 @@ entries:
       - persona_definition
       - ai_strategy
       - mjml_architect
-  - file: JE_20250515_131849_TASK005_Review-Analysis-Report.md
+    related_task_id: "TASK006"
+  - file: Journal/JE_20250515_131849_TASK005_Review-Analysis-Report.md
     date: "2025-05-15"
     time: "20:18:42"
     timezone: "UTC"
@@ -86,7 +91,8 @@ entries:
       - planning
       - mjml_components
       - work_order_followup
-  - file: JE_20250515_164649_TASK004_Std-WO-Guide.md
+    related_task_id: "TASK005"
+  - file: Journal/JE_20250515_164649_TASK004_Std-WO-Guide.md
     date: "2025-05-15"
     time: "23:46:32"
     timezone: "UTC"
@@ -101,7 +107,8 @@ entries:
       - work_order
       - workflow_improvement
       - readme_update
-  - file: JE_20250516_080117_TASK001_MJML-Comp-Done.md
+    related_task_id: "TASK004"
+  - file: Journal/JE_20250516_080117_TASK001_MJML-Comp-Done.md
     date: "2025-05-16"
     time: "15:01:02"
     timezone: "UTC"
@@ -126,9 +133,10 @@ entries:
       - va-divider-simple
       - va-text-conclusion
       - va-footer-standard
+    related_task_id: "TASK001"
   - date: "2025-05-17"
     title: "Completed WO_Legacy_System_Doc_001 - Legacy System Documentation"
-    file: JE_20250516_132253_TASK003_Legacy-Doc.md
+    file: Journal/JE_20250516_132253_TASK003_Legacy-Doc.md
     description: "Documentation of the legacy (non-MJML) email template system completed and archived as per WO_Legacy_System_Doc_001."
     work_order_id: "WO_Legacy_System_Doc_001"
     participants:
@@ -140,7 +148,8 @@ entries:
       - archive
       - work_order_completion
       - historical_reference
-  - file: JE_20250516_230523_TASK_META_Meta-Rules-Applied.md
+    related_task_id: "TASK003"
+  - file: Journal/JE_20250516_230523_TASK_META_Meta-Rules-Applied.md
     date: "2025-05-16"
     time: "23:05:23"
     timezone: "UTC"
@@ -153,9 +162,10 @@ entries:
       - file_naming
       - task_meta
       - cleanup
+    related_task_id: "TASK_META"
   - date: "2025-05-17"
     title: "MJML Project Structure Consolidation & Asset Relocation"
-    file: "20250517110000_TASK_Refactor_MJML-Structure-Cleanup.md"
+    file: workflow/Journal/20250517110000_TASK_Refactor_MJML-Structure-Cleanup.md
     participants:
       - "AI Assistant"
       - "User"
@@ -165,5 +175,21 @@ entries:
       - refactor
       - file_organization
       - project_cleanup
-    related_task_id: "TASK_Refactor" # Conceptual
+    related_task_id: "TASK_Refactor"
     description: "Consolidated MJML component library and relocated mjml_assets files to align with README.md project structure. Ensured src/mjml-source/ is the primary location for MJML development assets."
+
+  - file: workflow/Journal/JE_20250520_125927_TASK_SS_014_Refine_L2_Audit_Persona.md
+    date: "2025-05-20"
+    time: "12:59:27"
+    timezone: "PT"
+    participants:
+      - User (Henry Groman)
+      - AI Assistant (Cascade)
+    summary_brief: "Completed creation and refinement of Layer 2 Audit Persona (Cascade Schema Sentinel) and instantiating prompt."
+    tags:
+      - workflow
+      - persona_development
+      - audit_setup
+      - documentation
+      - layer2_audit
+    related_task_id: "TASK_SS_014"

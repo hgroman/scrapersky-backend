@@ -1,5 +1,15 @@
 # Standardized Workflow Documentation System
 
+> ⚠️ **NON-NEGOTIABLE WORKFLOW RULE** ⚠️
+>
+> **ALL work MUST begin by registering a new Task in `workflow/tasks.yml`, using the next available Task ID (incrementing from the last entry).**
+>
+> **NO artifact (journal entry, work order, handoff, etc.) may reference a Task that does not exist in `workflow/tasks.yml`.**
+>
+> **Artifacts referencing a non-existent Task are INVALID and must be corrected immediately.**
+>
+> **NO EXCEPTIONS. This is the law of the workflow.**
+
 > **Purpose** Build and maintain an AI-assisted, IDE-native workflow for complex projects (e.g., code standardization, content generation, system audits) that require consistent, traceable, and quality-assured outputs.
 
 ---
@@ -14,12 +24,28 @@
 6.  [Contributor Onboarding Checklist](#contributor-onboarding-checklist)
 7.  [Workflow Process Guides](#workflow-process-guides)
 8.  [General Lessons Learned](#general-lessons-learned)
+9.  [Task-Centric Artifact Relationships](#task-centric-artifact-relationships)
 
 ---
 
 ## Overview
 
-This system facilitates the execution of complex tasks through a structured process. **The cornerstone of this system is a master task list (e.g., `tasks_master.yml`), where all units of work originate and are tracked.** Building upon this, the workflow involves clear task definitions, optional work orders for comprehensive tasks, diligent progress journaling, and formal handoffs. It is designed to support collaboration between multiple participants, whether AI or human, ensuring clarity and a robust audit trail.
+This system facilitates the execution of complex tasks through a structured process. **The cornerstone of this system is the Task. The Task is the root and historic register of all work. All workflow artifacts (journal entries, work orders, handoff documents) must explicitly reference their parent Task.**
+
+**Hierarchy:**
+
+- The Task is the "god" object. Every artifact is a child of a Task.
+- Simple tasks may only require a journal entry.
+- Medium tasks may require a journal entry and a work order.
+- Large or impactful tasks may require a journal entry, work order, and a handoff document.
+- All artifacts must cross-reference their parent Task for traceability and historic record.
+
+**Artifact Relationships:**
+
+- **Task** (root)
+  - **Journal Entry** (child, always references Task)
+  - **Work Order** (child, always references Task)
+  - **Handoff Document** (child, always references Task and Work Order)
 
 ---
 
@@ -35,32 +61,38 @@ Persona prompts or role descriptions may be maintained in a dedicated `persona_p
 
 ## Project Structure
 
-A recommended baseline project structure to support this workflow:
+The entire standardized workflow system, including all its core components and artifacts, is self-contained within the `workflow/` directory at the project root.
+
+⚠️ **CRITICAL NOTE FOR ALL PARTICIPANTS (ESPECIALLY AI):** ⚠️
+All primary workflow management files and directories listed below reside *directly within this `workflow/` directory*.
+- **Master Task List:** `workflow/tasks.yml` (Full Path: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/tasks.yml`)
+- **Journal Index:** `workflow/journal_index.yml` (Full Path: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/journal_index.yml`)
+- **Journal Entries Folder:** `workflow/Journal/` (Full Path: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/Journal/`)
+- **Work Orders Folder:** `workflow/Work_Orders/`
+- **Handoff Documents Folder:** `workflow/Handoff/`
+- **Guides Folder:** `workflow/Guides/`
+- **Personas Folder:** `workflow/Personas/`
+
+This `README_WORKFLOW.md` you are currently reading is also located at `workflow/README_WORKFLOW.md` (Full Path: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/README_WORKFLOW.md`).
+
+**Full Project Context (Illustrative):**
 
 ```text
 project_root/
   src/                     # Source code or primary work materials
   output_artifacts/        # Compiled outputs, reports, or deliverables
+  workflow/                # **All workflow system files are here**
+    README_WORKFLOW.md     # This file
+    tasks.yml              # Master list of all tasks (AUTHORITATIVE FILE)
+    journal_index.yml      # Index of all journal entries
+    Work_Order_Process.md  # Work order process documentation
+    Journal/               # Contains Journal Entry (JE) documents
+    Work_Orders/           # Contains Work Order (WO) documents
+    Handoff/               # Contains Handoff (HO) documents
 
-  tasks_master.yml         # Master list of all tasks (or equivalent system)
-
-  Work_Orders/             # Contains Work Order (WO) documents
-    active/
-    completed/
-    Archive/
-
-  Journal/                 # Contains Journal Entry (JE) documents
-    YYYY/MM/DD/            # Optional chronological sub-foldering
-
-  Handoff/                 # Contains Handoff (HO) documents
-    pending_review/
-    completed/
-
-  Guides/                 # Detailed process guides (e.g., Work Order Process)
-  Personas/               # AI and human role definitions
-  tasks.yml               # Master task list
-  journal_index.yml       # Index of all journal entries
-  Work_Order_Process.md   # Work order process documentation
+    Guides/                # Detailed process guides
+    Personas/              # AI and human role definitions
+  ...other_project_directories...
 ```
 
 ---
@@ -78,12 +110,12 @@ A detailed specification of naming conventions is maintained in the Work Order P
 
 > **Rule of Thumb:**
 >
-> 1. **Task Definition:** All work **must** begin as a defined task in the master task list (e.g., `tasks_master.yml`), where its status is actively maintained.
-> 2. **Work Order (Optional):** For comprehensive tasks, a Work Order (WO) may be initiated, detailing scope and objectives.
-> 3. **Journaling:** Progress, observations, or the completion of any task (especially simpler ones not requiring a WO) should be recorded in a Journal Entry (JE).
->    - JEs are placed in the `journal/` folder following the specified naming convention.
+> 1. **Task Definition:** All work **must** begin as a defined task in the master task list, located at `workflow/tasks.yml` (Full Path: `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/tasks.yml`), where its status is actively maintained.
+> 2. **Work Order (Optional):** For comprehensive tasks, a Work Order (WO) may be initiated, detailing scope and objectives. The WO must reference its parent Task.
+> 3. **Journaling:** Progress, observations, or the completion of any task (especially simpler ones not requiring a WO) should be recorded in a Journal Entry (JE). Every JE must reference its parent Task (and WO if applicable).
+>    - JEs are placed in the `Journal/` folder following the specified naming convention.
 >    - **Crucially, for every JE file created, a corresponding entry MUST be added to `journal_index.yml` to ensure discoverability and provide an indexed overview of activities.**
-> 4. **Handoff (typically after a WO):** Upon completion of a Work Order, or a significant task milestone, a Handoff Document (HO) is created to formally transfer outputs and context.
+> 4. **Handoff (typically after a WO):** Upon completion of a Work Order, or a significant task milestone, a Handoff Document (HO) is created to formally transfer outputs and context. The HO must reference its parent Task and WO.
 
 ---
 
@@ -99,8 +131,8 @@ A detailed specification of naming conventions is maintained in the Work Order P
 
 1.  Read this `README_WORKFLOW.md` document thoroughly, paying special attention to the **Rule of Thumb** in the Naming Conventions section.
 2.  Open and study the detailed `Work_Order_Process.md`, paying close attention to the task lifecycle and the full specification of naming conventions.
-3.  Review the `tasks.yml` for an overview of open and pending tasks. This is the **primary source of truth for all work items**.
-4.  Skim recent entries in the `journal/` directory (facilitated by `journal_index.yml`) and the latest documents in `handoff/` for current project context and status.
+3.  Review `workflow/tasks.yml` for an overview of open and pending tasks. This file, located at `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/tasks.yml`, is the **primary source of truth for all work items**.
+4.  Skim recent entries in the `workflow/Journal/` directory (facilitated by `workflow/journal_index.yml`) and the latest documents in `workflow/Handoff/` for current project context and status. The journal index is located at `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/workflow/journal_index.yml`.
 5.  State readiness to your team lead or project coordinator, or request any necessary clarifications.
 
 ---
@@ -120,5 +152,12 @@ Key process guides should be maintained within the `Guides/` directory. Examples
 - **Strict Naming Adherence:** Filename and identifier drift can disrupt automation, traceability, and clarity. Canonical naming patterns (like those for WO, JE, HO) should be strictly enforced.
 
 ---
+
+## Task-Centric Artifact Relationships
+
+- **The Task is the root and historic register of all work.**
+- **All workflow artifacts (journal entries, work orders, handoff documents) must explicitly reference their parent Task.**
+- **Artifacts must be cross-referenced for traceability and historic record.**
+- **This ensures a single source of truth and enables robust, auditable project management.**
 
 _This document provides a template for a standardized workflow. Adapt and extend it as needed for your specific project requirements._
