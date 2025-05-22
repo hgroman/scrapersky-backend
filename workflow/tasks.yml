@@ -173,10 +173,10 @@
   title: "Standardize All Layer AI Audit SOPs & Create Auditor Persona"
   status: "done"
   completed: "2025-05-20"
-  due: "2025-05-20"
   description: |
     Reviewed and standardized all 7 AI Audit SOP documents (Layers 1-7) to ensure a consistent audit-only focus, clear output destinations, and defined next steps.
     Created the auditor_cascade_ai_persona.md document for a specialized AI Auditor role, capturing current context for Layer 1 audit initiation.
+    The completion of this task was documented in the journal entry for TASK_SS_015.
   assigned_to: "Cascade AI (Session 2025-05-20)"
   priority: high
   related_files:
@@ -188,51 +188,66 @@
     - "Docs/Docs_10_Final_Audit/Layer-6.3-UI_Components_AI_Audit_SOP.md"
     - "Docs/Docs_10_Final_Audit/Layer-7.3-Testing_AI_Audit_SOP.md"
     - "workflow/Personas/auditor_cascade_ai_persona.md"
-  latest_journal_entry: "workflow/Journal/2025/05/20/JE_20250520_120533_TASK_SS_013_AI_Audit_SOPs_Standardization.md"
+  latest_journal_entry: "workflow/Journal/JE_20250520_203631_TASK_SS_015_Session-Docs.md"
 
 - id: TASK_SS_014
   title: "Create and refine Layer 2 Audit Persona ('Cascade Schema Sentinel')"
   status: done
   completed: "2025-05-20"
-  due: "2025-05-20"
   description: "Created and refined the 'Cascade Schema Sentinel' persona for Layer 2 (Pydantic Schemas) audit, including its instantiating prompt. Ensured full file paths for all referenced documents were included. Logged completion of this effort in workflow system."
   assigned_to: "User (Henry Groman) & AI Assistant (Cascade)"
   priority: high
   related_files:
-    - "workflow/Personas/Cascade Schema Sentinel.md"
+    - "workflow/Personas/cascade_schema_sentinel_persona.md"
+
+- id: TASK_SS_021
+  title: "Consolidate Layer 6 UI Audit Findings and Document Session"
+  status: done
+  completed: "2025-05-21"
+  description: |
+    Consolidated findings from various Layer 6 UI audit reports (`Layer6_Report_scraper-sky-mvp.html.md`) into the main `Layer6_UI_Components_Audit_Report.md`.
+    Updated report status, completed the 'General Static Files Audit' section (integrated into 'Static Asset Management'), added notes on Font Awesome accessibility and general JS linking observations.
+    Created a 'Final AI Audit Summary' incorporating key findings (missing JS files, hardcoded JWTs) and recommendations.
+    Created this journal entry to document the session's work as per workflow requirements.
+  assigned_to: "Cascade AI & User (Henry Groman)"
+  priority: high
+  related_files:
+    - "Docs/Docs_10_Final_Audit/Audit Reports Layer 6/Layer6_UI_Components_Audit_Report.md"
+    - "Docs/Docs_10_Final_Audit/Audit Reports Layer 6/Layer6_Report_scraper-sky-mvp.html.md"
+    - "workflow/README_WORKFLOW.md"
     - "workflow/tasks.yml"
     - "workflow/journal_index.yml"
+    - "workflow/Journal/JE_20250521_150912_TASK_SS_021_Layer6-Audit-Consolidation.md"
+  latest_journal_entry: "workflow/Journal/JE_20250521_150912_TASK_SS_021_Layer6-Audit-Consolidation.md"
     - "workflow/Journal/JE_20250520_125927_TASK_SS_014_Refine_L2_Audit_Persona.md"
   latest_journal_entry: "workflow/Journal/JE_20250520_125927_TASK_SS_014_Refine_L2_Audit_Persona.md"
 
 - id: TASK_SS_015
-  title: "Finalize L2 Audit, Create L3 Audit Plan & L3 Persona"
-  status: done
+  title: "Define Standard Procedure for New Task Creation"
+  status: "done"
   completed: "2025-05-20"
-  due: "2025-05-20"
   description: |
-    Completed several documentation and planning efforts in a collaborative session:
-    1. Added a comprehensive summary to the Layer 2 Schemas Audit Report.
-    2. Created the Layer 3 Routers Audit Plan, including a process for AI-generated summaries.
-    3. Collaboratively designed and created a standalone, enhanced persona document for the 'Cascade Router Guardian' (Layer 3 Auditor).
-    4. Updated the Layer 3 Audit Plan to reference the new standalone persona document.
-  assigned_to: "Cascade AI & User (Henry Groman)"
-  priority: high
+    Define and document the standard operating procedure for creating new tasks in `tasks.yml`.
+    This includes:
+    1. Verifying the last used Task ID.
+    2. Incrementing the Task ID sequentially (e.g., if last was TASK_SS_014, next is TASK_SS_015).
+    3. Ensuring all mandatory fields are present (id, title, status, description).
+    4. Documenting this SOP in a relevant section of `README_WORKFLOW.md` or a new dedicated guide.
+    This task itself (TASK_SS_015) was created and its definition documented as per this procedure.
+  assigned_to: "AI Assistant (Cascade)"
+  priority: medium
   related_files:
-    - "Docs/Docs_10_Final_Audit/Audit Reports Layer 2/Layer2_Schemas_Audit_Report.md"
-    - "Docs/Docs_10_Final_Audit/Layer-3.2-Routers_Audit-Plan.md"
-    - "workflow/Personas/Layer-3_Cascade_Router_Guardian_Persona.md"
-  latest_journal_entry: "workflow/Journal/2025/05/20/JE_20250520_203631_TASK_SS_015_Session-Docs.md"
-  related_wo_id: "WO_TASK_SS_015_20250520_L2-Summary-L3-Plan-Persona"
+    - "workflow/README_WORKFLOW.md"
+    - "workflow/tasks.yml"
+  latest_journal_entry: "workflow/Journal/JE_20250520_203631_TASK_SS_015_Session-Docs.md"
 
 - id: TASK_SS_016
-  title: "Refine Workflow Documentation for Clarity (README_WORKFLOW.md & Work_Order_Process.md)"
+  title: "Refine Workflow Documentation for Clarity"
   status: done
   completed: "2025-05-20"
-  due: "2025-05-20"
   description: |
-    Refined `README_WORKFLOW.md` and `Work_Order_Process.md` to enhance clarity on Work Order initiation (USER-directed, Task prerequisite), the primary purpose of Handoff Documents (linking sequential WOs), and the natural workflow progression (Task -> Journal -> Work Order -> Handoff). This effort aims to improve onboarding and consistent application of the workflow.
-  assigned_to: "User (Henry Groman) & AI Assistant (Cascade)"
+    Reviewed and refined `README_WORKFLOW.md` and `Work_Order_Process.md` to enhance clarity regarding Work Order initiation, the purpose of Handoff documents, and the natural progression of workflow artifacts (Task -> Journal -> Work Order -> Handoff).
+  assigned_to: "AI Assistant (Cascade) & User (Henry Groman)"
   priority: medium
   related_files:
     - "workflow/README_WORKFLOW.md"
@@ -241,13 +256,63 @@
 
 - id: TASK_SS_017
   title: "Temporarily Disable Pre-commit Hooks"
-  status: done
+  status: "done"
   completed: "2025-05-20"
-  due: "2025-05-20"
-  description: |
-    Temporarily disabled all pre-commit hooks by commenting them out in `.pre-commit-config.yaml`. This action was taken due to user directive to alleviate workflow friction caused by repeated interference from the hooks during the commit process. The hooks can be re-enabled by uncommenting them in the configuration file when desired.
-  assigned_to: "AI Assistant (Cascade)"
-  priority: high
+  description: "Temporarily disabled all pre-commit hooks by commenting them out in `.pre-commit-config.yaml`. This action was taken due to user directive to alleviate workflow friction caused by repeated interference from the hooks during the commit process. The hooks can be re-enabled by uncommenting them in the configuration file when desired."
+  assigned_to: "AI Assistant (Cascade) & User (Henry Groman)"
+  priority: medium
   related_files:
     - ".pre-commit-config.yaml"
   latest_journal_entry: "workflow/Journal/2025/05/20/JE_20250520_145233_TASK_SS_017_Disable-Precommit-Hooks.md"
+
+- id: TASK_SS_018
+  title: "Execute and Document Layer 3 Routers Audit"
+  status: "done"
+  completed: "2025-05-21"
+  description: |
+    Completed the comprehensive audit of Layer 3 API Routers. All findings, GAPs, and compliance observations documented in the `Layer3_Routers_Audit_Report.md`, including a final AI Audit Summary.
+    This task was executed following the SOPs defined in TASK_SS_013.
+  assigned_to: "Cascade AI & User (Henry Groman)"
+  priority: high
+  related_files:
+    - "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+    - "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md"
+    - "Docs/Docs_10_Final_Audit/Layer-3.2-Routers_Audit-Plan.md"
+    - "Docs/Docs_10_Final_Audit/Layer-3.3-Routers_AI_Audit_SOP.md"
+  latest_journal_entry: "workflow/Journal/JE_20250521_072600_TASK_SS_018_Layer3-Audit-Completion.md"
+
+- id: TASK_SS_019
+  title: "Process New Workflow Instruction and Document Layer 5 Audit (Corrected)"
+  status: done
+  due: "2025-05-21"
+  completed: "2025-05-21"
+  description: |
+    Received instruction to follow workflow/README_WORKFLOW.md for new tasks.
+    This task encompasses registering this instruction and creating a journal entry
+    for the previously completed Layer 5 Configuration Audit. This corrects a previous
+    attempt that used an incorrect Task ID.
+  assigned_to: "Cascade AI"
+  priority: high
+  related_files:
+    - "workflow/README_WORKFLOW.md"
+    - "Docs/Docs_10_Final_Audit/Audit Reports Layer 5/Layer5_Configuration_Audit_Report.md"
+    - "workflow/Journal/JE_20250521_080654_TASK_SS_019_Layer5-Configuration-Audit-Completion.md"
+    - "workflow/journal_index.yml"
+  latest_journal_entry: "workflow/Journal/JE_20250521_080654_TASK_SS_019_Layer5-Configuration-Audit-Completion.md"
+
+- id: TASK_SS_020
+  title: "Create and Enhance Layer 6 UI Components Audit Plan"
+  status: done
+  due: "2025-05-21"
+  completed: "2025-05-21"
+  description: |
+    Created the initial Layer 6 UI Components Audit Plan (Layer-6.2-UI_Components_Audit-Plan.md) based on Layer-6.1-UI_Components_Blueprint.md, Layer-6.3-UI_Components_AI_Audit_SOP.md, and 0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md.
+    Subsequently enhanced the plan by adding a 'Critical Reminders for the Auditor AI (Meta-Guidance)' section and augmenting the conclusion to incorporate lessons learned from previous audit cycles. This aims to improve the efficiency and accuracy of the AI persona executing the audit by providing explicit meta-instructions regarding audit scope, document adherence, reporting standards, and process awareness.
+  assigned_to: "Cascade AI (Audit Plan Architect Persona)"
+  priority: high
+  related_files:
+    - "Docs/Docs_10_Final_Audit/Layer-6.1-UI_Components_Blueprint.md"
+    - "Docs/Docs_10_Final_Audit/Layer-6.2-UI_Components_Audit-Plan.md"
+    - "Docs/Docs_10_Final_Audit/Layer-6.3-UI_Components_AI_Audit_SOP.md"
+    - "Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md"
+  latest_journal_entry: "workflow/Journal/JE_20250521_084839_TASK_SS_020_L6-Audit-Plan-Creation.md"
