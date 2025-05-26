@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Configuration & State ---
     const API_BASE_URL_DC = '/api/v3'; // Use unique prefix if needed
-    const DEV_TOKEN_DC = 'scraper_sky_2024';
+    // Removed hardcoded token for security
     const PAGE_SIZE_DC = 15;
 
     let currentDomainCurationPage = 1;
@@ -53,9 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Helper Functions ---
-    function getJwtTokenDC() { // Renamed
-        // Replace with actual token retrieval logic if necessary
-        return DEV_TOKEN_DC;
+    function getJwtTokenDC() { // Using global getJwtToken function
+        // Check if the global function exists
+        if (typeof getJwtToken !== 'function') {
+            console.error("Global getJwtToken function not found. Ensure google-maps-common.js is loaded.");
+            return null;
+        }
+        return getJwtToken();
     }
 
     function showStatusDC(message, type = 'info', targetDivId = 'domainCurationStatus') { // Renamed

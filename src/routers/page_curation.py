@@ -12,7 +12,7 @@ from src.schemas.page_curation import (
 )
 from src.session.async_session import get_session_dependency
 
-# from src.auth.jwt_auth import UserInToken, get_current_active_user
+from src.auth.jwt_auth import get_current_user
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 async def update_page_curation_status_batch(
     request: PageCurationUpdateRequest,
     session: AsyncSession = Depends(get_session_dependency),  # noqa: B008
-    # current_user: UserInToken = Depends(get_current_active_user),  # Example
+    current_user: Dict[str, Any] = Depends(get_current_user),  # Example
 ):
     """
     Updates the page_curation_status for a batch of pages.

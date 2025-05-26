@@ -17,7 +17,9 @@
 | Local dev workflow     | [Workflow](#workflow)         |
 | CI / tooling rationale | [CI](#ci-tooling)             |
 | Git commit tips        | [Git](#git-commit-tips)       |
+| Git Diff Troubleshooting | [Git Diff Troubleshooting](#git-diff-troubleshooting) |
 | Deployment (Render)    | [Deployment](#deployment)     |
+| DART MCP Integration   | [DART MCP Integration](#dart-mcp-integration) |
 | Architecture diagram   | [Architecture](#architecture) |
 
 ## Docker
@@ -129,6 +131,25 @@ Bypass hooks if necessary:
 git commit --no-verify -m "hotfix"
 ```
 
+## Git Diff Troubleshooting
+
+If `git diff` commands appear to hang or only show partial output, it's likely due to the default pager (`less`) misbehaving in the terminal environment.
+
+**Symptoms:**
+- `git diff` or `git show` commands hang after displaying only a few lines.
+- This occurs consistently across different file sizes.
+- The `--no-pager` option might be unsupported by your Git version.
+
+**Resolution:**
+To resolve this, configure Git to use `cat` as its default pager. This bypasses `less` and displays the full output directly to the terminal.
+
+```bash
+git config --global core.pager cat
+```
+
+**Verification:**
+After applying the fix, run `git diff <file_path>` again. The full diff should now display without hanging.
+
 ## Deployment
 
 Render blueprint lives at `render.yaml`.
@@ -140,3 +161,41 @@ render deploy
 ## Architecture
 
 See [`Docs/ScraperSky-Backend-Architecture-Summary.md`](Docs/ScraperSky-Backend-Architecture-Summary.md) for a Mermaid diagram and full folder map.
+
+
+## DART MCP Integration
+
+This project is integrated with DART for task and document management via the Model Context Protocol (MCP). Your AI pairing partner (Cascade) can directly interact with your DART boards.
+
+**Full Guide:** For detailed instructions, tool examples, and troubleshooting, see [`Docs/Docs_1_AI_GUIDES/DART_MCP_GUIDE.md`](Docs/Docs_1_AI_GUIDES/DART_MCP_GUIDE.md).
+
+**Identified Dartboards (Workspaces):**
+*   `General/Tasks`
+*   `Personal/Tutorial tasks`
+
+**Key Commands (for Cascade to use):**
+
+*   **List Tasks from "General/Tasks" (e.g., latest 10):**
+    ```xml
+    <mcp0_list_tasks>{"dartboard": "General/Tasks", "limit": 10}</mcp0_list_tasks>
+    ```
+
+*   **Create a Task in "General/Tasks":**
+    ```xml
+    <mcp0_create_task>{"title": "My New Task Title", "dartboard": "General/Tasks", "description": "Task details here.", "status": "To-do"}</mcp0_create_task>
+    ```
+
+*   **Get Task Details (replace `task_id`):**
+    ```xml
+    <mcp0_get_task>{"id": "task_id"}</mcp0_get_task>
+    ```
+
+*   **List Documents (e.g., latest 10):**
+    ```xml
+    <mcp0_list_docs>{"limit": 10}</mcp0_list_docs>
+    ```
+
+*   **Create a Document:**
+    ```xml
+    <mcp0_create_doc>{"title": "My New Document Title", "text": "Document content here."}</mcp0_create_doc>
+    ```

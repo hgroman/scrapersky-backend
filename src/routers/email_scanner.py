@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.jwt_auth import get_current_user  # Import user dependency
@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 # Define dependencies outside function signatures to satisfy B008
 SessionDep = Depends(get_session_dependency)
 CurrentUserDep = Depends(get_current_user)
-
 
 class EmailScanningResponse(BaseModel):
     domain_id: uuid.UUID
@@ -82,15 +81,14 @@ async def scan_website_for_emails_api(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid user ID format in token.",
             ) from e  # Add 'from e' for B904
-
-    if not user_id:
-        logger.error(
+    else: # Handle case where user_id_str is None or empty
+         logger.error(
             f"Could not get valid user ID from current_user. User info: {current_user}"
         )
-        # No original exception here, so 'from None' is appropriate for B904
-        raise HTTPException(
+         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user context."
         ) from None
+
 
     # Requirement #6: Check for existing PENDING or RUNNING jobs for this domain
     try:
@@ -98,7 +96,7 @@ async def scan_website_for_emails_api(
         stmt = (
             select(Job)
             .where(Job.domain_id == domain_id)
-            .where(Job.status.in_([TaskStatus.PENDING.value, TaskStatus.RUNNING.value]))  # noqa
+            .where(cast(Job.status, String).in_([TaskStatus.PENDING.value, TaskStatus.RUNNING.value]))  # noqa
             .order_by(
                 Job.created_at.desc()
             )  # Get the most recent one if multiple somehow exist
@@ -186,7 +184,7 @@ async def scan_website_for_emails_api(
 async def get_scan_status_api(
     job_id: uuid.UUID,  # Use UUID type hint for path parameter
     session: AsyncSession = SessionDep,
-    # current_user: Dict[str, Any] = CurrentUserDep # Auth usually needed here too
+    current_user: Dict[str, Any] = CurrentUserDep # Auth usually needed here too
 ):
     """Retrieve the status and results of a specific email scan job by its UUID."""
     # Add authentication check if needed based on requirements

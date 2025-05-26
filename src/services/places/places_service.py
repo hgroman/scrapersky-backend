@@ -28,7 +28,7 @@ class PlacesService:
 
     @staticmethod
     async def get_by_id(
-        session: AsyncSession, place_id: str, tenant_id: Optional[str] = None
+        session: AsyncSession, place_id: str
     ) -> Optional[Place]:
         """
         Get a place by its place_id.
@@ -36,27 +36,11 @@ class PlacesService:
         Args:
             session: SQLAlchemy session
             place_id: The Google Place ID
-            tenant_id: Optional tenant ID for isolation
 
         Returns:
             Place object or None if not found
         """
         query = select(Place).where(Place.place_id == place_id)
-
-        if tenant_id:
-            try:
-                # Try to convert tenant_id to UUID for filtering
-                tenant_uuid = (
-                    uuid.UUID(tenant_id) if isinstance(tenant_id, str) else tenant_id
-                )
-                # Use raw SQL with explicit text casting to avoid type issues
-                query = query.where(text("tenant_id::text = :tenant_uuid")).params(
-                    tenant_uuid=str(tenant_uuid)
-                )
-            except ValueError:
-                # If not a UUID, log a warning
-                logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
-                return None
 
         result = await session.execute(query)
         return result.scalar_one_or_none()
@@ -64,7 +48,6 @@ class PlacesService:
     @staticmethod
     async def get_places(
         session: AsyncSession,
-        tenant_id: str,
         status: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
@@ -74,7 +57,6 @@ class PlacesService:
 
         Args:
             session: SQLAlchemy session
-            tenant_id: Tenant ID for isolation
             status: Optional status filter
             limit: Maximum number of records
             offset: Offset for pagination
@@ -109,7 +91,6 @@ class PlacesService:
         session: AsyncSession,
         place_id: str,
         status: str,
-        tenant_id: Optional[str] = None,
         user_id: Optional[str] = None,
     ) -> bool:
         """
@@ -119,7 +100,6 @@ class PlacesService:
             session: SQLAlchemy session
             place_id: The Google Place ID
             status: New status to set
-            tenant_id: Optional tenant ID for isolation
             user_id: Optional user ID for attribution
 
         Returns:
@@ -130,12 +110,6 @@ class PlacesService:
             .where(Place.place_id == place_id)
             .values(status=status, updated_at=datetime.utcnow())
         )
-
-        if tenant_id:
-            # REMOVED tenant filtering as per architectural mandate
-            # JWT authentication happens ONLY at API gateway endpoints
-            # Database operations should NEVER handle JWT or tenant authentication
-            pass
 
         if user_id:
             user_uuid = (
@@ -149,7 +123,6 @@ class PlacesService:
     @staticmethod
     async def create_search(
         session: AsyncSession,
-        tenant_id: str,
         user_id: str,
         location: str,
         business_type: str,
@@ -160,7 +133,6 @@ class PlacesService:
 
         Args:
             session: SQLAlchemy session
-            tenant_id: Tenant ID
             user_id: User ID
             location: Search location
             business_type: Business type
@@ -169,14 +141,10 @@ class PlacesService:
         Returns:
             Created PlaceSearch object
         """
-        # Convert IDs to UUID if they're strings
-        tenant_uuid = (
-            tenant_id if isinstance(tenant_id, uuid.UUID) else uuid.UUID(tenant_id)
-        )
+        # Convert user_id to UUID if it's a string
         user_uuid = user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(user_id)
 
         search = PlaceSearch(
-            tenant_id=tenant_uuid,
             user_id=user_uuid,
             location=location,
             business_type=business_type,
@@ -190,7 +158,7 @@ class PlacesService:
 
     @staticmethod
     async def batch_update_status(
-        session: AsyncSession, place_ids: List[str], status: str, tenant_id: str
+        session: AsyncSession, place_ids: List[str], status: str
     ) -> int:
         """
         Update the status of multiple places in batch.
@@ -199,7 +167,6 @@ class PlacesService:
             session: SQLAlchemy session
             place_ids: List of Google Place IDs
             status: New status to set
-            tenant_id: Tenant ID for isolation
 
         Returns:
             Number of records updated

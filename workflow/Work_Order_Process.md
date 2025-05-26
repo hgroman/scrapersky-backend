@@ -1,7 +1,17 @@
 # Standard Work Order Process
 
-**Version:** 1.0
-**Date:** 2025-05-15
+> ⚠️ **NON-NEGOTIABLE WORKFLOW RULE** ⚠️
+>
+> **ALL work MUST begin by creating a new Task in DART using MCP. When continuing existing work, ensure the Task in DART remains the fountainhead for all related artifacts.**
+>
+> **NO artifact (journal entry, work order, handoff, etc.) may reference a Task that does not exist in DART.**
+>
+> **Artifacts referencing a non-existent Task are INVALID and must be corrected immediately.**
+>
+> **NO EXCEPTIONS. This is the law of the workflow.**
+
+**Version:** 2.0 (DART Integration)
+**Date:** 2025-05-21
 
 ## 1. Purpose
 
@@ -9,7 +19,7 @@ This document outlines the standard process for creating, managing, executing, a
 
 ## 2. Overview
 
-A Work Order is a formal directive to perform a specific set of tasks to achieve a defined goal. It serves as a central reference point for a unit of work. The lifecycle of a WO is tightly integrated with the project's other management tools: `tasks.yml`, the `journal/` directory (and `journal_index.yml`), and `Handoff/` documents.
+A Work Order is a formal directive to perform a specific set of tasks to achieve a defined goal. It serves as a central reference point for a unit of work. The lifecycle of a WO is tightly integrated with the project's other management tools: **DART MCP** (for task and document management), and `Handoff/` documents. While local journal files may still be used for very detailed, temporary, or complex notes, the primary and authoritative record for all work progress and completion is now a **DART Document Journal Entry**. A key aspect of our workflow is the continuous identification and documentation of reusable patterns, as detailed in Section 9.
 
 ## 3. Personas and Responsibilities
 
@@ -30,17 +40,17 @@ Different project personas interact with Work Orders at various stages:
     *   Outputs or plans from another persona (e.g., a Content Strategist's email plan requiring new components).
     *   Follow-up actions from a previous Work Order or journal entry.
 *   **Responsibility:** Typically an Architect, Lead, or designated planning persona, acting upon USER direction.
-*   **Prerequisite:** A corresponding Task **must** already exist in `tasks.yml` (see Section 6.1 for Task creation protocol, typically USER-directed). The `Task ID` from this existing task will be used in the Work Order.
+*   **Prerequisite:** A corresponding Task **must** already exist in **DART** (see Section 6.1 for Task creation protocol, typically USER-directed). The `Task ID` from this existing DART task will be used in the Work Order.
 *   **Action (Typically USER-directed, or by a designated planning persona):**
     1.  Create a new Work Order Markdown file in the `work_orders/active/` directory.
-        *   **Filename Convention:** `WO_<TASKID>_<YYYYMMDD>_<3-5-word-label>.md` (e.g., `WO_TASK007_20250517_New-Hero-Variants.md`). `<TASKID>` is the ID from the **pre-existing Task** in `tasks.yml`, and `<YYYYMMDD>` is the WO creation date.
+        *   **Filename Convention:** `WO_<TASKID>_<YYYYMMDD>_<3-5-word-label>.md` (e.g., `WO_TASK007_20250517_New-Hero-Variants.md`). `<TASKID>` is the ID from the **pre-existing Task** in **DART**, and `<YYYYMMDD>` is the WO creation date.
     2.  Populate the WO document with all mandatory contents (see Section 5).
-    3.  Ensure the `tasks.yml` entry for the related Task is updated to reflect the Work Order's existence and assignment if necessary (e.g., adding the WO ID to `related_files` or updating status to `in_progress_wo`).
+    3.  Ensure the **DART task** for the related Task is updated to reflect the Work Order's existence and assignment if necessary (e.g., updating status or adding notes about the WO ID).
 
 ### 4.2. Work Order Assignment
 
 *   The `Assigned Persona(s)` field in the WO clearly designates who is responsible for execution.
-*   The corresponding task in `tasks.yml` should also reflect this assignment.
+*   The corresponding task in **DART** should also reflect this assignment.
 
 ### 4.3. Work Order Execution
 
@@ -53,23 +63,24 @@ Different project personas interact with Work Orders at various stages:
 The completion of a Work Order is not just the creation of its primary deliverables but also the meticulous documentation of the work. **All of the following steps are mandatory for a WO to be considered complete:**
 
 1.  **Primary Deliverables Met:** All items listed under "Expected Deliverables/Outputs" in the WO have been produced and are in their correct locations.
-2.  **Journal Entry Creation:**
+2.  **Journal Entry Creation (DART Document Primary):**
     *   **Responsibility:** Executing Persona.
-    *   **Action:** Create a new Markdown journal file in the `journal/` directory.
-        *   **Filename:** `JE_<YYYYMMDD_HHMMSS>_<TASKID>_<1-3-word-summary>.md` (e.g., `JE_20250517_103000_TASK007_Hero-Done.md`). `<YYYYMMDD_HHMMSS>` is the UTC timestamp, and `<TASKID>` is from `tasks.yml`.
-        *   **Content:** Must include:
-            *   Timestamp.
-            *   Participants (including the executing persona).
-            *   **Explicit reference to the `Work Order ID` (e.g., "This entry details the completion of WO003.").**
-            *   Detailed summary of actions taken, decisions made, problems encountered (and solutions), and a list of all files created, modified, or deleted.
-    *   **Index Update:** Add a corresponding entry to `journal_index.yml` as per the project's `README.md` guidelines.
-3.  **Task Update in `tasks.yml`:**
+    *   **Action (Primary - DART Document):** Create a new **DART Document Journal Entry** using the `create_doc` MCP tool. This document serves as the primary, authoritative record of work progress and completion.
+        *   **Title:** Human-friendly summary (e.g., "Email Scanner Authentication Fix").
+        *   **Content:** Detailed work summary, debugging steps, learnings, decisions, and a list of all files created, modified, or deleted.
+        *   **Linking:** The DART Document must be linked directly to its parent DART Task, and the Task description should be updated with a markdown link to the DART Document (e.g., `[Document Title](document_htmlUrl)`).
+        *   **Note:** For minor fixes or simple updates (like a tooling resolution that doesn't justify a full document), the DART Task description itself can serve as the journal entry, or a concise DART Document can be created.
+    *   **Action (Optional - Local Journal File):** For very detailed, complex, or temporary notes that are not suitable for a concise DART Document, a local Markdown journal file *may* still be created in the `journal/` directory.
+        *   **Filename:** `JE_<YYYYMMDD_HHMMSS>_<TASKID>_<1-3-word-summary>.md` (e.g., `JE_20250517_103000_TASK007_Hero-Done.md`). `<YYYYMMDD_HHMMSS>` is the UTC timestamp, and `<TASKID>` is from **DART**.
+        *   **Content:** Should include explicit reference to the `Work Order ID` and the corresponding DART Task ID.
+        *   **Important:** Local journal files are secondary and do **not** require updates to `journal_index.yml` as DART now manages document organization.
+3.  **Task Update in DART:**
     *   **Responsibility:** Executing Persona.
-    *   **Action:** Update the status of the corresponding task (identified by `Task ID` in the WO) in `tasks.yml` to `done`.
+    *   **Action:** Update the status of the corresponding task (identified by `Task ID` in the WO) in **DART** to `done`.
         *   If a review stage is required by a different persona, the status may first be set to `review`.
-        *   The task entry in `tasks.yml` should, if possible, be updated to include a reference to the `Work Order ID` and the filename of the completion `Journal Entry`.
+        *   The task in **DART** should, if possible, be updated to include notes about the `Work Order ID` and the filename of the completion `Journal Entry`.
 4.  **Handoff Document Creation:**
-    *   **Trigger:** A Handoff Document is created if the completion of the current Work Order (WO1) has led to the USER-directed identification and creation of new, subsequent Work Order(s) (WO2, WO3, etc., each tied to a newly created Task).
+    *   **Trigger:** A Handoff Document is created if the completion of the current Work Order (WO1) has led to the USER-directed identification and creation of new, subsequent Work Order(s) (WO2, WO3, etc., each tied to a newly created Task in **DART**).
     *   **Purpose:** To provide essential context, outputs, and a "note to self" from the AI completing WO1 to the AI/session that will execute the subsequent WO(s).
     *   **Responsibility:** Executing Persona for WO1.
     *   **Action:**
@@ -93,7 +104,7 @@ Each Work Order document (`.md` file in `work_orders/active/` or `work_orders/co
 1.  `Work Order ID:` (Unique, e.g., `WO003`)
 2.  `Title:` (Clear, concise title)
 3.  `Status:` (e.g., `Open`, `In Progress`, `Blocked`, `Review`, `Done`)
-4.  `Related Task ID in tasks.yml:` (The `id` of the corresponding task in `tasks.yml`)
+4.  `Related Task ID in DART:` (The `id` of the corresponding task in **DART**)
 5.  `Input Documents/Prerequisites:` (List of all files or information needed to start, e.g., analysis reports, previous Handoff docs, specific component files)
 6.  `Date Created:` (YYYY-MM-DD)
 7.  `Created By Persona:` (The persona initiating the WO)
@@ -107,29 +118,48 @@ Each Work Order document (`.md` file in `work_orders/active/` or `work_orders/co
 15. `Completion Checklist (Cross-reference to Section 4.4):`
     *   [ ] Primary Deliverables Met
     *   [ ] Journal Entry Created (Filename: ____________________)
-    *   [ ] `tasks.yml` Updated (Task ID: _________ set to `done`/`review`)
+    *   [ ] **DART Task Updated** (Task ID: _________ set to `done`/`review`)
     *   [ ] Handoff Document Created (Filename: ____________________)
     *   [ ] WO Archived (Moved to `work_orders/completed/`)
 
 ## 6. Integration with Other Project Management Tools
 
-### 6.1. `tasks.yml`
+### 6.1. DART (Task Management)
 
-*   For every WO created, a corresponding task **must** be created in `tasks.yml`.
-*   The `tasks.yml` entry should include the `Work Order ID` in its `description` or a dedicated `related_wo_id` field for easy cross-referencing.
-*   The status of the task in `tasks.yml` reflects the status of the WO.
+*   For every WO created, a corresponding task **must** be created in **DART**.
+*   The **DART task** should include the `Work Order ID` in its description or notes for easy cross-referencing.
+*   The status of the task in **DART** reflects the status of the WO.
+*   **Task Creation:** Use DART MCP to create tasks with proper tagging (Layer, Workflow, Priority) and incremental TASK_XXX IDs.
+*   **Task Queries:** Use DART MCP to find next available task ID, filter by status, or search by criteria.
 
-### 6.2. `journal/` and `journal_index.yml`
+### 6.2. DART Document Journal Entries (Primary Journaling)
 
-*   Key decisions during WO execution *may* warrant interim journal entries.
-*   A comprehensive journal entry detailing the WO's completion is **mandatory** as per Section 4.4.2.
-*   All journal entries related to a WO should reference the `Work Order ID`.
+*   **Primary Record:** All comprehensive journal entries detailing WO execution and completion are now managed as **DART Documents**. This ensures centralized, searchable, and version-controlled documentation directly linked to DART Tasks.
+*   **No `journal_index.yml`:** The `journal_index.yml` file is no longer required as DART natively manages the organization and discoverability of DART Documents.
+*   **Local Journal Files (Optional):** Local Markdown files in the `journal/` directory are now considered optional. They may be used for very detailed, temporary, or complex notes that are not suitable for direct inclusion in a concise DART Document. If used, they should still reference the `Work Order ID` and the corresponding **DART Task ID**.
 
 ### 6.3. `Handoff/`
 
-*   A Handoff document is **mandatory** upon WO completion, as per Section 4.4.4.
+*   A Handoff document is **mandatory** upon WO completion if follow-up WOs are created, as per Section 4.4.4.
 *   It summarizes the WO outcome and points to the detailed journal entry.
+*   References both the completed WO and the newly created **DART tasks** for subsequent work.
 
-## 7. Process Adherence
+## 7. DART MCP Integration Benefits
 
-Strict adherence to this Work Order Process is crucial for maintaining project clarity, ensuring comprehensive documentation ("popcorn trail"), and facilitating seamless collaboration between all team members, especially when transitioning work between sessions or AI assistants.
+The integration with DART MCP provides several advantages over the previous tasks.yml approach:
+
+*   **No File Parsing Issues:** AI assistants can query DART directly without truncation problems
+*   **Real-time Task Management:** Instant access to current task status and next available task IDs
+*   **Rich Metadata:** Advanced filtering by Layer, Workflow, Priority, and custom tags
+*   **Cross-session Continuity:** Task context persists across different AI sessions and tools
+*   **Structured Queries:** Natural language task management ("Show me all critical Layer 4 tasks")
+
+## 8. Process Adherence
+
+Strict adherence to this Work Order Process is crucial for maintaining project clarity, ensuring comprehensive documentation ("popcorn trail"), and facilitating seamless collaboration between all team members, especially when transitioning work between sessions or AI assistants. The integration with DART MCP enhances this process by providing robust, scalable task management while preserving all established workflow principles.
+
+## 9. Continuous Improvement: Pattern Identification and Documentation
+
+As a core practice, all participants in this workflow are **continuously engaged in identifying and documenting reusable patterns**—both "good patterns" (best practices, effective solutions) and "anti-patterns" (issues to avoid). This effort is crucial for building our collective knowledge base, accelerating future development, and preventing regressions.
+
+When working on any task or Work Order, if you encounter a recurring problem, discover an elegant solution, or identify a new architectural standard, please consider documenting it as a dedicated "Fix Pattern" or "Good Pattern" markdown file (e.g., in `Docs/Docs_11_Refactor/LayerX_Fix_Patterns/`) and creating a corresponding DART task to track its integration into the vector database. This proactive knowledge capture is a vital part of our commitment to AI-native software engineering.

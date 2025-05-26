@@ -1,9 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Sitemap Curation Tab JS Loaded");
+    
+    // Check if the global getJwtToken function exists
+    if (typeof getJwtToken !== 'function') {
+        console.error("Global getJwtToken function not found. Ensure google-maps-common.js is loaded before this script.");
+        return; // Exit initialization if authentication function is missing
+    }
 
     // --- Configuration & State ---
     const API_BASE_URL = '/api/v3';
-    const DEV_TOKEN = 'scraper_sky_2024'; // Replace with dynamic token handling if needed
+    // Removed hardcoded token for security - now using getJwtToken() from google-maps-common.js
     const PAGE_SIZE = 15;
 
     let currentPage = 1;
@@ -146,6 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateBatchControls() {
         if (!batchUpdateSection || !batchUpdateBtn || !clearSelectionBtn) return;
+        const token = getJwtToken();
+        if (!token) {
+            showStatusMessage('JWT Token is required for authentication.', true);
+            return;
+        }
         const count = selectedSitemapFileIds.size;
         if (count > 0) {
             batchUpdateSection.style.display = 'block';
@@ -175,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${DEV_TOKEN}`,
+                    'Authorization': `Bearer ${getJwtToken()}`,
                     'Accept': 'application/json'
                 }
             });
@@ -266,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${DEV_TOKEN}`,
+                    'Authorization': `Bearer ${getJwtToken()}`,
                     'Accept': 'application/json'
                 }
             });
@@ -505,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_BASE_URL}/sitemap-files/status`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${DEV_TOKEN}`,
+                    'Authorization': `Bearer ${getJwtToken()}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
