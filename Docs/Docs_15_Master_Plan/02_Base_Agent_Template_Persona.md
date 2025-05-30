@@ -16,7 +16,7 @@ To provide a standardized, consistent base upon which specialized expertise can 
 
 ## Content of the Base Agent Template Persona Document
 
-The Base Agent Template Persona document (e.g., `Persona_MVP_Framework.md` or a new document) should include:
+The Base Agent Template Persona document is located at `Docs/Docs_12_Persona_Nursery/Base_Agent_Template_Persona.md`. It includes:
 
 *   **Core Identity:** A general mission statement and core behaviors applicable to any ScraperSky AI agent.
 *   **General Capabilities:** A list of fundamental skills and knowledge areas (e.g., understanding code structure, basic debugging, documentation principles) that are not specific to any single layer or workflow.

@@ -5,14 +5,13 @@ Vector DB Pattern Insertion - Final Script
 This script inserts the extracted patterns into the fix_patterns table with proper vector embeddings.
 """
 
-import os
 import asyncio
+import json  # Import the json module
 import logging
+import os
 import uuid
-import json # Import the json module
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
-import httpx
 import asyncpg
 from dotenv import load_dotenv
 
@@ -75,15 +74,14 @@ async def create_embeddings_for_pattern(pattern: Dict[str, Any]) -> Dict[str, Li
     """
     embeddings['content_embedding'] = await generate_embedding(content_text)
 
-    # Code embedding (code_before, code_after)
-    code_text = f"""
-    CODE BEFORE:
-    {pattern.get('code_before', '')}
-
-    CODE AFTER:
-    {pattern.get('code_after', '')}
+    # Code embedding (now conceptual, as code is in DART)
+    # This embedding will represent the conceptual nature of the code pattern,
+    # derived from its description and solution steps, not literal code.
+    code_conceptual_text = f"""
+    PROBLEM DESCRIPTION: {pattern.get('problem_description', '')}
+    SOLUTION STEPS: {pattern.get('solution_steps', '')}
     """
-    embeddings['code_embedding'] = await generate_embedding(code_text)
+    embeddings['code_embedding'] = await generate_embedding(code_conceptual_text)
 
     # Problem embedding (problem_description, verification_steps)
     problem_text = f"""
@@ -92,7 +90,7 @@ async def create_embeddings_for_pattern(pattern: Dict[str, Any]) -> Dict[str, Li
     """
     embeddings['problem_embedding'] = await generate_embedding(problem_text)
 
-    # Pattern vector (combined embedding for general search)
+    # Pattern vector (combined embedding for general search, excluding literal code)
     pattern_text = f"""
     TITLE: {pattern.get('title', '')}
     DESCRIPTION: {pattern.get('description', '')}
@@ -100,8 +98,9 @@ async def create_embeddings_for_pattern(pattern: Dict[str, Any]) -> Dict[str, Li
     CODE TYPE: {pattern.get('code_type', '')}
     SEVERITY: {pattern.get('severity', '')}
     PROBLEM DESCRIPTION: {pattern.get('problem_description', '')}
-    CODE BEFORE: {pattern.get('code_before', '')}
-    CODE AFTER: {pattern.get('code_after', '')}
+    SOLUTION STEPS: {pattern.get('solution_steps', '')}
+    LEARNINGS: {pattern.get('learnings', '')}
+    PREVENTION GUIDANCE: {pattern.get('prevention_guidance', '')}
     """
     embeddings['pattern_vector'] = await generate_embedding(pattern_text)
 
@@ -121,7 +120,8 @@ async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, Li
     if not pattern_id:
         pattern_id = str(uuid.uuid4())
 
-    # Insert the pattern with all fields
+    # Insert the pattern with all fields. code_before and code_after will be None/empty strings
+    # as they are now stored in DART documents.
     await conn.execute(
         """
         INSERT INTO fix_patterns (
@@ -131,10 +131,10 @@ async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, Li
             dart_document_urls, applied_count, success_rate, confidence_score,
             content_embedding, code_embedding, problem_embedding, pattern_vector,
             created_by, reviewed, description, created_at, updated_at,
-            reviewer_notes, related_files, source_file_audit_id, applied_to_files, avg_time_saved
+            reviewer_notes, related_files, source_file_audit_id, applied_to_files, avg_time_saved, knowledge_type
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
             $17, $18, $19, $20, $21, $22::vector, $23::vector, $24::vector, $25::vector,
-            $26, $27, $28, NOW(), NOW(), $29, $30, $31, $32, $33)
+            $26, $27, $28, NOW(), NOW(), $29, $30, $31, $32, $33, $34)
         """,
         pattern_id,
         pattern.get("title"),
@@ -147,8 +147,8 @@ async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, Li
         pattern.get("file_types"),
         pattern.get("problem_description"),
         pattern.get("solution_steps"),
-        pattern.get("code_before"),
-        pattern.get("code_after"),
+        pattern.get("code_before", None), # Pass None if not present
+        pattern.get("code_after", None),  # Pass None if not present
         pattern.get("verification_steps"),
         pattern.get("learnings"),
         pattern.get("prevention_guidance"),
@@ -168,7 +168,8 @@ async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, Li
         pattern.get("related_files"),
         pattern.get("source_file_audit_id"),
         pattern.get("applied_to_files"),
-        pattern.get("avg_time_saved")
+        pattern.get("avg_time_saved"),
+        pattern.get("knowledge_type")
     )
 
     logger.info(f"Pattern '{pattern.get('title', 'Unknown')}' inserted successfully")

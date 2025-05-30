@@ -81,7 +81,57 @@ With your knowledge base built and your identity forged through experience, you 
 
 ## Index of Knowledge Documents
 
-(This section will be populated with the categorized list of General and Specific Knowledge Documents relevant to the persona being created. This list will be provided by the Architect Persona).
+This index categorizes the foundational knowledge documents for ScraperSky AI Agents. This list will be continuously updated as new definitive sources are identified and formalized.
+
+### General Knowledge Documents (Core Principles & System-Wide Standards)
+
+These documents provide foundational understanding applicable across the entire project.
+
+*   **`Docs/Docs_15_Master_Plan/00_Master_Plan.md`**: The overarching vision, core architecture, and key components of the AI-Native Engineering System.
+*   **`Docs/Docs_15_Master_Plan/___Guide_to_Persona_Creation_and_Knowledge_Onboarding.md`**: This guide itself, detailing the process of becoming a specialized persona.
+*   **`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`**: Definitive guide for naming and structural conventions across the backend project.
+*   **`Docs/ARCHITECTURE_EVOLUTION.md`**: (To be reviewed and potentially added if it contains general architectural evolution narrative).
+*   **`Docs/Documentation-Dependency-Tree.md`**: (To be reviewed and potentially added if it contains general documentation structure).
+*   **`workflow/README_WORKFLOW.md`**: Standardized workflow system, emphasizing DART task management.
+
+### Specific Knowledge Documents (Layer/Workflow-Specific Blueprints, Audit Findings, Patterns)
+
+These documents provide detailed expertise for specific architectural layers or workflows.
+
+#### Layer 1: Models & ENUMs
+*   **`Docs/Docs_10_Final_Audit/Layer-1.1-Models_Enums_Blueprint.md`**: Blueprint for Layer 1 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 1/Layer1_Models_Enums_Audit_Report.md`**: Detailed audit findings for Layer 1.
+*   **`Docs/Docs_0_SQL-Alchemy-Over-Engineered-Nightmare/` (various files)**: (To be reviewed for specific historical context/patterns related to Layer 1 evolution).
+
+#### Layer 2: Schemas
+*   **`Docs/Docs_10_Final_Audit/Layer-2.1-Schemas_Blueprint.md`**: Blueprint for Layer 2 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 2/Layer2_Schemas_Audit_Report.md`**: Detailed audit findings for Layer 2.
+
+#### Layer 3: Routers
+*   **`Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md`**: Blueprint for Layer 3 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md`**: Detailed audit findings for Layer 3.
+*   **`Docs/Docs_11_Refactor/Layer3_Fix_Patterns/` (all files)**: Specific fix patterns for Layer 3 (already embedded in Vector DB).
+*   **`Docs/Docs_11_Refactor/Layer3_Good_Patterns/` (all files)**: Specific good patterns for Layer 3 (already embedded in Vector DB).
+
+#### Layer 4: Services & Schedulers
+*   **`Docs/Docs_10_Final_Audit/Layer-4.1-Services_Blueprint.md`**: Blueprint for Layer 4 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 4/` (all WF-specific files)**: Detailed audit findings for Layer 4 workflows.
+
+#### Layer 5: Configuration
+*   **`Docs/Docs_10_Final_Audit/Layer-5.1-Configuration_Blueprint.md`**: Blueprint for Layer 5 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 5/Layer5_Configuration_Audit_Report.md`**: Detailed audit findings for Layer 5.
+
+#### Layer 6: UI Components
+*   **`Docs/Docs_10_Final_Audit/Layer-6.1-UI_Components_Blueprint.md`**: Blueprint for Layer 6 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 6/` (all files)**: Detailed audit findings for Layer 6.
+
+#### Layer 7: Testing
+*   **`Docs/Docs_10_Final_Audit/Layer-7.1-Testing_Blueprint.md`**: Blueprint for Layer 7 standards.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 7/Layer7_Testing_Audit_Report.md`**: Detailed audit findings for Layer 7 (initial).
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 7/Layer7_Testing_Final_Report.md`**: Final audit findings for Layer 7.
+*   **`Docs/Docs_10_Final_Audit/Audit Reports Layer 7/File Audits/` (all files)**: Specific file audits for Layer 7.
+
+(This index will be continuously refined and expanded as more documents are reviewed and formalized.)
 
 ## Conclusion: Your Ongoing Evolution
 
