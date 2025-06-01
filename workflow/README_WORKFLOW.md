@@ -73,6 +73,18 @@ This system facilitates the execution of complex tasks through a structured proc
 | **Work Order (WO)**            | `WO_<DART_TASKID>_<YYYYMMDD>_<label>.md`       | `WO_ildO8Gz1EtoV_20250522_Email-Scanner.md` |
 | **Handoff Document (HO)**      | `HO_<YYYYMMDD_HHMMSS>_<DART_TASKID>_<summary>.md` | `HO_20250522_170000_ildO8Gz1EtoV_Security-Done.md` |
 
+### Workspace Selection in DART
+
+**Available Workspaces:**
+- **ScraperSky/Tasks** - Primary workspace for ScraperSky project tasks
+- **General/Tasks** - General workspace (avoid using for ScraperSky work)
+
+**Important Notes:**
+- When creating tasks or documents, verify you're in the correct workspace
+- Use `dartboard` parameter with exact workspace name (e.g., `ScraperSky/Tasks`)
+- Workspace IDs (like `98qCXyZtX35A`) are not valid for the `dartboard` parameter
+- To move tasks between workspaces, use `update_task` with the correct `dartboard` value
+
 ### DART Document Journal Entry Integration
 
 **DART Document Requirements:**
