@@ -26,7 +26,27 @@ The core idea is to create specialized AI personas (like the current agent, Clin
 *   **Main DART Task (`Bu65bMpZkFWu`):**
     *   Created and is now "UPGRADED" with the "Guiding Principles & Meta-Strategy" and a new "Phase 0: Strategic Document Organization & Initial Embedding."
     *   Moved to "Doing" status in the "ScraperSky" DART workspace.
-*   **Detailed DART Plan Documents:** All 8 detailed sub-plan documents (for Phase 1, Phase 2 layers, and Phase 3 of the cleanup) have been created and linked to the main DART task.
+### 3.1 Detailed DART Plan Documents
+
+During this chat, 8 detailed DART plan documents were created and linked to the main DART task (`Bu65bMpZkFWu`). These documents serve as the granular, actionable roadmap for executing the documentation cleanup and building the AI-Native Engineering System.
+
+**List of Detailed DART Plan Documents:**
+
+*   **Phase 1: Foundational Documentation & Critical Code Consistency - Detailed Plan**
+*   **Phase 2: Layer 4 (Services & Schedulers) Remediation - Detailed Plan**
+*   **Phase 2: Layer 2 (Schemas) Remediation - Detailed Plan**
+*   **Phase 2: Layer 3 (Routers) Remediation - Detailed Plan**
+*   **Phase 2: Layer 5 (Configuration) Remediation - Detailed Plan**
+*   **Phase 2: Layer 6 (UI Components) Remediation - Detailed Plan**
+*   **Phase 2: Layer 7 (Testing) Remediation - Detailed Plan**
+*   **Phase 3: Verification & Finalization for Vector Table Embedding - Detailed Plan**
+
+**How They Complement the Existing Plan:**
+
+These DART documents complement the existing strategic plans (`doc_cleanup_plan.md` and `Docs/Docs_15_Master_Plan/00_Master_Plan.md`) by providing the **detailed execution layer**.
+*   They break down the high-level phases and strategic components outlined in `doc_cleanup_plan.md` and `00_Master_Plan.md` into concrete, actionable subtasks.
+*   They serve as the **tactical roadmap** for implementing the strategic blueprints, ensuring that the vision for documentation cleanup and AI-Native System building is translated into verifiable steps.
+*   They are central to the "DART as the Paper Trail & Roadmap" principle outlined in Section 2 of this handoff document.
 *   **Vector DB Insertion Script:** `scripts/vector_db_insert_final.py` has been adapted to handle patterns without embedded code and to insert DART document URLs.
 *   **Base Agent Template Persona:** `Docs/Docs_12_Persona_Nursery/Base_Agent_Template_Persona.md` has been created.
 *   **Initial Knowledge Onboarding:** 8 Layer 3 fix patterns and 1 Layer 3 good pattern exemplar have been successfully extracted and embedded into the Supabase Vector DB. The `knowledge_type` column was added to the `fix_patterns` table via Supabase MCP to support this.
