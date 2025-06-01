@@ -68,26 +68,22 @@ async def generate_embedding(text: str) -> List[float]:
         return [0.0] * 1536 # Return placeholder on error
 
 
-async def insert_document(conn: asyncpg.Connection, document_name: str, content: str, embedding: List[float]) -> None:
+async def insert_document(conn: asyncpg.Connection, title: str, content: str, embedding: List[float]) -> None:
     """Insert a document with its embedding into the public.project_docs table."""
     embedding_str = f"[{','.join(map(str, embedding))}]"
     try:
         await conn.execute(
             """
-            INSERT INTO public.project_docs (document_name, content, embedding)
-            VALUES ($1, $2, $3::vector)
-            ON CONFLICT (document_name) DO UPDATE SET
-                content = EXCLUDED.content,
-                embedding = EXCLUDED.embedding,
-                updated_at = NOW();
+            INSERT INTO public.project_docs (title, content, embedding)
+            VALUES ($1, $2, $3::vector);
             """,
-            document_name,
+            title,
             content,
             embedding_str
         )
-        logger.info(f"Document '{document_name}' inserted/updated successfully.")
+        logger.info(f"Document '{title}' inserted/updated successfully.")
     except Exception as e:
-        logger.error(f"Error inserting/updating document '{document_name}': {e}")
+        logger.error(f"Error inserting/updating document '{title}': {e}")
 
 
 async def test_vector_search(conn: asyncpg.Connection) -> None:
@@ -107,7 +103,7 @@ async def test_vector_search(conn: asyncpg.Connection) -> None:
         results = await conn.fetch(
             """
             SELECT
-                document_name,
+                title,
                 1 - (embedding <=> $1::vector) as similarity
             FROM
                 public.project_docs
@@ -121,7 +117,7 @@ async def test_vector_search(conn: asyncpg.Connection) -> None:
         logger.info("Vector search results from project_docs:")
         if results:
             for result in results:
-                logger.info(f"Document: {result['document_name']} - Similarity: {result['similarity']:.4f}")
+                logger.info(f"Document: {result['title']} - Similarity: {result['similarity']:.4f}")
         else:
             logger.info("No search results found.")
     except Exception as e:
