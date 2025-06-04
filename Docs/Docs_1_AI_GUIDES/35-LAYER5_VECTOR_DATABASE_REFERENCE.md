@@ -27,12 +27,22 @@ The following are the **ONLY** authoritative sources for vector database informa
    - Example queries for all common operations
    - Troubleshooting guidance for manual operations
 
-4. **Asyncpg Connectivity:** `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md`
+4. **Connectivity Patterns:** `Docs/Docs_18_Vector_Operations/Documentation/v_connectivity_patterns.md`
+   - Simple copy-paste reference for both connection patterns
+   - Clear decision tree for when to use each method
+   - Includes the required header tags and connection parameters
+
+5. **MCP Connectivity:** `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md`
+   - **CRITICAL:** Contains the correct function name and project ID
+   - Example queries for all common operations
+   - Troubleshooting guidance for manual operations
+
+6. **Asyncpg Connectivity:** `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md`
    - Documents both database connectivity methods (MCP and asyncpg)
    - Explains when to use each method and technical requirements
    - Implementation details for vector operations scripts
 
-5. **Document Loading Guide:** `Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md`
+7. **Document Loading Guide:** `Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md`
    - Step-by-step process for adding documents to the vector database
    - Registry update procedures
    - Verification steps

@@ -44,6 +44,7 @@ See `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vect
 
 ## Key Files
 - `Docs/Docs_18_Vector_Operations/Documentation/v_living_document.md` - Primary reference
+- `Docs/Docs_18_Vector_Operations/Documentation/v_connectivity_patterns.md` - Approved DB connectivity patterns (simple reference)
 - `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md` - MCP connectivity for manual operations
 - `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md` - Asyncpg connectivity for vector scripts
 - `Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md` - Document loading process guide
