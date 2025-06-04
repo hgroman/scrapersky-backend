@@ -1,0 +1,411 @@
+[
+    {
+        "title": "Authentication and Attribute Access Correction Pattern",
+        "problem_type": "security",
+        "code_type": "router",
+        "severity": "CRITICAL-SECURITY",
+        "tags": [
+            "Engineering",
+            "L3",
+            "MissingAuth",
+            "Security",
+            "WF7",
+            "authentication",
+            "attribute-access"
+        ],
+        "layers": [
+            3
+        ],
+        "workflows": [
+            "WF7"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "Missing authentication on endpoints and/or incorrect attribute access when handling user data (e.g., from JWT tokens) in routers.",
+        "solution_steps": "1. Add the standard authentication dependency (`Depends(get_current_active_user)`) to affected endpoint function signatures.\n2. Ensure user data returned by the dependency is accessed using the correct method (e.g., dictionary key access `current_user['id']` for JWT payload dictionaries).\n3. Verify and correct import statements for authentication dependencies and type hints.\n4. Add or correct type hints for the user object in endpoint signatures (e.g., `Dict[str, Any]`).",
+        "verification_steps": "1. Confirm all affected endpoints now have the authentication dependency.\n2. Verify user ID or other user data is correctly accessed within the endpoint logic.\n3. Test the endpoint with a valid JWT token to ensure successful execution.\n4. Test the endpoint without a token or with an invalid token to ensure requests are correctly rejected (e.g., returning 401 Unauthorized).",
+        "learnings": "1. Import Verification: Always verify that imported names are actually defined and exported by the source module.\n2. Attribute Access Consistency: Use appropriate access patterns based on object type (dot notation for objects, key access for dictionaries).\n3. Authentication Requirements: All API endpoints must include authentication dependencies, especially those performing sensitive operations.\n4. Type Hints: Ensure type hints accurately reflect the actual types returned by dependencies.",
+        "prevention_guidance": "Always add authentication to all new endpoints by default. Use dictionary access for JWT user data payloads.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for fixing common authentication issues and attribute access errors in API routers, particularly when accessing user data from JWT tokens after applying an authentication dependency.",
+        "related_files": [
+            "src/routers/places_staging.py",
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_1_AI_GUIDES/11-LAYER3_AUTHENTICATION_BOUNDARY.md",
+            "Docs/Docs_1_AI_GUIDES/30-LAYER3_STANDARD_DEPENDENCY_INJECTION_PATTERNS.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Business Logic in Router",
+        "problem_type": "architecture",
+        "code_type": "router",
+        "severity": "HIGH-ARCHITECTURE",
+        "tags": [
+            "architecture",
+            "business-logic",
+            "service-delegation",
+            "layer-3",
+            "layer-4",
+            "global"
+        ],
+        "layers": [
+            3,
+            4
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "Router endpoints contain complex business logic, such as direct database queries (SQLAlchemy ORM or raw SQL), data transformations, or complex conditional processing, instead of delegating these operations to Layer 4 services.",
+        "solution_steps": "1. Identify the specific business logic block(s) within the router endpoint function.\n2. Create or identify the appropriate Layer 4 service file (e.g., `src/services/{workflow_name}_service.py`).\n3. Create a new method within the Layer 4 service to encapsulate the extracted business logic. This method should accept necessary parameters, including the database session (`AsyncSession`).\n4. Move the business logic code from the router endpoint to the new service method.\n5. Update the router endpoint function to call the new Layer 4 service method, passing the database session and any required input data.\n6. Ensure the router endpoint handles the transaction boundary (`async with session.begin():`) if the service method involves database writes, and the service method uses the provided session without managing its own transaction boundary.",
+        "verification_steps": "1. Verify that the router endpoint no longer contains the extracted business logic.\n2. Confirm that the new service method correctly encapsulates the logic and uses the provided session.\n3. Ensure the router endpoint correctly calls the service method and handles the response.\n4. Run relevant tests or manually test the API endpoint to confirm functionality is preserved and the fix works as expected.",
+        "learnings": "1. Adhering to the layered architecture by delegating business logic to Layer 4 services keeps routers focused on API concerns (request handling, validation, authentication, transaction boundaries).\n2. Encapsulating logic in services improves code organization, reusability, testability, and maintainability.",
+        "prevention_guidance": "Always create dedicated Layer 4 service methods for any non-trivial business logic. Routers should primarily orchestrate calls to services, not implement the core logic themselves.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for refactoring router endpoints that incorrectly contain business logic by extracting that logic into dedicated Layer 4 service methods.",
+        "related_files": [
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Direct Service Internal Access",
+        "problem_type": "architecture",
+        "code_type": "router",
+        "severity": "HIGH-ARCHITECTURE",
+        "tags": [
+            "architecture",
+            "encapsulation",
+            "service-internals",
+            "layer-3",
+            "layer-4"
+        ],
+        "layers": [
+            3,
+            4
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "Router endpoints directly access or manipulate internal variables or attributes of Layer 4 service instances instead of interacting with the service only through its public methods.",
+        "solution_steps": "1. Identify the code in the router endpoint that directly accesses or modifies a service's internal variable.\n2. Determine the intended purpose of accessing/modifying this internal state.\n3. If the service needs to expose this information or functionality, create a new public method in the Layer 4 service that provides controlled access or performs the required operation.\n4. Update the router endpoint to call the new public service method instead of directly accessing the internal variable.\n5. If the internal variable was being modified, ensure the new service method handles the state change internally and correctly.",
+        "verification_steps": "1. Verify that the router endpoint no longer directly accesses the service's internal variable.\n2. Confirm that the new service method (if created) correctly provides the necessary access or functionality.\n3. Run relevant tests or manually test the API endpoint to ensure functionality is preserved and the fix works as expected, respecting the service's encapsulation.",
+        "learnings": "1. Services should encapsulate their internal state and expose functionality only through well-defined public methods.\n2. Routers should interact with services solely through their public interfaces to maintain a clear separation of concerns and improve maintainability.",
+        "prevention_guidance": "Never access attributes or variables of a service instance directly from a router. If a service's internal state or functionality is needed, request the service author to expose it via a public method.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for refactoring router endpoints that violate service encapsulation by directly accessing service internal variables, ensuring interaction occurs only through public service methods.",
+        "related_files": [
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Incorrect Pydantic Model Location",
+        "problem_type": "standards",
+        "code_type": "router",
+        "severity": "MEDIUM-STANDARDS",
+        "tags": [
+            "standards",
+            "pydantic",
+            "schema-management",
+            "layer-2",
+            "layer-3"
+        ],
+        "layers": [
+            2,
+            3
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "Pydantic request or response models are defined directly within Layer 3 router files (`src/routers/*.py`) or imported from incorrect locations (e.g., `src/models/`) instead of residing in the designated Layer 2 schemas directory (`src/schemas/`).",
+        "solution_steps": "1. Identify the Pydantic model definition(s) located incorrectly within the router file.\n2. Determine the appropriate location for the model in the Layer 2 schemas directory, following the conventions (e.g., `src/schemas/{workflow_name}.py` for workflow-specific schemas, `src/schemas/{source_table_name}.py` for generic entity schemas).\n3. Move the Pydantic model definition(s) to the correct Layer 2 schema file.\n4. Update the import statement(s) in the router file to import the model from its new, correct Layer 2 location.\n5. Verify that the model is correctly imported and used in the router endpoint definitions (`response_model`, request body type hints).",
+        "verification_steps": "1. Verify the Pydantic model definition is removed from the router file.\n2. Confirm the model definition is correctly placed in the appropriate Layer 2 schema file.\n3. Ensure the import statement in the router file is updated and correct.\n4. Verify the router endpoint(s) still correctly reference the model.\n5. Run relevant tests or manually test the API endpoint(s) to ensure request validation and response serialization work as expected.",
+        "learnings": "1. Centralizing Pydantic models in Layer 2 (`src/schemas/`) improves modularity, reusability, and maintainability.\n2. Adhering to schema location conventions ensures a clear separation of concerns between API contracts (Layer 2) and API endpoints (Layer 3).",
+        "prevention_guidance": "Always define Pydantic request and response models in the `src/schemas/` directory, following the established naming and file conventions. Never define Pydantic models directly within router files.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for refactoring router files by moving incorrectly located Pydantic model definitions to the standard Layer 2 schemas directory.",
+        "related_files": [
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Incorrect Transaction Management in Router",
+        "problem_type": "architecture",
+        "code_type": "router",
+        "severity": "MEDIUM-ARCHITECTURE",
+        "tags": [
+            "architecture",
+            "transaction-management",
+            "session-handling",
+            "layer-3",
+            "layer-4"
+        ],
+        "layers": [
+            3,
+            4
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "Router endpoints incorrectly manage database sessions (e.g., creating sessions directly) or handle transaction boundaries (`session.commit()`, `session.rollback()`) instead of using the standard injected session dependency and `async with session.begin():` for transaction scope. Services might also incorrectly manage transactions.",
+        "solution_steps": "1. Identify where the router endpoint incorrectly creates or manages database sessions/transactions.\n2. Ensure the endpoint uses the standard injected session dependency (`session: AsyncSession = Depends(get_session_dependency)`).\n3. Wrap database write operations within the router endpoint with `async with session.begin():` to define the transaction boundary.\n4. Remove any explicit `session.commit()`, `session.rollback()`, or `session.close()` calls from the router endpoint, as the dependency and `async with` block handle this.\n5. Verify that Layer 4 service methods accept the session as a parameter and use it without managing their own transaction boundaries.",
+        "verification_steps": "1. Verify the router endpoint uses the standard session dependency.\n2. Confirm `async with session.begin():` is correctly used for transaction scope in the router.\n3. Ensure no incorrect session/transaction management calls remain in the router.\n4. Verify that called service methods correctly use the provided session.\n5. Run relevant tests or manually test the API endpoint to confirm data persistence and error handling within transactions work as expected.",
+        "learnings": "1. Routers are responsible for initiating and managing the transaction lifecycle using the injected session and `async with session.begin():`.\n2. Services should be transaction-aware (use the session) but not transaction-creating or managing.\n3. Using the standard session dependency (`get_session_dependency`) ensures proper session handling and cleanup.",
+        "prevention_guidance": "Always use `Depends(get_session_dependency)` for database sessions in routers. Always wrap database write operations in routers with `async with session.begin():`. Never create sessions or manage transactions (`commit`, `rollback`, `close`) within service methods.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for correcting incorrect database session and transaction management practices in Layer 3 router endpoints and ensuring proper delegation of session usage to Layer 4 services.",
+        "related_files": [
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_1_AI_GUIDES/30-LAYER3_STANDARD_DEPENDENCY_INJECTION_PATTERNS.md",
+            "Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Missing Router Prefix and Versioning",
+        "problem_type": "standards",
+        "code_type": "router",
+        "severity": "HIGH-STANDARDS",
+        "tags": [
+            "standards",
+            "api-versioning",
+            "router-configuration",
+            "layer-3"
+        ],
+        "layers": [
+            3
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "APIRouter instances are initialized without the standard `/api/v3/` prefix and/or appropriate tags, leading to inconsistent API endpoint paths and poor OpenAPI documentation.",
+        "solution_steps": "1. Locate the `APIRouter` instance initialization in the target router file (`src/routers/*.py`).\n2. Add or update the `prefix` argument to include the standard versioned path, typically `/api/v3/{resource-name}` (using lowercase and hyphens for the resource name).\n3. Add or update the `tags` argument to include a relevant tag for the router, typically the Title Case version of the resource name (e.g., `tags=[\"Resource Name\"]`).\n4. If the router is included in `src/main.py`, verify that the `app.include_router()` call follows the Router Prefix Convention (i.e., does NOT add a duplicate `/api/v3` prefix if the router already defines the full prefix).",
+        "verification_steps": "1. Verify the `APIRouter` instance now has the correct `prefix` and `tags`.\n2. Check the generated OpenAPI documentation (e.g., `/docs` or `/redoc`) to confirm the endpoints appear under the correct path and with the specified tags.\n3. Manually test an endpoint from the router to ensure it is accessible at the new, correct `/api/v3/` prefixed path.\n4. If applicable, verify the router inclusion in `src/main.py` follows the convention.",
+        "learnings": "1. Consistent API prefixing and tagging are essential for a well-organized and discoverable API surface.\n2. Adhering to the router prefix convention in `src/main.py` prevents 404 errors caused by concatenated prefixes.",
+        "prevention_guidance": "Always initialize `APIRouter` instances with the standard `/api/v3/{resource-name}` prefix and relevant tags. Always follow the Router Prefix Convention when including routers in `src/main.py`.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for standardizing APIRouter definitions by adding the correct `/api/v3/` prefix and relevant tags.",
+        "related_files": [
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_1_AI_GUIDES/15-LAYER3_API_STANDARDIZATION_GUIDE.md",
+            "Docs/Docs_1_AI_GUIDES/23-LAYER3_FASTAPI_ROUTER_PREFIX_CONVENTION.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Places Staging Error Handling and Type Correction",
+        "problem_type": "bugfix",
+        "code_type": "router",
+        "severity": "MEDIUM-BUGFIX",
+        "tags": [
+            "error-handling",
+            "places-staging",
+            "linter-fix",
+            "type-errors",
+            "sqlalchemy-orm",
+            "layer-3"
+        ],
+        "layers": [
+            3
+        ],
+        "workflows": [
+            "WF2"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "The `update_places_status_batch` endpoint in `src/routers/places_staging.py` had a `ruff F841` linter error (`error_message` assigned but unused) and Pylance type errors related to SQLAlchemy ORM `Column` assignments (`deep_scan_status`, `deep_scan_error`, `updated_at`) and incorrect enum member access. The `error_message` field, intended to capture error details, was not being utilized.",
+        "solution_steps": "1. Added an `elif` condition within the `for place in places_to_process:` loop to check if `error_message is not None`.\n2. Explicitly set `place.deep_scan_status` to `GcpApiDeepScanStatusEnum.Error.value` when an `error_message` is present, ensuring the correct string value is assigned.\n3. Assigned the `error_message` to `place.deep_scan_error`.\n4. Updated `place.updated_at` timestamp in this error handling branch.\n5. Added `# type: ignore` comments to suppress Pylance warnings on SQLAlchemy ORM attribute assignments where runtime behavior is correct.",
+        "verification_steps": "1. Confirmed `ruff F841` linter error for `error_message` is resolved.\n2. Verified Pylance type errors related to the new logic are suppressed or resolved.\n3. Ensured the `update_places_status_batch` function correctly processes and stores error messages associated with place status updates.",
+        "learnings": "1. Always ensure all input parameters are utilized in the logic, or explicitly handled if not needed, to avoid linter warnings.\n2. When assigning values to SQLAlchemy ORM `Column` attributes, especially from Enums, ensure the `.value` is used to assign the underlying string, and be prepared to use `# type: ignore` for Pylance's strictness where appropriate.\n3. Robust error handling and clear status propagation are crucial for data integrity and debugging in asynchronous workflows.",
+        "prevention_guidance": "1. Implement explicit error handling branches for all possible error states in batch processing functions.\n2. Always use `.value` when assigning Enum members to database columns.\n3. Regularly run linters and type checkers, and address warnings/errors systematically.",
+        "created_by": "Cline (AI Assistant)",
+        "reviewed": false,
+        "description": "Pattern for correctly implementing error handling and status updates in batch processing functions, specifically addressing linter and type errors related to SQLAlchemy ORM attribute assignments and enum value usage.",
+        "related_files": [
+            "src/routers/places_staging.py"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "FVkuUV7b0zWY"
+        ],
+        "dart_document_urls": [
+            "BXY1feLo6IAA"
+        ]
+    },
+    {
+        "title": "Standardize Response Models",
+        "problem_type": "standards",
+        "code_type": "router",
+        "severity": "MEDIUM-STANDARDS",
+        "tags": [
+            "standards",
+            "pydantic",
+            "response-model",
+            "api-design",
+            "layer-2",
+            "layer-3"
+        ],
+        "layers": [
+            2,
+            3
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "API endpoints use generic types like `Dict[str, Any]` or `List[Dict[str, Any]]`, or use SQLAlchemy ORM models directly as `response_model`, instead of defining and using explicit Pydantic models from Layer 2 (`src/schemas/`). This leads to poor API documentation (OpenAPI schema) and lack of clear data contracts.",
+        "solution_steps": "1. Identify the endpoint(s) using a generic type or ORM model for `response_model`.\n2. Determine the required structure of the response data.\n3. Create a new, explicit Pydantic model in the appropriate Layer 2 schema file (`src/schemas/`), following naming conventions (e.g., `{Entity}Read`, `{Workflow}Response`).\n4. Update the endpoint definition(s) in the router file to use the new Layer 2 Pydantic model in the `response_model` argument of the `@router.<method>` decorator.\n5. Ensure the data returned by the endpoint handler function conforms to the structure of the new Pydantic response model.",
+        "verification_steps": "1. Verify the endpoint decorator now uses the explicit Layer 2 Pydantic model for `response_model`.\n2. Check the generated OpenAPI documentation (e.g., `/docs` or `/redoc`) to confirm the response schema for the endpoint is now detailed and correct.\n3. Run relevant tests or manually test the API endpoint to ensure the response data is correctly serialized according to the new model.",
+        "learnings": "1. Using explicit Pydantic models for `response_model` provides clear API contracts, improves documentation, and enables automatic data serialization and validation by FastAPI.\n2. SQLAlchemy ORM models should not be used directly as API response models; dedicated Pydantic schemas provide better separation of concerns and control over the API surface.",
+        "prevention_guidance": "Always define and use explicit Pydantic models from Layer 2 (`src/schemas/`) for API response models. Never use generic types (`dict`, `list`) or SQLAlchemy ORM models directly for `response_model`.",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "Pattern for standardizing API response models by replacing generic types or ORM models with explicit Pydantic models from the Layer 2 schemas directory.",
+        "related_files": [
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md",
+            "Docs/Docs_1_AI_GUIDES/15-LAYER3_API_STANDARDIZATION_GUIDE.md",
+            "Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    },
+    {
+        "title": "Router Delegation and Configuration Exemplar (`sitemap_files.py`)",
+        "problem_type": "exemplar",
+        "code_type": "router",
+        "severity": "INFORMATIONAL",
+        "tags": [
+            "good-pattern",
+            "exemplar",
+            "architecture",
+            "standards",
+            "business-logic-delegation",
+            "router-configuration",
+            "api-versioning",
+            "layer-3",
+            "layer-4"
+        ],
+        "layers": [
+            3,
+            4
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "This document highlights `src/routers/sitemap_files.py` as a good example of correctly implementing Business Logic Delegation to Layer 4 services and standard Router Configuration (prefix and tags) in Layer 3.",
+        "solution_steps": "1. **Business Logic Delegation:** Router endpoints delegate core database operations and complex logic to dedicated Layer 4 service methods.\n2. **Router Configuration:** The `APIRouter` is correctly initialized with the standard `/api/v3/` prefix and relevant tags.",
+        "verification_steps": "(Refer to the verification steps in the corresponding fix patterns for delegation and configuration).",
+        "learnings": "(Refer to the learnings in the corresponding fix patterns for delegation and configuration).",
+        "prevention_guidance": "(Refer to the prevention guidance in the corresponding fix patterns for delegation and configuration).",
+        "created_by": "Architect Persona (Documented by Roo)",
+        "reviewed": false,
+        "description": "This document highlights `src/routers/sitemap_files.py` as a good example of correctly implementing Business Logic Delegation to Layer 4 services and standard Router Configuration (prefix and tags) in Layer 3.",
+        "related_files": [
+            "src/routers/sitemap_files.py",
+            "src/services/sitemap_files_service.py",
+            "Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md",
+            "Docs/Docs_1_AI_GUIDES/15-LAYER3_API_STANDARDIZATION_GUIDE.md",
+            "Docs/Docs_1_AI_GUIDES/23-LAYER3_FASTAPI_ROUTER_PREFIX_CONVENTION.md",
+            "Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md"
+        ],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "exemplar",
+        "dart_task_ids": [
+            "Bu65bMpZkFWu"
+        ],
+        "dart_document_urls": []
+    }
+]

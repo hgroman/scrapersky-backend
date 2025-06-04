@@ -1,0 +1,48 @@
+[
+    {
+        "id": null,
+        "title": "Business Logic in Router",
+        "problem_type": "architecture",
+        "code_type": "router, service",
+        "severity": "high-architecture",
+        "tags": [
+            "architecture",
+            "business-logic",
+            "service-delegation",
+            "layer-3",
+            "layer-4",
+            "global"
+        ],
+        "layers": [
+            3,
+            4
+        ],
+        "workflows": [
+            "global"
+        ],
+        "file_types": [
+            "py"
+        ],
+        "problem_description": "Router endpoints contain complex business logic, such as direct database queries (SQLAlchemy ORM or raw SQL), data transformations, or complex conditional processing, instead of delegating these operations to Layer 4 services.",
+        "solution_steps": "1. Identify the specific business logic block(s) within the router endpoint function.\n2. Create or identify the appropriate Layer 4 service file (e.g., `src/services/{workflow_name}_service.py`).\n3. Create a new method within the Layer 4 service to encapsulate the extracted business logic. This method should accept necessary parameters, including the database session (`AsyncSession`).\n4. Move the business logic code from the router endpoint to the new service method.\n5. Update the router endpoint function to call the new Layer 4 service method, passing the database session and any required input data.\n6. Ensure the router endpoint handles the transaction boundary (`async with session.begin():`) if the service method involves database writes, and the service method uses the provided session without managing its own transaction boundary.",
+        "code_before": "...",
+        "code_after": "...",
+        "verification_steps": "1. Verify that the router endpoint no longer contains the extracted business logic.\n2. Confirm that the new service method correctly encapsulates the logic and uses the provided session.\n3. Ensure the router endpoint correctly calls the service method and handles the response.\n4. Run relevant tests or manually test the API endpoint to confirm functionality is preserved and the fix works as expected.",
+        "learnings": "1. Adhering to the layered architecture by delegating business logic to Layer 4 services keeps routers focused on API concerns (request handling, validation, authentication, transaction boundaries).\n2. Encapsulating logic in services improves code organization, reusability, testability, and maintainability.",
+        "prevention_guidance": "Always create dedicated Layer 4 service methods for any non-trivial business logic. Routers should primarily orchestrate calls to services, not implement the core logic themselves.",
+        "dart_task_ids": [],
+        "dart_document_urls": [],
+        "applied_count": 0,
+        "success_rate": 1.0,
+        "confidence_score": 0.9,
+        "created_by": "Architect Persona",
+        "reviewed": false,
+        "description": "Pattern for refactoring router endpoints that incorrectly contain business logic by extracting that logic into dedicated Layer 4 service methods.",
+        "reviewer_notes": null,
+        "related_files": [],
+        "source_file_audit_id": null,
+        "applied_to_files": [],
+        "avg_time_saved": 0,
+        "knowledge_type": "pattern"
+    }
+]
