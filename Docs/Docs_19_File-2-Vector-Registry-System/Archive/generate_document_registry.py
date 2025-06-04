@@ -1,0 +1,180 @@
+import asyncio
+import datetime  # Added for date generation
+import logging
+import os
+
+import asyncpg
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# Database configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and "postgresql+asyncpg://" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+
+# Supabase Project ID (from persona)
+SUPABASE_PROJECT_ID = "ddfldwzhdhhzhxywqnyz" # Hardcoded from persona for direct use
+
+async def generate_document_registry():
+    """
+    Generates the document_registry.md file by querying the database.
+    """
+    logger.info("Starting document registry generation...")
+
+    if not DATABASE_URL:
+        logger.error("DATABASE_URL environment variable is not set. Exiting.")
+        return
+
+    conn = None
+    try:
+        connection_url = DATABASE_URL
+        if "?" in connection_url:
+            base_url = connection_url.split("?")[0]
+            connection_url = base_url
+
+        logger.info(f"Connecting to database: {connection_url}")
+        conn = await asyncpg.connect(
+            connection_url,
+            ssl="require",
+            statement_cache_size=0
+        )
+        logger.info("Connected to database.")
+
+        # Fetch all documents from public.project_docs table
+        # Order by title for consistent output
+        documents = await conn.fetch(
+            """
+            SELECT title FROM public.project_docs ORDER BY title;
+            """
+        )
+
+        # Get the list of documents that are explicitly NOT ingested or have issues
+        # This list should ideally be maintained in the persona or a separate config
+        # For now, hardcode based on current knowledge
+        not_ingested_docs = {
+            "0.5_Curation Workflow Cookbook_Developer-On‑Ramping-Guide.md": "Filename Issue",
+            "CONVENTIONS_AND_PATTERNS_GUIDE.md": "Excluded by User"
+        }
+        
+        # Create a set of titles already in the database for quick lookup
+        db_titles = set(doc['title'] for doc in documents)
+
+        # Build the Markdown table content
+        header = "| Document Title | Path | Status |\n| :------------- | :--- | :----- |\n"
+        in_db_rows = []
+        not_ingested_rows = []
+        
+        # Reconstruct the full path for documents in Docs/Docs_6_Architecture_and_Status/
+        # This is an assumption based on the majority of documents.
+        # A more robust solution might store paths in the DB or have a mapping.
+        base_doc_path = "Docs/Docs_6_Architecture_and_Status/"
+        vector_ops_path = "Docs/Docs_18_Vector_Operations/"
+        code_canon_path = "Docs/Docs_16_ScraperSky_Code_Canon/" # Archive path
+
+        for doc_record in documents:
+            title = doc_record['title']
+            status = "In Database"
+            
+            # Determine path based on title, this is a heuristic
+            if title == "0.6-AI_Synthesized_Architectural_Overview.md":
+                path = f"{code_canon_path}{title}"
+            elif title.startswith("v_"):
+                # New vector documentation with v_ prefix
+                path = f"{vector_ops_path}Documentation/{title}"
+            else:
+                path = f"{base_doc_path}{title}"
+            
+            in_db_rows.append(f"| `{title}` | `{path}` | {status} |")
+        
+        for title, status_note in not_ingested_docs.items():
+            # Skip if the document is already in the database
+            if title in db_titles:
+                continue
+                
+            # Determine path for not ingested docs
+            if title == "CONVENTIONS_AND_PATTERNS_GUIDE.md":
+                path = f"{base_doc_path}{title}"
+            elif title == "0.5_Curation Workflow Cookbook_Developer-On‑Ramping-Guide.md":
+                 path = f"{base_doc_path}{title}"
+            else:
+                path = "N/A" # Fallback if path is unknown
+            
+            not_ingested_rows.append(f"| `{title}` | `{path}` | {status_note} |")
+            
+        # Add any documents that were previously marked as "Too Large for Embedding" but are now in the database
+        if "3.0-ARCH-TRUTH-Layer_Classification_Analysis.md" in db_titles:
+            logger.info("Note: 3.0-ARCH-TRUTH-Layer_Classification_Analysis.md is now in the database.")
+
+
+
+        # Construct the full registry content
+        registry_content = f"""# ScraperSky Vector Database Document Registry
+
+**Date:** {datetime.datetime.now().strftime('%Y-%m-%d')}  
+**Version:** 1.1  
+**Status:** Active
+
+This document serves as a local "cheat sheet" to track the status of documents intended for or currently residing in the `public.project_docs` vector database table. **This file is automatically generated by the `generate_document_registry.py` script and should not be manually edited.**
+
+> **IMPORTANT**: Documents with the `v_` prefix are specifically marked for inclusion in the vector database. This prefix serves as a clear visual indicator of which documents are intended to be embedded in the vector database.
+
+## Document Status Categories:
+
+*   **In Database:** Documents successfully ingested into the `project_docs` table.
+*   **In Queue:** Documents identified for ingestion but not yet processed.
+*   **Not Yet Ingested:** Documents identified as authoritative but not yet in the database or queue.
+
+---
+
+## 1. Documents In Database (Current Set - {len(documents)} Documents)
+
+These documents are currently present in the `public.project_docs` table.
+
+{header}{"\\n".join(in_db_rows)}
+
+## 2. Documents In Queue
+
+| Document Title | Path | Status |
+| :------------- | :--- | :----- |
+
+## 3. Documents Not Yet Ingested (Identified as Authoritative)
+
+{header}{"\\n".join(not_ingested_rows)}
+"""
+
+        # Get the project root directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.abspath(os.path.join(script_dir, '..', '..', '..'))
+        
+        # Write to the registry file using absolute paths
+        registry_path = os.path.join(project_root, "Docs", "Docs_18_Vector_Operations", "Registry", "document_registry.md")
+        os.makedirs(os.path.dirname(registry_path), exist_ok=True)  # Ensure directory exists
+        with open(registry_path, 'w') as f:
+            f.write(registry_content)
+        logger.info(f"Document registry '{registry_path}' generated successfully.")
+        
+        # Also write to the old path for backward compatibility
+        old_registry_path = os.path.join(project_root, "Docs", "Docs_16_ScraperSky_Code_Canon", "0.5-vector_db_document_registry.md")
+        os.makedirs(os.path.dirname(old_registry_path), exist_ok=True)  # Ensure directory exists
+        with open(old_registry_path, 'w') as f:
+            f.write(registry_content + "\n\n> Note: This file is now maintained in `Docs/Docs_18_Vector_Operations/Registry/document_registry.md`")
+        logger.info(f"Document registry also written to legacy path '{old_registry_path}' for backward compatibility.")
+
+    except Exception as e:
+        logger.error(f"Error generating document registry: {e}")
+    finally:
+        if conn:
+            await conn.close()
+            logger.info("Database connection closed.")
+
+if __name__ == "__main__":
+    asyncio.run(generate_document_registry())

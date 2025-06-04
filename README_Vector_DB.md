@@ -1,19 +1,56 @@
 # ScraperSky Vector DB: AI-Driven Technical Debt Elimination
 
 ## Purpose
-The Vector DB serves as the knowledge foundation for our technical debt elimination strategy. It stores architectural standards, patterns, and documentation to support systematic code refactoring and standardization across all layers of the ScraperSky backend.
+This document serves as the primary entry point for developers and AI pairing partners to understand and interact with the ScraperSky Vector Database system. The vector database provides semantic search capabilities across architectural documentation, enabling pattern-based refactoring and architectural compliance verification.
+
+## Core Context & The Project's Journey
+
+ScraperSky is a FastAPI-based web scraping and analytics platform that has undergone a dramatic transformation from an "over-engineered nightmare" into a disciplined, 7-layered architectural system. This journey is defined by a militant effort to eliminate technical debt (e.g., inconsistent transactions, raw SQL, scattered logic) and enforce strict standards. The Vector DB is a direct response to the challenge of enabling AI partners to effectively contribute to this refactoring effort by providing a comprehensive, synthesized knowledge base, ensuring "zero-effort" access to architectural truth.
+
+## Project Context
+The ScraperSky backend uses a vector database implemented in Supabase PostgreSQL with the pgvector extension. This enables semantic search across architectural documents, allowing AI pairing partners to find relevant architectural patterns, conventions, and examples.
 
 ## Current Status
 - ✅ Database setup complete with Supabase
-- ✅ 12 core architectural documents loaded
+- ✅ 21 core architectural documents loaded
 - ✅ OpenAI integration functional
 - ✅ Search functionality verified
 - ✅ ScraperSky Librarian persona established
 
+## CRITICAL: Database Connectivity
+
+The vector database system uses two distinct connectivity methods:
+
+### 1. MCP Method (For Manual Operations)
+To perform manual queries and operations on the vector database, you **MUST** use the following specific parameters:
+
+- **Function Name:** `mcp4_execute_sql` (not just "execute_sql")
+- **Project ID:** `ddfldwzhdhhzhxywqnyz` (always use this exact ID)
+
+Example query for semantic search:
+```javascript
+mcp4_execute_sql({
+  "project_id": "ddfldwzhdhhzhxywqnyz",
+  "query": "SELECT * FROM search_docs('your search query', 0.5);"
+})
+```
+
+See `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md` for complete details.
+
+### 2. Asyncpg Method (For Vector Database Scripts)
+Vector database scripts like `insert_architectural_docs.py` use direct asyncpg connections with specific technical requirements. Do not modify these connection patterns without consulting the connectivity guide.
+
+See `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md` for complete implementation details.
+
 ## Key Files
-- `Docs_15_Master_Plan/_0.0.3-vector_db_living_document.md` - Primary reference
-- `Docs_15_Master_Plan/_0.0.4-vector_db_insert_architectural_docs.py` - Document insertion
-- `Docs_15_Master_Plan/_0.0.5-vector_db_simple_test.py` - Testing functionality
+- `Docs/Docs_18_Vector_Operations/Documentation/v_living_document.md` - Primary reference
+- `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md` - MCP connectivity for manual operations
+- `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md` - Asyncpg connectivity for vector scripts
+- `Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md` - Document loading process guide
+- `Docs/Docs_18_Vector_Operations/Scripts/insert_architectural_docs.py` - Document insertion
+- `Docs/Docs_18_Vector_Operations/Scripts/simple_test.py` - Testing functionality
+- `Docs/Docs_18_Vector_Operations/Registry/document_registry.md` - Local document tracking registry
+- `Docs/Docs_18_Vector_Operations/Documentation/v_complete_reference.md` - Complete reference guide
 
 ## ScraperSky Librarian Persona
 
@@ -99,7 +136,7 @@ The Librarian persona automatically tracks all documents in the Vector DB. To se
 What's in the Vector DB now?
 ```
 
-The current knowledge base includes 12 core architectural documents covering:
+The current knowledge base includes 13 core architectural documents covering:
 - Layer 4 Services architecture
 - Authentication patterns
 - Transaction management

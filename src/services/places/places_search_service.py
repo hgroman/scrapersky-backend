@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import aiohttp
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Removed custom error service import in favor of FastAPI's built-in error handling
 
@@ -309,7 +310,7 @@ class PlacesSearchService:
             return None
 
 
-async def process_places_search_background(
+async def process_places_search_background(session: AsyncSession,
     job_id: str,
     business_type: str,
     location: str,
@@ -332,9 +333,10 @@ async def process_places_search_background(
 
     import uuid
 
+    from sqlalchemy import select
+
     from ...models import Place, SearchJob
     from ...services.job_service import job_service
-    from ...session.async_session import get_session
 
     # Create job_uuid from job_id
     try:
