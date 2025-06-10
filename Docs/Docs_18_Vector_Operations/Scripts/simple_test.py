@@ -110,8 +110,24 @@ async def test_vector_search():
     )
     
     try:
-        # Test pattern to search for
-        test_pattern = "authentication and transaction management patterns"
+        # First, try to directly query for the document by title
+        logger.info("Checking if v_34-DART_MCP_GUIDE.md exists in project_docs table...")
+        direct_check = await conn.fetch(
+            """
+            SELECT id, title, content FROM public.project_docs 
+            WHERE title = 'v_34-DART_MCP_GUIDE.md'
+            """
+        )
+        
+        if direct_check:
+            logger.info("✅ FOUND: v_34-DART_MCP_GUIDE.md exists in the vector database!")
+            logger.info(f"Document ID: {direct_check[0]['id']}")
+            logger.info(f"Content preview: {direct_check[0]['content'][:150]}...")
+        else:
+            logger.info("❌ NOT FOUND: v_34-DART_MCP_GUIDE.md does not exist in the vector database.")
+        
+        # Test pattern to search for DART MCP related content
+        test_pattern = "DART MCP guide integration model context protocol"
         logger.info(f"Testing vector search with pattern: '{test_pattern}'")
         
         # Search for documents
@@ -129,11 +145,15 @@ async def test_vector_search():
             logger.warning("No matching documents found")
             
         # Test the search_docs database function if it exists
-        logger.info("Testing search_docs database function...")
+        logger.info("Testing search_docs database function specifically for DART MCP guide...")
         try:
+            # First search pattern focused on DART MCP
+            dart_pattern = "DART MCP integration guide"
+            logger.info(f"Searching with pattern: '{dart_pattern}'")
+            
             db_results = await conn.fetch(
                 "SELECT * FROM search_docs($1, $2) LIMIT 5;",
-                test_pattern,
+                dart_pattern,
                 0.5
             )
             

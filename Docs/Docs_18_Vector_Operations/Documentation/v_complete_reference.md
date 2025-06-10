@@ -1,7 +1,7 @@
 # ScraperSky Vector Database: Complete Reference Guide
 
-**Date:** 2025-06-03  
-**Version:** 1.1  
+**Date:** 2025-06-09  
+**Version:** 1.2  
 **Status:** Active  
 
 ## Purpose
@@ -12,61 +12,51 @@ This document serves as the comprehensive reference guide for the ScraperSky Vec
 
 The ScraperSky Vector Database is a semantic search system built on Supabase PostgreSQL with the pgvector extension. It stores embeddings of architectural documents, enabling semantic search across the codebase's architectural standards, patterns, and guidelines.
 
-## Key Documents
+## Key Documents & Systems Reference
 
-### Core Documentation
+This section lists the primary authoritative documents and systems. For a curated list of essential reading, always refer to `Docs/Docs_18_Vector_Operations/v_key_documents.md`.
 
-1. **Entry Point:** [`README_Vector_DB.md`](../../../README_Vector_DB.md)
-   - High-level overview of the vector database
-   - Purpose and context
-   - Links to detailed documentation
+### I. Core Architectural & System Guides
 
-2. **Technical Reference:** [`v_living_document.md`](./v_living_document.md)
-   - Comprehensive technical details
-   - Database schema and setup
-   - Embedding generation
+1.  **Vector Ingestion Pipeline Developer Guide:** [`v_vector_ingestion_pipeline_dev_guide.md`](../../Docs_19_File-2-Vector-Registry-System/v_vector_ingestion_pipeline_dev_guide.md)
+    *   **Description:** The primary entry point for understanding the entire document ingestion, vectorization, and registry pipeline. Details architecture, components, end-to-end workflow, and core principles.
+2.  **Vector Operations Overview (README):** [`v_Docs_18_Vector_Operations_README.md`](../v_Docs_18_Vector_Operations_README.md)
+    *   **Description:** Provides an overview of the `Docs_18_Vector_Operations` directory, its purpose, current goals, roadmap, naming conventions, and technical debt strategy.
+3.  **Document Registry Source of Truth:** The `document_registry` table in the Supabase PostgreSQL database.
+    *   **Description:** This table is the single source of truth for all documents intended for vectorization, including their metadata, file paths, and processing status (e.g., `queue`, `active`, `archived`, `orphan`). It is managed by the Registry Management script suite.
 
-3. **MCP Server Integration:** [`v_mcp_guide.md`](./v_mcp_guide.md)
-   - **CRITICAL:** Contains the correct function name and project ID
-   - Example queries for all common operations
-   - Troubleshooting guidance
+### II. AI Personas & Operational Directives
 
-4. **Knowledge Librarian Persona:** [`Path1_Knowledge_Librarian_Persona.md`](../../Docs_16_ScraperSky_Code_Canon/Path1_Knowledge_Librarian_Persona.md)
-   - Instructions for the Knowledge Librarian AI persona
-   - Responsibilities and operational parameters
-   - References to the authoritative documentation sources
+4.  **Registry Librarian Persona & System Overview:** [`0-registry_librarian_persona.md`](../../Docs_19_File-2-Vector-Registry-System/0-registry_librarian_persona.md)
+    *   **Description:** Details the AI persona, responsibilities, tools, and operational workflows for the Document Registry Management system, including scripts `1-registry-directory-manager.py` through `7-registry-orphan-purger.py`.
+5.  **Vector DB Knowledge Librarian Persona:** [`v_knowledge_librarian_persona_v2.md`](../v_knowledge_librarian_persona_v2.md)
+    *   **Description:** Defines the operational parameters, responsibilities, and mandatory reading for the AI persona responsible for direct Vector DB interactions, including using `insert_architectural_docs.py`.
 
-5. **AI Guides Reference:** [`35-LAYER5_VECTOR_DATABASE_REFERENCE.md`](../../Docs_1_AI_GUIDES/35-LAYER5_VECTOR_DATABASE_REFERENCE.md)
-   - Pointer to all authoritative documentation sources
-   - Clear identification of which documents are authoritative
+### III. Connectivity & Procedural Guides
 
-### Registry and Maintenance
+6.  **Asyncpg Connectivity for Vector Ops:** [`v_db_connectivity_async_4_vector_ops.md`](./v_db_connectivity_async_4_vector_ops.md)
+    *   **Description:** Comprehensive guide for programmatic database connections using `asyncpg`, primarily for scripts performing vector operations.
+7.  **MCP Connectivity for Manual Ops:** [`v_db_connectivity_mcp_4_manual_ops.md`](./v_db_connectivity_mcp_4_manual_ops.md)
+    *   **Description:** Focused guide for using the MCP method (`mcp4_execute_sql`) for manual database operations and AI-driven queries.
 
-6. **Document Registry:** [`document_registry.md`](../Registry/document_registry.md)
-   - Current list of documents in the vector database
-   - Documents not yet ingested with reasons
+### IV. Maintenance & Troubleshooting
 
-7. **Registry Generator:** [`generate_document_registry.py`](../Scripts/generate_document_registry.py)
-   - Script to update the document registry
-   - Connects to the database and generates markdown table
+8.  **Maintenance Procedures:** [`v_maintenance_procedures.md`](./v_maintenance_procedures.md)
+    *   **Description:** Outlines key maintenance tasks for the Vector DB, including API key rotation, performance checks, and re-embedding procedures.
+9.  **Troubleshooting Guide:** [`v_troubleshooting_guide.md`](./v_troubleshooting_guide.md)
+    *   **Description:** Provides quick solutions and a cheatsheet for common issues encountered with the Vector Database.
 
-8. **Documentation Loader:** [`load_documentation.py`](../Scripts/load_documentation.py)
-   - Script to load all vector database documentation into the vector database
-   - Ensures documentation is searchable within the system itself
+### V. Core Scripts (Primary Operations)
 
-### Scripts and Tools
+10. **Document Insertion Script:** [`insert_architectural_docs.py`](../Scripts/insert_architectural_docs.py)
+    *   **Description:** Primary script for fetching documents marked 'queue' from `document_registry`, generating embeddings using OpenAI, and inserting/updating them into the `project_docs` table in the Vector DB. Uses `asyncpg`.
+11. **Vector DB Test Script:** [`simple_test.py`](../Scripts/simple_test.py)
+    *   **Description:** Script for testing vector database search functionality. Performs semantic search and verifies results. Uses `asyncpg`.
 
-9. **Document Insertion:** [`insert_architectural_docs.py`](../Scripts/insert_architectural_docs.py)
-   - Script to insert architectural documents into the vector database
-   - Generates embeddings and inserts into the database
+### VI. Diagnostics & Historical Information
 
-10. **Testing Script:** [`simple_test.py`](../Scripts/simple_test.py)
-    - Script to test vector database functionality
-    - Performs semantic search and verifies results
-
-11. **NaN Issue Resolution:** [`v_nan_issue_resolution.md`](./v_nan_issue_resolution.md)
-    - Resolution for the "Similarity: nan" issue
-    - Vector normalization fix
+12. **NaN Issue Resolution:** [`v_nan_issue_resolution.md`](./v_nan_issue_resolution.md)
+    *   **Description:** Historical document detailing the resolution of the "Similarity: nan" issue, which involved vector normalization.
 
 ## CRITICAL: MCP Server Integration
 
@@ -85,32 +75,37 @@ mcp4_execute_sql({
 
 ## Document Registry Management
 
-The document registry is maintained using the `generate_document_registry.py` script, which:
-- Connects directly to the vector database using asyncpg
-- Generates a markdown table of all documents in the database
-- Identifies documents that are not yet ingested
-- Prevents documents from being listed in both categories
-- Outputs the registry to `document_registry.md`
+The document registry is maintained within the `document_registry` database table. This table is the single source of truth for documents intended for vectorization, their metadata, and current status.
 
-To update the document registry:
+Management of the registry is performed using a suite of Python scripts located in `Docs/Docs_19_File-2-Vector-Registry-System/`:
+- **`1-registry-directory-manager.py`**: Approves or unapproves directories for scanning, lists candidate files, and reports status on approved directories (total vs. `v_` prefixed files).
+- **`2-registry-document-scanner.py`**: Marks individual files with a `v_` prefix (and adds minimal registry entry), and scans approved directories for `v_*.md` files to fully populate or update their metadata in the `document_registry` table.
+- **`3-registry-update-manager.py`**: Manages the `needs_update` flag in the registry to signal that a document requires re-vectorization.
+- **`4-registry-archive-manager.py`**: Identifies and manages documents listed in the registry that are no longer found on the filesystem, allowing them to be marked as 'archived'.
 
+**Typical Workflow Snippets:**
+
+To approve a directory for scanning:
 ```bash
-python Docs/Docs_18_Vector_Operations/Scripts/generate_document_registry.py
+python Docs/Docs_19_File-2-Vector-Registry-System/1-registry-directory-manager.py --approve /path/to/your/docs_subdir
 ```
 
-## Loading Vector Database Documentation
-
-To ensure that all documentation about the vector database is searchable within the vector database itself, use the `load_documentation.py` script:
-
+To scan approved directories and update the `document_registry` table:
 ```bash
-python Docs/Docs_18_Vector_Operations/Scripts/load_documentation.py
+python Docs/Docs_19_File-2-Vector-Registry-System/2-registry-document-scanner.py --scan
 ```
 
-This script will:
-1. Load all key vector database documents into the database
-2. Update existing documents if they've changed
-3. Generate embeddings for semantic search
-4. Update the document registry
+To see which documents are marked for update:
+```bash
+python Docs/Docs_19_File-2-Vector-Registry-System/3-registry-update-manager.py --list-updates
+```
+
+To list files in the registry that are missing from the filesystem:
+```bash
+python Docs/Docs_19_File-2-Vector-Registry-System/4-registry-archive-manager.py --list-missing
+```
+
+Consult `Docs/Docs_19_File-2-Vector-Registry-System/0-registry_librarian_persona.md` for detailed workflows and command options for these scripts.
 
 ## Test Questions
 
@@ -119,14 +114,14 @@ The following questions can be used to test understanding of the vector database
 1. **MCP Query Test**: "How do I query the vector database to find documents related to transaction management?"
    - Expected: Use `mcp4_execute_sql` with project ID `ddfldwzhdhhzhxywqnyz` and a search_docs query
 
-2. **Registry Check**: "How can I check which documents are currently in the vector database and which still need to be ingested?"
-   - Expected: Reference the document registry or run the registry generator script
+2. **Registry Check**: "How can I determine which documents are intended for vectorization, their current processing status (e.g., pending, completed, needs update, archived), and compare this with what's actually present in the `project_docs` vector database?"
+   - Expected: Query the `document_registry` table (checking fields like `title`, `file_path`, `embedding_status` (e.g., 'queue', 'active', 'archived', 'orphan'), `needs_update`). Compare its contents with queries against the `project_docs` table. Utilize scripts like `1-registry-directory-manager.py --status` for directory-level insights and review outputs from `2-registry-document-scanner.py --scan` and `4-registry-archive-manager.py --list-missing` or `--list-archived`.
 
-3. **Registry Update**: "What script should I run to update the document registry after adding new documents to the vector database?"
-   - Expected: Run `generate_document_registry.py` in the Docs_18_Vector_Operations/Scripts directory
+3. **Registry Update**: "After new `v_` prefixed documents are added to approved directories on the filesystem, or existing ones are modified, what is the primary script to run to ensure these changes are reflected in the `document_registry` table with full metadata?"
+   - Expected: Run `python Docs/Docs_19_File-2-Vector-Registry-System/2-registry-document-scanner.py --scan`. This processes `v_` files in active, approved directories and updates their entries in the `document_registry` table. Subsequently, `insert_architectural_docs.py` processes items from the registry queue into the vector DB.
 
 4. **Project ID Verification**: "What is the correct project ID to use when querying the vector database through the MCP server?"
    - Expected: `ddfldwzhdhhzhxywqnyz`
 
-5. **Document Count**: "How many documents are currently in the vector database and how can I verify this count?"
-   - Expected: 21 documents, verify by checking the document registry or querying the database
+5. **Document Count & Status**: "How can I get a count of documents in the `document_registry` table, and how can I ascertain the number of documents actually present in the `project_docs` (vector database) table?"
+   - Expected: To count entries in the registry: `SELECT COUNT(*) FROM document_registry;`. To count entries in the vector database: `SELECT COUNT(*) FROM project_docs;`. The `document_registry` table's `embedding_status` field provides further detail on the vectorization status of registered documents.

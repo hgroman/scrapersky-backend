@@ -1,12 +1,14 @@
 # ScraperSky Vector DB MCP Server Integration Guide
 
-**Date:** 2025-06-02  
-**Version:** 1.1  
+**Date:** 2025-06-09  
+**Version:** 1.2  
 **Status:** Active  
 
 ## Purpose
 
 This document provides comprehensive instructions for AI pairing partners on how to access and query the ScraperSky Vector Database using the Supabase MCP server. It consolidates all essential information about MCP server integration into a single authoritative source.
+
+> **Technical Context:** While the main ScraperSky backend uses SQLAlchemy with FastAPI, vector database operations intentionally use direct SQL via MCP (for manual queries) or asyncpg (for scripts with vector operations) instead of ORM models. This approach provides better compatibility with pgvector and simplifies internal-facing operations.
 
 ## MCP Server Access Requirements
 
@@ -112,26 +114,59 @@ If you receive connection errors when using the MCP server:
 2. Verify you're using the correct project ID: `ddfldwzhdhhzhxywqnyz`
 3. Check that your SQL query syntax is valid
 
+### Table Schema and Column Names
+
+**IMPORTANT:** When querying the vector database tables, be aware of the exact column names to avoid errors.
+
+#### project_docs Table Columns
+
+```sql
+SELECT column_name FROM information_schema.columns WHERE table_name = 'project_docs' AND table_schema = 'public';
+```
+
+The `project_docs` table has these columns:
+- `id` (not doc_id) - The primary key identifier
+- `title` - The document title
+- `content` - The document content
+- `embedding` - The vector embedding
+- `created_at` (not last_updated_at) - Timestamp when the document was created
+
+#### document_registry Table Columns
+
+The `document_registry` table has these columns:
+- `id` - The primary key identifier
+- `title` - The document title (typically v_filename.md)
+- `file_path` - The absolute path to the document
+- `should_be_vectorized` - Boolean flag indicating if the document should be vectorized
+- `embedding_status` - Status of the embedding process (e.g., 'completed', 'pending', error codes)
+- `error_message` - Any error message from the embedding process
+- `last_checked` - When the document was last checked
+
+Always verify column names if you encounter "column does not exist" errors.
+
 ## Current Database Status
 
-As of 2025-06-03, the vector database contains 21 documents, including:
-- All core architectural truth documents
-- All layer-specific conventions and patterns guides
-- Key overview documents and synthesized architectural documents
+The number of documents in the vector database is dynamic. You can get the current count using the MCP query pattern provided in the "Advanced Query Patterns" section (Get Document Count).
 
 ### Document Registry Management
 
-The document registry is maintained using the `0.7-generate_document_registry.py` script, which:
-- Connects directly to the vector database using asyncpg
-- Generates a markdown table of all documents in the database
-- Identifies documents that are not yet ingested
-- Prevents documents from being listed in both categories
-- Outputs the registry to `0.5-vector_db_document_registry.md`
+The `document_registry` table in the ScraperSky Vector Database is the source of truth for document metadata, tracking which files should be vectorized, their ingestion status, and file paths. It is managed by a suite of Python scripts:
 
-To update the document registry:
+- **`2-registry-document-scanner.py`**:
+  - Scans predefined approved directories for documentation files.
+  - Adds new documents found to the `document_registry` table.
+  - Updates existing entries if file paths or `last_modified` times change.
+  - Sets `should_be_vectorized = true` for files following the `v_*.md` naming convention within approved vectorization paths.
+  - Records the `last_checked` timestamp.
 
-```bash
-python Docs/Docs_18_Vector_Operations/Scripts/generate_document_registry.py
-```
+- **`3-registry-update-manager.py`** (Conceptual - confirm exact script name and functionality if different):
+  - Monitors the main `project_docs` table (where successfully vectorized documents reside).
+  - Updates the `is_vectorized` (boolean) and `embedding_status` (e.g., 'completed', 'pending', 'error') fields in the `document_registry` table based on the actual ingestion status.
+  - May log errors from the embedding/ingestion process to the `error_message` field.
 
-The complete list of current documents can be found in `Docs/Docs_18_Vector_Operations/Registry/document_registry.md`.
+- **`4-registry-archive-manager.py`**:
+  - Handles documents that have been archived.
+  - Updates the `document_registry` by setting `should_be_vectorized = false`, `is_vectorized = false`, and `embedding_status = 'archived'` for specified archived documents.
+  - Ensures archived documents are no longer candidates for ingestion.
+
+These scripts work together to maintain an accurate and up-to-date registry, forming the backbone of the document ingestion and management pipeline. The `document_registry` table itself, queried via MCP or asyncpg, provides the most current list and status of all tracked documents.

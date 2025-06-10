@@ -1,86 +1,45 @@
-# LAYER5: Vector Database Reference Guide
+# LAYER5: Vector Database & Registry - Authoritative Pointers
 
-**Status:** Active  
-**Version:** 1.0  
-**Last Updated:** 2025-06-03  
+**Status:** Active (Pointer Document)
+**Version:** 2.0
+**Last Updated:** 2025-06-09
 
 ## Purpose
 
-This document serves as a pointer to the authoritative sources of information about the ScraperSky Vector Database. It ensures that all AI pairing partners and personas have a consistent understanding of how to interact with the vector database.
+This document serves as a high-level pointer to the authoritative sources of information for the ScraperSky Vector Database and Document Registry systems. It ensures all team members and AI partners use a consistent and correct set of documentation and tools.
 
-## Authoritative Documentation Sources
+**This document itself is not the source of truth; it directs you to it.**
 
-The following are the **ONLY** authoritative sources for vector database information:
+---
 
-1. **Entry Point:** `README_Vector_DB.md` (project root)
-   - High-level overview of the vector database
-   - Purpose and context
-   - Links to detailed documentation
+## Master Index & Primary Entry Point
 
-2. **Technical Reference:** `Docs/Docs_18_Vector_Operations/Documentation/v_living_document.md`
-   - Comprehensive technical details
-   - Database schema and setup
-   - Embedding generation
+For a comprehensive, curated, and up-to-date list of all key documents, scripts, and operational guides, refer to the **master index**:
 
-3. **MCP Connectivity:** `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md`
-   - **CRITICAL:** Contains the correct function name and project ID
-   - Example queries for all common operations
-   - Troubleshooting guidance for manual operations
+*   **Master Index:** [`Docs/Docs_18_Vector_Operations/v_key_documents.md`](./../../Docs_18_Vector_Operations/v_key_documents.md)
 
-4. **Connectivity Patterns:** `Docs/Docs_18_Vector_Operations/Documentation/v_connectivity_patterns.md`
-   - Simple copy-paste reference for both connection patterns
-   - Clear decision tree for when to use each method
-   - Includes the required header tags and connection parameters
+For a deep technical understanding of the end-to-end process, the primary developer guide is:
 
-5. **MCP Connectivity:** `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md`
-   - **CRITICAL:** Contains the correct function name and project ID
-   - Example queries for all common operations
-   - Troubleshooting guidance for manual operations
+*   **Primary Dev Guide:** [`Docs/Docs_19_File-2-Vector-Registry-System/v_vector_ingestion_pipeline_dev_guide.md`](./../../Docs_19_File-2-Vector-Registry-System/v_vector_ingestion_pipeline_dev_guide.md)
 
-6. **Asyncpg Connectivity:** `Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md`
-   - Documents both database connectivity methods (MCP and asyncpg)
-   - Explains when to use each method and technical requirements
-   - Implementation details for vector operations scripts
 
-7. **Document Loading Guide:** `Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md`
-   - Step-by-step process for adding documents to the vector database
-   - Registry update procedures
-   - Verification steps
+## Core Process Overview
 
-6. **Document Registry:** 
-   - `Docs/Docs_18_Vector_Operations/Registry/document_registry.md` (current registry)
-   - `Docs/Docs_18_Vector_Operations/Scripts/generate_document_registry.py` (script to update registry)
-   - Provides a complete list of documents in the vector database
-   - Identifies documents that are not yet ingested
+The system follows a strict, two-part process to ensure data integrity:
 
-7. **Knowledge Librarian Persona:** `Docs/Docs_18_Vector_Operations/Documentation/v_knowledge_librarian_persona.md`
-   - Instructions for the Knowledge Librarian AI persona
-   - Responsibilities and operational parameters
-   - References to the authoritative documentation sources
+1.  **Document Registry (`document_registry` table):**
+    *   A file is first registered in the `document_registry` table using the script suite in `Docs/Docs_19_File-2-Vector-Registry-System/`.
+    *   This registry acts as the single source of truth for document status (e.g., `active`, `queued_for_embedding`, `archived`).
+    *   Only files prefixed with `v_` are scanned for inclusion.
 
-## Critical Information
+2.  **Vector Database (`project_docs` table):**
+    *   The `insert_architectural_docs.py` script processes documents marked as `queued_for_embedding` in the registry.
+    *   It generates vector embeddings for the content and inserts them into the `project_docs` table for semantic search.
+    *   Cleanup scripts remove vectors for documents marked `archived`.
 
-When interacting with the vector database, always remember:
+---
 
-1. **Two Connectivity Methods:**
-   - **MCP Method:** Use for manual operations and ad-hoc queries (see `v_db_connectivity_mcp_4_manual_ops.md`)
-   - **Asyncpg Method:** Used in vector database scripts with specific technical requirements (see `v_db_connectivity_async_4_vector_ops.md`)
-   - Each method has its own specific implementation requirements
+## Key Constants
 
-2. **MCP Function Name:** Always use `mcp4_execute_sql` (not just "execute_sql")
-3. **Project ID:** Always use `ddfldwzhdhhzhxywqnyz` as the project_id parameter
-4. **Search Function:** Use `search_docs('query text', threshold)` for semantic search
-5. **Embedding Format:** Ensure embeddings are properly normalized to prevent "Similarity: nan" issues
-
-## Do Not Use
-
-The following documents are **NOT** authoritative and should not be referenced:
-
-- `Docs/Docs_Archive/vector_db_mcp_guide.md` (superseded by consolidated guide)
-- `Docs/Docs_Archive/mcp_server_section.md` (superseded by consolidated guide)
-- `Docs/Docs_16_ScraperSky_Code_Canon/` (now an archive directory, superseded by `Docs/Docs_18_Vector_Operations/`)
-- Any other documents discussing vector database implementation not listed in the authoritative sources
-
-## For More Information
-
-For detailed information about vector database implementation, refer to the authoritative documentation sources listed above. Do not create new documentation about the vector database without updating this reference guide.
+*   **Supabase Project ID:** `ddfldwzhdhhzhxywqnyz`
+*   **MCP Function for SQL:** `mcp4_execute_sql`

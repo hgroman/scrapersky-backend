@@ -92,7 +92,6 @@ await conn.execute('CREATE EXTENSION IF NOT EXISTS vector;')
   - Specialized connection parameters
 - Existing scripts like:
   - `insert_architectural_docs.py`
-  - `load_documentation.py`
   - `simple_test.py`
 
 ## Technical Requirements

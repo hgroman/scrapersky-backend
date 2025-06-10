@@ -15,7 +15,7 @@
 
 ## 1. Purpose
 
-This document outlines the standard process for creating, managing, executing, and completing Work Orders (WOs) within the Voice Automated Email Template System project. Adherence to this process ensures clarity, traceability, consistent documentation, and effective collaboration between human and AI team members acting in various personas.
+This document outlines the standard process for creating, managing, executing, and completing Work Orders (WOs) within the ScraperSky project. Adherence to this process ensures clarity, traceability, consistent documentation, and effective collaboration between human and AI team members acting in various personas.
 
 ## 2. Overview
 
@@ -66,7 +66,7 @@ The completion of a Work Order is not just the creation of its primary deliverab
 2.  **Journal Entry Creation (DART Document Primary):**
     *   **Responsibility:** Executing Persona.
     *   **Action (Primary - DART Document):** Create a new **DART Document Journal Entry** using the `create_doc` MCP tool. This document serves as the primary, authoritative record of work progress and completion.
-        *   **Title:** Human-friendly summary (e.g., "Email Scanner Authentication Fix").
+        *   **Title:** Human-friendly summary (e.g., "User Profile Update Logic").
         *   **Content:** Detailed work summary, debugging steps, learnings, decisions, and a list of all files created, modified, or deleted.
         *   **Linking:** The DART Document must be linked directly to its parent DART Task, and the Task description should be updated with a markdown link to the DART Document (e.g., `[Document Title](document_htmlUrl)`).
         *   **Note:** For minor fixes or simple updates (like a tooling resolution that doesn't justify a full document), the DART Task description itself can serve as the journal entry, or a concise DART Document can be created.

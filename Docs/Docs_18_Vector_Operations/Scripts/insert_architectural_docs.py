@@ -10,6 +10,7 @@ import asyncio
 import logging
 import os
 from typing import List
+from datetime import datetime, timezone # Added for timestamping
 
 import asyncpg
 from dotenv import load_dotenv
@@ -35,54 +36,56 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL and "postgresql+asyncpg://" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
-# Base directory for all document paths
-BASE_DIR = "/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend"
+async def get_vectorization_candidates(conn: asyncpg.Connection) -> List[asyncpg.Record]:
+    """Fetch documents from document_registry that need vectorization."""
+    logger.info("Fetching candidate documents from document_registry...")
+    try:
+        records = await conn.fetch(
+            """
+            SELECT id, title, file_path
+            FROM public.document_registry
+            WHERE embedding_status = 'queue' OR needs_update = TRUE
+            ORDER BY last_seen_at ASC;
+            """
+        )
+        logger.info(f"Found {len(records)} candidate documents to process.")
+        return records
+    except Exception as e:
+        logger.error(f"Error fetching vectorization candidates: {e}")
+        return []
 
-# List of documents to embed in the vector database
-# This list includes both the 21 foundational architectural documents
-# and the 7 new documents from the Docs_18_Vector_Operations directory
-# All documents are prepended with 'v_' to signify their vectorized status.
-ARCHITECTURAL_DOCUMENTS = [
-    # Original 21 foundational architectural documents
-    {"name": "v_00-30000-FT-PROJECT-OVERVIEW.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_00-30000-FT-PROJECT-OVERVIEW.md"},
-    {"name": "v_0.1_ScraperSky_Architecture_Flow_and_Components-Enhanced.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_0.1_ScraperSky_Architecture_Flow_and_Components-Enhanced.md"},
-    {"name": "v_0.2_ScraperSky_Architecture_and_Implementation_Status.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_0.2_ScraperSky_Architecture_and_Implementation_Status.md"},
-    {"name": "v_0.4_Curation Workflow Operating Manual.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_0.4_Curation Workflow Operating Manual.md"},
-    {"name": "v_0.6-AI_Synthesized_Architectural_Overview.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_0.6-AI_Synthesized_Architectural_Overview.md"},
-    {"name": "v_1.0-ARCH-TRUTH-Definitive_Reference.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md"},
-    {"name": "v_2.0-ARCH-TRUTH-Implementation_Strategy.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_2.0-ARCH-TRUTH-Implementation_Strategy.md"},
-    {"name": "v_3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md"},
-    {"name": "v_4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Base_Identifiers.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Base_Identifiers.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer5_Configuration.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer5_Configuration.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md"},
-    {"name": "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer7_Testing.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer7_Testing.md"},
-    {"name": "v_Q&A_Key_Insights.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_Q&A_Key_Insights.md"},
-    {"name": "v_ScraperSky_Architectural_Anti-patterns_and_Standards.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_ScraperSky_Architectural_Anti-patterns_and_Standards.md"},
-    {"name": "v_Synthesized Project Evolution by Architectural Layer.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_Synthesized Project Evolution by Architectural Layer.md"},
-    {"name": "v_WO5.0-ARCH-TRUTH-Code_Implementation_Work_Order.md", "path": f"{BASE_DIR}/Docs/Docs_6_Architecture_and_Status/v_WO5.0-ARCH-TRUTH-Code_Implementation_Work_Order.md"},
-    
-    # New documents from Docs_18_Vector_Operations directory
-    {"name": "v_complete_reference.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_complete_reference.md"},
-    {"name": "v_key_documents.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_key_documents.md"},
-    {"name": "v_knowledge_librarian_persona_v2.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_knowledge_librarian_persona_v2.md"},
-    {"name": "v_living_document.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_living_document.md"},
-    {"name": "v_nan_issue_resolution.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_nan_issue_resolution.md"},
-    {"name": "v_supabase_setup.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Setup/v_supabase_setup.md"},
-    
-    # New connectivity and documentation files
-    {"name": "v_Add_docs_to_register_and_vector_db.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md"},
-    {"name": "v_db_connectivity_mcp_4_manual_ops.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_mcp_4_manual_ops.md"},
-    {"name": "v_db_connectivity_async_4_vector_ops.md", "path": f"{BASE_DIR}/Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md"},
-    
-    # Updated reference documents
-    {"name": "README_Vector_DB.md", "path": f"{BASE_DIR}/README_Vector_DB.md"},
-    {"name": "35-LAYER5_VECTOR_DATABASE_REFERENCE.md", "path": f"{BASE_DIR}/Docs/Docs_1_AI_GUIDES/35-LAYER5_VECTOR_DATABASE_REFERENCE.md"}
-]
+async def update_document_registry_status(conn: asyncpg.Connection, registry_id: int, status: str, error_message: str = None) -> None:
+    """Update the status of a document in the document_registry table."""
+    logger.info(f"Updating document_registry ID {registry_id} with status: {status}")
+    try:
+        if status == "completed":
+            # Get current UTC time for last_embedded_at
+            current_time = datetime.now(timezone.utc)
+            await conn.execute(
+                """
+                UPDATE public.document_registry
+                SET embedding_status = 'active',  -- Changed from 'completed' to 'active'
+                    error_message = NULL,
+                    needs_update = FALSE,
+                    last_embedded_at = $2
+                WHERE id = $1;
+                """,
+                registry_id, current_time
+            )
+            logger.info(f"Successfully updated document_registry ID {registry_id} to 'active' at {current_time}.")
+        else: # Handle error statuses
+            await conn.execute(
+                """
+                UPDATE public.document_registry
+                SET embedding_status = $1,
+                    error_message = $2
+                WHERE id = $3;
+                """,
+                status, error_message, registry_id
+            )
+            logger.info(f"Updated document_registry ID {registry_id} with status '{status}'.")
+    except Exception as e:
+        logger.error(f"Error updating document_registry for ID {registry_id}: {e}")
 
 async def generate_embedding(text: str) -> List[float]:
     """Generate an embedding for the given text using OpenAI's API."""
@@ -101,41 +104,39 @@ async def generate_embedding(text: str) -> List[float]:
         return [0.0] * 1536 # Return placeholder on error
 
 
-async def insert_document(conn: asyncpg.Connection, title: str, content: str, embedding: List[float]) -> None:
-    """Insert or update a document with its embedding into the public.project_docs table."""
+async def insert_document(conn: asyncpg.Connection, registry_id: int, title: str, content: str, embedding: List[float]) -> None:
+    """Insert or update a document with its embedding into the public.project_docs table using registry_id as the key."""
     embedding_str = f"[{','.join(map(str, embedding))}]"
     try:
-        # Check if document already exists
+        # Check if document already exists by ID
         existing = await conn.fetchrow(
-            "SELECT id FROM public.project_docs WHERE title = $1",
-            title
+            "SELECT id FROM public.project_docs WHERE id = $1",
+            registry_id
         )
         
         if existing:
-            # Update existing document
+            # Update existing document by ID, also update title in case it changed
             await conn.execute(
                 """
                 UPDATE public.project_docs 
-                SET content = $1, embedding = $2::vector
-                WHERE title = $3
+                SET title = $1, content = $2, embedding = $3::vector
+                WHERE id = $4
                 """,
-                content, embedding_str, title
+                title, content, embedding_str, registry_id
             )
-            logger.info(f"Document '{title}' updated successfully.")
+            logger.info(f"Document ID {registry_id} ('{title}') updated successfully in project_docs.")
         else:
-            # Insert new document
+            # Insert new document with ID
             await conn.execute(
                 """
-                INSERT INTO public.project_docs (title, content, embedding)
-                VALUES ($1, $2, $3::vector);
+                INSERT INTO public.project_docs (id, title, content, embedding)
+                VALUES ($1, $2, $3, $4::vector);
                 """,
-                title,
-                content,
-                embedding_str
+                registry_id, title, content, embedding_str
             )
-            logger.info(f"Document '{title}' inserted successfully.")
+            logger.info(f"Document ID {registry_id} ('{title}') inserted successfully into project_docs.")
     except Exception as e:
-        logger.error(f"Error inserting/updating document '{title}': {e}")
+        logger.error(f"Error inserting/updating document ID {registry_id} ('{title}') in project_docs: {e}")
 
 
 async def test_vector_search(conn: asyncpg.Connection) -> None:
@@ -199,24 +200,72 @@ async def main():
             statement_cache_size=0 # Disable statement cache for pgbouncer compatibility
         )
         # Ensure vector extension is enabled
-        await conn.execute('CREATE EXTENSION IF NOT EXISTS vector;')
-        logger.info("Connected to database and ensured vector extension is enabled.")
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;")
+        logger.info("Ensured 'vector' extension is enabled in 'extensions' schema.")
 
-        for doc_info in ARCHITECTURAL_DOCUMENTS:
-            doc_name = doc_info["name"]
-            doc_path = doc_info["path"]
-            logger.info(f"Processing document: {doc_name} from {doc_path}")
+        # Create project_docs table if it doesn't exist
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS public.project_docs (
+                id bigserial PRIMARY KEY,
+                title TEXT UNIQUE NOT NULL,
+                content TEXT,
+                embedding vector(1536),
+                last_updated_at TIMESTAMPTZ DEFAULT now(),
+                metadata JSONB
+            );
+            """
+        )
+        logger.info("Ensured 'project_docs' table exists in 'public' schema.")
 
-            try:
-                with open(doc_path, 'r') as f:
-                    content = f.read()
-                embedding = await generate_embedding(content)
-                await insert_document(conn, doc_name, content, embedding)
-            except FileNotFoundError:
-                logger.error(f"Document file not found: {doc_path}. Skipping.")
-            except Exception as e:
-                logger.error(f"Error processing document {doc_name}: {e}. Skipping.")
+        # Add error_message column to document_registry if it doesn't exist
+        # This is to store any errors encountered during processing by this script
+        try:
+            await conn.execute(
+                """ALTER TABLE public.document_registry ADD COLUMN IF NOT EXISTS error_message TEXT;"""
+            )
+            logger.info("Ensured 'error_message' column exists in 'document_registry' table.")
+        except Exception as e:
+            logger.warning(f"Could not ensure 'error_message' column in 'document_registry': {e}. This may be fine if permissions are restricted.")
 
+        candidate_docs = await get_vectorization_candidates(conn)
+
+        if not candidate_docs:
+            logger.info("No documents found in the registry that require vectorization at this time.")
+        else:
+            for doc_record in candidate_docs:
+                registry_id = doc_record["id"]
+                doc_title = doc_record["title"] # This is typically v_filename.md
+                doc_path = doc_record["file_path"]
+                
+                logger.info(f"Processing document from registry: ID={registry_id}, Title='{doc_title}', Path='{doc_path}'")
+                
+                if not doc_path: # Should not happen if 2-registry-document-scanner.py is working correctly
+                    logger.error(f"Document ID {registry_id}, Title '{doc_title}' has no file_path in registry. Skipping.")
+                    await update_document_registry_status(conn, registry_id, "error_missing_path", "File path missing in registry.")
+                    continue
+
+                try:
+                    with open(doc_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    embedding = await generate_embedding(content)
+                    
+                    if embedding != [0.0] * 1536: # Check for placeholder/error embedding
+                        await insert_document(conn, registry_id, doc_title, content, embedding) # Inserts/updates in project_docs
+                        await update_document_registry_status(conn, registry_id, "completed")
+                    else:
+                        logger.warning(f"Skipping insertion of '{doc_title}' (ID: {registry_id}) due to placeholder embedding (OpenAI API issue or empty content).")
+                        await update_document_registry_status(conn, registry_id, "error_embedding_failed", "Placeholder embedding returned by OpenAI API.")
+                
+                except FileNotFoundError:
+                    logger.error(f"File not found: {doc_path} (ID: {registry_id}, Title: '{doc_title}'). Skipping this document.")
+                    await update_document_registry_status(conn, registry_id, "error_file_not_found", f"File not found at path: {doc_path}")
+                except Exception as e:
+                    logger.error(f"Error processing document ID {registry_id}, Title '{doc_title}': {e}")
+                    await update_document_registry_status(conn, registry_id, "error_processing", str(e))
+
+        # Test vector search after potential insertions
         await test_vector_search(conn)
         logger.info("All specified architectural documents processed and vector search tested.")
 
