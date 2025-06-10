@@ -92,7 +92,7 @@ Based on systematic observation of AI partner behaviors:
 
 #### Technical Execution Failures
 - **Symptom:** Using placeholder solutions instead of proper implementations
-- **Example:** Manual vector construction instead of search_docs() function
+- **Example:** Using the deprecated `search_docs()` function instead of the correct client-side search pattern.
 - **Prevention:** Provide specific technical warnings in persona documents
 - **Training:** Include explicit "what NOT to do" examples
 

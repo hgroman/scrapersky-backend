@@ -71,7 +71,7 @@ await conn.execute('CREATE EXTENSION IF NOT EXISTS vector;')
 - Requires `DATABASE_URL` environment variable
 - Requires connection string conversion from SQLAlchemy format
 - Requires specific connection parameters:
-  - `ssl="require"` for secure connections
+  - SSL/TLS encryption is handled by the Supabase connection pooler by default (verified by `SHOW ssl;` returning `on`). Explicitly setting `ssl='require'` in the `asyncpg` client connection may cause connection failures with the current Supabase/pgbouncer configuration. For this environment, omit the `ssl` parameter in the `asyncpg.connect()` call; the connection will still be encrypted.
   - `statement_cache_size=0` for pgbouncer compatibility
 - May need to enable vector extension
 

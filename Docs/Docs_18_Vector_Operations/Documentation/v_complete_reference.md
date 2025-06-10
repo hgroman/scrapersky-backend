@@ -65,13 +65,19 @@ To query the vector database, you **MUST** use the following specific parameters
 1. **Function Name:** `mcp4_execute_sql` (not just "execute_sql")
 2. **Project ID:** `ddfldwzhdhhzhxywqnyz` (always use this exact ID)
 
-Example query for semantic search:
-```javascript
-mcp4_execute_sql({
-  "project_id": "ddfldwzhdhhzhxywqnyz",
-  "query": "SELECT * FROM search_docs('your search query', 0.5);"
-})
-```
+Example of performing semantic search:
+
+1.  **Client-Side Embedding Generation:** First, generate an embedding for your search query (e.g., 'your search query') using the OpenAI API (model `text-embedding-ada-002`). This will produce a vector like `[0.01, -0.02, ...]`. Format this vector as a string compatible with SQL, e.g., `'[0.01,-0.02,...]'`.
+
+2.  **MCP Query for Similarity Search:**
+    ```javascript
+    // Assume 'client_generated_embedding_string' holds the formatted vector string.
+    mcp4_execute_sql({
+      "project_id": "ddfldwzhdhhzhxywqnyz",
+      "query": `SELECT title, content, 1 - (embedding <=> '${client_generated_embedding_string}'::vector) AS similarity FROM public.project_docs ORDER BY similarity DESC LIMIT 5;`
+    })
+    ```
+Refer to `v_db_connectivity_mcp_4_manual_ops.md` for a more detailed example.
 
 ## Document Registry Management
 
@@ -112,7 +118,9 @@ Consult `Docs/Docs_19_File-2-Vector-Registry-System/0-registry_librarian_persona
 The following questions can be used to test understanding of the vector database system:
 
 1. **MCP Query Test**: "How do I query the vector database to find documents related to transaction management?"
-   - Expected: Use `mcp4_execute_sql` with project ID `ddfldwzhdhhzhxywqnyz` and a search_docs query
+   - Expected: 
+     1. Generate an embedding for 'transaction management' client-side (e.g., using OpenAI API).
+     2. Use `mcp4_execute_sql` with project ID `ddfldwzhdhhzhxywqnyz` and an SQL query performing a vector similarity search against `public.project_docs` using the generated embedding. For example: `SELECT title, 1 - (embedding <=> '[CLIENT_GENERATED_EMBEDDING]'::vector) AS similarity FROM public.project_docs ORDER BY similarity DESC LIMIT 5;` (replacing `[CLIENT_GENERATED_EMBEDDING]` with the actual vector string).
 
 2. **Registry Check**: "How can I determine which documents are intended for vectorization, their current processing status (e.g., pending, completed, needs update, archived), and compare this with what's actually present in the `project_docs` vector database?"
    - Expected: Query the `document_registry` table (checking fields like `title`, `file_path`, `embedding_status` (e.g., 'queue', 'active', 'archived', 'orphan'), `needs_update`). Compare its contents with queries against the `project_docs` table. Utilize scripts like `1-registry-directory-manager.py --status` for directory-level insights and review outputs from `2-registry-document-scanner.py --scan` and `4-registry-archive-manager.py --list-missing` or `--list-archived`.

@@ -14,9 +14,14 @@ This document outlines key maintenance tasks for the ScraperSky Vector Database.
 
 - **Frequency:** Monthly, or as needed.
 - **Command:** To analyze search performance:
+  First, you would need a sample query embedding. Let's assume you have generated an embedding for 'test query' client-side and have it as a SQL-formatted vector string, e.g., `'[0.01,-0.02,...]'` (let's call this `[SAMPLE_QUERY_EMBEDDING_STRING]`).
   ```sql
-  EXPLAIN ANALYZE SELECT * FROM search_docs('test query');
+  EXPLAIN ANALYZE SELECT title, content, 1 - (embedding <=> '[SAMPLE_QUERY_EMBEDDING_STRING]'::vector) AS similarity 
+  FROM public.project_docs 
+  ORDER BY similarity DESC 
+  LIMIT 10;
   ```
+  This analyzes the performance of a direct vector similarity search.
 
 ## 3. Null-Embedding Scan
 

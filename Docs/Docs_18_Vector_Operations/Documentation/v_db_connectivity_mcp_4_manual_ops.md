@@ -40,17 +40,43 @@ mcp4_execute_sql({
 
 ### 3. Perform Semantic Search
 
-```javascript
-mcp4_execute_sql({
-  "project_id": "ddfldwzhdhhzhxywqnyz",
-  "query": "SELECT * FROM search_docs('your search query', 0.5);"
-})
-```
+Semantic search involves two main steps:
+1.  **Generate Query Embedding Client-Side:** Use the appropriate embedding model (e.g., OpenAI's `text-embedding-ada-002`) to convert your textual search query into a vector embedding. This step is performed in your client application (e.g., Python script).
+2.  **Execute Similarity Search Query:** Use the generated query embedding in an SQL query to find similar document embeddings in the `project_docs` table.
 
-The `search_docs` function returns a table with the following columns:
-- `doc_title`: The title of the document
-- `doc_content`: The content of the document (truncated to 1000 characters)
-- `similarity`: The similarity score between the query and the document (higher is better)
+**Example Workflow:**
+
+*   **Client-Side (Python Example using OpenAI API - conceptual):**
+    ```python
+    # Assume 'openai_client' is an initialized OpenAI API client
+    # and 'your_search_query' is the text you want to search for.
+    response = openai_client.embeddings.create(
+        input=[your_search_query],
+        model="text-embedding-ada-002"
+    )
+    query_embedding = response.data[0].embedding
+    # query_embedding is now a list of floats, e.g., [0.01, -0.02, ...]
+    # Convert this list to a string format suitable for SQL: '[0.01,-0.02,...]'
+    query_embedding_sql_string = f"[{','.join(map(str, query_embedding))}]"
+    ```
+
+*   **MCP Call (using the `query_embedding_sql_string` from above):**
+    ```javascript
+    // Assume query_embedding_sql_string contains the vector like '[0.01,-0.02,...]'
+    mcp4_execute_sql({
+      "project_id": "ddfldwzhdhhzhxywqnyz",
+      "query": `SELECT title, content, 1 - (embedding <=> '${query_embedding_sql_string}'::vector) AS similarity FROM public.project_docs ORDER BY similarity DESC LIMIT 10;`
+    })
+    ```
+
+This query returns the `title`, `content`, and `similarity` score for the top 10 most similar documents. Adjust `LIMIT` as needed.
+
+The `project_docs` table (queried above) typically has columns like:
+- `id`: The primary key identifier for the document chunk in the vector store.
+- `title`: The original document title.
+- `content`: The text chunk that was embedded.
+- `embedding`: The vector embedding of the content.
+- `similarity`: The calculated similarity score (cosine similarity, where 1 is most similar, 0 is unrelated). Higher is better.
 
 ## Advanced Query Patterns
 

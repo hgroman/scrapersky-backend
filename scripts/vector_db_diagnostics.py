@@ -93,23 +93,7 @@ async def run_diagnostics():
         except Exception as e:
             logger.error(f"Error testing cosine distance operator: {e}")
         
-        # 4. Test search_docs function if it exists
-        logger.info("Testing search_docs function...")
-        try:
-            search_results = await conn.fetch("SELECT * FROM search_docs('test pattern', 0.5) LIMIT 3;")
-            if search_results:
-                for i, result in enumerate(search_results):
-                    logger.info(f"Search result {i+1}: Title={result['title']}, Similarity={result['similarity']}")
-                    
-                    # Check for NaN in similarity
-                    if result['similarity'] != result['similarity']:  # NaN check
-                        logger.error(f"NaN detected in similarity for document: {result['title']}")
-            else:
-                logger.warning("No results returned from search_docs function")
-        except Exception as e:
-            logger.error(f"Error testing search_docs function: {e}")
-        
-        # 5. Check for NaN values in embeddings
+        # 4. Check for NaN values in embeddings
         logger.info("Checking for NaN values in embeddings...")
         try:
             # This is a simplified check - a more thorough check would parse the vector and check each element

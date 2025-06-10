@@ -144,33 +144,7 @@ async def test_vector_search():
         else:
             logger.warning("No matching documents found")
             
-        # Test the search_docs database function if it exists
-        logger.info("Testing search_docs database function specifically for DART MCP guide...")
-        try:
-            # First search pattern focused on DART MCP
-            dart_pattern = "DART MCP integration guide"
-            logger.info(f"Searching with pattern: '{dart_pattern}'")
-            
-            db_results = await conn.fetch(
-                "SELECT * FROM search_docs($1, $2) LIMIT 5;",
-                dart_pattern,
-                0.5
-            )
-            
-            if db_results:
-                logger.info(f"Found {len(db_results)} matching documents using search_docs function:")
-                for i, doc in enumerate(db_results):
-                    logger.info(f"Result {i+1}:")
-                    logger.info(f"  Title: {doc['doc_title']}")
-                    logger.info(f"  Similarity: {doc['similarity']}")
-                    logger.info(f"  Content Preview: {doc['doc_content'][:100]}...") # Add content preview for consistency
-                    logger.info("---")
-            else:
-                logger.warning("No matching documents found using search_docs function")
-                
-        except Exception as e:
-            logger.error(f"Error testing search_docs function: {e}")
-            logger.info("You may need to update the search_docs function in the database.")
+
             
     finally:
         await conn.close()

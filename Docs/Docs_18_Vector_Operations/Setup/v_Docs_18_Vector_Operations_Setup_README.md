@@ -22,8 +22,8 @@ These files are primarily used during initial setup and testing of the vector da
 
 ## Reference Documentation
 
-For detailed guidance on the vector database setup process, refer to:
-- [v_Add_docs_to_register_and_vector_db.md](/Docs/Docs_18_Vector_Operations/Documentation/v_Add_docs_to_register_and_vector_db.md)
+For detailed guidance on the vector database setup process, refer to the authoritative guide in this directory:
+- `v_correct_vector_db_setup.md`
 
 ## Connectivity Method
 

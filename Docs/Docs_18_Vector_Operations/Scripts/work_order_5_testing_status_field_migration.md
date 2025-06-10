@@ -68,11 +68,14 @@ End-to-end testing of the following lifecycle stages for a test document:
 *   **Verification 1.3.3:** Perform semantic search for content from `v_test_lifecycle_doc.md`.
     *Expected:* `v_test_lifecycle_doc.md` appears in results for query 'AlphaVersion LifecycleTest'.
     ```javascript
-    // MCP Call
+    // MCP Call for semantic search. 
+    // Step 1 (Client-side): Generate embedding for 'AlphaVersion LifecycleTest'. Let's call it 'embedding_vector_string_1'.
+    // Step 2 (MCP Call):
     mcp4_execute_sql({
       "project_id": "ddfldwzhdhhzhxywqnyz",
-      "query": "SELECT title, similarity FROM search_docs('AlphaVersion LifecycleTest', 0.1, 5);"
+      "query": `SELECT title, 1 - (embedding <=> '${embedding_vector_string_1}'::vector) AS similarity FROM public.project_docs ORDER BY similarity DESC LIMIT 5;`
     })
+    // Ensure 'embedding_vector_string_1' is correctly formatted as a SQL vector string, e.g., '[0.1,0.2,...]'.
     ```
 
 --- 
@@ -107,11 +110,14 @@ End-to-end testing of the following lifecycle stages for a test document:
 *   **Verification 2.3.2:** Perform semantic search for *new* content from `v_test_lifecycle_doc.md`.
     *Expected:* `v_test_lifecycle_doc.md` appears in results for query 'BetaVersion RevectorizeTest'. Search for 'AlphaVersion LifecycleTest' should yield lower or no relevance.
     ```javascript
-    // MCP Call
+    // MCP Call for semantic search.
+    // Step 1 (Client-side): Generate embedding for 'BetaVersion RevectorizeTest'. Let's call it 'embedding_vector_string_2'.
+    // Step 2 (MCP Call):
     mcp4_execute_sql({
       "project_id": "ddfldwzhdhhzhxywqnyz",
-      "query": "SELECT title, similarity FROM search_docs('BetaVersion RevectorizeTest', 0.1, 5);"
+      "query": `SELECT title, 1 - (embedding <=> '${embedding_vector_string_2}'::vector) AS similarity FROM public.project_docs ORDER BY similarity DESC LIMIT 5;`
     })
+    // Ensure 'embedding_vector_string_2' is correctly formatted as a SQL vector string.
     ```
 
 --- 

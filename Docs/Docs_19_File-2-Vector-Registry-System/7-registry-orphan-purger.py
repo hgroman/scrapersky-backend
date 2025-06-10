@@ -43,7 +43,7 @@ class OrphanPurger:
                 SELECT pd.id, pd.title
                 FROM project_docs pd
                 LEFT JOIN document_registry dr ON pd.id = dr.id
-                WHERE dr.id IS NULL
+                WHERE dr.embedding_status != 'active' OR dr.id IS NULL
                 ORDER BY pd.id;
             """)
             return orphans

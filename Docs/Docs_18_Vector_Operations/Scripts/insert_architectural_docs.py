@@ -196,7 +196,6 @@ async def main():
         logger.info(f"Connecting to database: {connection_url}")
         conn = await asyncpg.connect(
             connection_url,
-            ssl="require",
             statement_cache_size=0 # Disable statement cache for pgbouncer compatibility
         )
         # Ensure vector extension is enabled

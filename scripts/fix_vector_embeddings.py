@@ -104,7 +104,7 @@ async def fix_embeddings():
         logger.info(f"Fixed {fixed_count} out of {len(docs)} documents")
         
         # Test the search function after fixing
-        logger.info("Testing search_docs function after fixes...")
+        logger.info("Testing direct similarity search after fixes...")
         try:
             # Create a simple test query
             test_query = "architecture patterns"
@@ -135,62 +135,9 @@ async def fix_embeddings():
             for i, result in enumerate(results):
                 logger.info(f"Test result {i+1}: ID={result['id']}, Title={result['title']}, Similarity={result['similarity']}")
                 
-            # Now test the search_docs function if it exists
-            try:
-                search_results = await conn.fetch("SELECT * FROM search_docs($1, 0.5) LIMIT 3;", test_query)
-                for i, result in enumerate(search_results):
-                    logger.info(f"Search result {i+1}: Title={result['title']}, Similarity={result['similarity']}")
-            except Exception as e:
-                logger.error(f"Error testing search_docs function: {e}")
-                logger.info("Attempting to create or fix search_docs function...")
-                
-                # Create a basic search_docs function if it doesn't exist or is broken
-                await conn.execute(
-                    """
-                    CREATE OR REPLACE FUNCTION search_docs(
-                        query_text TEXT,
-                        similarity_threshold FLOAT DEFAULT 0.5
-                    ) RETURNS TABLE (
-                        id INTEGER,
-                        title TEXT,
-                        content TEXT,
-                        similarity FLOAT
-                    ) AS $$
-                    DECLARE
-                        query_embedding VECTOR(1536);
-                    BEGIN
-                        -- For testing purposes, use a normalized random vector
-                        -- In production, this would call the OpenAI API
-                        query_embedding := (
-                            SELECT 
-                                (array_agg(random()))[1:1536]::vector / sqrt(1536)
-                            FROM 
-                                generate_series(1, 1536)
-                        );
-                        
-                        RETURN QUERY
-                        SELECT 
-                            p.id,
-                            p.title,
-                            p.content,
-                            1 - (p.embedding <=> query_embedding) AS similarity
-                        FROM 
-                            public.project_docs p
-                        WHERE 
-                            1 - (p.embedding <=> query_embedding) >= similarity_threshold
-                        ORDER BY 
-                            similarity DESC;
-                    END;
-                    $$ LANGUAGE plpgsql;
-                    """
-                )
-                
-                logger.info("Created basic search_docs function with random vector for testing")
-                
-                # Test the new function
-                search_results = await conn.fetch("SELECT * FROM search_docs($1, 0.5) LIMIT 3;", test_query)
-                for i, result in enumerate(search_results):
-                    logger.info(f"Search result {i+1} with new function: ID={result['id']}, Title={result['title']}, Similarity={result['similarity']}")
+            # Deprecated: The search_docs function is no longer used.
+            # The direct similarity query above is the correct test pattern.
+            pass
         
         except Exception as e:
             logger.error(f"Error testing after fixes: {e}")

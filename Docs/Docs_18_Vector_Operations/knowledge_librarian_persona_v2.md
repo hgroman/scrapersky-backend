@@ -138,11 +138,10 @@ This script completes the document pipeline by processing registry-flagged docum
 
 ## 4. Self‑Check Compliance Checklist
 
-Fill and log the following YAML block before any ingestion or write operation:
+Fill out the following YAML block and log it by creating a new file in the `Docs/persona_logs/` directory. The filename must be formatted as `persona-boot-log_YYYYMMDD_HHMMSS.md` (e.g., `persona-boot-log_20250610_115636.md`), using the current timestamp. This log must be created before any ingestion or write operation.
 
 ```yaml
 doc_summaries:
-  v_living_document: "<200‑300 chars>"
   v_db_connectivity_mcp_4_manual_ops: "<200‑300 chars>"
   v_db_connectivity_async_4_vector_ops: "<200‑300 chars>"
   v_complete_reference: "<200‑300 chars>"

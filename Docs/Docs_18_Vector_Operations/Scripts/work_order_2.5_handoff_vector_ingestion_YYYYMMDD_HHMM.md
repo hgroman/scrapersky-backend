@@ -62,7 +62,17 @@ The following steps were executed to test the ingestion of `v_34-DART_MCP_GUIDE.
         *   In `document_registry`: `should_be_vectorized = FALSE`, `embedding_status = 'completed'`.
         *   In `project_docs`: An entry exists with `has_embedding = TRUE` and a recent `last_updated_at`.
 2.  **If `v_34-DART_MCP_GUIDE.md` is Confirmed Successful:**
-    *   Proceed with the USER's request to "have another AI chat query the vector database and ensure that it can see that document." This likely means performing a semantic search using the `search_docs('your search query', 0.5)` function detailed in `v_db_connectivity_mcp_4_manual_ops.md` via an `mcp4_execute_sql` call.
+    *   Proceed with the USER's request to "have another AI chat query the vector database and ensure that it can see that document." This involves:
+        1.  **Client-Side Embedding Generation:** Generate an embedding for a relevant search query (e.g., related to 'DART MCP GUIDE') using the OpenAI API.
+        2.  **Direct Similarity Search:** Use the generated embedding in an `mcp4_execute_sql` call to query the `project_docs` table directly for similar vectors. For example:
+            ```sql
+            -- Assume '[CLIENT_GENERATED_EMBEDDING]' is replaced with the actual vector string
+            SELECT title, content, 1 - (embedding <=> '[CLIENT_GENERATED_EMBEDDING]'::vector) AS similarity 
+            FROM public.project_docs 
+            ORDER BY similarity DESC 
+            LIMIT 5;
+            ```
+            Refer to `v_db_connectivity_mcp_4_manual_ops.md` for the detailed client-side embedding and query pattern.
     *   After successful semantic verification, **resume "Work Order Part Two"**:
         *   **Modify `document_registry` schema:** Add `needs_update` and `last_embedded_at` columns using `mcp4_execute_sql` to execute `ALTER TABLE` commands.
             *   `ALTER TABLE public.document_registry ADD COLUMN IF NOT EXISTS needs_update BOOLEAN DEFAULT FALSE NOT NULL;`

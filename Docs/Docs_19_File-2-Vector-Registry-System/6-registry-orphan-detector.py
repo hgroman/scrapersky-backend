@@ -43,7 +43,7 @@ class OrphanDetector:
             orphans = await self.conn.fetch("""
                 SELECT pd.id, pd.title
                 FROM project_docs pd
-                LEFT JOIN document_registry dr ON pd.id = dr.id
+                LEFT JOIN document_registry dr ON pd.id = dr.id AND dr.embedding_status = 'active'
                 WHERE dr.id IS NULL
                 ORDER BY pd.id;
             """)
