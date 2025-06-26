@@ -21,8 +21,8 @@ For a comprehensive and curated list of all key documents, scripts, connectivity
 Key subdirectories within `Docs_18_Vector_Operations/` include:
 
 *   `Documentation/`: Contains core conceptual documents, connectivity guides, and detailed references for the vector database.
-*   `Scripts/`: Houses primary operational Python scripts for tasks like document vectorization (`insert_architectural_docs.py`) and testing (`simple_test.py`).
-*   `MCP-Manual-ops/`: Contains scripts designed for manual vector database operations, often utilizing the MCP (Model Context Protocol) for direct SQL execution. (See internal `README.md` for details if scripts are present, or `v_key_documents.md` for primary script locations).
+*   `Scripts/`: Houses primary operational Python scripts. Key scripts include `insert_architectural_docs.py` for vectorization and `semantic_query_cli.py`, the primary command-line interface for performing semantic searches.
+*   `MCP-Manual-ops/`: **(DEPRECATED FOR SEARCH)** Contains scripts for direct SQL execution. This method is an anti-pattern for semantic search due to data transport issues. Use `semantic_query_cli.py` for all search operations.
 *   `Async-Vector-ops/`: Holds scripts that perform vector operations using asynchronous database connections (e.g., via `asyncpg`). (See internal `README.md` for details if scripts are present, or `v_key_documents.md` for primary script locations).
 *   `Setup/`: Includes scripts or configuration files typically used for one-time setup or specific configurations of the vector database environment. (See internal `README.md` for details if scripts are present, or `v_key_documents.md` for primary script locations).
 
@@ -74,12 +74,10 @@ The Librarian persona enables several "zero-effort" workflows:
 
 ### No Technical Knowledge Required
 
-The Librarian persona handles underlying technical aspects:
-- Running insertion scripts (via coordination with the Registry Librarian persona for `document_registry` updates).
-- Executing database queries for search.
-- Managing OpenAI API calls for embeddings (for search queries; document embedding is part of the registry pipeline).
-- Providing status information.
-- Utilizing memory records for context.
+The Librarian persona handles underlying technical aspects by leveraging the project's script-based toolchain:
+- **For Search:** Utilizes `Scripts/semantic_query_cli.py` to generate query embeddings, perform the search via RPC, and retrieve results directly from the database.
+- **For Ingestion:** Coordinates with the Document Registry system, which uses `insert_architectural_docs.py` to vectorize and store new documents.
+- **For Status & Context:** Provides status information and utilizes memory records for context.
 
 ### Cost Considerations (Librarian Interaction)
 
@@ -92,6 +90,19 @@ Interacting with the Librarian persona for Vector DB tasks can incur OpenAI API 
 If you encounter issues while interacting with the Vector DB via the Librarian:
 - **API Key Problems**: The Librarian can help verify if the necessary API keys (e.g., OpenAI) are conceptually in place for its operations.
 - **Search Function Issues**: The Librarian can help confirm if search queries are being formulated correctly.
+
+## Semantic Search: Critical Development Guidelines & Anti-Patterns
+
+**The development of the semantic search capability has highlighted critical do's and don'ts. Adherence to these is mandatory to ensure system stability and correctness.**
+
+*   **THE CRITICAL "DO":** ALWAYS use `Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py` for all semantic search operations. This script correctly handles vector generation, native vector passing via RPC, and parameterized queries.
+*   **THE CRITICAL "DON'T":** NEVER attempt to pass vector embeddings as raw string literals within SQL queries executed via `mcp4_execute_sql` (or similar direct SQL execution methods) for search purposes. This is a proven anti-pattern that leads to data truncation and dimension mismatch errors.
+
+For a comprehensive explanation of these points, detailed architectural principles, other anti-patterns, approved good patterns, and key lessons learned, refer to the authoritative guidelines document:
+
+*   **Authoritative Guidelines:** [`./Documentation/v_semantic_search_dev_guidelines.md`](./Documentation/v_semantic_search_dev_guidelines.md)
+
+Following these guidelines is essential for any future development or interaction with the semantic search system.
 
 ## Technical Debt Elimination Strategy
 

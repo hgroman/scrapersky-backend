@@ -7,6 +7,12 @@
 
 This guide provides a comprehensive technical overview of the ScraperSky document ingestion, vectorization, and registry management pipeline. It is intended for developers involved in maintaining, extending, or troubleshooting this system. The focus is on the architectural design, the interaction between components, and the core principles that ensure its robustness, maintainability, and adaptability. This document aims to be a truthful and concise reference, avoiding unnecessary bloat while capturing the critical considerations embedded in its design.
 
+
+**Important Note on Querying:** While this document details the *ingestion and vectorization* pipeline, the *querying* of these vectors for semantic search has its own set of critical development guidelines and anti-patterns. Please refer to:
+*   **Semantic Search Development Guidelines:** [`../Docs_18_Vector_Operations/Documentation/v_semantic_search_dev_guidelines.md`](../Docs_18_Vector_Operations/Documentation/v_semantic_search_dev_guidelines.md)
+
+Understanding both ingestion and querying best practices is essential for working with the full vector database system.
+
 ## 2. Core Architectural Principles
 
 The pipeline is built upon several key principles:

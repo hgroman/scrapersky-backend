@@ -20,6 +20,7 @@
 | Git Diff Troubleshooting | [Git Diff Troubleshooting](#git-diff-troubleshooting) |
 | Deployment (Render)    | [Deployment](#deployment)     |
 | DART MCP Integration   | [DART MCP Integration](#dart-mcp-integration) |
+| Vector DB & Semantic Search | [Vector Database & Semantic Search](#vector-database--semantic-search) |
 | Architecture diagram   | [Architecture](#architecture) |
 
 ## Docker
@@ -130,6 +131,17 @@ Bypass hooks if necessary:
 ```bash
 git commit --no-verify -m "hotfix"
 ```
+
+## Vector Database & Semantic Search
+
+**Core Principle:** For querying the vector database for semantic similarity:
+
+*   **DO:** Use the `Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py` script. This tool correctly handles query embedding generation and executes searches via RPC calls to a dedicated PostgreSQL function, passing the vector natively.
+*   **DON'T:** Attempt to pass vector embeddings as raw string literals within SQL queries (e.g., via `mcp4_execute_sql`) for search. This is an anti-pattern leading to data truncation and errors.
+
+For comprehensive development guidelines, architectural principles, and detailed anti-patterns:
+
+*   **Authoritative Guidelines:** [`Docs/Docs_18_Vector_Operations/Documentation/v_semantic_search_dev_guidelines.md`](./Docs/Docs_18_Vector_Operations/Documentation/v_semantic_search_dev_guidelines.md)
 
 ## Git Diff Troubleshooting
 

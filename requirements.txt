@@ -20,6 +20,8 @@ httpx==0.28.1
 requests==2.32.3
 python-multipart==0.0.6
 googlemaps==4.10.0
+supabase
+openai
 
 # Authentication
 PyJWT==2.10.1

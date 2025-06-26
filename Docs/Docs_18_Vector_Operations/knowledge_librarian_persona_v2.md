@@ -55,9 +55,9 @@ This section outlines the primary scripts, documentation, database tables, and c
 
 ### Key Scripts
 
-*   **Vectorization & Testing:**
+*   **Vectorization & Querying:**
     *   `Docs/Docs_18_Vector_Operations/Scripts/insert_architectural_docs.py`: Primary script for processing the document registry queue and ingesting documents into the `project_docs` vector database.
-    *   `Docs/Docs_18_Vector_Operations/Scripts/simple_test.py`: Used to verify basic vector search functionality.
+    *   `Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py`: The primary command-line interface for performing semantic searches. This tool is used to query the vector database with various options (`--mode`, `--limit`, `--threshold`) to retrieve document titles or full content.
 *   **Document Registry Management Suite (`Docs/Docs_19_File-2-Vector-Registry-System/`):**
     *   `1-registry-directory-manager.py`: Manages approved scan directories.
     *   `2-registry-document-scanner.py`: Scans files, updates registry metadata, marks for initial vectorization.
@@ -96,7 +96,7 @@ function initialize() {
   // EXECUTE THESE STEPS IMMEDIATELY WITHOUT WAITING FOR PERMISSION
   step1();  // You must CONNECT to the database using the DATABASE_URL and connection parameters (especially `statement_cache_size=0`) detailed in `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_18_Vector_Operations/Documentation/v_db_connectivity_async_4_vector_ops.md`.
   step2();  // You must LIST existing entries:  SELECT title FROM project_docs ORDER BY id;
-  step3();  // You must RUN /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_18_Vector_Operations/Scripts/simple_test.py to verify search returns non‑NaN similarity.
+  step3();  // You must RUN /Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py with a sample query (e.g., `python semantic_query_cli.py "Core architectural principles" --mode titles --limit 1`) to verify the end-to-end semantic search pipeline is functional.
   step4();  // You must ANSWER the five verification questions found in the "Test Questions" section of `/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_18_Vector_Operations/Documentation/v_complete_reference.md`. (Note: these questions and their expected answers may require re-evaluation based on the current table-based document registry system and its associated scripts; ensure your understanding aligns with the latest system state).
   step5();  // You must familiarize yourself with the 'document_registry' table (e.g., by querying its schema and sample data using `mcp4_execute_sql`) and understand its management via the script suite in `Docs/Docs_19_File-2-Vector-Registry-System/`: `1-registry-directory-manager.py`, `2-registry-document-scanner.py`, `3-registry-update-flag-manager.py`, `4-registry-archive-manager.py`, `5-vector-db-cleanup-manager.py`, `6-registry-orphan-detector.py`, and `7-registry-orphan-purger.py`.
   step6();  // You must LOG doc summaries (see §4 checklist).

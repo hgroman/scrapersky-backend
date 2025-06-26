@@ -39,6 +39,14 @@ The system follows a strict, two-part process to ensure data integrity:
 
 ---
 
+## Semantic Search Development Guidelines
+
+For detailed guidelines, critical anti-patterns, and approved best practices specifically for developing with or extending the semantic search capabilities, refer to the authoritative document:
+
+*   **Semantic Search Development Guidelines:** [`Docs/Docs_18_Vector_Operations/Documentation/v_semantic_search_dev_guidelines.md`](./../../Docs_18_Vector_Operations/Documentation/v_semantic_search_dev_guidelines.md)
+
+Adherence to these guidelines is crucial for maintaining system integrity and leveraging the search functionality correctly.
+
 ## Key Constants
 
 *   **Supabase Project ID:** `ddfldwzhdhhzhxywqnyz`
