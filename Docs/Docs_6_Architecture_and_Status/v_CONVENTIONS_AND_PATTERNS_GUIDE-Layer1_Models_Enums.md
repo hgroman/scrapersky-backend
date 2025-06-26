@@ -7,7 +7,7 @@
 
 - **[1.0-ARCH-TRUTH-Definitive_Reference.md](./1.0-ARCH-TRUTH-Definitive_Reference.md)** - Definitive architectural reference
 - **[2.0-ARCH-TRUTH-Implementation_Strategy.md](./2.0-ARCH-TRUTH-Implementation_Strategy.md)** - Implementation strategy for architectural alignment
-- **[3.0-ARCH-TRUTH-Layer_Classification_Analysis.md](./3.0-ARCH-TRUTH-Layer_Classification_Analysis.md)** - Comprehensive analysis of layer classification
+- **[3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md](./3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md)** - Comprehensive analysis of layer classification
 - **[Q&A_Key_Insights.md](./Q&A_Key_Insights.md)** - Clarifications on implementation standards
 
 **Objective:** This document details the naming and structural conventions for Layer 1 components (SQLAlchemy Models and Python ENUMs) within the ScraperSky backend project. Adherence to these conventions is crucial for maintaining consistency, readability, and maintainability across the codebase.

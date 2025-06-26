@@ -11,7 +11,7 @@
 
 - **[1.0-ARCH-TRUTH-Definitive_Reference.md](./1.0-ARCH-TRUTH-Definitive_Reference.md)** - Definitive architectural reference
 - **[2.0-ARCH-TRUTH-Implementation_Strategy.md](./2.0-ARCH-TRUTH-Implementation_Strategy.md)** - Implementation strategy
-- **[3.0-ARCH-TRUTH-Layer_Classification_Analysis.md](./3.0-ARCH-TRUTH-Layer_Classification_Analysis.md)** - Layer classification
+- **[3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md](./3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md)** - Layer classification
 - **[4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md](./4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md)** - Current assessment
 
 ## Purpose & Scope

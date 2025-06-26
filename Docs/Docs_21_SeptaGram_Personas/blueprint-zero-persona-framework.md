@@ -80,7 +80,7 @@ Each persona is defined by seven core layers, each with an associated "dial" (0-
 
 ### 5. Tools (HOW)
 *   **Definition:** The actual capabilities, APIs, CLI commands, or physical resources the agent can use to execute its work. These are the agent's "verbs."
-*   **Example:** `read_file`, `write_file`, `use_mcp_tool (dart)`, `use_mcp_tool (supabase)`.
+*   **Example:** `read_file`, `write_file`, `use_mcp_tool (dart)`, `use_mcp_tool (supabase)`, and the universal semantic search tool: `python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Your Query"`.
 
 ### 6. Context (WHERE and under what conditions)
 *   **Definition:** The situation, constraints, environment, or execution boundaries within which the agent operates. This defines its operational space.
@@ -145,9 +145,22 @@ Therefore, a standard part of any persona's initialization or grooming process *
 *   **Containerization & Environment:** `docker-compose.yml`, `docker-compose.prod.yml`
 *   **Deployment & Infrastructure:** `render.yaml`
 *   **Code Quality & CI/CD:** `.pre-commit-config.yaml`
-*   **Project & Task Management:** `workflow/README_WORKFLOW.md`, `workflow/Work_Order_Process.md`
+*   **Project & Task Management:** `workflow/README.md`, `workflow/Work_Order_Process.md`
 
 This ensures that a persona's guidance is not only architecturally sound but also pragmatically applicable within the established engineering ecosystem. Adherence to the *processes* defined in these documents is as critical as knowledge of the technical configurations.
+
+### Core Requirement: Foundational Technology Exposure (Unmissable)
+
+To achieve peak operational performance, all personas **must** be systematically exposed to the core technologies that constitute the ScraperSky stack. This goes beyond document review and requires a deeper, more practical understanding.
+
+-   [ ] **Task:** Develop a standardized "tech immersion" protocol for all personas.
+-   [ ] **Scope:** The protocol must cover, at a minimum:
+    -   **Containerization:** `Docker` (`docker-compose.yml`, `Dockerfile`)
+    -   **Language & Framework:** `Python`, `FastAPI` (including dependency injection, lifespan events)
+    -   **Database & ORM:** `Supabase` (as a managed `PostgreSQL` service), `SQLAlchemy` (async sessions, ORM patterns)
+    -   **Deployment & CI/CD:** `Render` (`render.yaml`), `pre-commit` hooks.
+    -   **Task Management:** `APScheduler` for background jobs.
+-   [ ] **Goal:** Ensure personas can reason not just about architectural documents, but also about the practical implications and constraints of the underlying technologies.
 
 ---
 

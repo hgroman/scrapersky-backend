@@ -4,7 +4,7 @@
 
 - **[1.0-ARCH-TRUTH-Definitive_Reference.md](./1.0-ARCH-TRUTH-Definitive_Reference.md)** - Definitive architectural reference
 - **[2.0-ARCH-TRUTH-Implementation_Strategy.md](./2.0-ARCH-TRUTH-Implementation_Strategy.md)** - Implementation strategy
-- **[3.0-ARCH-TRUTH-Layer_Classification_Analysis.md](./3.0-ARCH-TRUTH-Layer_Classification_Analysis.md)** - Layer classification
+- **[3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md](./3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md)** - Layer classification
 - **[CONVENTIONS_AND_PATTERNS_GUIDE.md](./CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Detailed conventions
 
 ## Platform Purpose

@@ -1,0 +1,13 @@
+# Historical Summary: Docs/Docs_7_Workflow_Canon
+
+This directory is the single source of truth for all ScraperSky workflow documentation, audit artifacts, and templates. It represents a crucial phase in the project's history focused on formalizing the operational processes, linking them explicitly to the architectural layers, and establishing a rigorous system for workflow definition, auditing, and continuous improvement.
+
+**Key Historical Contribution:**
+
+*   **Canonization of Workflows:** This directory establishes the "Workflow Canon," defining the standardized end-to-end operational processes within the ScraperSky system. Documents here outline the purpose, phases, dependencies, status transitions, and connections between different workflows, providing a clear and unified understanding of how data flows through the system.
+*   **Linking Workflows to Architecture:** The documentation explicitly links workflow steps and components to the 7-layer architectural model and core architectural principles. This demonstrates how the operational processes are designed to adhere to the established architectural standards.
+*   **Standardized Workflow Documentation:** The directory provides mandatory templates and required elements for various workflow artifacts, including Canonical YAML files, Dependency Trace documents, Linear Steps documents, and Micro Work Orders. This ensures consistency and comprehensiveness in workflow documentation.
+*   **Establishing an Audit Toolkit and Process:** This directory contains the "Audit Toolkit" and defines a mandatory process for conducting workflow audits. It outlines the step-by-step workflow for auditors (including AI), emphasizing the order of creating artifacts (Dependency Trace -> Linear Steps -> Canonical YAML) to ensure thoroughness and accuracy in identifying technical debt and compliance issues within workflows.
+*   **Identifying Workflow-Specific Technical Debt:** Canonical workflow documents (like the example for WF2-StagingEditor) detail specific technical debt, known issues, and actionable TODOs identified during the audit process, linking them to Jira tickets and remediation plans. This provides a granular view of the technical debt that exists within specific operational flows.
+
+In summary, `/Docs/Docs_7_Workflow_Canon` is fundamental to understanding the project's standardized operational framework and the rigorous process established for defining, documenting, and auditing these workflows. It highlights the project's commitment to ensuring that its operational processes are well-defined, compliant with the architecture, and continuously improved.

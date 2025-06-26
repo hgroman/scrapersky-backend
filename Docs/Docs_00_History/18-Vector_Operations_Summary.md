@@ -1,0 +1,13 @@
+# Historical Summary: Docs/Docs_18_Vector_Operations
+
+This directory is the current, centralized location for all active documentation, scripts, and resources related to the ScraperSky Vector Database system. It represents the phase where the Vector DB was fully implemented, operationalized, and integrated into the project's knowledge management and AI strategy.
+
+**Key Historical Contribution:**
+
+*   **Centralizing Vector Database Resources:** This directory was established to consolidate all active Vector Database documentation, scripts, and related resources, moving them from previous locations (like `Docs/Docs_16_ScraperSky_Code_Canon`). This reorganization was a historical step to create a single, authoritative source for Vector DB information.
+*   **Defining Vector Operations and Semantic Search:** The documents here provide a comprehensive overview of the Vector Database's purpose (semantic search across architectural documentation), its role in the technical debt elimination strategy, and critical guidelines for its use. This includes mandatory practices for semantic search (using `semantic_query_cli.py`) and anti-patterns to avoid (passing raw vectors in SQL).
+*   **Documenting Connectivity Methods:** Detailed guides explain the two primary methods for connecting to the Vector Database: the MCP method (for manual operations) and the Asyncpg method (for scripts). These guides specify technical requirements, connection parameters (like the critical `statement_cache_size=0`), and troubleshooting common issues.
+*   **Operationalizing Document Ingestion and Management:** This directory outlines the process for ingesting authoritative documents into the Vector DB and managing the document registry. It references the script suite in `Docs/Docs_19_File-2-Vector-Registry-System/` which automates scanning, status updates, archiving, and cleanup.
+*   **Defining the Knowledge Librarian Persona:** This directory contains the definition for the ScraperSky Knowledge Librarian AI persona, specifically designed to manage and interact with the Vector DB. This highlights the integration of the Vector DB into the project's AI strategy and the development of specialized personas for knowledge management.
+
+In summary, `/Docs/Docs_18_Vector_Operations` is fundamental to understanding the project's current knowledge management infrastructure. It documents the fully implemented Vector Database, the methods for interacting with it, the processes for keeping its content up-to-date, and the role it plays in enabling AI partners through semantic search and a comprehensive, synthesized knowledge base.
