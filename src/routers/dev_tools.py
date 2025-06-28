@@ -15,8 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_db_session
 from src.models.domain import Domain
-from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
 from src.services.sitemap_import_service import SitemapImportService
+from src.services.website_scan_service import WebsiteScanService
 
 from ..auth.jwt_auth import get_current_user
 
@@ -971,23 +971,21 @@ async def trigger_domain_processing_endpoint():
         )
 
 
-# --- Test Endpoint for Domain Sitemap Submission Adapter ---
+# --- Test Endpoint for Website Scan Service ---
 @router.post(
-    "/test-sitemap-adapter/{domain_id}",
-    summary="Test Domain Sitemap Submission Adapter",
+    "/trigger-website-scan/{domain_id}",
+    summary="Manually Trigger Website Scan",
     dependencies=[Depends(require_dev_mode)],
 )
-async def test_domain_sitemap_submission(
-    domain_id: UUID, session=Depends(get_db_session)
+async def trigger_website_scan(
+    domain_id: UUID, session: AsyncSession = Depends(get_db_session)
 ):
     """
-    Manually triggers the DomainToSitemapAdapterService for a specific domain ID.
+    Manually triggers the WebsiteScanService for a specific domain ID.
     Requires dev mode.
     """
-    logger.info(
-        f"Received request to test sitemap submission for domain ID: {domain_id}"
-    )
-    adapter_service = DomainToSitemapAdapterService()
+    logger.info(f"Received request to manually scan website for domain ID: {domain_id}")
+    scan_service = WebsiteScanService(session)
     try:
         # Fetch the domain first to ensure it exists
         domain = await session.get(Domain, domain_id)
@@ -996,49 +994,17 @@ async def test_domain_sitemap_submission(
                 status_code=404, detail=f"Domain with ID {domain_id} not found."
             )
 
-        logger.info(f"Attempting submission for domain: {domain.domain}")
-        # Use a separate transaction for the test submission to mimic scheduler behavior
-        async with (
-            session.begin_nested()
-        ):  # Or begin() if you want full rollback on failure here
-            # Optionally mark as processing first if the service expects it
-            # setattr(domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.processing)
-            # await session.flush()
-
-            success = await adapter_service.submit_domain_to_legacy_sitemap(
-                domain_id=domain_id, session=session
-            )
-
-            # Read the status set by the adapter
-            final_status = getattr(domain, "sitemap_analysis_status", "Unknown")
-            error_message = getattr(domain, "sitemap_analysis_error", None)
-
-        if success:
-            logger.info(
-                f"Test submission for domain {domain_id} successful. Final status: {final_status}"
-            )
-            return {
-                "message": f"Test submission for domain {domain_id} successful.",
-                "status": final_status,
-            }
-        else:
-            logger.warning(
-                f"Test submission for domain {domain_id} failed. Final status: {final_status}, Error: {error_message}"
-            )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Test submission failed. Status: {final_status}. Error: {error_message}",
-            )
+        logger.info(f"Attempting to initiate scan for domain: {domain.domain}")
+        await scan_service.initiate_scan(domain_id=domain.id)
+        return {"status": "success", "message": "Website scan initiated successfully."}
 
     except HTTPException as http_exc:
-        raise http_exc  # Re-raise HTTP exceptions
+        logger.error(f"HTTP error triggering website scan for domain {domain_id}: {http_exc.detail}")
+        raise http_exc
     except Exception as e:
-        logger.error(
-            f"Error during test sitemap submission for domain {domain_id}: {e}",
-            exc_info=True,
-        )
+        logger.error(f"Error triggering website scan for domain {domain_id}: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Error during test submission: {str(e)}"
+            status_code=500, detail=f"Failed to trigger website scan: {str(e)}"
         )
 
 

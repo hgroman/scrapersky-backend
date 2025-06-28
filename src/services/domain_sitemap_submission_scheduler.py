@@ -1,9 +1,8 @@
 """
-Scheduler Service for Domain Sitemap Submission
+Scheduler Service for Website Scanning
 
 Periodically checks for domains marked with sitemap_analysis_status = 'queued'
-and triggers the DomainToSitemapAdapterService to submit them to the legacy
-sitemap scanning system.
+and triggers the WebsiteScanService to initiate a new scan.
 """
 
 import logging

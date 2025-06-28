@@ -4,10 +4,11 @@ Routers Package
 This package contains all the FastAPI routers for the application.
 """
 
+from src.config.settings import settings
+
 from .batch_page_scraper import router as batch_page_scraper_router
 from .batch_sitemap import router as batch_sitemap_router
 from .db_portal import router as db_portal_router
-from .dev_tools import router as dev_tools_router
 from .google_maps_api import router as google_maps_router
 from .modernized_page_scraper import router as modernized_page_scraper_router
 from .modernized_sitemap import router as modernized_sitemap_router
@@ -20,9 +21,14 @@ __all__ = [
     "modernized_sitemap_router",
     "batch_page_scraper_router",
     "modernized_page_scraper_router",
-    "dev_tools_router",
     "db_portal_router",
     "profile_router",
     "batch_sitemap_router",
     "places_staging_router",
 ]
+
+# Conditionally import and export dev_tools_router for development environments
+if settings.ENVIRONMENT.lower() in ["development", "dev"]:
+    from .dev_tools import router as dev_tools_router
+
+    __all__.append("dev_tools_router")
