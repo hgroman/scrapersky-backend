@@ -80,14 +80,3 @@ typing_extensions==4.12.2
 urllib3==2.3.0
 yarl==1.18.3
 zstandard==0.23.0
-
-# Code Analysis Tools
-importlab>=0.8.1 # Added for unused code detection
-pydeps>=3.0.0 # Added for improved static analysis (replaces static_import_trace.py)
-
-# Testing
-pytest>=8.0.0 # Testing framework
-pytest-asyncio>=0.23.0 # Pytest plugin for asyncio code
-pytest-cov>=4.0.0 # Code coverage for pytest
-# httpx-mock -> Replaced by respx for better async support
-respx>=0.20 # Mocking httpx requests
