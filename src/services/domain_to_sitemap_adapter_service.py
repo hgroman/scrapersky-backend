@@ -70,7 +70,7 @@ class DomainToSitemapAdapterService:
                 logger.error(
                     f"Adapter Service: Domain record {domain_id} has no domain name."
                 )
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error
                 domain.sitemap_analysis_error = (
                     "Domain record is missing the domain name."  # type: ignore
                 )
@@ -87,7 +87,7 @@ class DomainToSitemapAdapterService:
             api_key = settings.DEV_TOKEN
             if not api_key:
                 logger.error("Adapter Service: DEV_TOKEN not found in settings.")
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error
                 domain.sitemap_analysis_error = (
                     "Configuration Error: DEV_TOKEN missing."  # type: ignore
                 )
