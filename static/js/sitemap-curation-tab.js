@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Sending batch update:", payload);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/sitemap-files/status`, {
+                        const response = await fetch(`${API_BASE_URL}/sitemap-files/sitemap_import_curation/status`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${getJwtToken()}`,

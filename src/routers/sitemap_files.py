@@ -45,6 +45,7 @@ sitemap_files_service = SitemapFilesService()
 # Order matters: Specific paths should generally come before parameterized paths
 
 
+
 @router.get(
     "/",
     response_model=PaginatedSitemapFileResponse,
@@ -99,14 +100,12 @@ async def list_sitemap_files(
 
 
 @router.put(
-    "/status",
-    response_model=Dict[
-        str, int
-    ],  # Response model matches service: {"updated_count": N, "queued_count": M}
-    summary="Batch Update Sitemap File Curation Status",
-    description="Updates the deep_scrape_curation_status for multiple sitemap files and potentially queues them.",
+    "/sitemap_import_curation/status",
+    response_model=Dict[str, int],
+    summary="Batch Update Sitemap Import Curation Status",
+    description="Updates the `sitemap_import_curation_status` for multiple sitemap files and potentially queues them for processing. Compliant with Layer-3 conventions.",
 )
-async def update_sitemap_files_status_batch(
+async def update_sitemap_import_curation_status_batch(
     update_request: SitemapFileBatchUpdate,
     session: AsyncSession = Depends(get_db_session),
     current_user: Dict[str, Any] = Depends(get_current_user),

@@ -24,7 +24,6 @@ services:
       - DEV_TOKEN=${DEV_TOKEN}
       - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
       - LOG_LEVEL=TRACE
-      - DEV_TOKEN=scraper_sky_2024
       - SCRAPER_SKY_DEV_MODE=true
 
       # --- Database Inspection ---
