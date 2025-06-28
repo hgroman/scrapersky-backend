@@ -249,7 +249,7 @@ async def main():
                         content = f.read()
                     
                     embedding = await generate_embedding(content)
-                    
+
                     if embedding != [0.0] * 1536: # Check for placeholder/error embedding
                         await insert_document(conn, registry_id, doc_title, content, embedding) # Inserts/updates in project_docs
                         await update_document_registry_status(conn, registry_id, "completed")

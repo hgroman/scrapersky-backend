@@ -1,7 +1,7 @@
 # Layer Guardian Remediation Protocol
 
-**Version:** 2.0
-**Status:** Adopted
+**Version:** 2.1
+**Status:** Enhanced for Strategic Task Creation
 
 ---
 
@@ -11,14 +11,14 @@ This flag governs the operational mode of the Guardian Persona.
 
 **Proceed with Autonomous DART Task Creation:** TRUE
 
-- **If `TRUE`:** The Guardian will autonomously execute the full remediation workflow (Section 2.0) for each finding in the audit report without seeking intermediate approval.
+- **If `TRUE`:** The Guardian will autonomously execute the full remediation workflow (Section 2.0) for each strategic theme without seeking intermediate approval.
 - **If `FALSE`:** The Guardian will halt after analyzing the audit report, present a consolidated remediation plan, and await explicit user authorization before creating any DART tasks.
 
 ---
 
-## 2.0 Autonomous Remediation Workflow
+## 2.0 Strategic Remediation Workflow
 
-This workflow is executed for each finding when the control flag is `TRUE`.
+**CRITICAL PRINCIPLE:** Process existing audit findings only. Do NOT investigate code files or conduct new analysis.
 
 1.  **Identify Layer-Specific Assets:** Before processing, the Guardian must identify its core assets from its persona file:
     *   `{LayerNumber}` (e.g., 1, 2, 3)
@@ -26,38 +26,66 @@ This workflow is executed for each finding when the control flag is `TRUE`.
     *   `{LayerAuditReportPath}` (e.g., `Docs/Docs_10_Final_Audit/Audit Reports Layer 1/v_Layer1_Models_Enums_Audit_Report.md`)
     *   `{LayerDartboardName}` (e.g., `ScraperSky/Layer 1 Data Sentinel Persona`)
 
-2.  **Create Master Audit Task:** Before processing findings, create a single "master" DART task for the entire audit session. This task will serve as a container for the remediation effort.
+2.  **Create Master Audit Task (MANDATORY FIRST STEP):** 
+    **BLOCKING CONDITION:** You MUST complete this step before proceeding to Step 3. Do not analyze audit findings until this master task exists.
+    
     a. **Title:** `L{LayerNumber} Audit Remediation Session - [YYYY-MM-DD]`
-    b. **Description:** "Master task for tracking all remediation sub-tasks generated during the audit session on [Date]. Governed by audit report: {LayerAuditReportPath}."
+    b. **Description:** "Master task for tracking all strategic remediation themes from audit session on [Date]. Governed by audit report: {LayerAuditReportPath}."
     c. **Action:** Create the task in `{LayerDartboardName}` and capture its `task_id`. This ID is the `dart_master_task_id` for all subsequent steps.
+    **VERIFICATION:** Confirm the master task was created and you have captured the `dart_master_task_id` before continuing.
 
-3.  **Formulate the Plan of Attack:**
-    a.  **Goal:** To establish a clear, high-level roadmap for the remediation session. This provides strategic direction and manages the cognitive load of processing granular findings.
-    b.  **Action:**
-        i.  Perform a high-level survey of the `{LayerAuditReportPath}` to understand the scope and nature of the findings.
-        ii. Formulate a **Plan of Attack Checklist**. This checklist outlines the proposed order of remediation, grouping files or findings thematically for efficient resolution.
-        iii. Update the master DART task's description with this checklist. This ensures the strategic plan is documented and accessible.
+3.  **Perform Strategic Theme Analysis (AFTER Master Task Created):**
+    **PREREQUISITE:** Master task from Step 2 must exist with captured `dart_master_task_id`.
+    
+    a.  **Read Entire Audit Report:** Survey all findings in `{LayerAuditReportPath}` without investigating any code files.
+    b.  **Identify Pattern Categories:** Group audit findings into 3-7 strategic themes based on recurring architectural patterns:
+        *   **Structural Patterns:** BaseModel inheritance, class definitions, column types
+        *   **ENUM Patterns:** Base classes, naming conventions, centralization opportunities
+        *   **Data Integrity Patterns:** Foreign key constraints, primary key types, relationship definitions
+        *   **Naming Convention Patterns:** snake_case violations, SQLAlchemy enum names
+        *   **File Organization Patterns:** Location violations, duplication issues
+    c.  **Strategic Packaging Rule:** Group related audit findings into coherent architectural themes.
+    d.  **Create Master Plan:** Document the strategic approach that will be updated in the master task description.
 
-4.  **Identify Finding:** Read the next technical debt finding from the official `{LayerAuditReportPath}`. This includes identifying the specific principle and the governing document that was violated.
+4.  **Formulate Strategic Theme Details:**
+    a.  **Title Format:** `[L{LayerNumber}] {Strategic Theme Name}` 
+        - Examples: "L1 ENUM Architecture Standardization", "L1 BaseModel Inheritance Compliance"
+    b.  **Description Structure:**
+        ```
+        **Strategic Goal:** [High-level architectural improvement this theme addresses]
+        
+        **Blueprint Principles:** [Specific blueprint sections being enforced]
+        
+        **Files Affected:** [List of files that will be modified]
+        
+        **Detailed Action Items:**
+        [] **{filename.py}** - {Pattern Category}:
+           * [] {Specific audit finding with exact fix needed - include file path, line numbers/components, blueprint principle violated, and governing document reference}
+           * [] {Specific audit finding with exact fix needed - include file path, line numbers/components, blueprint principle violated, and governing document reference}
+        [] **{filename.py}** - {Pattern Category}:
+           * [] {Specific audit finding with exact fix needed}
+        ```
+    c.  **Severity Assignment:** Extract the highest severity level from the grouped audit findings.
 
-5.  **Gather File Audit Context:**
-    a.  Extract the file path (e.g., `src/models/batch_job.py`) from the finding.
-    b.  Query Supabase: `SELECT id, layer_number, workflows FROM public.file_audit WHERE file_path = '[file_path]'` to retrieve the unique record ID, its layer, and its associated workflows.
+5.  **Create Strategic DART Task:** Create a new task in the `{LayerDartboardName}` DART project with the strategic theme details.
 
-6.  **Formulate Task Details:**
-    a.  **Title:** `[L{LayerNumber}] [File Name]: [Actionable Issue Summary]`
-    b.  **Tags:** `layer-{LayerNumber}`, `audit-remediation`, and context-specific tags (e.g., `schema-compliance`, `refactoring`).
-    c.  **Description:** A detailed summary of the finding from the audit report, including the specific principle from the governing document.
-    d.  **Priority / Severity:** Extract the severity level (e.g., High, Medium, Low) from the finding.
-
-7.  **Create DART Task:** Create a new task in the `{LayerDartboardName}` DART project with the formulated details.
-
-8.  **Create Enriched Remediation Record:**
+6.  **Create Enriched Remediation Record:**
     a.  Capture the `task_id` from the newly created DART task.
-    b.  Formulate the `INSERT` query using all gathered context. The Guardian MUST designate itself as the `governor` by using its `{LayerNumber}`.
-    c.  Execute Supabase command: `INSERT INTO public.file_remediation_tasks (file_audit_id, dart_task_id, dart_master_task_id, description, severity, remediation_status, workflow_context, blueprint_principle_violated, governor, governing_document_reference) VALUES ([file_audit.id], '[new_dart_task_id]', '[dart_master_task_id]', '[Summary]', '[Severity]', 'pending', array_to_string([file_audit.workflows], ', '), '[Principle]', '{LayerNumber}', '[Governing Doc Path]');`.
+    b.  For EACH audit finding within this strategic theme, execute: 
+        `INSERT INTO public.file_remediation_tasks (file_audit_id, dart_task_id, dart_master_task_id, description, severity, remediation_status, workflow_context, blueprint_principle_violated, governor, governing_document_reference) VALUES ([file_audit.id], '[new_dart_task_id]', '[dart_master_task_id]', '[Finding Summary]', '[Severity from audit]', 'pending', array_to_string([file_audit.workflows], ', '), '[Specific principle from audit]', '{LayerNumber}', '[Exact governing document path from audit]');`
 
-9.  **Log and Repeat:** Log the successful creation and linking. Proceed to the next finding in the audit report and repeat the workflow.
+7.  **Log and Repeat:** Log the successful creation and linking. Proceed to the next strategic theme and repeat steps 4-6.
+
+---
+
+## 2.1 Quality Assurance Checklist
+
+Before completing the remediation workflow, verify:
+- [ ] **Strategic Grouping:** Created thematic tasks, not individual finding tasks
+- [ ] **Coverage:** Every audit finding is captured in exactly one strategic task
+- [ ] **Specificity:** Each action item references specific files, classes, or components from the audit
+- [ ] **No Code Investigation:** Did not read any source code files beyond the audit report
+- [ ] **Strategic Coherence:** Each task addresses a coherent architectural improvement theme
 
 ---
 
