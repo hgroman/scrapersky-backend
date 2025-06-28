@@ -19,7 +19,9 @@ from sqlalchemy.future import select
 
 from src.config.settings import settings
 from src.models.domain import Domain, SitemapAnalysisStatusEnum
-from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
+import asyncio
+from src.services.website_scan_service import WebsiteScanService
+from src.tasks.email_scraper import scan_website_for_emails
 from src.session.async_session import get_background_session
 
 # Import the shared scheduler instance
@@ -47,7 +49,7 @@ async def process_pending_domain_sitemap_submissions():
     domains_failed = 0  # Unified failure counter
     stale_threshold_minutes = 15  # Threshold for considering a domain stuck in 'queued'
 
-    adapter_service = DomainToSitemapAdapterService()
+    website_scan_service = WebsiteScanService()
     domain_ids_to_process: List[uuid.UUID] = []
 
     # --- Step 1: Fetch IDs of domains to process (outside main transaction loop) ---
@@ -138,43 +140,35 @@ async def process_pending_domain_sitemap_submissions():
                     f"Domain {domain_id} status set to 'processing' and flushed."
                 )
 
-                # 2. Call the adapter service
+                # 2. Initiate the scan directly using the service
                 domains_processed += 1
-                submitted_ok = await adapter_service.submit_domain_to_legacy_sitemap(
+                system_user_id = uuid.UUID(settings.SYSTEM_USER_ID)
+                job = await website_scan_service.initiate_scan(
                     domain_id=locked_domain.id,
-                    session=session_inner,  # Pass the dedicated inner session
+                    user_id=system_user_id,
+                    session=session_inner,
                 )
 
-                # 3. Adapter Status Check (Defensive Check)
-                # The adapter *should* have set status to submitted/failed and flushed.
-                current_status_after_adapter = getattr(
-                    locked_domain, "sitemap_analysis_status", None
-                )
-                if current_status_after_adapter not in [
-                    SitemapAnalysisStatusEnum.Completed,
-                    SitemapAnalysisStatusEnum.Error,
-                ]:
-                    logger.error(
-                        f"Adapter failed to update status for domain {domain_id}! Current status: {locked_domain.sitemap_analysis_status}. Forcing 'failed'."
-                    )
-                    locked_domain.sitemap_analysis_status = (
-                        SitemapAnalysisStatusEnum.Error
-                    )
-                    locked_domain.sitemap_analysis_error = (
-                        "Adapter did not set final status"
-                    )
-                    await session_inner.flush()  # Flush the forced failure status
-                    domains_failed += 1  # Count this as a failure
-                elif submitted_ok:
+                # 3. Queue the background task
+                if job.status == TaskStatus.PENDING:
+                    asyncio.create_task(scan_website_for_emails(job.id))
+                    logger.info(f"Queued background task for job {job.id} for domain {domain_id}.")
+                    # Mark domain as completed since the job is now queued
+                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Completed
+                    await session_inner.flush()
                     domains_submitted_successfully += 1
-                    logger.info(
-                        f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter."
-                    )
-                else:  # submitted_ok is False, status should be 'failed'
+                elif job.status == TaskStatus.RUNNING:
+                    logger.info(f"Job {job.id} for domain {domain_id} is already running. No new task queued.")
+                    # Mark domain as completed as a job is already active
+                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Completed
+                    await session_inner.flush()
+                    domains_submitted_successfully += 1
+                else:
+                    logger.error(f"Failed to initiate scan for domain {domain_id}. Job status: {job.status}")
+                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error
+                    locked_domain.sitemap_analysis_error = "Failed to create or find active job for scan."
+                    await session_inner.flush()
                     domains_failed += 1
-                    logger.warning(
-                        f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter. Error: {getattr(locked_domain, 'sitemap_analysis_error', 'N/A')}"
-                    )
 
                 # 4. Commit this domain's transaction
                 await session_inner.commit()
