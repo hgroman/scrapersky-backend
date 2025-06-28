@@ -47,7 +47,7 @@ APScheduler==3.10.4
 # Other dependencies required by the application
 aiosignal==1.3.2
 annotated-types==0.7.0
-anyio==4.8.0
+anyio==3.*
 attrs==25.1.0
 certifi==2025.1.31
 cffi==1.17.1
