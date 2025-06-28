@@ -65,7 +65,7 @@ def decode_token(token: str) -> Dict[str, Any]:
     Decode and validate a JWT token.
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience="authenticated")
         return payload
     except JWTError as e:
         logger.error(f"JWT decode error: {str(e)}")
