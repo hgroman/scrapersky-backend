@@ -7,6 +7,8 @@ import uvicorn
 src_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
 sys.path.append(src_dir)
 
+from src.config.settings import settings
+
 if __name__ == "__main__":
     # Get port from environment variable for Render compatibility
     port = int(os.getenv("PORT", "8000"))
@@ -15,9 +17,7 @@ if __name__ == "__main__":
     enable_tracing = os.getenv("ENABLE_IMPORT_TRACING", "false").lower() == "true"
 
     # Disable reload if tracing is enabled, otherwise use standard logic
-    reload_enabled = (not enable_tracing) and (
-        os.getenv("ENVIRONMENT", "development") == "development"
-    )
+    reload_enabled = (not enable_tracing) and (settings.environment.lower() == "development")
 
     if enable_tracing:
         print("INFO: ENABLE_IMPORT_TRACING=true, Uvicorn reload DISABLED.")

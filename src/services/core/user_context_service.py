@@ -11,6 +11,8 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
+from src.config.settings import settings
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class UserContextService:
     def __init__(self):
         """Initialize the UserContextService."""
         # Cache environment variables for better performance
-        self._environment = os.getenv("ENVIRONMENT", "development")
+        self._environment = settings.environment
         self._dev_user_id = os.getenv("DEV_USER_ID")
         self._system_user_id = os.getenv("SYSTEM_USER_ID")
 

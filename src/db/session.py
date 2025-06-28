@@ -33,7 +33,7 @@ def get_engine():
     connection_string = get_db_url()
 
     # Determine environment-appropriate pool settings
-    is_prod = os.getenv("ENVIRONMENT", "").lower() == "production"
+    is_prod = settings.environment.lower() == "production"
 
     # Production values are more conservative than development
     pool_settings = {
@@ -69,7 +69,7 @@ def get_engine():
     connect_args["ssl"] = ssl_context
 
     # Development environment - log SSL configuration
-    if os.getenv("ENVIRONMENT", "").lower() != "production":
+    if settings.environment.lower() != "production":
         logger.warning(
             "Development environment detected: Disabling SSL certificate verification"
         )

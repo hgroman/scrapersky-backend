@@ -28,7 +28,7 @@ __all__ = [
 ]
 
 # Conditionally import and export dev_tools_router for development environments
-if settings.ENVIRONMENT.lower() in ["development", "dev"]:
+if settings.environment.lower() in {"development", "dev"}:
     from .dev_tools import router as dev_tools_router
 
     __all__.append("dev_tools_router")
