@@ -18,10 +18,20 @@ from ..config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "development_secret_key")
-ALGORITHM = "HS256"
+# --- JWT Configuration ---
+# IMPORTANT: The application will NOT start if JWT_SECRET_KEY is not set in the environment.
+# This is a security measure to prevent using a default/weak key.
+try:
+    SECRET_KEY = os.environ["JWT_SECRET_KEY"]
+except KeyError:
+    logger.error("FATAL: JWT_SECRET_KEY environment variable not set.")
+    raise
+
+ALGORITHM = "HS256"  # As per Supabase default
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "30"))
+
+# Log the configuration on startup to aid debugging
+logger.info(f"JWT Auth Initialized. Algorithm: {ALGORITHM}, Secret Key Hint: '{SECRET_KEY[:8]}...'.")
 
 # Default tenant for development/testing
 DEFAULT_TENANT_ID = os.getenv(
@@ -74,11 +84,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     if token.startswith("Bearer "):
         token = token[7:]  # Remove "Bearer " prefix
 
-    # Special case for development with hardcoded token
-    if token == "scraper_sky_2024" and settings.environment.lower() in [
-        "development",
-        "dev",
-    ]:
+    # --- SECURITY WARNING: DEVELOPMENT ONLY ---
+    # This block provides a bypass for JWT validation in development environments.
+    # It uses a hardcoded token ('scraper_sky_2024') and should NEVER be enabled in staging or production.
+    # The primary purpose is to allow backend testing without a live frontend session.
+    if token == "scraper_sky_2024" and settings.environment.lower() in ["development", "dev"]:
         logger.info("Using development token for authentication")
 
         # --- DEVELOPMENT TOKEN USER ID CHANGE (2025-04-11) ---
