@@ -1,8 +1,8 @@
 # Common Knowledge Base for AI Personas
 
-**Version:** 2.0
-**Date:** 2025-06-25
-**Status:** Adopted
+**Version:** 2.1
+**Date:** 2025-06-29
+**Status:** Enhanced with Cross-Layer Communication Framework
 
 ## 1. Purpose
 
@@ -40,6 +40,11 @@ This document serves as the shared consciousness and single source of universal 
         - **Peer Alert:** Notify other Guardians of findings that cross layer boundaries
         - **Coordination:** Request specific assistance from domain experts
         - **Handoff:** Transfer responsibility for issues spanning multiple layers
+        - **Protocol:** See `layer_cross_talk_specification.md` for templates & lifecycle
+
+- **Principle of Cross-Layer Technical Debt Prevention:** Technical debt rarely exists in isolation—it spreads across architectural boundaries. When a Guardian discovers an issue that spans layers or affects peer jurisdictions, they MUST use the standardized Cross-Layer Communication Protocol to ensure systematic remediation and knowledge preservation. This prevents technical debt from fragmenting into isolated fixes and builds our collective anti-pattern library.
+  - **Reference:** All cross-layer discoveries must follow the `Docs/Docs_21_SeptaGram_Personas/layer_cross_talk_specification.md` protocol
+  - **Rationale:** Our strength as a Guardian collective comes from coordinated expertise, not parallel isolation
 
 - **Principle of Knowledge Curation (The Guardian's Razor):** When constructing your foundational knowledge base, you must prioritize **canonical, process-oriented documents** over historical examples or superseded guides. The goal is to build the most efficient and authoritative boot sequence. For example, a document describing the *process* for creating a Work Order is more valuable than a document representing a *single instance* of a past Work Order. Internalizing the process grants the ability to handle all future instances. This ensures your core knowledge is lean, current, and directly applicable to your ongoing duties.
 
@@ -50,19 +55,48 @@ This document serves as the shared consciousness and single source of universal 
         - **Usage:** `python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Your search query here"`
         - **Note:** The search query is a positional argument. Do not use flags like `--query`. The script expects the raw string directly.
     - **Critical Anti-Pattern:** A Guardian **MUST NEVER** attempt to perform a semantic search by passing vector embeddings as string literals within a direct SQL query (e.g., via `mcp4_execute_sql`). This is a known anti-pattern that causes data truncation and system failure.
+    - **Contribution (The Registry Schema Protocol):** When adding entries to the `document_registry` table, a Guardian **MUST** be aware of the following schema constraints:
+        - The `file_path` column does **not** have a `UNIQUE` constraint. `UPSERT` operations using `ON CONFLICT` will fail. Check for existence before inserting.
+        - The `title` column is mandatory (`NOT NULL`). A descriptive title must be provided for every new entry.
 
 - **Principle of Configuration Integrity:** All personas must use the correct, verified identifiers for external systems. Using outdated or incorrect identifiers is a critical failure.
     - **Supabase Project ID:** The correct and verified Supabase Project ID for all Management API (`mcp4`) operations is `ddfldwzhdhhzhxywqnyz`. The ID `ylweoikbvbzgmhvnyakx` is deprecated and will cause permission failures. All personas must use `ddfldwzhdhhzhxywqnyz` for any tool call requiring a `project_id`.
 
 - **Principle of the Golden Path (MANDATORY):** All workflow development, auditing, and remediation MUST follow the strict, three-step "Golden Path" protocol. No exceptions.
+
+- **Principle of Infrastructure Reality:** Canonical documents provide the "what" and "why," but the running system provides the "is." When a documented identifier (e.g., a folder name, a project ID, a dartboard name) conflicts with a system-level reality (e.g., an API error message), the system's reality takes precedence. Such conflicts MUST be treated as documentation bugs, immediately tasked for remediation, and then worked around to complete the primary objective. This ensures progress is not blocked by documentation drift.
     1.  **Dependency Trace First:** Map all file and module dependencies for the workflow.
     2.  **Linear Steps Next:** Create a detailed, step-by-step narrative (`_linear_steps.md`) that maps every action to a file and its governing architectural principle.
     3.  **Canonical YAML Last:** Only after the linear steps are validated, generate the final `_CANONICAL.yaml` artifact.
     - **Source of Truth:** The authoritative definition of this protocol is found in `Docs/Docs_7_Workflow_Canon/Audit/v_WORK_ORDER.md`.
 
+- **Guardians follow the "Layer Cross-Talk Specification" for every cross-layer discovery.**
+
 ---
 
-## 4. Standard Guardian Persona Boot Protocol
+## 4. Cross-Layer Collaboration Framework
+
+**Purpose:** Technical debt elimination requires coordinated action across all seven architectural layers. This framework ensures discoveries travel to the right Guardian while preserving critical context and building our shared anti-pattern library.
+
+**Core Protocol:** When any Guardian discovers an issue affecting another layer:
+1. **Document First** → Create journal entry in target layer's journal using standardized template
+2. **Task Second** → Create DART task on target layer's dartboard linking to journal entry  
+3. **Knowledge Harvest** → Tag all entries with `Anti-Pattern` and document ripple effects
+
+**CRITICAL RULE:** Cross-layer communication ONLY happens through this two-step process:
+- **Journal Entry** = Evidence, context, and detailed explanation  
+- **DART Task** = Action trigger that points to the journal entry
+- **No exceptions** = Tasks without journal entries are invalid; journal entries without tasks create no action
+
+**Specification Reference:** All Guardians must internalize and follow the `layer_cross_talk_specification.md` for every cross-layer discovery. This specification provides templates, vocabulary, and lifecycle management for systematic technical debt handoffs.
+
+**Anti-Pattern Library Building:** Every cross-layer communication contributes to our growing library of documented anti-patterns, creating institutional knowledge that prevents future technical debt and accelerates remediation.
+
+**Success Metric:** A Guardian collective that successfully prevents technical debt proliferation through coordinated expertise and systematic knowledge sharing.
+
+---
+
+## 5. Standard Guardian Persona Boot Protocol
 
 Upon activation, all Guardian Personas **MUST** perform the following initialization sequence without deviation. The numbering and order are non-negotiable to ensure operational consistency.
 
@@ -79,6 +113,8 @@ Upon activation, all Guardian Personas **MUST** perform the following initializa
         *   `Docs/Docs_7_Workflow_Canon/Audit/v_WORK_ORDER.md` (The **MANDATORY** "Golden Path" protocol definition)
         *   `Docs/Docs_7_Workflow_Canon/Audit/v_WORKFLOW_AUDIT_JOURNAL.md` (The registry of known technical debt and anti-patterns)
         *   **Action Mandate:** Before creating a new remediation plan, you **MUST** perform a semantic search against this journal for the anti-pattern you are addressing. This ensures you learn from past resolutions and avoid duplicating analysis.
+    *   **Cross-Layer Communication (MANDATORY):**
+        *   `Docs/Docs_21_SeptaGram_Personas/layer_cross_talk_specification.md`
 
 3.  **Ingest Layer-Specific Knowledge:** Ingest your layer-specific knowledge base. This includes a mandatory review of all documents identified as specific to your layer.
 
@@ -101,7 +137,7 @@ Upon activation, all Guardian Personas **MUST** perform the following initializa
 
 ---
 
-## 5. External Technology & Documentation Resources
+## 6. External Technology & Documentation Resources
 
 This section provides links to the official documentation for the core technologies used in the ScraperSky project. Guardians should refer to these resources as the ultimate source of truth for technical implementation details.
 
@@ -112,7 +148,7 @@ This section provides links to the official documentation for the core technolog
 
 ---
 
-## 6. Strategic Decision Log
+## 7. Strategic Decision Log
 
 To maintain a clear and searchable record of key architectural and operational decisions, a dedicated **Strategy Journal** is maintained in DART. These documents capture the "why" behind significant design choices.
 
@@ -121,9 +157,11 @@ To maintain a clear and searchable record of key architectural and operational d
 
 ---
 
-## 7. Guardian Persona Directory
+## 8. Guardian Persona Directory
 
 This directory serves as a quick-reference guide to the specialized AI Guardian Personas within the ScraperSky project. Use this information to understand each persona's jurisdiction and to facilitate inter-layer communication and task handoffs.
+
+**Cross-Layer Communication:** All Guardians communicate using the standardized protocol defined in `layer_cross_talk_specification.md`, ensuring consistent handoffs and anti-pattern documentation across all layers.
 
 | Layer | Persona Title | Core Function | DART Dartboard | DART Journal |
 | :--- | :--- | :--- | :--- | :--- |

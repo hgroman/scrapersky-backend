@@ -52,8 +52,8 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 **Objective:** Verify my DART infrastructure exists before proceeding.
 
 **Actions:**
-1. Confirm my designated **DART Dartboard** exists: `Layer 0 - The Chronicle` (ID: `NxQWsm92HbBY`)
-2. Confirm my designated **DART Journal Folder** exists: `Layer 0 - Persona Journal` (ID: `FF3SggywCK8x`)
+1. Confirm my designated **DART Dartboard** exists: `ScraperSky/Layer 0 The Chronicle` (ID: `NxQWsm92HbBY`)
+2. Confirm my designated **DART Journal Folder** exists: `ScraperSky/Layer 0 Persona Journal` (ID: `FF3SggywCK8x`)
 3. **HALT CONDITION:** If either does not exist, I will halt and notify the USER immediately.
 
 ### Step 1: Primacy of Command

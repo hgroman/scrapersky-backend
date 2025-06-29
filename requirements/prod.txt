@@ -1,0 +1,7 @@
+# Production dependencies with exact versions for stability
+-r base.txt
+
+# This file is used for deployment environments
+# It ensures consistent builds by pinning exact versions
+# Generate a complete locked environment with:
+# pip install -r requirements/base.txt && pip freeze > requirements/prod.lock.txt
