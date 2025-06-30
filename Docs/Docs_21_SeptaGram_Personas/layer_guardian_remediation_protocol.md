@@ -1,7 +1,7 @@
 # Layer Guardian Remediation Protocol
 
-**Version:** 2.1
-**Status:** Enhanced for Strategic Task Creation
+**Version:** 2.2
+**Status:** Enhanced for Strategic Task Creation with Detailed Implementation Guidance
 
 ---
 
@@ -29,7 +29,7 @@ This flag governs the operational mode of the Guardian Persona.
 2.  **Create Master Audit Task (MANDATORY FIRST STEP):** 
     **BLOCKING CONDITION:** You MUST complete this step before proceeding to Step 3. Do not analyze audit findings until this master task exists.
     
-    a. **Title:** `L{LayerNumber} Audit Remediation Session - [YYYY-MM-DD]`
+    a. **Title:** `L{LayerNumber} Audit Remediation Session - [YYYY-MM-DD HH:MM:SS]`
     b. **Description:** "Master task for tracking all strategic remediation themes from audit session on [Date]. Governed by audit report: {LayerAuditReportPath}."
     c. **Action:** Create the task in `{LayerDartboardName}` and capture its `task_id`. This ID is the `dart_master_task_id` for all subsequent steps.
     **VERIFICATION:** Confirm the master task was created and you have captured the `dart_master_task_id` before continuing.
@@ -53,21 +53,44 @@ This flag governs the operational mode of the Guardian Persona.
     b.  **Description Structure:**
         ```
         **Strategic Goal:** [High-level architectural improvement this theme addresses]
-        
-        **Blueprint Principles:** [Specific blueprint sections being enforced]
-        
-        **Files Affected:** [List of files that will be modified]
-        
-        **Detailed Action Items:**
-        [] **{filename.py}** - {Pattern Category}:
-           * [] {Specific audit finding with exact fix needed - include file path, line numbers/components, blueprint principle violated, and governing document reference}
-           * [] {Specific audit finding with exact fix needed - include file path, line numbers/components, blueprint principle violated, and governing document reference}
-        [] **{filename.py}** - {Pattern Category}:
-           * [] {Specific audit finding with exact fix needed}
+
+        **Originating Audit Report Chunk:** [Full path to the audit report chunk file (e.g., Docs/Docs_10_Final_Audit/Audit Reports Layer 1/v_Layer1_Models_Enums_Audit_Report_CHUNK_X_of_10_FILENAME.md)]
+
+        **Blueprint Authority:** 
+        - **Violated Principle:** [Exact blueprint principle number and title]
+        - **Governing Document:** [Full path to blueprint/convention document]
+        - **Compliance Standard:** [Specific rule/pattern being enforced]
+
+        **Files & Findings Matrix:**
+        [] **{filename.py}** (Lines {X-Y}) - {Pattern Category}:
+           📍 **Location:** `{exact_class_name}.{method_name}()` | Line {specific_line}
+           ❌ **Current State:** {exact_current_implementation_from_audit}
+           ✅ **Required State:** {exact_compliant_implementation_from_audit}
+           📖 **Blueprint Reference:** {specific_section_number_and_quote}
+           🔧 **Implementation Notes:** {any_special_considerations_from_audit}
+           
+        [] **{filename.py}** (Lines {A-B}) - {Pattern Category}:
+           📍 **Location:** `{exact_class_name}.{field_name}` | Line {specific_line}
+           ❌ **Current State:** {exact_violating_code_snippet}
+           ✅ **Required State:** {exact_target_pattern}
+           📖 **Blueprint Reference:** {section_and_direct_quote}
+           🔗 **Dependencies:** {any_related_files_or_imports_affected}
+
+        **Cross-Layer Impact Assessment:**
+        - **L{X} Dependencies:** {specific_files_that_import_these_changes}
+        - **Breaking Changes:** {any_API_or_interface_changes_required}
+        - **Migration Steps:** {sequence_of_changes_to_avoid_breaking_system}
+
+        **Testing Verification:**
+        - **Unit Tests Affected:** {specific_test_files_needing_updates}
+        - **Integration Points:** {workflows_or_endpoints_to_verify}
+        - **Manual Verification:** {specific_steps_to_confirm_compliance}
+
+        **Estimated Effort:** {Small|Medium|Large} - {brief_justification}
         ```
     c.  **Severity Assignment:** Extract the highest severity level from the grouped audit findings.
 
-5.  **Create Strategic DART Task:** Create a new task in the `{LayerDartboardName}` DART project with the strategic theme details.
+5.  **Create Strategic DART Task:** Create a new task in the `{LayerDartboardName}` DART project with the strategic theme details. The 'parentId' for this task MUST be the ID of the audit report chunk task being processed (e.g., the ID of 'v_Layer1_Models_Enums_Audit_Report_CHUNK_X_of_10_...md').
 
 6.  **Create Enriched Remediation Record:**
     a.  Capture the `task_id` from the newly created DART task.
@@ -86,6 +109,9 @@ Before completing the remediation workflow, verify:
 - [ ] **Specificity:** Each action item references specific files, classes, or components from the audit
 - [ ] **No Code Investigation:** Did not read any source code files beyond the audit report
 - [ ] **Strategic Coherence:** Each task addresses a coherent architectural improvement theme
+- [ ] **Implementation Detail:** All findings include exact line numbers, code snippets, and blueprint references
+- [ ] **Cross-Layer Awareness:** Impact assessment identifies dependencies and breaking changes
+- [ ] **Testing Guidance:** Clear verification steps are provided for each change
 
 ---
 

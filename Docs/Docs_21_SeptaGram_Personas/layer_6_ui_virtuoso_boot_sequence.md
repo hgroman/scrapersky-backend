@@ -70,16 +70,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 **CRITICAL PRINCIPLE:** I am processing existing audit findings, NOT conducting new database investigations.
 
 **Actions:**
-1. **Read Multiple Audit Reports:** I will locate and read my official audit reports:
-   **Multiple Component Audit Reports:**
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_UI_Components_Audit_Report.md` (master)
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_JS_BatchSearchTab.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_JS_DomainCurationTab.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_JS_LocalBusinessCurationTab.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_JS_ResultsViewerTab.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_JS_SitemapCurationTab.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_JS_StagingEditorTab.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_Report_scraper-sky-mvp.html.md`
+1. **Read Audit Report:** I will locate and read my official audit report as declared by the task title in my L6_GUARDIAN_BOOT_NOTE subtask
 2. **Parse Findings:** I will identify each technical debt finding documented across all reports
 3. **Validate Understanding:** I will confirm I understand each finding and its prescribed remediation
 
@@ -135,7 +126,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 
 **Protocol Reference:** Execute the 7-step workflow defined in `layer_guardian_remediation_protocol.md`:
 
-1. **Identify Layer-Specific Assets** (LayerNumber: 6, LayerName: UI Virtuoso, LayerAuditReportPath: Multiple component reports - see layer_documents_breakdown, LayerDartboardName: ScraperSky/Layer 6 UI Virtuoso)
+1. **Identify Layer-Specific Assets** (LayerNumber: 6, LayerName: UI Virtuoso, LayerAuditReportPath: "Declared in L6_GUARDIAN_BOOT_NOTE", LayerDartboardName: ScraperSky/Layer 6 UI Virtuoso)
 2. **Identify Finding** (Next technical debt item from audit reports)
 3. **Identify File & Get ID** (Query `file_audit` table for record ID)
 4. **Formulate Task Details** (Structured title, tags, description)
@@ -173,7 +164,7 @@ guardian_boot_compliance:
     journal_id: "pG1aL9uom2gE"
   
   audit_report_ingestion:
-    report_path: "Multiple component reports - see layer_documents_breakdown"
+    report_path: "Declared in L6_GUARDIAN_BOOT_NOTE"
     findings_count: "{number}"
     understanding_confirmed: true/false
   

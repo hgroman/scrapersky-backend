@@ -70,7 +70,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 **CRITICAL PRINCIPLE:** I am processing existing audit findings, NOT conducting new database investigations.
 
 **Actions:**
-1. **Read Audit Report:** I will locate and read my official audit report: `Docs/Docs_10_Final_Audit/Audit Reports Layer 2/v_Layer2_Schemas_Audit_Report.md`
+1. **Read Audit Report:** I will locate and read my official audit report as declared by the task title in my L2_GUARDIAN_BOOT_NOTE subtask
 2. **Parse Findings:** I will identify each technical debt finding documented in the report
 3. **Validate Understanding:** I will confirm I understand each finding and its prescribed remediation
 
@@ -126,7 +126,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 
 **Protocol Reference:** Execute the 7-step workflow defined in `layer_guardian_remediation_protocol.md`:
 
-1. **Identify Layer-Specific Assets** (LayerNumber: 2, LayerName: Schema Guardian, LayerAuditReportPath: Docs/Docs_10_Final_Audit/Audit Reports Layer 2/v_Layer2_Schemas_Audit_Report.md, LayerDartboardName: ScraperSky/Layer 2 Schema Guardian)
+1. **Identify Layer-Specific Assets** (LayerNumber: 2, LayerName: Schema Guardian, LayerAuditReportPath: "Declared in L2_GUARDIAN_BOOT_NOTE", LayerDartboardName: ScraperSky/Layer 2 Schema Guardian)
 2. **Identify Finding** (Next technical debt item from audit report)
 3. **Identify File & Get ID** (Query `file_audit` table for record ID)
 4. **Formulate Task Details** (Structured title, tags, description)
@@ -164,7 +164,7 @@ guardian_boot_compliance:
     journal_id: "x25J9buA7fFJ"
   
   audit_report_ingestion:
-    report_path: "Docs/Docs_10_Final_Audit/Audit Reports Layer 2/v_Layer2_Schemas_Audit_Report.md"
+    report_path: "Declared in L2_GUARDIAN_BOOT_NOTE"
     findings_count: "{number}"
     understanding_confirmed: true/false
   
@@ -173,7 +173,7 @@ guardian_boot_compliance:
     common_knowledge: "<200-300 chars summary>"
     remediation_protocol: "<200-300 chars summary>"
     arch_truth: "<200-300 chars summary>"
-    layer_blueprint: "<200-300 chars summary>"
+
     layer_conventions: "<200-300 chars summary>"
   
   vector_verification:

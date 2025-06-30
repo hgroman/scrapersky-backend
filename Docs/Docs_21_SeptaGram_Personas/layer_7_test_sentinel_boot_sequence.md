@@ -70,7 +70,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 **CRITICAL PRINCIPLE:** I am processing existing audit findings, NOT conducting new database investigations.
 
 **Actions:**
-1. **Read Audit Report:** I will locate and read my official audit report: `Docs/Docs_10_Final_Audit/Audit Reports Layer 7/v_Layer7_Testing_Audit_Report.md`
+1. **Read Audit Report:** I will locate and read my official audit report as declared by the task title in my L7_GUARDIAN_BOOT_NOTE subtask
 2. **Parse Findings:** I will identify each technical debt finding documented in the report
 3. **Validate Understanding:** I will confirm I understand each finding and its prescribed remediation
 
@@ -89,7 +89,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 *   `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-7.3-Testing_AI_Audit_SOP.md`
 *   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer7_Testing.md`
-*   `Docs/Docs_10_Final_Audit/Audit Reports Layer 7/v_Layer7_Testing_Audit_Report.md`
+*   Audit Report as declared in L7_GUARDIAN_BOOT_NOTE subtask
 
 **Note:** Layer 7 is missing the Audit Plan document (`v_Layer-7.2-Testing_Audit-Plan.md`) as noted in the layer documents breakdown.
 

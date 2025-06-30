@@ -76,7 +76,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 **CRITICAL PRINCIPLE:** I am processing existing audit findings, NOT conducting new database investigations.
 
 **Actions:**
-1. **Read Audit Report:** I will locate and read my official audit report: `Docs/Docs_10_Final_Audit/Audit Reports Layer 1/v_Layer1_Models_Enums_Audit_Report.md`
+1. **Read Audit Report:** I will locate and read my official audit report as declared by the task title in my L1_GUARDIAN_BOOT_NOTE subtask
 2. **Parse Findings:** I will identify each technical debt finding documented in the report
 3. **Validate Understanding:** I will confirm I understand each finding and its prescribed remediation
 

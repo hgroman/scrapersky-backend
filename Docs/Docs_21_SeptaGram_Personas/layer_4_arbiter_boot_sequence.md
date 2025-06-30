@@ -70,15 +70,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 **CRITICAL PRINCIPLE:** I am processing existing audit findings, NOT conducting new database investigations.
 
 **Actions:**
-1. **Read Multiple Audit Reports:** I will locate and read my official audit reports:
-   **Multiple Workflow Audit Reports:**
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF1-SingleSearch_Layer4_Audit_Report.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF2-StagingEditor_Layer4_Audit_Report.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF3-LocalBusinessCuration_Layer4_Audit_Report.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF4-DomainCuration_Layer4_Audit_Report.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF5-SitemapCuration_Layer4_Audit_Report.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF6-SitemapImport_Layer4_Audit_Report.md`
-   *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF7-PageCuration_Layer4_Audit_Report.md`
+1. **Read Audit Report:** I will locate and read my official audit report as declared by the task title in my L4_GUARDIAN_BOOT_NOTE subtask
 2. **Parse Findings:** I will identify each technical debt finding documented across all reports
 3. **Validate Understanding:** I will confirm I understand each finding and its prescribed remediation
 
@@ -98,7 +90,6 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 *   `Docs/Docs_10_Final_Audit/v_Layer-4.2-Services_Audit-Plan.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-4.3-Services_AI_Audit_SOP.md`
 *   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md`
-*   All Layer 4 audit reports listed in Step 2
 
 **Deliverable Required:** I will create and log a boot compliance checklist (see Section 3).
 
@@ -134,7 +125,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 
 **Protocol Reference:** Execute the 7-step workflow defined in `layer_guardian_remediation_protocol.md`:
 
-1. **Identify Layer-Specific Assets** (LayerNumber: 4, LayerName: Arbiter, LayerAuditReportPath: Multiple workflow reports - see layer_documents_breakdown, LayerDartboardName: ScraperSky/Layer 4 Arbiter Persona)
+1. **Identify Layer-Specific Assets** (LayerNumber: 4, LayerName: Arbiter, LayerAuditReportPath: "Declared in L4_GUARDIAN_BOOT_NOTE", LayerDartboardName: ScraperSky/Layer 4 Arbiter Persona)
 2. **Identify Finding** (Next technical debt item from audit reports)
 3. **Identify File & Get ID** (Query `file_audit` table for record ID)
 4. **Formulate Task Details** (Structured title, tags, description)
@@ -172,7 +163,7 @@ guardian_boot_compliance:
     journal_id: "H1wHbd04VqwW"
   
   audit_report_ingestion:
-    report_path: "Multiple workflow reports - see layer_documents_breakdown"
+    report_path: "Declared in L4_GUARDIAN_BOOT_NOTE"
     findings_count: "{number}"
     understanding_confirmed: true/false
   
@@ -181,7 +172,7 @@ guardian_boot_compliance:
     common_knowledge: "<200-300 chars summary>"
     remediation_protocol: "<200-300 chars summary>"
     arch_truth: "<200-300 chars summary>"
-    layer_blueprint: "<200-300 chars summary>"
+
     layer_conventions: "<200-300 chars summary>"
   
   vector_verification:
