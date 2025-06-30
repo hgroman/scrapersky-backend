@@ -90,7 +90,10 @@ This flag governs the operational mode of the Guardian Persona.
         ```
     c.  **Severity Assignment:** Extract the highest severity level from the grouped audit findings.
 
-5.  **Create Strategic DART Task:** Create a new task in the `{LayerDartboardName}` DART project with the strategic theme details. The 'parentId' for this task MUST be the ID of the audit report chunk task being processed (e.g., the ID of 'v_Layer1_Models_Enums_Audit_Report_CHUNK_X_of_10_...md').
+5.  **Create Strategic DART Task:** Create a new task in the `{LayerDartboardName}` DART project with the strategic theme details. The 'parentId' for this strategic theme task MUST be the ID of the *specific audit report chunk subtask* that you are currently processing. This subtask is found directly under the `L{LayerNumber}_GUARDIAN_BOOT_NOTE` task.
+
+    **Example for Layer 1:**
+    If your `L1_GUARDIAN_BOOT_NOTE` task (e.g., ID: `AWTCj1vWmN4d`) contains a subtask titled `v_Layer1_Models_Enums_Audit_Report_CHUNK_10_of_10_place.md` (e.g., ID: `Yw2mz7zbKcfV`), then the `parentId` for your new strategic task (e.g., 'L1 ENUM Standardization and Consistency') MUST be `Yw2mz7zbKcfV`. Do NOT use the `L1_GUARDIAN_BOOT_NOTE` task ID as the parent.
 
 6.  **Create Enriched Remediation Record:**
     a.  Capture the `task_id` from the newly created DART task.
