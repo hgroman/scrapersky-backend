@@ -38,7 +38,7 @@ Detailed, step-by-step breakdowns of each workflow:
 
 Formal YAML definitions of workflow structures for validation:
 - WF-Sitemap-Import_CANONICAL.yaml
-- 2-evaluation_progress.yaml
+- v_6_SYSTEM_SCOPE_MAP.yaml
 - Other workflow definition files
 
 ### 5. Dependency Traces
@@ -130,3 +130,60 @@ To further enhance this system, we might consider:
 ---
 
 The combination of standardized documentation, clear patterns, and comprehensive reference material makes this one of the most powerful workflow systems in the ScraperSky project, enabling consistent implementation and maintenance across all workflows.
+
+---
+
+## Note on Historical Anti-Patterns and Data Model Corrections (June 2025)
+
+**Attention Future Auditors, Developers, and AI Assistants:**
+
+This section serves as a permanent record of a significant data model correction implemented in June 2025. An anti-pattern was identified where workflow documentation and definitions for **WF1-SingleSearch** and **WF2-StagingEditor** incorrectly referenced the `places` table instead of the correct `places_staging` table.
+
+This discrepancy was systematically resolved across all canonical workflow documents to ensure architectural consistency and prevent data processing errors. The detailed report below summarizes all changes made.
+
+**If you encounter any file or artifact that appears to reference an incorrect table name for Workflows 1 or 2, you must immediately flag it for correction. This is critical for maintaining the integrity of the workflow canon.**
+
+### **Project-Wide Audit and Correction Summary**
+
+**Objective:** To find and replace all incorrect references to the `places` table and its corresponding `Place` model, ensuring all documentation consistently uses `places_staging` and `PlacesStaging` where appropriate.
+
+---
+
+### **1. Workflow Canonicals (`/workflows`)**
+
+These files define the core workflows and their interactions.
+
+*   **`WF1-SingleSearch_CANONICAL.yaml`**
+    *   Updated the `depends_on_models` definition from `table: places` to `table: places_staging`.
+    *   Corrected the `workflow_connections` section, changing `interface_table: places` to `interface_table: places_staging`.
+    *   Modified the `production_operation` from `INSERT INTO places` to `INSERT INTO places_staging`.
+    *   Updated descriptive comments to refer to the `places_staging table` for clarity.
+
+*   **`v_5_REFERENCE_IMPLEMENTATION_WF2.yaml`**
+    *   Performed a comprehensive update, changing all instances of `table: places`, `interface_table: places`, `source_table: places`, and `destination_table: places` to use `places_staging`.
+    *   Updated the `consumption_query` to select `FROM places_staging`.
+    *   Corrected the `alternative_operation` to `UPDATE places_staging`.
+    *   Fixed descriptions in the `connection_details` to refer to the `places_staging table`.
+
+### **2. Supporting Documentation (`/Template Resources`, `/Micro-Work-Orders`, `/Audit`)**
+
+These documents provide detailed traces, work orders, and audit trails.
+
+*   **`Template Resources/1 WF2-Staging Editor Dependency Trace.md`**
+    *   Corrected the data model mapping to refer to the `places_staging` table.
+    *   Updated the step-by-step data flow sequence to correctly reference `places_staging.status`, the `places_staging` table, and `places_staging` records.
+
+*   **`Micro-Work-Orders/WF2-StagingEditor_micro_work_order.md`**
+    *   In the "Producer-Consumer Pattern Analysis" section, corrected the handoff description to state that it occurs in the `places_staging table`.
+
+*   **`Template Resources/3 WF2-StagingEditor_CANONICAL.yaml`**
+    *   Updated notes in the "Background Task Execution" phase to refer to `PlacesStaging` objects instead of `Places`, ensuring model name consistency.
+
+*   **`Audit/v_6_SYSTEM_SCOPE_MAP.yaml`**
+    *   Corrected two key entries under `model_files` and `enum_files`, changing `table: places` to `table: places_staging` to align the audit document with the current schema.
+
+---
+
+**Conclusion:**
+
+The audit is complete. All identified documentation within the `Docs/Docs_7_Workflow_Canon` directory has been updated. The term `places` has been systematically replaced with `places_staging` to reflect the correct table name, ensuring that all workflow definitions, dependency traces, and audit files are accurate and consistent.

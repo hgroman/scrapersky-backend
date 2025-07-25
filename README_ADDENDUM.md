@@ -36,6 +36,25 @@ docker compose logs -f app
 docker compose down
 ```
 
+## Local Docker Troubleshooting & Gotchas
+
+If the local container fails to start silently (i.e., `docker compose ps` is empty and `logs` are blank), check for these common issues:
+
+1.  **Problem: Incorrect Environment Variable Loading**
+    *   **Symptom**: Container exits instantly. Warnings about missing variables (e.g., `JWT_SECRET_KEY`) may appear.
+    *   **Cause**: The `docker-compose.yml` uses the `environment:` key with shell syntax (`- VAR=${VAR}`). This overrides and blanks out variables that should be loaded from the `.env` file.
+    *   **Solution**: **Always** use `env_file: [-.env]` to load secrets. Do not use the `environment:` block for variables that exist in your `.env` file.
+
+2.  **Problem: Brittle Volume Mounts**
+    *   **Symptom**: Code changes in the image don't seem to apply; local environment behaves differently from production.
+    *   **Cause**: Mounting every file individually (`- ./file:/app/file`) bypasses the code baked into the Docker image, making the setup fragile.
+    *   **Solution**: Only mount essential directories needed for development (e.g., `- ./src:/app/src` for live reload). Trust the code in the image as the source of truth.
+
+3.  **Problem: Build Fails During `pip install`**
+    *   **Symptom**: The `docker compose build` command fails with dependency resolution errors.
+    *   **Cause**: Conflicting version pins in `requirements.txt`.
+    *   **Solution**: Avoid over-pinning dependencies. Allow `pip` to resolve compatible versions where possible. For complex projects, consider using a tool like `pip-tools` to manage dependencies.
+
 ## Environment
 
 Full `.env.example` reference:

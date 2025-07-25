@@ -132,7 +132,7 @@ Audit and document the Sitemap Import workflow (WF6) with particular attention t
    - Contents: Detailed step-by-step workflow breakdown
 
 3. **Canonical YAML**
-   - File: /Docs/Docs_7_Workflow_Canon/workflows/WF6-SitemapImport_CANONICAL.yaml
+   - File: /Docs/Docs_7_Workflow_Canon/workflows/v_11_WF6_CANONICAL.yaml
    - Status: Complete
    - Contents: Structured workflow definition with phases, steps, principles, and verifications
 

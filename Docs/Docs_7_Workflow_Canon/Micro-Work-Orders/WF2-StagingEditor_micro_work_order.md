@@ -63,7 +63,7 @@ Perform a comprehensive audit of the WF2-StagingEditor workflow to document its 
 
    - WF2 directly consumes Place records with status='New' created by WF1
    - The Staging Editor Layer 6: UI Components displays these records for human review
-   - The handoff occurs via the Place.status field in the places table
+   - The handoff occurs via the Place.status field in the places_staging table
    - **Evidence**: Found in places_staging.py where it queries for Place records
 
 2. **Producer Relationship with WF3**

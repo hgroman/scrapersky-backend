@@ -43,7 +43,7 @@ Before starting the audit for a specific workflow, ensure you have access to and
     - Associated service files (e.g., `src/services/{workflow_name}_service.py`, `src/services/{workflow_name}_scheduler.py`).
     - Associated router files (e.g., `src/routers/{workflow_name}.py` or `src/routers/{workflow}_CRUD.py` or `src/routers/{source_table_plural_name}.py`).
 5.  **Workflow Definition (for context):**
-    - `Docs/Docs_7_Workflow_Canon/workflow-comparison-structured.yaml` (provides high-level overview of workflow structure).
+    - `Docs/Docs_7_Workflow_Canon/v_4_PATTERN_COMPARISON.yaml` (provides high-level overview of workflow structure).
 
 ---
 
@@ -53,7 +53,7 @@ For each target workflow (as per the checklist in Section 1.A), perform the foll
 
 ### Step 2.1: Identify Service/Logic Implementation Pattern
 
-1.  **Review `workflow-comparison-structured.yaml` and relevant router/service filenames** for the target workflow.
+1.  **Review `v_4_PATTERN_COMPARISON.yaml` and relevant router/service filenames** for the target workflow.
 2.  **Consult Section 4 (Audit & Assessment Guidance) of the `Layer-4-Services_Blueprint.md`.**
 3.  **Determine the primary pattern used for this workflow's core logic:**
     - **Pattern A: Dedicated Service Layer** (Logic primarily in `src/services/{workflow_name}_service.py` and `..._scheduler.py`).

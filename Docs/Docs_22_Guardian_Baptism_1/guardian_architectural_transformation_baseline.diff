@@ -1,0 +1,2685 @@
+# Guardian's 21 Architectural Files Changed:
+src/models/__init__.py
+src/models/api_models.py
+src/models/batch_job.py
+src/models/contact.py
+src/models/domain.py
+src/models/enums.py
+src/models/job.py
+src/models/local_business.py
+src/models/page.py
+src/models/place.py
+src/models/place_search.py
+src/models/profile.py
+src/models/sitemap.py
+src/routers/batch_sitemap.py
+src/routers/domains.py
+src/routers/local_businesses.py
+src/routers/sitemap_files.py
+src/schemas/sitemap_file.py
+src/services/domain_scheduler.py
+src/services/sitemap_import_scheduler.py
+src/services/sitemap_scheduler.py
+
+# Clean Architectural Changes (No Chat Noise):
+diff --git a/src/models/__init__.py b/src/models/__init__.py
+index 708ed46..682143d 100644
+--- a/src/models/__init__.py
++++ b/src/models/__init__.py
+@@ -44,34 +44,8 @@ from .sitemap import SitemapFile, SitemapUrl
+ from .tenant import Tenant
+ 
+ 
+-class SitemapType(str, Enum):
+-    """Types of sitemaps that can be processed."""
+-
+-    INDEX = "index"
+-    STANDARD = "standard"
+-    IMAGE = "image"
+-    VIDEO = "video"
+-    NEWS = "news"
+-
+-
+-class DiscoveryMethod(str, Enum):
+-    """How a sitemap was discovered."""
+-
+-    ROBOTS_TXT = "robots_txt"
+-    COMMON_PATH = "common_path"
+-    SITEMAP_INDEX = "sitemap_index"
+-    HTML_LINK = "html_link"
+-    MANUAL = "manual"
+-
+-
+-class TaskStatus(str, Enum):
+-    """Common status values for tasks and jobs."""
+-
+-    PENDING = "Queued"
+-    RUNNING = "InProgress"
+-    COMPLETE = "Completed"
+-    FAILED = "Error"
+-    CANCELLED = "Cancelled"
++# Import Enums from the dedicated module
++from .enums import DiscoveryMethod, SitemapType, TaskStatus
+ 
+ 
+ # Export all models
+diff --git a/src/models/api_models.py b/src/models/api_models.py
+deleted file mode 100644
+index 6e40785..0000000
+--- a/src/models/api_models.py
++++ /dev/null
+@@ -1,388 +0,0 @@
+-"""
+-API models for sitemap scraper endpoints.
+-
+-This module defines Pydantic models for API requests and responses.
+-"""
+-
+-import enum
+-from datetime import datetime
+-from enum import Enum
+-from typing import Any, Dict, List, Optional
+-from uuid import UUID
+-
+-from pydantic import UUID4, BaseModel, Field, validator
+-
+-
+-class SitemapScrapingRequest(BaseModel):
+-    """Request model for sitemap scraping endpoint."""
+-
+-    base_url: str = Field(..., description="Domain URL to scan")
+-    max_pages: int = Field(1000, description="Maximum number of pages to scan")
+-    tenant_id: Optional[str] = Field(None, description="Tenant ID for the scan")
+-
+-
+-class SitemapScrapingResponse(BaseModel):
+-    """Response model for sitemap scraping endpoint."""
+-
+-    job_id: str = Field(..., description="Job ID for tracking the scan")
+-    status_url: str = Field(..., description="URL to check the status of the scan")
+-    created_at: Optional[str] = Field(None, description="When the job was created")
+-
+-
+-class BatchRequest(BaseModel):
+-    """Request model for batch scraping endpoint."""
+-
+-    domains: List[str] = Field(..., description="List of domains to scan")
+-    max_pages: int = Field(
+-        1000, description="Maximum number of pages to scan per domain"
+-    )
+-    max_concurrent: int = Field(5, description="Maximum number of concurrent jobs")
+-    batch_id: Optional[str] = Field(
+-        None, description="Optional batch ID (generated if not provided)"
+-    )
+-    tenant_id: Optional[str] = Field(None, description="Tenant ID for the scan")
+-
+-
+-class BatchResponse(BaseModel):
+-    """Response model for batch scraping endpoint."""
+-
+-    batch_id: str = Field(..., description="Batch ID for tracking the scan")
+-    status_url: str = Field(..., description="URL to check the status of the batch")
+-    job_count: int = Field(..., description="Number of jobs in the batch")
+-    created_at: Optional[str] = Field(None, description="When the batch was created")
+-
+-
+-class BatchStatusResponse(BaseModel):
+-    """Response model for batch status endpoint."""
+-
+-    batch_id: str = Field(..., description="Batch ID")
+-    status: str = Field(
+-        ..., description="Batch status (pending, running, complete, failed, partial)"
+-    )
+-    total_domains: int = Field(0, description="Total number of domains in the batch")
+-    completed_domains: int = Field(0, description="Number of completed domains")
+-    failed_domains: int = Field(0, description="Number of failed domains")
+-    progress: float = Field(0.0, description="Overall progress as a percentage (0-100)")
+-    created_at: Optional[str] = Field(None, description="When the batch was created")
+-    updated_at: Optional[str] = Field(
+-        None, description="When the batch was last updated"
+-    )
+-    start_time: Optional[str] = Field(None, description="When processing started")
+-    end_time: Optional[str] = Field(None, description="When processing completed")
+-    processing_time: Optional[float] = Field(
+-        None, description="Total processing time in seconds"
+-    )
+-    domain_statuses: Optional[Dict[str, Any]] = Field(
+-        None, description="Status of individual domains"
+-    )
+-    error: Optional[str] = Field(None, description="Error message if batch failed")
+-    metadata: Optional[Dict[str, Any]] = Field(
+-        None, description="Additional batch metadata"
+-    )
+-
+-
+-# Sitemap Analyzer Models
+-
+-
+-class SitemapExtractOptions(BaseModel):
+-    """Options for sitemap extraction."""
+-
+-    follow_sitemapindex: bool = Field(
+-        True, description="Whether to follow sitemap index files"
+-    )
+-    check_robots_txt: bool = Field(
+-        True, description="Whether to check robots.txt for sitemaps"
+-    )
+-    max_depth: int = Field(3, description="Maximum depth to follow sitemap index files")
+-    max_sitemaps: int = Field(100, description="Maximum number of sitemaps to process")
+-    verify_ssl: bool = Field(True, description="Whether to verify SSL certificates")
+-    timeout_seconds: int = Field(60, description="Timeout for HTTP requests in seconds")
+-    extract_metadata: bool = Field(
+-        True, description="Whether to extract metadata from sitemaps"
+-    )
+-    store_raw_xml: bool = Field(False, description="Whether to store raw XML content")
+-
+-
+-class SitemapType(str, Enum):
+-    """Types of sitemaps that can be encountered."""
+-
+-    INDEX = "index"
+-    STANDARD = "standard"
+-    IMAGE = "image"
+-    VIDEO = "video"
+-    NEWS = "news"
+-    UNKNOWN = "unknown"
+-
+-
+-class DiscoveryMethod(str, Enum):
+-    """How a sitemap was discovered."""
+-
+-    ROBOTS_TXT = "robots_txt"
+-    COMMON_PATH = "common_path"
+-    SITEMAP_INDEX = "sitemap_index"
+-    HTML_LINK = "html_link"
+-    MANUAL = "manual"
+-
+-
+-class SitemapAnalyzerRequest(BaseModel):
+-    """Request model for sitemap analyzer endpoint."""
+-
+-    domain: str = Field(..., description="Domain to analyze")
+-    user_id: Optional[str] = Field(None, description="User ID performing the analysis")
+-    extract_options: Optional[SitemapExtractOptions] = Field(
+-        None, description="Options for sitemap extraction"
+-    )
+-    include_content: bool = Field(
+-        False, description="Whether to include sitemap content in response"
+-    )
+-    store_results: bool = Field(
+-        True, description="Whether to store results in database"
+-    )
+-    # tenant_id field removed - using default tenant ID
+-
+-    @validator("domain")
+-    def domain_must_be_valid(cls, v):
+-        """Validate domain format."""
+-        # Simple validation, could be more complex in production
+-        if not v or len(v) < 4 or "." not in v:
+-            raise ValueError("Must be a valid domain")
+-        return v
+-
+-
+-class SitemapAnalyzerResponse(BaseModel):
+-    """Response model for sitemap analyzer endpoint."""
+-
+-    job_id: str = Field(..., description="Job ID for tracking the analysis")
+-    status: str = Field(
+-        ..., description="Status of the job (pending, running, complete, failed)"
+-    )
+-    status_url: str = Field(..., description="URL to check the status of the analysis")
+-    domain: Optional[str] = Field(None, description="Domain being analyzed")
+-    created_at: Optional[str] = Field(None, description="When the job was created")
+-
+-
+-class SitemapFileResponse(BaseModel):
+-    """Response model for sitemap file data."""
+-
+-    id: str = Field(..., description="Sitemap file ID")
+-    url: str = Field(..., description="URL of the sitemap file")
+-    sitemap_type: Optional[str] = Field(
+-        None, description="Type of sitemap (index, standard, etc.)"
+-    )
+-    discovery_method: Optional[str] = Field(
+-        None, description="How the sitemap was discovered"
+-    )
+-    page_count: Optional[int] = Field(
+-        None, description="Number of pages in the sitemap"
+-    )
+-    size_bytes: Optional[int] = Field(None, description="Size of the sitemap in bytes")
+-    url_count: Optional[int] = Field(0, description="Number of URLs in the sitemap")
+-    last_modified: Optional[str] = Field(
+-        None, description="Last modified date of the sitemap"
+-    )
+-    has_lastmod: Optional[bool] = Field(
+-        False, description="Whether the sitemap contains lastmod information"
+-    )
+-    has_priority: Optional[bool] = Field(
+-        False, description="Whether the sitemap contains priority information"
+-    )
+-    has_changefreq: Optional[bool] = Field(
+-        False, description="Whether the sitemap contains changefreq information"
+-    )
+-    created_at: Optional[str] = Field(
+-        None, description="When the sitemap was processed"
+-    )
+-
+-    class Config:
+-        from_attributes = True
+-
+-
+-class SitemapUrlResponse(BaseModel):
+-    """Response model for sitemap URL data."""
+-
+-    id: str = Field(..., description="URL entry ID")
+-    url: str = Field(..., description="The URL from the sitemap")
+-    lastmod: Optional[str] = Field(None, description="Last modified date from sitemap")
+-    changefreq: Optional[str] = Field(None, description="Change frequency from sitemap")
+-    priority: Optional[float] = Field(None, description="Priority from sitemap")
+-    created_at: Optional[str] = Field(None, description="When the URL was processed")
+-
+-    class Config:
+-        from_attributes = True
+-
+-
+-class SitemapStatusResponse(BaseModel):
+-    """Response model for sitemap analysis status endpoint."""
+-
+-    job_id: str = Field(..., description="Job ID")
+-    status: str = Field(
+-        ..., description="Job status (pending, running, complete, failed)"
+-    )
+-    progress: float = Field(0.0, description="Progress as a percentage (0-100)")
+-    domain: Optional[str] = Field(None, description="Domain being analyzed")
+-    created_at: Optional[str] = Field(None, description="When the job was created")
+-    updated_at: Optional[str] = Field(None, description="When the job was last updated")
+-    sitemap_count: Optional[int] = Field(0, description="Number of sitemaps found")
+-    url_count: Optional[int] = Field(0, description="Total number of URLs found")
+-    error: Optional[str] = Field(None, description="Error message if job failed")
+-    status_url: Optional[str] = Field(None, description="URL to check the status")
+-    results_url: Optional[str] = Field(
+-        None, description="URL to get the results if complete"
+-    )
+-
+-    class Config:
+-        from_attributes = True
+-
+-
+-# --- Models for Places Staging Selection --- #
+-
+-
+-class PlaceStagingStatusEnum(str, Enum):
+-    """Possible statuses for a place in the staging table. Mirrors DB PlaceStatusEnum."""
+-
+-    NEW = "New"  # Initial status after discovery
+-    Selected = "Selected"
+-    Maybe = "Maybe"
+-    Not_a_Fit = "Not a Fit"
+-    ARCHIVED = "Archived"  # If user decides not to process
+-
+-
+-class PlaceStagingRecord(BaseModel):
+-    """Response model representing a single record from the places_staging table."""
+-
+-    # Corresponds to Place model, adjust fields as needed for UI display
+-    place_id: str = Field(..., description="Google Place ID (Primary Key for Staging)")
+-    business_name: Optional[str] = Field(None, description="Business Name")
+-    address: Optional[str] = Field(None, description="Address")
+-    category: Optional[str] = Field(None, description="Primary Category")
+-    search_location: Optional[str] = Field(
+-        None, description="Location used for the search"
+-    )
+-    latitude: Optional[float] = Field(None)
+-    longitude: Optional[float] = Field(None)
+-    rating: Optional[float] = Field(None)
+-    reviews_count: Optional[int] = Field(None)
+-    price_level: Optional[int] = Field(None)
+-    status: Optional[PlaceStagingStatusEnum] = Field(
+-        PlaceStagingStatusEnum.NEW, description="Current status for deep scan selection"
+-    )
+-    updated_at: datetime
+-    last_deep_scanned_at: Optional[datetime] = Field(None)
+-    search_job_id: UUID = Field(..., description="FK to the discovery Job")
+-    tenant_id: UUID
+-
+-    class Config:
+-        from_attributes = True
+-        use_enum_values = True  # Ensure enum values are used in response
+-
+-
+-class PlaceStagingListResponse(BaseModel):
+-    """Response model for listing staged places."""
+-
+-    items: List[PlaceStagingRecord]
+-    total: int
+-    # Add pagination fields if needed (page, size, etc.)
+-
+-
+-class PlaceStatusUpdateRequest(BaseModel):
+-    """Request model to update the status of a staged place."""
+-
+-    status: PlaceStagingStatusEnum = Field(
+-        ..., description="The new status to set for the place"
+-    )
+-
+-
+-# --- End Models for Places Staging Selection --- #
+-
+-
+-# --- Models for Local Businesses Selection --- #
+-
+-
+-class LocalBusinessApiStatusEnum(str, Enum):
+-    """Possible statuses for a local business, matching PlaceStatusEnum."""
+-
+-    New = "New"
+-    Selected = "Selected"
+-    Maybe = "Maybe"
+-    Not_a_Fit = "Not a Fit"  # Ensure space is handled if API sends it
+-    Archived = "Archived"
+-
+-
+-class LocalBusinessBatchStatusUpdateRequest(BaseModel):
+-    """Request model to update the status for one or more local businesses."""
+-
+-    local_business_ids: List[UUID] = Field(
+-        ...,
+-        min_length=1,
+-        description="List of one or more Local Business UUIDs to update.",
+-    )
+-    status: LocalBusinessApiStatusEnum = Field(
+-        ..., description="The new main status to set."
+-    )
+-
+-
+-# --- End Models for Local Businesses Selection --- #
+-
+-
+-# --- Models for Domain Curation --- #
+-
+-
+-# Import DB Enums required for response/request models
+-# Note: Adjust path if your models are structured differently
+-# try:
+-from .domain import SitemapAnalysisStatusEnum, SitemapCurationStatusEnum
+-
+-# except ImportError:
+-#     # Fallback or specific handling if the import path differs
+-#     # This might happen if api_models.py is not in the same directory level as domain.py
+-#     # For now, assuming they are siblings or accessible via relative path
+-#     SitemapCurationStatusEnum = enum.Enum('SitemapCurationStatusEnum', {'New': 'New', 'Selected': 'Selected', 'Maybe': 'Maybe', 'Not_a_Fit': 'Not a Fit', 'Archived': 'Archived'})
+-#     SitemapAnalysisStatusEnum = enum.Enum('SitemapAnalysisStatusEnum', {'queued': 'queued', 'processing': 'processing', 'submitted': 'submitted', 'failed': 'failed'})
+-
+-
+-# Mirrors DB Enum SitemapCurationStatusEnum for API Input
+-class SitemapCurationStatusApiEnum(str, enum.Enum):
+-    New = "New"
+-    Selected = "Selected"
+-    Maybe = "Maybe"
+-    Not_a_Fit = "Not a Fit"
+-    Archived = "Archived"
+-
+-
+-# Request model for the batch update endpoint
+-class DomainBatchCurationStatusUpdateRequest(BaseModel):
+-    domain_ids: List[UUID4] = Field(
+-        ..., min_length=1, description="List of one or more Domain UUIDs to update."
+-    )
+-    sitemap_curation_status: SitemapCurationStatusApiEnum = Field(
+-        ..., description="The new curation status to set for the sitemap workflow."
+-    )
+-
+-
+-# Pydantic model mirroring Domain for API responses (adjust fields as needed for UI)
+-class DomainRecord(BaseModel):
+-    id: UUID4
+-    domain: str
+-    sitemap_curation_status: Optional[SitemapCurationStatusEnum] = None
+-    sitemap_analysis_status: Optional[SitemapAnalysisStatusEnum] = None
+-    sitemap_analysis_error: Optional[str] = None
+-    # Include other relevant Domain fields needed by the UI grid
+-    status: Optional[str] = None  # Example: original domain status
+-    created_at: datetime
+-    updated_at: datetime
+-
+-    class Config:
+-        from_attributes = True
+-        use_enum_values = True  # Return enum values as strings
+-
+-
+-# Standard paginated response wrapper
+-class PaginatedDomainResponse(BaseModel):
+-    items: List[DomainRecord]
+-    total: int
+-    page: int
+-    size: int
+-    pages: int
+-
+-
+-# --- End Models for Domain Curation --- #
+diff --git a/src/models/batch_job.py b/src/models/batch_job.py
+index 82b2279..3464ccd 100644
+--- a/src/models/batch_job.py
++++ b/src/models/batch_job.py
+@@ -7,13 +7,23 @@ Represents batch processing jobs in ScraperSky.
+ import uuid
+ from typing import Any, Dict, List, Optional, Union
+ 
+-from sqlalchemy import UUID, Column, DateTime, Float, Integer, String
++from sqlalchemy import (
++    UUID,
++    Column,
++    DateTime,
++    Enum as sa_Enum,
++    Float,
++    ForeignKey,
++    Integer,
++    String,
++)
+ from sqlalchemy.dialects.postgresql import JSONB
+ from sqlalchemy.dialects.postgresql import UUID as PGUUID
+ from sqlalchemy.orm import relationship
+ from sqlalchemy.sql import func
+ 
+ from .base import Base, BaseModel, model_to_dict
++from .enums import BatchJobStatus
+ from .tenant import DEFAULT_TENANT_ID
+ 
+ 
+@@ -25,7 +35,7 @@ class BatchJob(Base, BaseModel):
+     metadata about the batch and relationships to individual jobs.
+ 
+     Fields:
+-        id: Integer primary key (overriding UUID from BaseModel)
++        id: UUID primary key (from BaseModel)
+         batch_id: UUID identifier for the batch (standardized from string)
+         tenant_id: The tenant ID field (always using default tenant ID)
+         processor_type: Type of processing (sitemap, metadata, contacts, etc.)
+@@ -50,22 +60,22 @@ class BatchJob(Base, BaseModel):
+ 
+     __tablename__ = "batch_jobs"
+ 
+-    # Override id with Integer primary key
+-    id = Column(Integer, primary_key=True, autoincrement=True)
++    # id is inherited from BaseModel (UUID, primary_key=True)
+ 
+-    # UUID identifier (missing column that's causing the error)
+-    id_uuid = Column(
+-        UUID(as_uuid=True), default=uuid.uuid4, nullable=False, unique=True
+-    )
+-
+-    # Core identifiers - Updated batch_id to UUID type
++    # Core identifiers
+     batch_id = Column(UUID(as_uuid=True), nullable=False, index=True, unique=True)
+     tenant_id = Column(
+-        PGUUID, nullable=False, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID)
++        PGUUID,
++        ForeignKey("tenants.id"),
++        nullable=False,
++        index=True,
++        default=lambda: uuid.UUID(DEFAULT_TENANT_ID),
+     )
+     processor_type = Column(String, nullable=False)
+-    status = Column(String, nullable=False, default="pending")
+-    created_by = Column(PGUUID)
++    status = Column(
++        sa_Enum(BatchJobStatus), nullable=False, default=BatchJobStatus.PENDING
++    )
++    created_by = Column(PGUUID, ForeignKey("users.id"))
+ 
+     # Progress tracking
+     total_domains = Column(Integer, default=0)
+@@ -124,11 +134,11 @@ class BatchJob(Base, BaseModel):
+         # Update status based on progress
+         if self.progress >= 1.0:
+             if self.failed_domains == self.total_domains:
+-                self.status = "failed"
++                self.status = BatchJobStatus.FAILED
+             elif self.failed_domains > 0:
+-                self.status = "partial"
++                self.status = BatchJobStatus.PARTIAL
+             else:
+-                self.status = "complete"
++                self.status = BatchJobStatus.COMPLETE
+ 
+             # Set end time if not already set
+             if not self.end_time:
+@@ -180,7 +190,7 @@ class BatchJob(Base, BaseModel):
+             batch_id=batch_id,
+             tenant_id=uuid.UUID(DEFAULT_TENANT_ID),
+             processor_type=processor_type,
+-            status="pending",
++            status=BatchJobStatus.PENDING,
+             created_by=created_by_uuid,
+             total_domains=total_domains,
+             completed_domains=0,
+diff --git a/src/models/contact.py b/src/models/contact.py
+index 699f82d..9895b42 100644
+--- a/src/models/contact.py
++++ b/src/models/contact.py
+@@ -10,6 +10,7 @@ from sqlalchemy import (
+     Boolean,
+     Column,
+     ForeignKey,
++    Integer,
+     Text,
+     UniqueConstraint,
+ )
+@@ -46,7 +47,7 @@ class ContactProcessingStatus(str, enum.Enum):
+ 
+ 
+ # HubSpot sync workflow status enums
+-class HubotSyncStatus(str, enum.Enum):
++class HubSpotSyncStatus(str, enum.Enum):
+     New = "New"
+     Queued = "Queued"
+     Processing = "Processing"
+@@ -55,7 +56,7 @@ class HubotSyncStatus(str, enum.Enum):
+     Skipped = "Skipped"
+ 
+ 
+-class HubSyncProcessingStatus(str, enum.Enum):
++class HubSpotSyncProcessingStatus(str, enum.Enum):
+     Queued = "Queued"
+     Processing = "Processing"
+     Complete = "Complete"
+@@ -65,10 +66,8 @@ class HubSyncProcessingStatus(str, enum.Enum):
+ class Contact(Base, BaseModel):
+     __tablename__ = "contacts"
+ 
+-    # Define columns based on the agreed schema
+-    id: Column[uuid.UUID] = Column(
+-        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+-    )
++    # id is inherited from BaseModel (UUID, primary_key=True)
++
+     domain_id: Column[uuid.UUID] = Column(
+         PGUUID(as_uuid=True),
+         ForeignKey("domains.id", ondelete="CASCADE"),
+@@ -84,22 +83,20 @@ class Contact(Base, BaseModel):
+     email: Column[str] = Column(Text, nullable=False, index=True)
+     email_type: Column[Optional[ContactEmailTypeEnum]] = Column(
+         SQLAlchemyEnum(
+-            ContactEmailTypeEnum, name="contact_email_type_enum", create_type=False
++            ContactEmailTypeEnum, name="contact_email_type", create_type=False
+         ),
+         nullable=True,
+     )
+     has_gmail: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
+     context: Column[Optional[str]] = Column(Text, nullable=True)
+     source_url: Column[Optional[str]] = Column(Text, nullable=True)
+-    source_job_id: Column[Optional[uuid.UUID]] = Column(
+-        PGUUID(as_uuid=True), ForeignKey("jobs.job_id"), nullable=True
++    source_job_id: Column[Optional[int]] = Column(
++        Integer, ForeignKey("jobs.id"), nullable=True
+     )
+ 
+     # Define relationships
+     domain = relationship("Domain", back_populates="contacts")
+     page = relationship("Page", back_populates="contacts")
+-    # Assuming Job model might have a collection of contacts found by it
+-    # If not, this can be a one-way relationship
+     job = relationship(
+         "Job"
+     )  # Consider adding back_populates="contacts" to Job model if needed
+@@ -107,7 +104,7 @@ class Contact(Base, BaseModel):
+     # Contact curation workflow status fields
+     contact_curation_status: Column[ContactCurationStatus] = Column(
+         SQLAlchemyEnum(
+-            ContactCurationStatus, name="contactcurationstatus", create_type=False
++            ContactCurationStatus, name="contact_curation_status", create_type=False
+         ),
+         nullable=False,
+         default=ContactCurationStatus.New,
+@@ -117,7 +114,7 @@ class Contact(Base, BaseModel):
+ 
+     contact_processing_status: Column[Optional[ContactProcessingStatus]] = Column(
+         SQLAlchemyEnum(
+-            ContactProcessingStatus, name="contactprocessingstatus", create_type=False
++            ContactProcessingStatus, name="contact_processing_status", create_type=False
+         ),
+         nullable=True,
+         index=True,
+@@ -126,17 +123,19 @@ class Contact(Base, BaseModel):
+     contact_processing_error: Column[Optional[str]] = Column(Text, nullable=True)
+ 
+     # HubSpot sync workflow status fields
+-    hubspot_sync_status: Column[HubotSyncStatus] = Column(
+-        SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
++    hubspot_sync_status: Column[HubSpotSyncStatus] = Column(
++        SQLAlchemyEnum(HubSpotSyncStatus, name="hubspot_sync_status", create_type=False),
+         nullable=False,
+-        default=HubotSyncStatus.New,
++        default=HubSpotSyncStatus.New,
+         server_default="New",
+         index=True,
+     )
+ 
+-    hubspot_processing_status: Column[Optional[HubSyncProcessingStatus]] = Column(
++    hubspot_processing_status: Column[Optional[HubSpotSyncProcessingStatus]] = Column(
+         SQLAlchemyEnum(
+-            HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
++            HubSpotSyncProcessingStatus,
++            name="hubspot_sync_processing_status",
++            create_type=False,
+         ),
+         nullable=True,
+         index=True,
+@@ -147,5 +146,4 @@ class Contact(Base, BaseModel):
+     # Define table arguments for constraints
+     __table_args__ = (
+         UniqueConstraint("domain_id", "email", name="uq_contact_domain_email"),
+-        # Note: Indices from SQL DDL are typically handled by index=True on columns
+     )
+diff --git a/src/models/domain.py b/src/models/domain.py
+index 0a1f3a3..ede021c 100644
+--- a/src/models/domain.py
++++ b/src/models/domain.py
+@@ -4,7 +4,6 @@ Domain SQLAlchemy Model
+ Represents website domains being processed by ScraperSky.
+ """
+ 
+-import enum
+ import logging
+ import uuid
+ from typing import Any, Dict, List, Optional, Union
+@@ -26,47 +25,18 @@ from sqlalchemy.orm import relationship
+ from sqlalchemy.sql import func
+ 
+ from .base import Base, BaseModel, model_to_dict
++from .enums import (
++    DomainStatus,
++    HubSpotSyncProcessingStatus,
++    HubSpotSyncStatus,
++    SitemapAnalysisStatus,
++    SitemapCurationStatus,
++)
+ from .tenant import DEFAULT_TENANT_ID
+ 
+ logger = logging.getLogger(__name__)
+ 
+ 
+-# Python Enum for USER curation status
+-class SitemapCurationStatusEnum(enum.Enum):
+-    New = "New"
+-    Selected = "Selected"
+-    Maybe = "Maybe"
+-    Not_a_Fit = "Not a Fit"  # Match API potentially needed space
+-    Archived = "Archived"
+-
+-
+-# HubSpot sync workflow status enums
+-class HubotSyncStatus(str, enum.Enum):
+-    New = "New"
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Complete = "Complete"
+-    Error = "Error"
+-    Skipped = "Skipped"
+-
+-
+-class HubSyncProcessingStatus(str, enum.Enum):
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Complete = "Complete"
+-    Error = "Error"
+-
+-
+-# Define the enum for the sitemap analysis background process status
+-class SitemapAnalysisStatusEnum(enum.Enum):
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Completed = (
+-        "Completed"  # Using Completed instead of submitted as per standardization
+-    )
+-    Error = "Error"  # Using Error instead of failed as per standardization
+-
+-
+ class Domain(Base, BaseModel):
+     """
+     Domain model representing websites being processed.
+@@ -130,8 +100,8 @@ class Domain(Base, BaseModel):
+     )
+ 
+     # Status and metadata
+-    created_by = Column(PGUUID)
+-    status = Column(String, nullable=False, default="active")
++    created_by = Column(PGUUID, ForeignKey("users.id"))
++    status = Column(SQLAlchemyEnum(DomainStatus), nullable=False, default=DomainStatus.PENDING)
+     domain_metadata = Column(JSONB, name="meta_json")
+     notes = Column(Text)
+ 
+@@ -166,8 +136,8 @@ class Domain(Base, BaseModel):
+ 
+     # Batch processing reference
+     batch_id = Column(
+-        PGUUID,
+-        ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"),
++        Integer,
++        ForeignKey("batch_jobs.id", ondelete="SET NULL"),
+         index=True,
+         nullable=True,
+     )
+@@ -183,8 +153,8 @@ class Domain(Base, BaseModel):
+     # --- New fields for User-Triggered Sitemap Analysis --- #
+     sitemap_analysis_status = Column(
+         SQLAlchemyEnum(
+-            SitemapAnalysisStatusEnum,
+-            name="SitemapAnalysisStatusEnum",
++            SitemapAnalysisStatus,
++            name="sitemap_analysis_status",
+             create_type=False,
+         ),
+         nullable=True,
+@@ -196,28 +166,28 @@ class Domain(Base, BaseModel):
+     # --- New fields for Sitemap Curation and Analysis --- #
+     sitemap_curation_status = Column(
+         SQLAlchemyEnum(
+-            SitemapCurationStatusEnum,
+-            name="SitemapCurationStatusEnum",
++            SitemapCurationStatus,
++            name="sitemap_curation_status",
+             create_type=False,
+         ),
+         nullable=True,
+-        default=SitemapCurationStatusEnum.New,
++        default=SitemapCurationStatus.NEW,
+         index=True,
+     )
+     # ---------------------------------------------------- #
+ 
+     # --- HubSpot sync workflow fields --- #
+     hubspot_sync_status = Column(
+-        SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
++        SQLAlchemyEnum(HubSpotSyncStatus, name="hubspot_sync_status", create_type=False),
+         nullable=False,
+-        default=HubotSyncStatus.New,
++        default=HubSpotSyncStatus.NEW,
+         server_default="New",
+         index=True,
+     )
+ 
+     hubspot_processing_status = Column(
+         SQLAlchemyEnum(
+-            HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
++            HubSpotSyncProcessingStatus, name="hubspot_sync_processing_status", create_type=False
+         ),
+         nullable=True,
+         index=True,
+@@ -265,7 +235,7 @@ class Domain(Base, BaseModel):
+ 
+         return result
+ 
+-    def update_batch_info(self, batch_id: str) -> None:
++    def update_batch__info(self, batch_id: int) -> None:
+         """
+         Update domain's batch information.
+ 
+@@ -279,7 +249,7 @@ class Domain(Base, BaseModel):
+         """
+         Mark domain as successfully scanned.
+         """
+-        self.status = "scanned"
++        self.status = DomainStatus.COMPLETED
+         self.last_scan = func.now()
+ 
+     def mark_failed(self, error_message: Optional[str] = None) -> None:
+@@ -289,7 +259,7 @@ class Domain(Base, BaseModel):
+         Args:
+             error_message: Optional error message explaining failure
+         """
+-        self.status = "failed"
++        self.status = DomainStatus.ERROR
+         self.last_scan = func.now()
+ 
+         # Store error in metadata if provided
+@@ -307,7 +277,7 @@ class Domain(Base, BaseModel):
+         domain: str,
+         metadata: Dict[str, Any],
+         created_by: Optional[str] = None,
+-        batch_id: Optional[str] = None,
++        batch_id: Optional[int] = None,
+     ) -> "Domain":
+         """
+         Create a domain record from metadata dictionary.
+@@ -352,7 +322,7 @@ class Domain(Base, BaseModel):
+             domain=domain,
+             tenant_id=tenant_id_uuid,
+             created_by=created_by_uuid,
+-            status="active",
++            status=DomainStatus.PENDING,
+             domain_metadata=metadata,
+             # Basic metadata
+             title=metadata.get("title", ""),
+@@ -398,6 +368,14 @@ class Domain(Base, BaseModel):
+         Args:
+             session: SQLAlchemy session
+             domain_obj: Existing Domain object
++            metadata: Extracted metadata dictionary
++
++        Returns:
++            Updated Domain instance
++        """
++        # Implementation for update logic would go here
++        # For now, just return the object
++        return domain_obj
+             metadata: New metadata dictionary
+ 
+         Returns:
+diff --git a/src/models/enums.py b/src/models/enums.py
+index 02a9820..91410df 100644
+--- a/src/models/enums.py
++++ b/src/models/enums.py
+@@ -1,18 +1,191 @@
+-import enum
++from enum import Enum
++
++
++class SitemapType(str, Enum):
++    """Types of sitemaps that can be processed."""
++
++    INDEX = "index"
++    STANDARD = "standard"
++    IMAGE = "image"
++    VIDEO = "video"
++    NEWS = "news"
++    UNKNOWN = "unknown"
++
++
++class DiscoveryMethod(str, Enum):
++    """How a sitemap was discovered."""
++
++    ROBOTS_TXT = "robots_txt"
++    COMMON_PATH = "common_path"
++    SITEMAP_INDEX = "sitemap_index"
++    HTML_LINK = "html_link"
++    MANUAL = "manual"
++
++
++class TaskStatus(str, Enum):
++    """Common status values for tasks and jobs."""
++
++    PENDING = "Queued"
++    RUNNING = "Processing"  # Standardized from "InProgress"
++    COMPLETE = "Complete"  # Standardized from "Completed"
++    FAILED = "Error"
++    CANCELLED = "Cancelled"
++
++
++class PlaceStatus(str, Enum):
++    """Standardized statuses for a place or local business."""
++
++    NEW = "New"
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETE = "Complete"
++    ERROR = "Error"
++    SKIPPED = "Skipped"
++
++
++class SitemapCurationStatus(str, Enum):
++    """Standardized curation statuses for sitemaps."""
++
++    NEW = "New"
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETE = "Complete"
++    ERROR = "Error"
++    SKIPPED = "Skipped"
+ 
+ # Existing Enums...
+ 
+ 
+-class SitemapAnalysisStatusEnum(str, enum.Enum):
+-    pending = "pending"  # Initial state when domain is created/reset
+-    queued = "queued"  # Scheduler picked it up, waiting for adapter
+-    processing = "processing"  # Adapter sent to API
+-    submitted = "submitted"  # API accepted (202)
+-    failed = "failed"  # Adapter or API call failed
++class SitemapAnalysisStatus(str, Enum):
++    """Statuses for sitemap analysis."""
++
++    PENDING = "pending"
++    QUEUED = "queued"
++    PROCESSING = "processing"
++    SUBMITTED = "submitted"
++    FAILED = "failed"
++
++
++class DomainStatus(str, Enum):
++    """Statuses for domain processing."""
++
++    PENDING = "pending"
++    PROCESSING = "processing"
++    COMPLETED = "completed"
++    ERROR = "error"
++
++
++class HubSpotSyncStatus(str, Enum):
++    """Standardized sync statuses for HubSpot."""
++
++    NEW = "New"
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETE = "Complete"
++    ERROR = "Error"
++    SKIPPED = "Skipped"
++
++
++class HubSpotSyncProcessingStatus(str, Enum):
++    """Standardized processing statuses for HubSpot sync."""
++
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETE = "Complete"
++    ERROR = "Error"
++
++
++class BatchJobStatus(str, Enum):
++    """Statuses for batch processing jobs."""
++
++    PENDING = "pending"
++    RUNNING = "running"
++    COMPLETE = "complete"
++    FAILED = "failed"
++    PARTIAL = "partial"
++
++
++class JobType(str, Enum):
++    """Types of jobs that can be processed."""
++
++    SITEMAP_SCAN = "sitemap_scan"
++    PLACES_SEARCH = "places_search"
++    DOMAIN_METADATA_EXTRACTION = "domain_metadata_extraction"
++    CONTACT_ENRICHMENT = "contact_enrichment"
++    BATCH_PROCESSING = "batch_processing"
++
++
++class DomainExtractionStatus(str, Enum):
++    """Statuses for domain extraction from local businesses."""
++
++    QUEUED = "queued"
++    PROCESSING = "processing"
++    COMPLETED = "completed"
++    ERROR = "error"
++
++
++class GcpApiDeepScanStatus(str, Enum):
++    """Statuses for the GCP API deep scan process."""
++
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETED = "Completed"
++    ERROR = "Error"
++
++
++class SearchStatus(str, Enum):
++    """Standardized statuses for search operations."""
++
++    PENDING = "pending"
++    RUNNING = "running"
++    COMPLETED = "completed"
++    FAILED = "failed"
++
++
++class PageCurationStatus(str, Enum):
++    """Standardized curation statuses for pages."""
++
++    NEW = "New"
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETE = "Complete"
++    ERROR = "Error"
++    SKIPPED = "Skipped"
++
++
++class PageProcessingStatus(str, Enum):
++    """Standardized processing statuses for pages."""
++
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETE = "Complete"
++    ERROR = "Error"
++
++
++class SitemapFileStatus(str, Enum):
++    """Standardized statuses for sitemap files."""
++
++    PENDING = "Pending"
++    PROCESSING = "Processing"
++    COMPLETED = "Completed"
++    ERROR = "Error"
++
++
++class SitemapImportCurationStatus(str, Enum):
++    """Standardized curation statuses for sitemap imports."""
++
++    NEW = "New"
++    SELECTED = "Selected"
++    MAYBE = "Maybe"
++    NOT_A_FIT = "Not a Fit"
++    ARCHIVED = "Archived"
++
+ 
++class SitemapImportProcessStatus(str, Enum):
++    """Standardized processing statuses for sitemap imports."""
+ 
+-class DomainStatusEnum(str, enum.Enum):
+-    pending = "pending"  # Ready for metadata extraction
+-    processing = "processing"  # Metadata extraction in progress
+-    completed = "completed"  # Metadata extraction successful
+-    error = "error"  # Metadata extraction failed
++    QUEUED = "Queued"
++    PROCESSING = "Processing"
++    COMPLETED = "Completed"
++    ERROR = "Error"
++    SUBMITTED = "Submitted"
+diff --git a/src/models/job.py b/src/models/job.py
+index 853b1c9..0951118 100644
+--- a/src/models/job.py
++++ b/src/models/job.py
+@@ -8,19 +8,19 @@ import uuid
+ from typing import Any, Dict, List, Optional, Union
+ 
+ from sqlalchemy import (
+-    UUID,
+     Column,
+     Float,
+     ForeignKey,
+     Integer,
+     String,
+ )
++from sqlalchemy import Enum as SQLAlchemyEnum
+ from sqlalchemy.dialects.postgresql import JSONB
+ from sqlalchemy.dialects.postgresql import UUID as PGUUID
+ from sqlalchemy.orm import relationship
+ 
+ from .base import Base, BaseModel, model_to_dict
+-from .tenant import DEFAULT_TENANT_ID
++from .enums import JobType, TaskStatus
+ 
+ 
+ class Job(Base, BaseModel):
+@@ -30,7 +30,7 @@ class Job(Base, BaseModel):
+     Fields:
+         id: UUID primary key (inherited from BaseModel)
+         job_type: Type of job (sitemap_scan, places_search, etc.)
+-        tenant_id: The tenant ID field (always using default tenant ID)
++        tenant_id: The tenant ID field (inherited from BaseModel)
+         created_by: The user who created this job
+         status: Current job status (pending, running, complete, failed)
+         domain_id: Optional reference to associated domain
+@@ -43,22 +43,18 @@ class Job(Base, BaseModel):
+ 
+     __tablename__ = "jobs"
+ 
+-    # Override the id column to use an Integer primary key
+-    id = Column(Integer, primary_key=True, autoincrement=True)
+-
+-    # UUID identifier (missing column that's causing the error)
+-    job_id = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False, unique=True)
+-
+     # Core fields
+-    job_type = Column(String, nullable=False)
+-    tenant_id = Column(String, nullable=False, default=DEFAULT_TENANT_ID)
+-    tenant_id_uuid = Column(
+-        PGUUID, index=True, default=lambda: uuid.UUID(DEFAULT_TENANT_ID)
++    job_type = Column(
++        SQLAlchemyEnum(JobType, name="job_type", create_type=False), nullable=False
+     )
+ 
+     # Status and metadata
+-    created_by = Column(PGUUID)
+-    status = Column(String, nullable=False)
++    created_by = Column(PGUUID, ForeignKey("users.id"))
++    status = Column(
++        SQLAlchemyEnum(TaskStatus, name="task_status", create_type=False),
++        nullable=False,
++        default=TaskStatus.PENDING,
++    )
+     domain_id = Column(PGUUID, ForeignKey("domains.id", ondelete="SET NULL"))
+     progress = Column(Float, default=0.0)
+     result_data = Column(JSONB)
+@@ -67,7 +63,7 @@ class Job(Base, BaseModel):
+ 
+     # Batch processing field
+     batch_id = Column(
+-        String, ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"), index=True
++        Integer, ForeignKey("batch_jobs.id", ondelete="SET NULL"), index=True
+     )
+ 
+     # Relationships
+@@ -79,7 +75,7 @@ class Job(Base, BaseModel):
+         return model_to_dict(self)
+ 
+     def update_progress(
+-        self, progress_value: float, status: Optional[str] = None
++        self, progress_value: float, status: Optional[TaskStatus] = None
+     ) -> None:
+         """
+         Update job progress and optionally status.
+@@ -92,17 +88,20 @@ class Job(Base, BaseModel):
+ 
+         if status:
+             self.status = status
+-        elif self.progress >= 1.0 and self.status not in ["complete", "failed"]:
+-            self.status = "complete"
++        elif self.progress >= 1.0 and self.status not in [
++            TaskStatus.COMPLETE,
++            TaskStatus.FAILED,
++        ]:
++            self.status = TaskStatus.COMPLETE
+ 
+     @classmethod
+     async def create_for_domain(
+         cls,
+         session,
+-        job_type: str,
++        job_type: JobType,
+         domain_id: Optional[uuid.UUID] = None,
+         created_by: Optional[uuid.UUID] = None,
+-        batch_id: Optional[str] = None,
++        batch_id: Optional[int] = None,
+         metadata: Optional[Dict[str, Any]] = None,
+     ) -> "Job":
+         """
+@@ -121,10 +120,8 @@ class Job(Base, BaseModel):
+         """
+         job = cls(
+             job_type=job_type,
+-            tenant_id=DEFAULT_TENANT_ID,
+-            tenant_id_uuid=uuid.UUID(DEFAULT_TENANT_ID),
+             created_by=created_by,
+-            status="pending",
++            status=TaskStatus.PENDING,
+             domain_id=domain_id,
+             progress=0.0,
+             job_metadata=metadata or {},
+@@ -134,46 +131,9 @@ class Job(Base, BaseModel):
+         session.add(job)
+         return job
+ 
+-    @classmethod
+-    async def get_by_id(
+-        cls, session, job_id: Union[int, uuid.UUID, str]
+-    ) -> Optional["Job"]:
+-        """Get a job by its integer ID without tenant filtering.
+-
+-        Args:
+-            session: Database session.
+-            job_id: Integer ID of the job.
+-
+-        Returns:
+-            Optional[Job]: Job if found, None otherwise.
+-        """
+-        from sqlalchemy import select
+-
+-        # Ensure we are querying by the integer primary key 'id'
+-        query = select(cls).where(cls.id == int(job_id))  # Convert to int just in case
+-        result = await session.execute(query)
+-        return result.scalars().first()
+-
+-    @classmethod
+-    async def get_by_job_id(cls, session, job_uuid: uuid.UUID) -> Optional["Job"]:
+-        """Get a job by its public UUID (job_id) without tenant filtering.
+-
+-        Args:
+-            session: Database session.
+-            job_uuid: The UUID identifier (job_id) of the job.
+-
+-        Returns:
+-            Optional[Job]: Job if found, None otherwise.
+-        """
+-        from sqlalchemy import select
+-
+-        query = select(cls).where(cls.job_id == job_uuid)
+-        result = await session.execute(query)
+-        return result.scalars().first()
+-
+     @classmethod
+     async def get_recent_jobs(
+-        cls, session, job_type: Optional[str] = None, limit: int = 10
++        cls, session, job_type: Optional[JobType] = None, limit: int = 10
+     ) -> List["Job"]:
+         """Get recent jobs without tenant filtering.
+ 
+@@ -197,7 +157,7 @@ class Job(Base, BaseModel):
+         return result.scalars().all()
+ 
+     @classmethod
+-    async def get_by_batch_id(cls, session, batch_id: str) -> List["Job"]:
++    async def get_by_batch_id(cls, session, batch_id: int) -> List["Job"]:
+         """
+         Get all jobs that belong to a specific batch without tenant filtering.
+ 
+diff --git a/src/models/local_business.py b/src/models/local_business.py
+index e149b04..cdd3a71 100644
+--- a/src/models/local_business.py
++++ b/src/models/local_business.py
+@@ -1,53 +1,32 @@
+-import enum
++"""
++SQLAlchemy model for LocalBusiness, representing a physical business location.
++"""
++
+ import uuid
+ from datetime import datetime
++from typing import Any, Dict
+ 
+ from sqlalchemy import (
+     Boolean,
+     Column,
+-    DateTime,
+-    Enum,
++    ForeignKey,
+     Integer,
+     Numeric,
+     String,
+     Text,
+ )
+-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
+-from sqlalchemy.sql import func
+-
+-# Import the actual PlaceStatusEnum definition
+-from .place import PlaceStatusEnum
+-
+-try:
+-    from .base import Base
+-except ImportError:
+-    print(
+-        "Warning: Could not import Base using relative path '.base'. Trying absolute path 'src.models.base'."
+-    )
+-    try:
+-        from src.models.base import Base
+-    except ImportError:
+-        raise ImportError(
+-            "Could not import Base from either '.base' or 'src.models.base'. Ensure the path is correct."
+-        )
+-
++from sqlalchemy import Enum as SQLAlchemyEnum
++from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PGUUID
++from sqlalchemy.orm import relationship
+ 
+-# Define the enum for the domain extraction background process status
+-# Values MUST match the database enum values exactly (case-sensitive)
+-class DomainExtractionStatusEnum(enum.Enum):
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Completed = "Completed"
+-    Error = "Error"
++from .base import BaseModel
++from .enums import DomainExtractionStatus, PlaceStatus
+ 
+ 
+-class LocalBusiness(Base):
++class LocalBusiness(BaseModel):
+     __tablename__ = "local_businesses"
+ 
+-    id = Column(
+-        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+-    )
+-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
++    # Preserving columns from existing file
+     place_id = Column(String, unique=True, nullable=True, index=True)
+     lead_source = Column(Text, nullable=True)
+     business_name = Column(Text, nullable=True, index=True)
+@@ -93,45 +72,29 @@ class LocalBusiness(Base):
+     parking = Column(ARRAY(Text), nullable=True)
+     pets = Column(ARRAY(Text), nullable=True)
+     additional_json = Column(JSONB, nullable=True, server_default="{}")
+-    created_at = Column(
+-        DateTime(timezone=True), server_default=func.now(), nullable=False
+-    )
+-    updated_at = Column(
+-        DateTime(timezone=True),
+-        server_default=func.now(),
+-        onupdate=func.now(),
+-        nullable=False,
+-    )
+ 
+-    # Use PlaceStatusEnum as it defines the shared user-facing statuses
++    # Refactored status columns
+     status = Column(
+-        Enum(
+-            PlaceStatusEnum,
+-            name="place_status_enum",
+-            create_type=False,
+-            native_enum=True,
+-        ),
+-        default=PlaceStatusEnum.New,
++        SQLAlchemyEnum(PlaceStatus, name="place_status", create_type=False),
++        default=PlaceStatus.NEW,
+         nullable=False,
+         index=True,
+     )
+-
+-    # New Enum specifically for tracking domain extraction workflow for this business
+-    # THIS ENUM MUST ADHERE TO PASCALCASE STANDARD
+     domain_extraction_status = Column(
+-        Enum(
+-            DomainExtractionStatusEnum,  # Reference the updated Enum
+-            name="DomainExtractionStatusEnum",  # Keep DB type name consistent for now
+-            create_type=False,
+-            native_enum=True,
+-            values_callable=lambda obj: [e.value for e in obj],
++        SQLAlchemyEnum(
++            DomainExtractionStatus, name="domain_extraction_status", create_type=False
+         ),
+         nullable=True,
+         index=True,
+     )
+-    domain_extraction_error = Column(String, nullable=True)  # To store error messages
++    domain_extraction_error = Column(String, nullable=True)
++
++    # Add relationship to Domain
++    domain_id = Column(PGUUID, ForeignKey("domains.id"), nullable=True)
++    domain = relationship("Domain", back_populates="local_businesses")
+ 
+     def to_dict(self):
++        """Converts the model to a dictionary, handling special types."""
+         result = {}
+         for c in self.__table__.columns:
+             value = getattr(self, c.name)
+@@ -141,6 +104,8 @@ class LocalBusiness(Base):
+                 result[c.name] = value.isoformat()
+             elif hasattr(value, "quantize"):
+                 result[c.name] = float(value) if value is not None else None
++            elif isinstance(value, (PlaceStatus, DomainExtractionStatus)):
++                result[c.name] = value.value
+             else:
+                 result[c.name] = value
+         return result
+diff --git a/src/models/page.py b/src/models/page.py
+index 3c61e29..f0ef904 100644
+--- a/src/models/page.py
++++ b/src/models/page.py
+@@ -17,118 +17,56 @@ from sqlalchemy import (
+     String,
+     Text,
+ )
+-from sqlalchemy.dialects.postgresql import ENUM as PgEnum
++from sqlalchemy import Enum as SQLAlchemyEnum
+ from sqlalchemy.dialects.postgresql import JSONB
+ from sqlalchemy.dialects.postgresql import UUID as PGUUID
+ from sqlalchemy.orm import relationship
+ 
+-from .base import Base, BaseModel
++from .base import BaseModel
++from .enums import PageCurationStatus, PageProcessingStatus
+ 
+ 
+-# --- Page Curation Workflow Enums ---
+-class PageCurationStatus(str, Enum):
+-    New = "New"
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Complete = "Complete"
+-    Error = "Error"
+-    Skipped = "Skipped"
+-
+-
+-class PageProcessingStatus(str, Enum):
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Complete = "Complete"
+-    Error = "Error"
+-
+-
+-class Page(Base, BaseModel):
++class Page(BaseModel):
+     __tablename__ = "pages"
+ 
+-    # From simple_inspect output:
+-    # id uuid NO gen_random_uuid() ✓
+-    # tenant_id uuid NO  -- NOTE: Assuming tenant isolation removed,
+-    #                      but copying schema for now
+-    # domain_id uuid NO → domains.id
+-    # url text NO
+-    # title text YES
+-    # description text YES
+-    # h1 text YES
+-    # canonical_url text YES
+-    # meta_robots text YES
+-    # has_schema_markup boolean YES false
+-    # schema_types ARRAY YES
+-    # has_contact_form boolean YES false
+-    # has_comments boolean YES false
+-    # word_count integer YES
+-    # inbound_links ARRAY YES
+-    # outbound_links ARRAY YES
+-    # last_modified timestamp with time zone YES
+-    # last_scan timestamp with time zone YES
+-    # page_type text YES
+-    # lead_source text YES
+-    # additional_json jsonb YES '{}'::jsonb
+-    # created_at timestamp with time zone YES now() -- Handled by BaseModel
+-    # updated_at timestamp with time zone YES now() -- Handled by BaseModel
+-
+-    id: Column[uuid.UUID] = Column(
+-        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+-    )
+-    tenant_id: Column[uuid.UUID] = Column(PGUUID(as_uuid=True), nullable=False)
+     domain_id: Column[uuid.UUID] = Column(
+         PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False
+     )
+     url: Column[str] = Column(Text, nullable=False)
+-    title: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    description: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    h1: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    canonical_url: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    meta_robots: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    has_schema_markup: Column[Optional[bool]] = Column(  # type: ignore
+-        Boolean, default=False, nullable=True
+-    )
+-    schema_types: Column[Optional[List[Optional[str]]]] = Column(  # type: ignore
+-        ARRAY(String), nullable=True
+-    )
+-    has_contact_form: Column[Optional[bool]] = Column(  # type: ignore
+-        Boolean, default=False, nullable=True
+-    )
+-    has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)  # type: ignore
+-    word_count: Column[Optional[int]] = Column(Integer, nullable=True)  # type: ignore
+-    inbound_links: Column[Optional[List[Optional[str]]]] = Column(  # type: ignore
+-        ARRAY(String), nullable=True
+-    )
+-    outbound_links: Column[Optional[List[Optional[str]]]] = Column(  # type: ignore
+-        ARRAY(String), nullable=True
+-    )
+-    last_modified: Column[Optional[datetime]] = Column(  # type: ignore
+-        DateTime(timezone=True), nullable=True
+-    )
+-    last_scan: Column[Optional[datetime]] = Column(  # type: ignore
+-        DateTime(timezone=True), nullable=True
+-    )
+-    page_type: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    lead_source: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+-    additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True)  # type: ignore
++    title: Column[Optional[str]] = Column(Text, nullable=True)
++    description: Column[Optional[str]] = Column(Text, nullable=True)
++    h1: Column[Optional[str]] = Column(Text, nullable=True)
++    canonical_url: Column[Optional[str]] = Column(Text, nullable=True)
++    meta_robots: Column[Optional[str]] = Column(Text, nullable=True)
++    has_schema_markup: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
++    schema_types: Column[Optional[List[Optional[str]]]] = Column(ARRAY(String), nullable=True)
++    has_contact_form: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
++    has_comments: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
++    word_count: Column[Optional[int]] = Column(Integer, nullable=True)
++    inbound_links: Column[Optional[List[Optional[str]]]] = Column(ARRAY(String), nullable=True)
++    outbound_links: Column[Optional[List[Optional[str]]]] = Column(ARRAY(String), nullable=True)
++    last_modified: Column[Optional[datetime]] = Column(DateTime(timezone=True), nullable=True)
++    last_scan: Column[Optional[datetime]] = Column(DateTime(timezone=True), nullable=True)
++    page_type: Column[Optional[str]] = Column(Text, nullable=True)
++    lead_source: Column[Optional[str]] = Column(Text, nullable=True)
++    additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True)
+ 
+-    # Foreign key to track the source sitemap file (optional)
+-    sitemap_file_id: Column[Optional[uuid.UUID]] = Column(  # type: ignore
++    sitemap_file_id: Column[Optional[uuid.UUID]] = Column(
+         PGUUID(as_uuid=True), ForeignKey("sitemap_files.id"), nullable=True, index=True
+     )
+ 
+-    # --- Page Curation Workflow Columns ---
+-    page_curation_status: Column[PageCurationStatus] = Column(  # type: ignore
+-        PgEnum(PageCurationStatus, name="pagecurationstatus", create_type=False),
++    page_curation_status: Column[PageCurationStatus] = Column(
++        SQLAlchemyEnum(PageCurationStatus, name="page_curation_status", create_type=False),
+         nullable=False,
+-        default=PageCurationStatus.New,
++        default=PageCurationStatus.NEW,
+         index=True,
+     )
+-    page_processing_status: Column[Optional[PageProcessingStatus]] = Column(  # type: ignore
+-        PgEnum(PageProcessingStatus, name="pageprocessingstatus", create_type=False),
++    page_processing_status: Column[Optional[PageProcessingStatus]] = Column(
++        SQLAlchemyEnum(PageProcessingStatus, name="page_processing_status", create_type=False),
+         nullable=True,
+         index=True,
+     )
+-    page_processing_error: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
++    page_processing_error: Column[Optional[str]] = Column(Text, nullable=True)
+ 
+     # Relationships
+     domain = relationship("Domain", back_populates="pages")
+diff --git a/src/models/place.py b/src/models/place.py
+index ae84245..a2b3adb 100644
+--- a/src/models/place.py
++++ b/src/models/place.py
+@@ -4,59 +4,35 @@ SQLAlchemy model for places from the Google Places API.
+ This module defines the database model for the places_staging table.
+ """
+ 
+-import enum
+-from datetime import datetime
+-
+ from sqlalchemy import (
+     Boolean,
+     Column,
+     DateTime,
+-    Enum,
+     Float,
+     ForeignKey,
+     Integer,
+     String,
+     Text,
+ )
+-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
++from sqlalchemy import Enum as SQLAlchemyEnum
++from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PGUUID
++from sqlalchemy.orm import relationship
+ 
+-from .base import Base
++from .base import BaseModel
++from .enums import GcpApiDeepScanStatus, PlaceStatus
+ from .tenant import DEFAULT_TENANT_ID
+ 
+ 
+-# Define the enum for the ORIGINAL user-facing place status
+-# Values MUST match the database enum values exactly (case-sensitive)
+-class PlaceStatusEnum(enum.Enum):
+-    New = "New"
+-    Selected = "Selected"
+-    Maybe = "Maybe"
+-    Not_a_Fit = "Not a Fit"
+-    Archived = "Archived"
+-
+-
+-# --- Define the NEW enum specifically for deep scan status --- #
+-# This replaces the previous DeepScanStatusEnum which was repurposed
+-# Values MUST match the database enum 'gcp_api_deep_scan_status_enum' exactly
+-class GcpApiDeepScanStatusEnum(enum.Enum):
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Completed = "Completed"
+-    Error = "Error"
+-
+-
+-# ------------------------------------------------------------- #
+-
+-
+-class Place(Base):
++class Place(BaseModel):
+     """
+-    SQLAlchemy model for places_staging table.
++    SQLAlchemy model for the places table.
+ 
+-    This table stores place data from Google Places API searches.
++    This table stores curated place data sourced from Google Places API searches.
+     """
+ 
+-    __tablename__ = "places_staging"
++    __tablename__ = "places"
+ 
+-    id = Column(Integer, primary_key=True, autoincrement=True)
++    # Fields from original model
+     place_id = Column(String(255), nullable=False, unique=True, index=True)
+     name = Column(String(255), nullable=False)
+     formatted_address = Column(String(512))
+@@ -67,53 +43,40 @@ class Place(Base):
+     rating = Column(Float)
+     user_ratings_total = Column(Integer)
+     price_level = Column(Integer)
+-    # Use the extended enum, assuming native DB enum type exists (Reverting to standard)
+-    # Ensure the default matches the new enum value
+-    status = Column(
+-        Enum(
+-            PlaceStatusEnum,
+-            name="place_status_enum",
+-            create_type=False,
+-            native_enum=True,
+-        ),
+-        default=PlaceStatusEnum.New,
+-        nullable=False,
+-        index=True,
+-    )
+-    tenant_id = Column(
+-        UUID(as_uuid=True), nullable=False, index=True, default=DEFAULT_TENANT_ID
+-    )
+-    created_by = Column(UUID(as_uuid=True), nullable=True)
+-    user_id = Column(UUID(as_uuid=True), nullable=True)
+-    user_name = Column(String(255))
+-    search_job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"))
+     search_query = Column(String(255))
+     search_location = Column(String(255))
+     raw_data = Column(JSONB)
+-    search_time = Column(DateTime, default=datetime.utcnow)
+     notes = Column(Text)
+     priority = Column(Integer, default=0)
+     tags = Column(ARRAY(String))
+     revisit_date = Column(DateTime)
+     processed = Column(Boolean, default=False)
+     processed_time = Column(DateTime)
+-    updated_by = Column(String(255))
+-    updated_at = Column(DateTime, default=datetime.utcnow)
+-    # New field to store deep scan errors
+     deep_scan_error = Column(Text, nullable=True)
+ 
+-    # --- Add the NEW column for deep scan status --- #
++    # Refactored fields
++    tenant_id = Column(
++        PGUUID, ForeignKey("tenants.id"), nullable=False, index=True, default=DEFAULT_TENANT_ID
++    )
++    search_job_id = Column(PGUUID, ForeignKey("jobs.id"), nullable=True)
++    created_by_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=True)
++    updated_by_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=True)
++
++    status = Column(
++        SQLAlchemyEnum(PlaceStatus, name="place_status", create_type=False),
++        default=PlaceStatus.NEW,
++        nullable=False,
++        index=True,
++    )
+     deep_scan_status = Column(
+-        Enum(
+-            GcpApiDeepScanStatusEnum,  # Use the NEW enum
+-            name="gcp_api_deep_scan_status_enum",  # Map to the NEW DB enum name
+-            create_type=False,  # Assume the type exists in DB
+-            native_enum=True,  # Use native PG enum
++        SQLAlchemyEnum(
++            GcpApiDeepScanStatus, name="gcp_api_deep_scan_status", create_type=False
+         ),
+-        nullable=True,  # Allow null for places not involved in deep scan
+-        index=True,  # Index for efficient querying by scheduler
++        nullable=True,
++        index=True,
+     )
+-    # ------------------------------------------------- #
+ 
+-    def __repr__(self):
+-        return f"<Place(id={self.id}, name={self.name}, place_id={self.place_id})>"
++    # Relationships
++    job = relationship("Job")
++    created_by = relationship("Profile", foreign_keys=[created_by_id])
++    updated_by = relationship("Profile", foreign_keys=[updated_by_id])
+diff --git a/src/models/place_search.py b/src/models/place_search.py
+index 86ace17..9bed677 100644
+--- a/src/models/place_search.py
++++ b/src/models/place_search.py
+@@ -1,39 +1,49 @@
+ """
+ SQLAlchemy model for place searches.
+ 
+-This module defines the database model for the place_searches table.
++This module defines the PlaceSearch model, which stores metadata related to
++Google Places API search queries.
+ """
+ 
+ import uuid
+ from datetime import datetime
+ 
+-from sqlalchemy import JSON, Column, DateTime, String
+-from sqlalchemy.dialects.postgresql import UUID
++from sqlalchemy import Column, ForeignKey, String
++from sqlalchemy import Enum as SQLAlchemyEnum
++from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
++from sqlalchemy.orm import relationship
+ 
+-from .base import Base
++from .base import BaseModel
++from .enums import SearchStatus
+ from .tenant import DEFAULT_TENANT_ID
+ 
+ 
+-class PlaceSearch(Base):
++class PlaceSearch(BaseModel):
+     """
+-    SQLAlchemy model for place_searches table.
+-
+-    This table stores search metadata from Google Places API queries.
++    Represents a search query made to the Google Places API.
+     """
+ 
+     __tablename__ = "place_searches"
+ 
+-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
++    id = Column(PGUUID, primary_key=True, default=uuid.uuid4)
++    query = Column(String(255), nullable=False)
++    location = Column(String(255))
++    results = Column(JSONB)
++
+     tenant_id = Column(
+-        UUID(as_uuid=True), nullable=False, index=True, default=DEFAULT_TENANT_ID
++        PGUUID, ForeignKey("tenants.id"), nullable=False, index=True, default=DEFAULT_TENANT_ID
++    )
++    user_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=False)
++
++    status = Column(
++        SQLAlchemyEnum(SearchStatus, name="search_status", create_type=False),
++        default=SearchStatus.PENDING,
++        nullable=False,
+     )
+-    user_id = Column(UUID(as_uuid=True))
+-    location = Column(String(255), nullable=False)
+-    business_type = Column(String(100), nullable=False)
+-    params = Column(JSON)
+-    created_at = Column(DateTime, default=datetime.utcnow)
+-    status = Column(String(50), default="pending")
+-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
++
++
++
++    user = relationship("Profile")
+ 
+     def __repr__(self):
+-        return f"<PlaceSearch(id={self.id}, location={self.location}, business_type={self.business_type})>"
++        return f"<PlaceSearch(id={self.id}, query='{self.query}', status='{self.status}')>"
+diff --git a/src/models/profile.py b/src/models/profile.py
+index 56477f0..1303fbf 100644
+--- a/src/models/profile.py
++++ b/src/models/profile.py
+@@ -10,21 +10,22 @@ from typing import Optional
+ from uuid import UUID
+ 
+ from pydantic import BaseModel, EmailStr
+-from sqlalchemy import Boolean, Column, Text
++from sqlalchemy import Boolean, Column, ForeignKey, Text
+ from sqlalchemy.dialects.postgresql import UUID as PGUUID
+ 
+-from .base import Base
+ from .base import BaseModel as BaseORMModel
+ from .tenant import DEFAULT_TENANT_ID
+ 
+ 
+-class Profile(Base, BaseORMModel):
++class Profile(BaseORMModel):
+     """SQLAlchemy model for profiles table."""
+ 
+     __tablename__ = "profiles"
+ 
+     # Keep tenant_id column for compatibility but no foreign key or relationship
+-    tenant_id = Column(PGUUID(as_uuid=True), nullable=False, default=DEFAULT_TENANT_ID)
++    tenant_id = Column(
++        PGUUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, default=DEFAULT_TENANT_ID
++    )
+     name = Column(Text, nullable=True)
+     email = Column(Text, nullable=True)
+     avatar_url = Column(Text, nullable=True)
+diff --git a/src/models/sitemap.py b/src/models/sitemap.py
+index 7814dfb..934cce5 100644
+--- a/src/models/sitemap.py
++++ b/src/models/sitemap.py
+@@ -5,7 +5,6 @@ This module defines the database models for sitemap files and URLs,
+ providing an ORM interface for interacting with the sitemap_files and sitemap_urls tables.
+ """
+ 
+-import enum
+ import logging
+ import uuid
+ from datetime import datetime
+@@ -26,72 +25,25 @@ from sqlalchemy.dialects.postgresql import JSONB
+ from sqlalchemy.dialects.postgresql import UUID as PGUUID
+ from sqlalchemy.orm import relationship
+ 
+-from .base import Base, BaseModel, model_to_dict
++from .base import BaseModel, model_to_dict
++from .enums import (
++    SitemapFileStatus,
++    SitemapImportCurationStatus,
++    SitemapImportProcessStatus,
++)
++from .tenant import DEFAULT_TENANT_ID
+ 
+ logger = logging.getLogger(__name__)
+ 
+ 
+-# Enum definitions to match database
+-class SitemapFileStatusEnum(enum.Enum):
+-    """Status values for sitemap_file_status_enum in database"""
+-
+-    Pending = "Pending"
+-    Processing = "Processing"
+-    Completed = "Completed"
+-    Error = "Error"
+-
+-
+-# Rename Enum related to Sitemap Curation status
+-class SitemapImportCurationStatusEnum(enum.Enum):
+-    """Status values for Sitemap Import Curation Status"""
+-
+-    New = "New"
+-    Selected = "Selected"
+-    Maybe = "Maybe"
+-    Not_a_Fit = "Not a Fit"
+-    Archived = "Archived"
+-
+-
+-# Rename Enum related to Sitemap Processing status
+-class SitemapImportProcessStatusEnum(enum.Enum):
+-    """Status values mapped to sitemap_import_status_enum in database (MUST MATCH DB DEFINITION)"""
+-
+-    # Setting to CAPITALIZED values to match corrected DB schema
+-    Queued = "Queued"
+-    Processing = "Processing"
+-    Completed = "Completed"
+-    Error = "Error"
+-    Submitted = "Submitted"
+-
+-
+-class SitemapFile(Base, BaseModel):
++class SitemapFile(BaseModel):
+     """
+     SitemapFile model representing sitemap XML files discovered and processed by the system.
+-
+-    Fields:
+-        id: UUID primary key (inherited from BaseModel)
+-        domain_id: Domain ID this sitemap belongs to
+-        url: URL of the sitemap file
+-        sitemap_type: Type of sitemap (INDEX, STANDARD, IMAGE, VIDEO, NEWS)
+-        discovery_method: How this sitemap was discovered (ROBOTS_TXT, COMMON_PATH, etc.)
+-        page_count: Number of pages in the sitemap
+-        size_bytes: Size of the sitemap file in bytes
+-        has_lastmod: Whether the sitemap contains lastmod information
+-        has_priority: Whether the sitemap contains priority information
+-        has_changefreq: Whether the sitemap contains changefreq information
+-        last_modified: When the sitemap was last modified according to HTTP headers
+-        url_count: Number of URLs in the sitemap
+-        tenant_id: The tenant this sitemap belongs to (for multi-tenancy)
+-        created_by: The user who created this sitemap record
+-        job_id: Associated job ID if created by a background job
+-        status: Processing status of the sitemap
+-        tags: JSON field for additional tags and categorization
+-        notes: Optional text notes about this sitemap
+     """
+ 
+     __tablename__ = "sitemap_files"
+ 
+-    # Core fields (id comes from BaseModel)
++    # Core fields
+     domain_id = Column(PGUUID, ForeignKey("domains.id"), nullable=False, index=True)
+     url = Column(Text, nullable=False)
+     sitemap_type = Column(Text, nullable=False)
+@@ -115,52 +67,43 @@ class SitemapFile(Base, BaseModel):
+ 
+     # Security and ownership
+     tenant_id = Column(
+-        PGUUID,
+-        nullable=True,
+-        index=True,
+-        default="550e8400-e29b-41d4-a716-446655440000",
++        PGUUID, ForeignKey("tenants.id"), nullable=False, index=True, default=DEFAULT_TENANT_ID
+     )
+-    created_by = Column(PGUUID, nullable=True)
+-    updated_by = Column(PGUUID, nullable=True)
+-    user_id = Column(PGUUID, nullable=True)
+-    user_name = Column(Text, nullable=True)
++    created_by_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=True)
++    updated_by_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=True)
++    job_id = Column(PGUUID, nullable=True, index=True)
+ 
+     # Process tracking
+-    job_id = Column(PGUUID, nullable=True, index=True)
+     status = Column(
+-        SQLAlchemyEnum(
+-            SitemapFileStatusEnum, name="sitemap_file_status_enum", create_type=False
+-        ),
++        SQLAlchemyEnum(SitemapFileStatus, name="sitemap_file_status", create_type=False),
+         nullable=False,
+-        default=SitemapFileStatusEnum.Pending,
++        default=SitemapFileStatus.PENDING,
+         index=True,
+     )
+     is_active = Column(Boolean, nullable=True, default=True)
+     process_after = Column(DateTime(timezone=True), nullable=True)
+     last_processed_at = Column(DateTime(timezone=True), nullable=True)
+ 
+-    # Renamed section comment: Sitemap Import columns (previously Deep Scrape)
+-    # Note: deep_scrape_curation_status column potentially needs DB migration/rename later
+-    deep_scrape_curation_status = Column(
++    # Sitemap Import columns
++    sitemap_import_curation_status = Column(
+         SQLAlchemyEnum(
+-            SitemapImportCurationStatusEnum,  # Use renamed Enum
+-            name="SitemapCurationStatusEnum",  # Keep DB name for now unless migrated
++            SitemapImportCurationStatus,
++            name="sitemap_import_curation_status",
+             create_type=False,
+         ),
+         nullable=True,
+-        default=SitemapImportCurationStatusEnum.New,  # Use renamed Enum
++        default=SitemapImportCurationStatus.NEW,
+         index=True,
+     )
+-    sitemap_import_error = Column(Text, name="sitemap_import_error", nullable=True)
++    sitemap_import_error = Column(Text, nullable=True)
+     sitemap_import_status = Column(
+         SQLAlchemyEnum(
+-            SitemapImportProcessStatusEnum,  # Use renamed Enum
+-            name="sitemap_import_status_enum",
++            SitemapImportProcessStatus,
++            name="sitemap_import_process_status",
+             create_type=False,
+         ),
+         nullable=True,
+         index=True,
+-        name="sitemap_import_status",
+     )
+ 
+     # Additional metadata
+@@ -172,171 +115,22 @@ class SitemapFile(Base, BaseModel):
+         "SitemapUrl", back_populates="sitemap", cascade="all, delete-orphan"
+     )
+     domain = relationship("Domain", back_populates="sitemap_files")
++    created_by = relationship("Profile", foreign_keys=[created_by_id])
++    updated_by = relationship("Profile", foreign_keys=[updated_by_id])
+ 
+     def to_dict(self) -> Dict[str, Any]:
+         """Convert sitemap file to dictionary with proper serialization."""
+         return model_to_dict(self)
+ 
+-    @classmethod
+-    async def create_new(
+-        cls,
+-        session,
+-        domain_id: str,
+-        url: str,
+-        sitemap_type: Optional[str] = None,
+-        discovery_method: Optional[str] = None,
+-        tenant_id: Optional[str] = None,
+-        created_by: Optional[str] = None,
+-        job_id: Optional[str] = None,
+-        **kwargs,
+-    ) -> "SitemapFile":
+-        """
+-        Create a new sitemap file record.
+-
+-        Args:
+-            session: SQLAlchemy session
+-            domain_id: Domain ID this sitemap belongs to
+-            url: URL of the sitemap file
+-            sitemap_type: Type of sitemap (INDEX, STANDARD, etc)
+-            discovery_method: How this sitemap was discovered
+-            tenant_id: Tenant ID for security
+-            created_by: User ID of creator
+-            job_id: Associated job ID if any
+-            **kwargs: Additional fields to set on the sitemap file
+-
+-        Returns:
+-            New SitemapFile instance
+-        """
+-        try:
+-            # Convert string UUIDs to UUID objects if provided
+-            tenant_id_obj = None
+-            if tenant_id:
+-                try:
+-                    tenant_id_obj = uuid.UUID(tenant_id)
+-                except (ValueError, TypeError) as err:
+-                    logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
+-                    raise ValueError(f"Invalid UUID format for tenant_id: {tenant_id}") from err
+-
+-            created_by_obj = None
+-            if created_by:
+-                try:
+-                    created_by_obj = uuid.UUID(created_by)
+-                except (ValueError, TypeError) as err:
+-                    logger.warning(f"Invalid UUID format for created_by: {created_by}")
+-                    raise ValueError(f"Invalid UUID format for created_by: {created_by}") from err
+-
+-            # Create the sitemap file
+-            sitemap_file = cls(
+-                domain_id=domain_id,
+-                url=url,
+-                sitemap_type=sitemap_type,
+-                discovery_method=discovery_method,
+-                tenant_id=tenant_id_obj,
+-                created_by=created_by_obj,
+-                job_id=job_id,
+-                status="pending",
+-                **kwargs,
+-            )
+-
+-            session.add(sitemap_file)
+-            return sitemap_file
+-
+-        except Exception as e:
+-            logger.error(f"Error creating sitemap file: {str(e)}")
+-            raise
+-
+-    @classmethod
+-    async def get_by_id(
+-        cls, session, sitemap_id: Union[str, uuid.UUID]
+-    ) -> Optional["SitemapFile"]:
+-        """
+-        Get a sitemap file by its ID.
+-
+-        Args:
+-            session: SQLAlchemy session
+-            sitemap_id: Sitemap ID (UUID or string)
+-
+-        Returns:
+-            SitemapFile instance or None if not found
+-        """
+-        from sqlalchemy import select
+-
+-        # Convert string UUID to UUID object if needed
+-        if isinstance(sitemap_id, str):
+-            try:
+-                sitemap_id = uuid.UUID(sitemap_id)
+-            except ValueError:
+-                logger.warning(f"Invalid UUID format for sitemap_id: {sitemap_id}")
+-                return None
+-
+-        query = select(cls).where(cls.id == sitemap_id)
+-
+-        result = await session.execute(query)
+-        return result.scalars().first()
+-
+-    @classmethod
+-    async def get_by_domain_id(cls, session, domain_id: str) -> List["SitemapFile"]:
+-        """
+-        Get all sitemap files for a domain.
+-
+-        Args:
+-            session: SQLAlchemy session
+-            domain_id: Domain ID to get sitemaps for
+-
+-        Returns:
+-            List of SitemapFile instances
+-        """
+-        from sqlalchemy import select
+-
+-        query = (
+-            select(cls)
+-            .where(cls.domain_id == domain_id)
+-            .order_by(cls.created_at.desc())
+-        )
+-
+-        result = await session.execute(query)
+-        return result.scalars().all()
+-
+-    @classmethod
+-    async def get_by_job_id(cls, session, job_id: str) -> List["SitemapFile"]:
+-        """
+-        Get all sitemap files for a specific job.
+-
+-        Args:
+-            session: SQLAlchemy session
+-            job_id: Job ID to get sitemaps for
+-
+-        Returns:
+-            List of SitemapFile instances
+-        """
+-        from sqlalchemy import select
+-
+-        query = select(cls).where(cls.job_id == job_id).order_by(cls.created_at.desc())
+-
+-        result = await session.execute(query)
+-        return result.scalars().all()
+-
+ 
+-class SitemapUrl(Base, BaseModel):
++class SitemapUrl(BaseModel):
+     """
+     SitemapUrl model representing URLs found in sitemaps.
+-
+-    Fields:
+-        id: UUID primary key (inherited from BaseModel)
+-        sitemap_id: Foreign key to the parent sitemap file
+-        url: The URL found in the sitemap
+-        lastmod: Last modified date from sitemap (if available)
+-        changefreq: Change frequency from sitemap (if available)
+-        priority: Priority value from sitemap (if available)
+-        tenant_id: The tenant this URL belongs to (for multi-tenancy)
+-        created_by: The user who created this record
+-        tags: JSON field for additional tags and categorization
+-        notes: Optional text notes about this URL
+     """
+ 
+     __tablename__ = "sitemap_urls"
+ 
+-    # Core fields (id comes from BaseModel)
++    # Core fields
+     sitemap_id = Column(
+         PGUUID,
+         ForeignKey("sitemap_files.id", ondelete="CASCADE"),
+@@ -352,13 +146,10 @@ class SitemapUrl(Base, BaseModel):
+ 
+     # Security and ownership
+     tenant_id = Column(
+-        PGUUID,
+-        nullable=True,
+-        index=True,
+-        default="550e8400-e29b-41d4-a716-446655440000",
++        PGUUID, ForeignKey("tenants.id"), nullable=False, index=True, default=DEFAULT_TENANT_ID
+     )
+-    created_by = Column(PGUUID, nullable=True)
+-    updated_by = Column(PGUUID, nullable=True)
++    created_by_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=True)
++    updated_by_id = Column(PGUUID, ForeignKey("profiles.id"), nullable=True)
+ 
+     # Additional metadata
+     tags = Column(JSONB, nullable=True)
+@@ -366,39 +157,13 @@ class SitemapUrl(Base, BaseModel):
+ 
+     # Relationships
+     sitemap = relationship("SitemapFile", back_populates="urls")
++    created_by = relationship("Profile", foreign_keys=[created_by_id])
++    updated_by = relationship("Profile", foreign_keys=[updated_by_id])
+ 
+     def to_dict(self) -> Dict[str, Any]:
+         """Convert sitemap URL to dictionary with proper serialization."""
+         return model_to_dict(self)
+-
+-    @classmethod
+-    async def create_new(
+-        cls,
+-        session,
+-        sitemap_id: Union[str, uuid.UUID],
+-        url: str,
+-        tenant_id: str,
+-        lastmod: Optional[datetime] = None,
+-        changefreq: Optional[str] = None,
+-        priority: Optional[float] = None,
+-        created_by: Optional[str] = None,
+-        **kwargs,
+-    ) -> "SitemapUrl":
+-        """
+-        Create a new sitemap URL record.
+-
+-        Args:
+-            session: SQLAlchemy session
+-            sitemap_id: ID of the parent sitemap
+-            url: The URL from the sitemap
+-            tenant_id: Tenant ID for security
+-            lastmod: Last modified date if available
+-            changefreq: Change frequency if available
+-            priority: Priority if available
+-            created_by: User ID of creator
+-            **kwargs: Additional fields to set
+-
+-        Returns:
++ Returns:
+             New SitemapUrl instance
+         """
+         try:
+diff --git a/src/routers/batch_sitemap.py b/src/routers/batch_sitemap.py
+index 7f0bfd6..cc61e01 100644
+--- a/src/routers/batch_sitemap.py
++++ b/src/routers/batch_sitemap.py
+@@ -26,10 +26,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
+ from ..auth.jwt_auth import DEFAULT_TENANT_ID, get_current_user
+ from ..config.settings import settings
+ from ..models.batch_job import BatchJob
++from ..models.enums import BatchJobStatus
+ from ..services.batch.batch_functions import (
+-    BATCH_STATUS_COMPLETED,
+-    BATCH_STATUS_FAILED,
+-    BATCH_STATUS_PROCESSING,
+     create_batch,
+     get_batch_status,
+ )
+@@ -248,7 +246,7 @@ async def process_sitemap_batch_with_own_session(
+             # Session already manages its own transaction
+             batch = await BatchJob.get_by_batch_id(session, batch_id)
+             if batch:
+-                batch.status = BATCH_STATUS_PROCESSING
++                batch.status = BatchJobStatus.PROCESSING
+                 batch.start_time = func.now()
+                 await session.flush()
+                 logger.info(f"Updated batch {batch_id} status to processing")
+diff --git a/src/routers/domains.py b/src/routers/domains.py
+index b5b92f5..9e3b265 100644
+--- a/src/routers/domains.py
++++ b/src/routers/domains.py
+@@ -22,16 +22,13 @@ from src.auth.jwt_auth import get_current_user  # Corrected based on other route
+ from src.db.session import (
+     get_db_session,  # Import the correct session dependency
+ )
+-from src.models.api_models import (
++from src.schemas.domain import (
+     DomainBatchCurationStatusUpdateRequest,
+     DomainRecord,
+     PaginatedDomainResponse,
+ )
+-from src.models.domain import (
+-    Domain,
+-    SitemapAnalysisStatusEnum,
+-    SitemapCurationStatusEnum,
+-)
++from src.models.domain import Domain
++from src.models.enums import SitemapAnalysisStatus, SitemapCurationStatus
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -66,7 +63,7 @@ async def list_domains(
+         ),
+     ),
+     sort_desc: bool = Query(True, description="Sort in descending order"),
+-    sitemap_curation_status: Optional[SitemapCurationStatusEnum] = Query(
++    sitemap_curation_status: Optional[SitemapCurationStatus] = Query(
+         None, description="Filter by sitemap curation status"
+     ),
+     domain_filter: Optional[str] = Query(
+@@ -182,9 +179,7 @@ async def update_domain_sitemap_curation_status_batch(
+ 
+     # Map API Enum to DB Enum (should match directly based on definition)
+     try:
+-        db_curation_status = SitemapCurationStatusEnum[
+-            api_status.name
+-        ]  # Use .name for reliable mapping
++        db_curation_status = api_status
+     except KeyError as e:
+         # Log the error including the invalid value received
+         logger.error(
+@@ -227,8 +222,8 @@ async def update_domain_sitemap_curation_status_batch(
+             )
+ 
+             # Conditional logic: If status is 'Selected', queue for analysis
+-            if db_curation_status == SitemapCurationStatusEnum.Selected:
+-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Queued  # type: ignore
++            if db_curation_status == SitemapCurationStatus.SELECTED:
++                domain.sitemap_analysis_status = SitemapAnalysisStatus.QUEUED  # type: ignore
+                 domain.sitemap_analysis_error = None  # type: ignore # Clear previous errors
+                 queued_count += 1
+                 logger.debug(
+diff --git a/src/routers/local_businesses.py b/src/routers/local_businesses.py
+index 16dd1cd..a9ae31e 100644
+--- a/src/routers/local_businesses.py
++++ b/src/routers/local_businesses.py
+@@ -20,41 +20,18 @@ from src.auth.jwt_auth import (
+ 
+ # Assuming DB Session, Auth dependencies are similar to other routers
+ from src.db.session import get_db_session  # Adjust path if necessary
+-from src.models.api_models import LocalBusinessBatchStatusUpdateRequest
+-from src.models.local_business import DomainExtractionStatusEnum, LocalBusiness
+-from src.models.place import PlaceStatusEnum  # For DB mapping
++from src.models.local_business import LocalBusiness
++from src.models.enums import DomainExtractionStatus, PlaceStatus
++from src.schemas.local_business import (
++    LocalBusinessBatchStatusUpdateRequest,
++    PaginatedLocalBusinessResponse,
++    LocalBusinessRecord,
++)
+ 
+ logger = logging.getLogger(__name__)
+ 
+ 
+-# --- Local Pydantic Models for GET Endpoint --- #
+-# Define a Pydantic model that mirrors the LocalBusiness SQLAlchemy model
+-# This ensures API responses have a defined schema.
+-# Include fields needed by the frontend grid.
+-class LocalBusinessRecord(BaseModel):
+-    id: UUID
+-    business_name: Optional[str] = None
+-    full_address: Optional[str] = None
+-    phone: Optional[str] = None
+-    website_url: Optional[str] = None
+-    status: Optional[PlaceStatusEnum] = None  # Use the DB enum here
+-    domain_extraction_status: Optional[DomainExtractionStatusEnum] = None
+-    created_at: datetime
+-    updated_at: datetime
+-    tenant_id: UUID
+-
+-    class Config:
+-        from_attributes = True  # Enable ORM mode for conversion (Updated from orm_mode)
+-        use_enum_values = True  # Ensure enum values are used in response
+-
+-
+-# Response model for paginated results
+-class PaginatedLocalBusinessResponse(BaseModel):
+-    items: List[LocalBusinessRecord]
+-    total: int
+-    page: int
+-    size: int
+-    pages: int
++# Schemas are now correctly imported from src.schemas.local_business
+ 
+ 
+ # --- Router Definition --- #
+@@ -69,7 +46,7 @@ router = APIRouter(prefix="/api/v3/local-businesses", tags=["Local Businesses"])
+     description="Retrieves a paginated list of local businesses, allowing filtering and sorting.",
+ )
+ async def list_local_businesses(
+-    status_filter: Optional[PlaceStatusEnum] = Query(
++    status_filter: Optional[PlaceStatus] = Query(
+         None,
+         alias="status",
+         description="Filter by main business status (e.g., New, Selected, Maybe)",
+@@ -155,7 +132,7 @@ async def list_local_businesses(
+ 
+         # --- Prepare Response --- #
+         # Pydantic models with from_attributes=True handle the conversion
+-        response_items = [LocalBusinessRecord.from_orm(item) for item in db_items]
++        response_items = [LocalBusinessRecord.model_validate(item) for item in db_items]
+ 
+         return PaginatedLocalBusinessResponse(
+             items=response_items, total=total, page=page, size=size, pages=total_pages
+@@ -205,26 +182,11 @@ async def update_local_businesses_status_batch(
+             "queued_count": 0,
+         }
+ 
+-    # Map the incoming API status enum member to the DB enum member (PlaceStatusEnum)
+-    # Compare by NAME for robustness against potential value differences/casing
+-    target_db_status_member = next(
+-        (member for member in PlaceStatusEnum if member.name == new_api_status.name),
+-        None,
+-    )
+-
+-    if target_db_status_member is None:
+-        # This case handles potential mismatches, e.g., if API enum has 'Not_a_Fit' and DB has 'Not a Fit'
+-        # A more robust mapping might be needed if values differ significantly besides underscores.
+-        logger.error(
+-            f"API status '{new_api_status.name}' ({new_api_status.value}) has no matching member name in DB PlaceStatusEnum."
+-        )
+-        raise HTTPException(
+-            status_code=status.HTTP_400_BAD_REQUEST,
+-            detail=f"Invalid status mapping for '{new_api_status.value}'",
+-        )
++    # The API request now uses the centralized PlaceStatus ENUM, so no mapping is needed.
++    target_db_status_member = new_api_status
+ 
+     # Determine if domain extraction should be triggered based on the target DB status
+-    trigger_domain_extraction = target_db_status_member == PlaceStatusEnum.Selected
++    trigger_domain_extraction = target_db_status_member == PlaceStatus.SELECTED
+     if trigger_domain_extraction:
+         logger.info(
+             f"Target DB status '{target_db_status_member.name}' will trigger domain extraction queueing."
+@@ -233,7 +195,7 @@ async def update_local_businesses_status_batch(
+     # Define which existing domain extraction statuses allow re-queueing (e.g., only if failed or not yet processed)
+     eligible_queueing_statuses = [
+         None,  # Not yet processed
+-        DomainExtractionStatusEnum.Error,  # Changed from 'failed' to 'Error' to match new enum
++        DomainExtractionStatus.ERROR,  # Changed from 'failed' to 'Error' to match new enum
+         # Add other statuses if needed (e.g., completed if re-running is desired)
+     ]
+ 
+@@ -276,7 +238,7 @@ async def update_local_businesses_status_batch(
+                     # REMOVED eligibility check: current_extraction_status in eligible_queueing_statuses:
+                     # if current_extraction_status in eligible_queueing_statuses:
+                     business.domain_extraction_status = (
+-                        DomainExtractionStatusEnum.Queued
++                        DomainExtractionStatus.QUEUED
+                     )  # type: ignore # Changed from 'queued' to 'Queued' to match new enum
+                     business.domain_extraction_error = None  # type: ignore # Clear any previous error
+                     actually_queued_count += 1
+diff --git a/src/routers/sitemap_files.py b/src/routers/sitemap_files.py
+index fa2bbe1..9b4043f 100644
+--- a/src/routers/sitemap_files.py
++++ b/src/routers/sitemap_files.py
+@@ -13,9 +13,7 @@ from src.auth.jwt_auth import get_current_user
+ 
+ # Core Dependencies
+ from ..db.session import get_db_session
+-from ..models.sitemap import (
+-    SitemapImportCurationStatusEnum,
+-)
++from ..models.enums import SitemapImportCurationStatus
+ from ..schemas.sitemap_file import (
+     PaginatedSitemapFileResponse,
+     SitemapFileBatchUpdate,  # Assuming batch status update needed
+@@ -55,7 +53,7 @@ sitemap_files_service = SitemapFilesService()
+ async def list_sitemap_files(
+     # Updated query parameters as per Spec 23.5 / Implementation 23.6
+     domain_id: Optional[uuid.UUID] = Query(None, description="Filter by domain UUID"),
+-    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = Query(
++    deep_scrape_curation_status: Optional[SitemapImportCurationStatus] = Query(
+         None,
+         description="Filter by sitemap import curation status (New, Selected, etc.)",
+     ),
+diff --git a/src/schemas/sitemap_file.py b/src/schemas/sitemap_file.py
+index 5bde302..99cb2c6 100644
+--- a/src/schemas/sitemap_file.py
++++ b/src/schemas/sitemap_file.py
+@@ -9,7 +9,7 @@ from typing import List, Optional
+ from pydantic import BaseModel, Field
+ 
+ # Import the Renamed Enum from the model to reuse it
+-from ..models.sitemap import SitemapFileStatusEnum, SitemapImportCurationStatusEnum
++from ..models.enums import SitemapFileStatus, SitemapImportCurationStatus
+ 
+ 
+ # Base Schema: Fields common to Create and Read
+@@ -19,7 +19,7 @@ class SitemapFileBase(BaseModel):
+     url: str = Field(
+         ..., alias="sitemap_url", examples=["https://example.com/sitemap.xml"]
+     )
+-    status: SitemapFileStatusEnum = Field(default=SitemapFileStatusEnum.Pending)
++    status: SitemapFileStatus = Field(default=SitemapFileStatus.PENDING)
+     file_path: Optional[str] = None
+     error_message: Optional[str] = None
+     processing_time: Optional[float] = None
+@@ -45,13 +45,13 @@ class SitemapFileUpdate(BaseModel):
+     domain_id: Optional[uuid.UUID] = None
+     # Use alias for update as well
+     url: Optional[str] = Field(None, alias="sitemap_url")
+-    status: Optional[SitemapFileStatusEnum] = None
++    status: Optional[SitemapFileStatus] = None
+     file_path: Optional[str] = None
+     error_message: Optional[str] = None
+     processing_time: Optional[float] = None
+     url_count: Optional[int] = None
+     # Use renamed Enum
+-    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = None
++    deep_scrape_curation_status: Optional[SitemapImportCurationStatus] = None
+     # updated_by will likely be set automatically
+     # If API allows manual update, add: updated_by: Optional[uuid.UUID] = None
+ 
+@@ -69,7 +69,7 @@ class SitemapFileRead(SitemapFileBase):
+     created_by: Optional[uuid.UUID] = None  # Include if set in model
+     updated_by: Optional[uuid.UUID] = None  # Include if set in model
+     # Use renamed Enum
+-    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = None
++    deep_scrape_curation_status: Optional[SitemapImportCurationStatus] = None
+     domain_name: Optional[str] = None  # Added field for domain name
+ 
+ 
+@@ -86,7 +86,7 @@ class PaginatedSitemapFileResponse(BaseModel):
+ class SitemapFileBatchUpdate(BaseModel):
+     sitemap_file_ids: List[uuid.UUID]
+     # Use renamed Enum
+-    deep_scrape_curation_status: SitemapImportCurationStatusEnum
++    deep_scrape_curation_status: SitemapImportCurationStatus
+ 
+     class Config:
+         # REMOVED use_enum_values = True
+diff --git a/src/services/domain_scheduler.py b/src/services/domain_scheduler.py
+index eebfc92..6fe44a6 100644
+--- a/src/services/domain_scheduler.py
++++ b/src/services/domain_scheduler.py
+@@ -16,7 +16,7 @@ from sqlalchemy.future import select
+ 
+ from ..config.settings import settings
+ from ..models.domain import Domain  # Import the Domain model
+-from ..models.enums import DomainStatusEnum  # Import the new Enum
++from ..models.enums import DomainStatus  # Import the new Enum
+ 
+ # Import the shared scheduler instance
+ from ..scheduler_instance import scheduler
+@@ -89,7 +89,7 @@ async def process_pending_domains(limit: int = 10):
+             # Step 1: Fetch pending domains using ORM
+             stmt = (
+                 select(Domain)
+-                .where(Domain.status == DomainStatusEnum.pending)  # Use Enum member
++                .where(Domain.status == DomainStatus.PENDING)  # Use Enum member
+                 .order_by(Domain.updated_at.asc())
+                 .limit(limit)
+                 .with_for_update(skip_locked=True)
+@@ -147,11 +147,11 @@ async def process_pending_domains(limit: int = 10):
+ 
+                 try:
+                     # Step 2.1: Update status to 'processing' IN MEMORY using setattr
+-                    domain.status = DomainStatusEnum.processing  # Use Enum member
++                    domain.status = DomainStatus.PROCESSING  # Use Enum member
+                     domain.last_error = None  # Clear previous error
+                     domain.updated_at = datetime.utcnow()  # Keep updated_at fresh
+                     logger.debug(
+-                        f"Domain {domain_id} status set to '{DomainStatusEnum.processing.value}' in memory."
++                        f"Domain {domain_id} status set to '{DomainStatus.PROCESSING.value}' in memory."
+                     )
+                     # NO COMMIT here
+ 
+@@ -181,12 +181,12 @@ async def process_pending_domains(limit: int = 10):
+                     # Assuming Domain model has an update_from_metadata method
+                     # that takes metadata dict and updates relevant fields IN MEMORY
+                     await Domain.update_from_metadata(session, domain, metadata)
+-                    domain.status = DomainStatusEnum.completed  # Use Enum member
++                    domain.status = DomainStatus.COMPLETED  # Use Enum member
+                     domain.updated_at = datetime.utcnow()
+ 
+                     domains_successful += 1
+                     logger.info(
+-                        f"Successfully processed and marked domain {domain_id} as '{DomainStatusEnum.completed.value}' in memory."
++                        f"Successfully processed and marked domain {domain_id} as '{DomainStatus.COMPLETED.value}' in memory."
+                     )
+ 
+                 except Exception as processing_error:
+@@ -198,13 +198,13 @@ async def process_pending_domains(limit: int = 10):
+                     domains_failed += 1
+                     # Update status to 'error' IN MEMORY using setattr
+                     try:
+-                        domain.status = DomainStatusEnum.error  # Use Enum member
++                        domain.status = DomainStatus.ERROR  # Use Enum member
+                         domain.last_error = error_message[
+                             :1024
+                         ]  # Truncate if necessary
+                         domain.updated_at = datetime.utcnow()
+                         logger.warning(
+-                            f"Marked domain {domain_id} as '{DomainStatusEnum.error.value}' in memory."
++                            f"Marked domain {domain_id} as '{DomainStatus.ERROR.value}' in memory."
+                         )
+                     except AttributeError:
+                         logger.error(
+diff --git a/src/services/sitemap_import_scheduler.py b/src/services/sitemap_import_scheduler.py
+index 1aec8bb..c86ac06 100644
+--- a/src/services/sitemap_import_scheduler.py
++++ b/src/services/sitemap_import_scheduler.py
+@@ -8,7 +8,8 @@ from sqlalchemy import asc
+ from src.common.curation_sdk.scheduler_loop import run_job_loop
+ 
+ # Model and Enum Imports
+-from src.models.sitemap import SitemapFile, SitemapImportProcessStatusEnum
++from src.models.enums import SitemapImportProcessStatus
++from src.models.sitemap import SitemapFile
+ from src.scheduler_instance import scheduler  # Import shared scheduler instance
+ 
+ # Service to be called
+@@ -28,11 +29,11 @@ async def process_pending_sitemap_imports() -> None:
+     try:
+         await run_job_loop(
+             model=SitemapFile,
+-            status_enum=SitemapImportProcessStatusEnum,
+-            queued_status=SitemapImportProcessStatusEnum.Queued,
+-            processing_status=SitemapImportProcessStatusEnum.Processing,
+-            completed_status=SitemapImportProcessStatusEnum.Completed,
+-            failed_status=SitemapImportProcessStatusEnum.Error,
++            status_enum=SitemapImportProcessStatus,
++            queued_status=SitemapImportProcessStatus.Queued,
++            processing_status=SitemapImportProcessStatus.Processing,
++            completed_status=SitemapImportProcessStatus.Completed,
++            failed_status=SitemapImportProcessStatus.Error,
+             # Pass the service method as the processing function
+             processing_function=service.process_single_sitemap_file,
+             # Use RENAMED setting
+diff --git a/src/services/sitemap_scheduler.py b/src/services/sitemap_scheduler.py
+index 3b57702..c36bb5d 100644
+--- a/src/services/sitemap_scheduler.py
++++ b/src/services/sitemap_scheduler.py
+@@ -16,14 +16,13 @@ from sqlalchemy import func, select, update
+ 
+ from ..config.settings import settings
+ 
+-# SitemapCurationStatusEnum removed (commented out) - Not used in this scheduler service.
+-# Was likely added erroneously during previous model refactoring and caused ImportError.
+-# from ..models.sitemap import SitemapFile, SitemapUrl, SitemapFileStatusEnum, SitemapCurationStatusEnum
++from ..models.enums import (
++    DomainExtractionStatus,
++    GcpApiDeepScanStatus,
++)
+ from ..models.job import Job
+-from ..models.local_business import DomainExtractionStatusEnum, LocalBusiness
+-
+-# Import the NEW Enum for deep scan status
+-from ..models.place import GcpApiDeepScanStatusEnum, Place
++from ..models.local_business import LocalBusiness
++from ..models.place import Place
+ 
+ # Import the shared scheduler instance
+ from ..scheduler_instance import scheduler
+@@ -209,7 +208,7 @@ async def process_pending_jobs(limit: int = 10):
+             stmt_select = (
+                 select(Place)
+                 # Query using the dedicated deep_scan_status field and the NEW enum
+-                .where(Place.deep_scan_status == GcpApiDeepScanStatusEnum.Queued)
++                .where(Place.deep_scan_status == GcpApiDeepScanStatus.QUEUED)
+                 .order_by(Place.updated_at.asc())  # Process oldest first
+                 .limit(limit)
+                 # --- Reinstated after debugging --- #
+@@ -235,7 +234,7 @@ async def process_pending_jobs(limit: int = 10):
+ 
+                     try:
+                         # Mark as Processing immediately using the NEW enum
+-                        place.deep_scan_status = GcpApiDeepScanStatusEnum.Processing  # type: ignore
++                        place.deep_scan_status = GcpApiDeepScanStatus.PROCESSING  # type: ignore
+                         place.updated_at = datetime.utcnow()  # type: ignore
+                         await (
+                             session.flush()
+@@ -255,7 +254,7 @@ async def process_pending_jobs(limit: int = 10):
+                                 f"Deep Scan: Success for Place ID: {place.place_id}"
+                             )
+                             # Update status to Completed using the NEW enum
+-                            place.deep_scan_status = GcpApiDeepScanStatusEnum.Completed  # type: ignore
++                            place.deep_scan_status = GcpApiDeepScanStatus.COMPLETED  # type: ignore
+                             place.deep_scan_error = None  # type: ignore
+                             place.updated_at = datetime.utcnow()  # type: ignore
+                             deep_scans_successful += 1
+@@ -265,7 +264,7 @@ async def process_pending_jobs(limit: int = 10):
+                                 f"Deep Scan: Failed for Place ID: {place.place_id} - Error: {error_msg}"
+                             )
+                             # Update status to Error using the NEW enum
+-                            place.deep_scan_status = GcpApiDeepScanStatusEnum.Error  # type: ignore
++                            place.deep_scan_status = GcpApiDeepScanStatus.ERROR  # type: ignore
+                             place.deep_scan_error = error_msg[:1024]  # type: ignore # Truncate
+                             place.updated_at = datetime.utcnow()  # type: ignore
+ 
+@@ -276,7 +275,7 @@ async def process_pending_jobs(limit: int = 10):
+                         )
+                         try:
+                             # Attempt to mark as Error using the NEW enum on exception
+-                            place.deep_scan_status = GcpApiDeepScanStatusEnum.Error  # type: ignore
++                            place.deep_scan_status = GcpApiDeepScanStatus.ERROR  # type: ignore
+                             place.deep_scan_error = str(deep_scan_e)[:1024]  # type: ignore
+                             place.updated_at = datetime.utcnow()  # type: ignore
+                         except Exception as inner_e:
+@@ -304,7 +303,7 @@ async def process_pending_jobs(limit: int = 10):
+                 select(LocalBusiness)
+                 .where(
+                     LocalBusiness.domain_extraction_status
+-                    == DomainExtractionStatusEnum.Queued
++                    == DomainExtractionStatus.QUEUED
+                 )
+                 .order_by(LocalBusiness.updated_at.asc())  # Process oldest first
+                 .limit(limit)
+@@ -339,7 +338,7 @@ async def process_pending_jobs(limit: int = 10):
+ 
+                         # Update status to Processing IN MEMORY using setattr
+                         business.domain_extraction_status = (
+-                            DomainExtractionStatusEnum.Processing
++                            DomainExtractionStatus.PROCESSING
+                         )  # type: ignore
+                         business.domain_extraction_error = None  # type: ignore
+                         await session.flush()  # Flush if needed before service call
+@@ -359,7 +358,7 @@ async def process_pending_jobs(limit: int = 10):
+                         if success:
+                             # Assume service set status to completed or queued_for_analysis if appropriate
+                             business.domain_extraction_status = (
+-                                DomainExtractionStatusEnum.Completed
++                                DomainExtractionStatus.COMPLETED
+                             )  # type: ignore
+                             business.domain_extraction_error = None  # type: ignore
+                             logger.info(
+@@ -369,7 +368,7 @@ async def process_pending_jobs(limit: int = 10):
+                         else:
+                             # Assume service set status to failed and set error message
+                             business.domain_extraction_status = (
+-                                DomainExtractionStatusEnum.Error
++                                DomainExtractionStatus.ERROR
+                             )  # type: ignore
+                             business.domain_extraction_error = error_message[:1024]  # type: ignore
+                             logger.warning(
+@@ -385,7 +384,7 @@ async def process_pending_jobs(limit: int = 10):
+                         # Update status to Failed IN MEMORY using the *existing* session with setattr
+                         try:
+                             business.domain_extraction_status = (
+-                                DomainExtractionStatusEnum.Error
++                                DomainExtractionStatus.ERROR
+                             )  # type: ignore
+                             business.domain_extraction_error = error_message[:1024]  # type: ignore
+                             logger.warning(

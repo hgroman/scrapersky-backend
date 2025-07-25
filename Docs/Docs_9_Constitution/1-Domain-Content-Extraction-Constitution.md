@@ -21,7 +21,7 @@ This constitution establishes a **ZERO ASSUMPTIONS** policy. The implementing AI
 | --- | ----------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | AI Collaboration Constitution | Primary                 | [`../Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md`](../Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md)                                                   |
 | 2   | Session Context Document      | Session-specific        | [`../Docs_8_Document-X/8.1-AI-SESSION-CONTEXT-PAGE-CURATION.md`](../Docs_8_Document-X/8.1-AI-SESSION-CONTEXT-PAGE-CURATION.md)                                             |
-| 3   | Workflow Builder Cheat Sheet  | Implementation template | [`../Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE-Enhanced.md`](<../Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE-Enhanced.md>) |
+| 3   | Workflow Builder Cheat Sheet  | Implementation template | [`../Docs_8_Document-X/v_3_WORKFLOW_BUILDER_CHEAT_SHEET.md`](<../Docs_8_Document-X/v_3_WORKFLOW_BUILDER_CHEAT_SHEET.md>) |
 | 4   | Core Architecture Guides      | Reference               | [`../Docs_1_AI_GUIDES/`](../Docs_1_AI_GUIDES/)                                                                                                                             |
 | 5   | This Constitution             | Service-specific        | Current document                                                                                                                                                           |
 

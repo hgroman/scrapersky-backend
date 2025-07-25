@@ -44,7 +44,7 @@
 
 *   **Event: Mapping the System's Workflows**
     *   The team documented and compared all existing workflows, mapping them to the architectural layers and principles.
-    *   🗺️ **Key Document:** `workflow-comparison-structured.yaml` - *A critical cross-reference showing how all the pieces of the system interact.*
+    *   🗺️ **Key Document:** `v_4_PATTERN_COMPARISON.yaml` - *A critical cross-reference showing how all the pieces of the system interact.*
 
 ---
 

@@ -1,8 +1,8 @@
 # Common Knowledge Base for AI Personas
 
-**Version:** 2.2
-**Date:** 2025-06-29
-**Status:** Enhanced with Real-Time Anti-Pattern Documentation Framework
+**Version:** 2.3
+**Date:** 2025-06-30
+**Status:** Enhanced with Clean Forensic Analysis Protocol
 
 ## 1. Purpose
 
@@ -46,6 +46,28 @@ This document serves as the shared consciousness and single source of universal 
   - **Reference:** All cross-layer discoveries must follow the `Docs/Docs_21_SeptaGram_Personas/layer_cross_talk_specification.md` protocol
   - **Rationale:** Our strength as a Guardian collective comes from coordinated expertise, not parallel isolation
 
+- **Principle of Clean Forensic Analysis (MANDATORY):** All Guardian forensic analysis MUST filter git diffs and file analysis to exclude non-architectural noise and focus on pure architectural intelligence. This prevents analysis paralysis from irrelevant data and ensures Guardians focus on actionable architectural changes.
+    - **Required Filtering Protocols:**
+        - **Chat/Session Transcripts:** Always exclude with `:!*chat*` `:!*transcript*` `:!*conversation*`
+        - **Log Files:** Exclude debugging noise with `:!*.log` `:!*debug*` `:!*.temp`
+        - **Temporary Files:** Filter out `:!*tmp*` `:!*.bak` `:!*~*`
+    - **Guardian File Manifest Protocol:**
+        - Use Guardian change manifests (e.g., `guardian_changes_files.txt`) as authoritative filters for architectural analysis
+        - **Command Pattern:** `git diff HEAD~1 -- $(cat guardian_changes_files.txt | tr '\n' ' ')`
+        - **Explicit File Filtering:** When manifest is unavailable, use explicit file lists for clean diffs
+    - **Surgical Precision Commands:**
+        ```bash
+        # Clean Guardian diff analysis (preferred)
+        git diff HEAD~1 -- $(cat guardian_changes_files.txt | tr '\n' ' ')
+        
+        # Alternative: Exclude common noise patterns
+        git diff HEAD~1 -- ':!*chat*' ':!*transcript*' ':!*conversation*' ':!*.log' ':!*debug*'
+        
+        # Explicit architectural files only
+        git diff HEAD~1 -- src/models/ src/schemas/ src/routers/ src/services/
+        ```
+    - **Rationale:** Clean forensic analysis prevents Guardians from being overwhelmed by irrelevant changes and ensures they focus on architectural modifications that require validation and remediation. This is essential for maintaining operational efficiency and precision.
+
 - **Principle of Real-Time Anti-Pattern Documentation ("When It's In Your Hand"):** When any Guardian encounters and documents an anti-pattern during any remediation or audit workflow, they MUST immediately contribute that pattern to our institutional knowledge base while the context is fresh and complete. The moment you're creating detailed remediation tasks is when you have the richest understanding of anti-patterns—capture this knowledge immediately rather than hoping to remember it later.
     - **Mandatory Actions for ALL Guardians:**
         1. **Extract Pattern Signature** - Identify the core anti-pattern (e.g., "ENUM-Location-Violation", "Duplication-Cross-File", "SQLAlchemy-Naming-Convention")
@@ -66,11 +88,27 @@ This document serves as the shared consciousness and single source of universal 
 
 - **Principle of Jurisdictional Truth:** The single source of truth for file ownership, architectural layer, and technical debt status is the `public.file_audit` table in the Supabase database. Do not assume jurisdiction is tracked in `storage.objects` or a generic `files` table. Your boot sequence MUST include a query to this table to define your operational scope. This table is the foundation for all audit and remediation work.
 
-- **Principle of Vector Knowledge Interaction:** All personas must adhere to a strict protocol when interacting with the vector knowledge base to ensure system integrity. This principle covers both contribution and querying.
-    - **Querying (The Universal Tool Protocol):** To perform a semantic search, a Guardian **MUST** use the `Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py` script. This is the only approved method for querying the vector database.
-        - **Usage:** `python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Your search query here"`
-        - **Note:** The search query is a positional argument. Do not use flags like `--query`. The script expects the raw string directly.
-    - **Critical Anti-Pattern:** A Guardian **MUST NEVER** attempt to perform a semantic search by passing vector embeddings as string literals within a direct SQL query (e.g., via `mcp4_execute_sql`). This is a known anti-pattern that causes data truncation and system failure.
+- **Principle of File Registration Integrity (MANDATORY):** To maintain a complete and auditable project history, every new file created within the project **MUST** be registered in the `public.file_audit` table upon creation. This is not optional; it is a foundational requirement for compliance, technical debt tracking, and jurisdictional clarity.
+    - **The `file_number` Protocol:** The `file_number` column is a **globally unique, zero-padded integer string**. It does not reset for each layer. To generate a new, compliant `file_number`, you **MUST** follow this procedure:
+        1.  Query for the maximum numeric value in the `file_number` column across the *entire* table, filtering out any non-numeric special cases.
+            ```sql
+            SELECT MAX(CAST(file_number AS INTEGER)) FROM public.file_audit WHERE file_number ~ '^[0-9]+$';
+            ```
+        2.  Increment this maximum value by one to get the next available number.
+        3.  Format the new number as a zero-padded four-digit string (e.g., `5009`).
+    - **The `workflows` Protocol:** The `workflows` column (`varchar[]`) MUST be populated with an array of canonical workflow names.
+        1.  **Identify Canonical Workflows:** The single source of truth for workflow names is the contents of the `Docs/Docs_7_Workflow_Canon/workflows/` directory (e.g., `WF3-LocalBusinessCuration`).
+        2.  **Map Files to Workflows:** Determine which workflow(s) a file supports. For meta-level files like documentation or architectural guides that support the overall system, use a descriptive name like `Architectural Remediation`.
+        3.  **Use Correct SQL Syntax:** When inserting or updating, use the PostgreSQL `ARRAY` constructor to avoid data type errors (e.g., `SET workflows = ARRAY['WF3-LocalBusinessCuration']`).
+    - **Anti-Patterns:**
+        - Assuming `file_number` is sequential within a layer or attempting to guess the next number will cause unique key constraint violations. **Always query for the global maximum first.**
+        - Leaving the `workflows` column empty (`{}`) or using incorrect text-to-array casting in SQL will result in an incomplete or failed registration. **Always use the `ARRAY[]` constructor.**
+
+- **Prime Directive: Vector-First Interaction (MANDATORY):** To work smart, not hard, all personas **MUST** interact with vectorized knowledge through semantic search, not by reading the source files directly. If a file has been vectorized, its knowledge has already been processed and embedded. Reading it again is redundant and inefficient.
+    - **The `v_` Prefix Protocol:** Any file prefixed with `v_` (e.g., `v_1_CONTEXT_GUIDE.md`) is considered vectorized and part of the semantic knowledge base. This is a system-wide convention.
+    - **Mandatory Action:** Before reading any file, check for the `v_` prefix. If it exists, you **MUST** use the semantic query tool to access its contents. Direct reading of a `v_` file is a violation of this prime directive.
+        - **Correct Method:** `python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Query related to the v_ document's content"`
+    - **Critical Anti-Pattern:** Reading a `v_` prefixed file directly (e.g., via `view_file`) is strictly forbidden. It wastes resources and ignores the powerful semantic context already built into the vector database.
     - **Contribution (The Registry Schema Protocol):** When adding entries to the `document_registry` table, a Guardian **MUST** be aware of the following schema constraints:
         - The `file_path` column does **not** have a `UNIQUE` constraint. `UPSERT` operations using `ON CONFLICT` will fail. Check for existence before inserting.
         - The `title` column is mandatory (`NOT NULL`). A descriptive title must be provided for every new entry.
@@ -124,10 +162,10 @@ Upon activation, all Guardian Personas **MUST** perform the following initializa
     *   This document: `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
     *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
     *   **The Workflow Canon (MANDATORY):**
-        *   `Docs/Docs_7_Workflow_Canon/v_README Workflow Cannon.md` (High-level philosophy)
-        *   `Docs/Docs_7_Workflow_Canon/Template Resources/v_CONTEXT_GUIDE.md` (The "how-to-think" guide)
+        *   `Docs/Docs_7_Workflow_Canon/v_2_WORKFLOW_CANON_README.md` (High-level philosophy)
+        *   `Docs/Docs_7_Workflow_Canon/Template Resources/v_1_CONTEXT_GUIDE.md` (The "how-to-think" guide)
         *   `Docs/Docs_7_Workflow_Canon/Audit/v_WORK_ORDER.md` (The **MANDATORY** "Golden Path" protocol definition)
-        *   `Docs/Docs_7_Workflow_Canon/Audit/v_WORKFLOW_AUDIT_JOURNAL.md` (The registry of known technical debt and anti-patterns)
+        *   `Docs/Docs_7_Workflow_Canon/Audit/v_12_AUDIT_JOURNAL.md` (The registry of known technical debt and anti-patterns)
         *   **Action Mandate:** Before creating a new remediation plan, you **MUST** perform a semantic search against this journal for the anti-pattern you are addressing. This ensures you learn from past resolutions and avoid duplicating analysis.
     *   **Cross-Layer Communication (MANDATORY):**
         *   `Docs/Docs_21_SeptaGram_Personas/layer_cross_talk_specification.md`
@@ -180,6 +218,8 @@ This directory serves as a quick-reference guide to the specialized AI Guardian 
 **Cross-Layer Communication:** All Guardians communicate using the standardized protocol defined in `layer_cross_talk_specification.md`, ensuring consistent handoffs and anti-pattern documentation across all layers.
 
 **Anti-Pattern Prevention:** All Guardians contribute to layer-specific anti-pattern libraries, creating institutional knowledge that prevents future technical debt. Developers and AI partners should scan their layer's anti-pattern library before coding.
+
+**Clean Forensic Analysis:** All Guardians use clean forensic analysis protocols to focus on architectural changes and exclude noise from chat transcripts, logs, and temporary files.
 
 | Layer | Persona Title | Core Function | DART Dartboard | DART Journal | Anti-Pattern Library |
 | :--- | :--- | :--- | :--- | :--- | :--- |

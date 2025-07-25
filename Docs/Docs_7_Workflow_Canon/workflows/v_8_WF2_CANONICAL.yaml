@@ -24,7 +24,7 @@ architecture_reference:
 depends_on_models:
   - name: Place
     file_path: src/models/place.py
-    table: places
+    table: places_staging
     description: Primary Layer 1: Model containing status, deep_scan_status fields
   - name: Base
     file_path: src/models/base.py
@@ -54,21 +54,21 @@ workflow_connections:
   as_consumer:
     - producer_workflow: WF1-SingleSearch
       # Database table that this workflow consumes data from (MANDATORY)
-      interface_table: places  # Explicit table name from database schema
+      interface_table: places_staging  # Explicit table name from database schema
       # Field that contains the status signal this workflow looks for
       handoff_field: status
       # Value that triggers consumption
       consumed_value: PlaceStatusEnum.New
       connection_details: |
-        WF2 consumes place records from the places table with status="New" produced by
-        WF1-SingleSearch workflow. These records are queried from the places table and
+        WF2 consumes place records from the places_staging table with status="New" produced by
+        WF1-SingleSearch workflow. These records are queried from the places_staging table and
         displayed in the Staging Editor Layer 6: UI Components for human review and selection.
       connection_source_file: src/services/places_service.py
       connection_source_function: create_place_from_search
       connection_target_file: src/routers/places_staging.py
       connection_target_function: get_places
       # Explicit database operation that reads from the producer table
-      consumption_query: "SELECT * FROM places WHERE status = 'new' ORDER BY created_at DESC"
+      consumption_query: "SELECT * FROM places_staging WHERE status = 'new' ORDER BY created_at DESC"
 
   as_producer:
     - consumer_workflow: WF3-LocalBusinessCuration
@@ -89,14 +89,14 @@ workflow_connections:
       # Explicit database operation that writes to the consumer table
       production_operation: "INSERT INTO local_businesses (id, place_id, status, created_at, ...) VALUES (...)"
       # Alternative operation when using the queue_for_deep_scan function
-      alternative_operation: "UPDATE places SET deep_scan_status = 'queued' WHERE id IN (...)"
+      alternative_operation: "UPDATE places_staging SET deep_scan_status = 'queued' WHERE id IN (...)"
 
 # Trigger patterns and table details
 trigger_patterns:
-  - source_table: places  # Database table where status changes trigger workflow
+  - source_table: places_staging  # Database table where status changes trigger workflow
     source_status_field: status
     source_status_value: PlaceStatusEnum.Selected
-    destination_table: places
+    destination_table: places_staging
     destination_status_field: deep_scan_status
     destination_status_value: DeepScanStatusEnum.Queued
     scheduler_file: src/services/sitemap_scheduler.py

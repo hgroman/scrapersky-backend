@@ -34,7 +34,7 @@ _Last updated: 2025-05-04T13:18:54-07:00_
    - Copy and adapt the example files for your workflow, following the order and requirements in this guide.
    - Always cross-reference:
      - [../1-main_routers.md](../1-main_routers.md) — master router map
-     - [../2-evaluation_progress.yaml](../2-evaluation_progress.yaml) — audit/evaluation tracker
+     - [../Audit/v_6_SYSTEM_SCOPE_MAP.yaml](../Audit/v_6_SYSTEM_SCOPE_MAP.yaml) — audit/evaluation tracker
      - [../3-python_file_status_map.md](../3-python_file_status_map.md) — Python file audit status
 4. **Synchronize All Artifacts:**
    - No artifact may lag behind; all changes must be reflected across all relevant docs before marking an audit complete.
@@ -122,7 +122,7 @@ _Last updated: 2025-05-04T13:18:54-07:00_
 ## Quick Links
 - [Audit Cheat Sheet](./0%20audit_cheat_sheet.md)
 - [Router Map](../1-main_routers.md)
-- [Evaluation Progress](../2-evaluation_progress.yaml)
+- [Evaluation Progress](../Audit/v_6_SYSTEM_SCOPE_MAP.yaml)
 - [Python File Status Map](../3-python_file_status_map.md)
 - [Example Dependency Trace](./1%20WF2-Staging%20Editor%20Dependency%20Trace.md)
 - [Example Linear Steps](./2%20WF2-StagingEditor_linear_steps.md)

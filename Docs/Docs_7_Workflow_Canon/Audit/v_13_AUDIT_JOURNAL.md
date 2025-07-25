@@ -290,7 +290,7 @@ Currently, all local businesses with status="Selected" are automatically queued 
 **Reference(s)**:
 
 - JIRA: SCRSKY-230
-- Canonical YAML: /Docs_7_Workflow_Canon/workflows/WF3-LocalBusinessCuration_CANONICAL.yaml
+- Canonical YAML: /Docs_7_Workflow_Canon/workflows/v_8_WF3_CANONICAL.yaml
 
 #### [2025-05-05] Naming confusion in sitemap_scheduler.py
 
@@ -319,7 +319,7 @@ Despite being named "sitemap_scheduler.py", this file handles multiple types of 
 **Reference(s)**:
 
 - JIRA: SCRSKY-231
-- Canonical YAML: /Docs_7_Workflow_Canon/workflows/WF3-LocalBusinessCuration_CANONICAL.yaml
+- Canonical YAML: /Docs_7_Workflow_Canon/workflows/v_8_WF3_CANONICAL.yaml
 
 ### WF4 - Domain Curation (2025-05-05)
 
@@ -356,7 +356,7 @@ The domain_to_sitemap_adapter_service.py makes a direct HTTP call to another int
 **Reference(s)**:
 
 - JIRA: SCRSKY-232
-- Canonical YAML: /Docs_7_Workflow_Canon/workflows/WF4-DomainCuration_CANONICAL.yaml
+- Canonical YAML: /Docs_7_Workflow_Canon/workflows/v_9_WF4_CANONICAL.yaml
 
 #### [2025-05-05] Hardcoded internal API URL
 
@@ -385,7 +385,7 @@ The adapter service contains a hardcoded INTERNAL_API_BASE_URL for API calls. Th
 **Reference(s)**:
 
 - JIRA: SCRSKY-233
-- Canonical YAML: /Docs_7_Workflow_Canon/workflows/WF4-DomainCuration_CANONICAL.yaml
+- Canonical YAML: /Docs_7_Workflow_Canon/workflows/v_9_WF4_CANONICAL.yaml
 
 ### WF5 - Sitemap Curation (2025-05-05)
 
@@ -420,7 +420,7 @@ Original remediation plan no longer needed as implementation exists. Updated wor
 - UI implementation: src/routers/sitemap_files.py
 - Status update method: src/routers/sitemap_files.py:update_sitemap_files_status_batch
 - WF6 implementation: src/services/sitemap_import_scheduler.py, src/services/sitemap_import_service.py
-- WF6 documentation: /Docs_7_Workflow_Canon/workflows/WF6-SitemapImport_CANONICAL.yaml
+- WF6 documentation: /Docs_7_Workflow_Canon/workflows/v_11_WF6_CANONICAL.yaml
 
 #### [2025-05-05] Direct API call to internal endpoint
 
@@ -480,7 +480,7 @@ Complete audit of the WF6-Sitemap Import workflow revealed a well-designed backg
 
 1. Dependency Trace: /Docs/Docs_7_Workflow_Canon/Dependency_Traces/WF6-SitemapImport_dependency_trace.md
 2. Linear Steps: /Docs/Docs_7_Workflow_Canon/Linear-Steps/WF6-SitemapImport_linear_steps.md
-3. Canonical YAML: /Docs/Docs_7_Workflow_Canon/workflows/WF6-SitemapImport_CANONICAL.yaml
+3. Canonical YAML: /Docs/Docs_7_Workflow_Canon/workflows/v_11_WF6_CANONICAL.yaml
 4. Micro Work Order: /Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF6-SitemapImport_micro_work_order.md
 
 **Remediation Plan**:
@@ -492,7 +492,7 @@ Complete audit of the WF6-Sitemap Import workflow revealed a well-designed backg
 
 **Reference(s)**:
 
-- Connection to WF5: `Docs_7_Workflow_Canon/workflows/WF5-SitemapCuration_CANONICAL.yaml`
+- Connection to WF5: `Docs_7_Workflow_Canon/workflows/v_10_WF5_CANONICAL.yaml`
 - Code components: `src/services/sitemap_import_service.py` and `src/services/sitemap_import_scheduler.py`
 - API versioning standards memory: `33b0290b-5be6-459e-ac03-12b1acfd2055`
 - Transaction management principles memory: `c7d8082c-3ff0-48e3-b5be-0d462ec8584a`

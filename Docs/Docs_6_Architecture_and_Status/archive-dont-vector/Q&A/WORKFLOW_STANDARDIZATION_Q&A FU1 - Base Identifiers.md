@@ -15,7 +15,7 @@ However, this isn't explicitly documented as a formal step in the workflow creat
 FU Q1.1.2 (workflow_name examples):
 Looking at the canonical YAML files:
 
-sitemap_import from WF6-SitemapImport_CANONICAL.yaml:
+sitemap_import from v_11_WF6_CANONICAL.yaml:
 Core purpose: Importing URLs from sitemap files into the system
 Direct derivation: "sitemap" (the data source) + "import" (the action)
 single_search from WF1-SingleSearch_CANONICAL.yaml:
@@ -33,7 +33,7 @@ Then the workflow implementation begins using this new source_table_name
 You can see this sequence in the code commit history - model files (Layer 1: Models & ENUMs) are typically committed before their corresponding workflow implementation files.
 
 FU Q1.2.2 (source_table_name example):
-A clear example is sitemap from WF6-SitemapImport_CANONICAL.yaml:
+A clear example is sitemap from v_11_WF6_CANONICAL.yaml:
 
 Corresponds directly to src/models/sitemap.py (Layer 1: Models & ENUMs)
 This file contains the Sitemap class (SQLAlchemy model) (Layer 1: Models & ENUMs)

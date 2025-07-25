@@ -47,7 +47,7 @@ checklist:
       - src/routers/domain_content.py
       - src/schedulers/domain_content_scheduler.py
     references:
-      - Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE-Enhanced.md
+      - Docs_8_Document-X/v_3_WORKFLOW_BUILDER_CHEAT_SHEET.md
 
   - id: import_runtime_constants
     text: "Import runtime constants (no magic numbers)"

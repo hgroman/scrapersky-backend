@@ -1,0 +1,462 @@
+# v_5_REFERENCE_IMPLEMENTATION_WF2.yaml
+# Last verified: 2025-05-05T08:45:12-07:00
+
+workflow_name: WF2-StagingEditor
+workflow_display_name: WF2 - Staging Editor Curation to Deep Scan
+verified_by: Cascade AI
+verification_date: 2025-05-04
+workflow_version: 1.0
+
+# Key cross-references to architectural documentation
+architecture_reference:
+  - path: Docs_1_AI_GUIDES/01-ABSOLUTE_ORM_REQUIREMENT.md
+    description: Enforces ORM usage for all database operations
+  - path: Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
+    description: JWT authentication must only occur at API Layer 3: Routers level
+  - path: Docs_1_AI_GUIDES/15-API_STANDARDIZATION_GUIDE.md
+    description: All API endpoints must follow v3 prefix format
+  - path: Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
+    description: Layer 3: Routers own transaction boundaries, Layer 4: Services are transaction-aware
+  - path: Docs_3_Project_Design/background_task_patterns.md
+    description: Background task scheduling and execution patterns
+
+# Database models this workflow depends on
+depends_on_models:
+  - name: Place
+    file_path: src/models/place.py
+    table: places_staging
+    description: Primary Layer 1: Model containing status, deep_scan_status fields
+  - name: Base
+    file_path: src/models/base.py
+    description: SQLAlchemy base model class
+  - name: LocalBusiness
+    file_path: src/models/local_business.py
+    table: local_businesses
+    description: Created during deep scan process, produced for WF3
+
+# Enums this workflow depends on
+depends_on_enums:
+  - name: PlaceStatusEnum
+    file_path: src/models/place.py  # Enum is defined directly in the place.py model file
+    values: [New, Selected, Rejected, Processed]
+    description: Enum for place.status field
+  - name: DeepScanStatusEnum
+    file_path: src/models/place.py  # Enum is defined directly in the place.py model file
+    values: [None, Queued, InProgress, Complete, Error]
+    description: Enum for place.deep_scan_status field
+  - name: PlaceStagingStatusEnum
+    file_path: src/models/api_models.py  # Correct, this one is in api_models.py
+    values: [New, Selected, Rejected]
+    description: Enum used for API validation
+
+# Workflow connections - producer-consumer pattern
+workflow_connections:
+  as_consumer:
+    - producer_workflow: WF1-SingleSearch
+      # Database table that this workflow consumes data from (MANDATORY)
+      interface_table: places_staging  # Explicit table name from database schema
+      # Field that contains the status signal this workflow looks for
+      handoff_field: status
+      # Value that triggers consumption
+      consumed_value: PlaceStatusEnum.New
+      connection_details: |
+        WF2 consumes place records from the places_staging table with status="New" produced by
+        WF1-SingleSearch workflow. These records are queried from the places_staging table and
+        displayed in the Staging Editor Layer 6: UI Components for human review and selection.
+      connection_source_file: src/services/places_service.py
+      connection_source_function: create_place_from_search
+      connection_target_file: src/routers/places_staging.py
+      connection_target_function: get_places
+      # Explicit database operation that reads from the producer table
+      consumption_query: "SELECT * FROM places_staging WHERE status = 'new' ORDER BY created_at DESC"
+
+  as_producer:
+    - consumer_workflow: WF3-LocalBusinessCuration
+      # Database table that this workflow writes to for the next workflow (MANDATORY)
+      interface_table: local_businesses  # Explicit table name from database schema
+      # Field that contains the status signal for the next workflow
+      handoff_field: status
+      # Value that signals readiness for the next workflow
+      produced_value: PlaceStatusEnum.Selected
+      connection_details: |
+        WF2 produces local_business records in the local_businesses table when places are marked
+        as "Selected" in the Layer 6: UI Components. These records are created with status="Selected" and are
+        then consumed by WF3-LocalBusinessCuration for domain extraction processing.
+      connection_source_file: src/routers/places_staging.py
+      connection_source_function: update_places_status_batch
+      connection_target_file: src/routers/local_businesses.py
+      connection_target_function: get_local_businesses
+      # Explicit database operation that writes to the consumer table
+      production_operation: "INSERT INTO local_businesses (id, place_id, status, created_at, ...) VALUES (...)"
+      # Alternative operation when using the queue_for_deep_scan function
+      alternative_operation: "UPDATE places_staging SET deep_scan_status = 'queued' WHERE id IN (...)"
+
+# Trigger patterns and table details
+trigger_patterns:
+  - source_table: places_staging  # Database table where status changes trigger workflow
+    source_status_field: status
+    source_status_value: PlaceStatusEnum.Selected
+    destination_table: places_staging
+    destination_status_field: deep_scan_status
+    destination_status_value: DeepScanStatusEnum.Queued
+    scheduler_file: src/services/sitemap_scheduler.py
+    scheduler_function: process_pending_jobs
+
+phases:
+  - phase: Layer 6: UI Components Interaction
+    description: User selects items in Staging Editor Layer 6: UI Components and updates status
+    steps:
+      - step_id: 2.1
+        file: static/js/staging-editor-tab.js
+        action: User selects rows, sets status="Selected", clicks "Update X Selected" button
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          API Std: true
+          guideline: |
+            Uses standardized endpoint PUT /api/v3/places/staging/status with proper JSON payload
+            Following API Standardization Guide requirements for endpoint format
+          Clear User Feedback: true
+          guideline: |
+            UI updates with processing status after submission
+            Displays Toast notification on success/failure
+        notes: |
+          VERIFIED 2025-05-04T23:42:30-07:00: batchUpdateStagingStatus() function sends request to
+          proper v3 API endpoint with correct payload. Frontend behavior properly reflects the architectural
+          design. Note that the critical trigger_deep_scan parameter is NEVER sent from frontend, which
+          aligns with the actual backend behavior discovered in the audit.
+
+  - phase: API Layer 3: Routers
+    description: Initial request handling at API Layer 3: Routers level
+    steps:
+      - step_id: 2.2
+        file: src/routers/places_staging.py [NOVEL]
+        action: JWT authentication is performed on incoming request
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Auth Boundary: true
+          guideline: |
+            JWT authentication occurs ONLY at the API Layer 3: Routers level using dependency injection
+            Follows /Docs_1_AI_GUIDES/11-AUTHENTICATION_BOUNDARY.md
+          API Std: true
+          guideline: |
+            Endpoint follows v3 format: PUT /api/v3/places/staging/status
+            Proper versioning in URL structure
+        notes: |
+          VERIFIED 2025-05-04T23:42:45-07:00: JWT dependency properly injected at router level
+          and follows authentication boundary guidelines. Auth happens before any business logic.
+
+      - step_id: 2.3
+        file: src/routers/places_staging.py [NOVEL]
+        action: Validates request body against PlaceBatchStatusUpdateRequest schema, checks ENUMs
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Enum Handling: true
+          guideline: |
+            Validates incoming status against PlaceStagingStatusEnum
+            Maps API enum to database enum correctly
+          Code Org: true
+          guideline: |
+            Follows Layer 3: Routers - Layer 4: Services - Layer 1: Models & ENUMs pattern
+            Layer 3: Routers only handles request validation and delegation
+        notes: |
+          VERIFIED 2025-05-04T23:43:00-07:00: Pydantic model validation properly implemented
+          for PlaceBatchStatusUpdateRequest. ENUM validation correctly checks status values.
+
+      - step_id: 2.4
+        file: src/routers/places_staging.py [NOVEL]
+        action: Maps status, evaluates trigger_deep_scan logic, starts transaction
+        source_table: N/A
+        destination_table: places_staging
+        principles:
+          Txn Boundary: true
+          guideline: |
+            Layer 3: Routers owns transaction boundary with 'async with session.begin()' pattern
+            Follows transaction management standard in /Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
+          ORM Req: false
+          guideline: |
+            CRITICAL NON-COMPLIANCE: Raw SQL used in update_places_status_batch function (lines ~121-180)
+            Violates Absolute ORM Requirement
+        notes: |
+          VERIFIED 2025-05-04T23:43:15-07:00: Transaction boundary correctly implemented in Layer 3: Routers.
+          ISSUE FOUND: Despite proper transaction boundaries, this Layer 3: Routers contains raw SQL statements
+          that violate the Absolute ORM Requirement. This is a critical compliance issue that requires
+          immediate refactoring. The raw SQL implementation bypasses the ORM safeguards and type checking.
+
+          REFACTOR PLAN:
+          1. Replace direct SQL with SQLAlchemy ORM queries
+          2. Use proper relationship loading with session.query(Place).filter(...)
+          3. Update models as needed if relationships are missing
+          4. Add test coverage to verify refactored functionality
+          5. Priority: HIGH - Complete by 2025-05-15
+
+  - phase: Database Interaction
+    description: Core database update logic for status changes
+    steps:
+      - step_id: 2.5
+        file: src/routers/places_staging.py [NOVEL]
+        action: Dual Status Update - Sets place.status=Selected and place.deep_scan_status=Queued
+        source_table: places_staging
+        destination_table: places_staging
+        principles:
+          ORM Req: false
+          guideline: |
+            CRITICAL NON-COMPLIANCE: Uses raw SQL for updating place status
+            Should be using Place ORM model from src/models/place.py
+          Enum Handling: true
+          guideline: |
+            Properly maps API StatusEnum to database PlaceStatusEnum
+            Correctly handles DeepScanStatusEnum.Queued for triggering
+        notes: |
+          VERIFIED 2025-05-04T23:43:30-07:00: This step is functionally correct despite using
+          raw SQL. The Dual Status Update pattern is correctly implemented - when status is set to
+          "Selected", deep_scan_status is automatically set to "Queued" regardless of the trigger_deep_scan
+          parameter (which is ignored). This creates the proper database trigger condition for background
+          processing, but the implementation method violates architectural standards.
+
+  - phase: Background Task Triggering
+    description: Status change acts as trigger for background processing
+    steps:
+      - step_id: 2.6
+        file: src/services/sitemap_scheduler.py [SHARED]
+        action: Setting deep_scan_status = 'Queued' acts as trigger for scheduler
+        source_table: places_staging
+        destination_table: places_staging
+        principles:
+          Decoupling: true
+          guideline: |
+            Status-based queuing decouples Layer 6: UI Components action from background processing
+            Follows asynchronous processing principles
+          Atomicity: true
+          guideline: |
+            Status update is atomic - either both statuses are updated or neither
+            Transaction ensures data consistency
+        notes: |
+          VERIFIED 2025-05-04T23:43:45-07:00: The status-based triggering pattern is correctly
+          implemented. This follows the architectural pattern where status changes in the database
+          act as triggers for background processing without direct coupling between components.
+
+  - phase: Background Task Execution
+    description: Scheduler identifies and processes queued items
+    steps:
+      - step_id: 2.7
+        file: src/services/sitemap_scheduler.py [SHARED]
+        action: Polls DB for Place with deep_scan_status='Queued', schedules processing
+        source_table: places_staging
+        destination_table: places_staging
+        principles:
+          Bg Task Pattern: true
+          guideline: |
+            Follows correct background task pattern with APScheduler
+            Properly sets up periodic polling with appropriate interval
+          Conn Mgmt: true
+          guideline: |
+            Uses get_background_session() for proper connection handling
+            Follows connection pooling standards
+          Txn Boundary: true
+          guideline: |
+            Manages its own transaction boundaries as a background task
+            Follows transaction pattern for background tasks
+          ORM Req: true
+          guideline: |
+            Uses proper ORM queries to find queued items
+            Follows Absolute ORM Requirement for database access
+        notes: |
+          VERIFIED 2025-05-04T23:44:00-07:00: The scheduler correctly implements the background task
+          pattern. It periodically polls the database for places with deep_scan_status='Queued' and
+          processes them in batches. The scheduler correctly uses SQLAlchemy ORM for all database operations
+          and properly manages its own connection and transaction boundaries as required for background tasks.
+
+      - step_id: 2.8
+        file: src/services/places_deep_service.py [SHARED]
+        action: Processes the deep scan for each queued place
+        source_table: places_staging
+        destination_table: places_staging
+        principles:
+          Bg Task Pattern: true
+          guideline: |
+            Implements correct background processing for deep scans
+            Follows background processing principles
+          Idempotency: true
+          guideline: |
+            Processing is idempotent - can be safely retried
+            Status transitions prevent duplicate processing
+          Retry Logic: true
+          guideline: |
+            Implements appropriate error handling and status updates
+            Failed jobs can be retried by setting status back to Queued
+          Txn Boundary: true
+          guideline: |
+            Owns its transaction boundaries as a service called by background task
+            Uses proper session management
+          ORM Req: true
+          guideline: |
+            Uses SQLAlchemy ORM for all database operations
+            Follows Absolute ORM Requirement
+        notes: |
+          VERIFIED 2025-05-04T23:44:15-07:00: PlacesDeepService.process_single_deep_scan is correctly
+          invoked by the scheduler for each queued place. The service properly handles the processing
+          and updates place.deep_scan_status to reflect the outcome. All database operations use
+          SQLAlchemy ORM as required by architectural standards.
+
+  - phase: Database Models and Enums
+    description: Core data models and enum definitions
+    steps:
+      - step_id: 2.9
+        file: src/models/place.py [SHARED]
+        action: Defines SQLAlchemy models and enums for Place records
+        source_table: places_staging
+        destination_table: places_staging
+        principles:
+          ORM Req: true
+          guideline: |
+            Proper SQLAlchemy model definition with typed fields
+            Follows ORM modeling best practices
+          Code Org: true
+          guideline: |
+            Models and related enums organized in appropriate files
+            Clear separation of concerns
+        notes: |
+          VERIFIED 2025-05-04T23:44:30-07:00: The Place model is correctly defined with all
+          required fields and relationships. The PlaceStatusEnum and DeepScanStatusEnum are
+          properly defined and used throughout the application. Model follows correct SQLAlchemy
+          practices with appropriate column types and constraints.
+
+      - step_id: 2.10
+        file: src/models/api_models.py [SHARED]
+        action: Defines Pydantic models for API request validation
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Code Org: true
+          guideline: |
+            Separates API models from database models
+            Follows best practices for API validation
+          Enum Handling: true
+          guideline: |
+            Properly defines API-specific enums that map to database enums
+            Provides clear validation rules
+        notes: |
+          VERIFIED 2025-05-04T23:44:45-07:00: API models are correctly defined using Pydantic
+          with proper validation rules. The separation between API models and database models
+          follows best practices for FastAPI applications. The PlaceStagingStatusEnum
+          correctly maps to the database PlaceStatusEnum.
+
+  - phase: Configuration
+    description: Environment and scheduler configuration
+    steps:
+      - step_id: 2.11
+        file: docker-compose.yml, src/config/settings.py
+        action: Defines environment variables for scheduler configuration
+        source_table: N/A
+        destination_table: N/A
+        principles:
+          Secure Config: true
+          guideline: |
+            Uses environment variables for configuration
+            No hardcoded secrets or sensitive values
+          Code Org: true
+          guideline: |
+            Configuration centralized and separated from business logic
+            Follows principles of separation of concerns
+        notes: |
+          VERIFIED 2025-05-04T23:45:00-07:00: Scheduler configuration correctly defined in
+          docker-compose.yml with appropriate environment variables for interval, batch size,
+          and maximum instances. These are properly loaded through settings.py for use in
+          the application.
+
+# Critical issues that require immediate attention
+known_issues:
+  - severity: CRITICAL
+    issue: "Raw SQL in src/routers/places_staging.py violates Absolute ORM Requirement"
+    description: |
+      update_places_status_batch function uses raw SQL statements for updating place status
+      and deep_scan_status. This violates the architectural mandate for ORM-only database
+      access and must be refactored.
+    remediation_plan: |
+      1. Replace SQL with SQLAlchemy ORM queries
+      2. Add appropriate unit tests
+      3. Verify transaction boundaries are maintained
+      4. Update documentation
+    target_date: 2025-05-15
+    assigned_to: TBD
+    jira_ticket: SCRSKY-224
+
+  - severity: MEDIUM
+    issue: "Unused trigger_deep_scan parameter in places_staging.py"
+    description: |
+      The API defines a query parameter 'trigger_deep_scan' that is completely ignored by
+      the implementation. The queuing logic is based solely on the status being 'Selected',
+      making this parameter misleading.
+    remediation_plan: |
+      1. Remove the unused parameter OR
+      2. Implement the parameter's functionality OR
+      3. Document clearly that the parameter is deprecated
+    target_date: 2025-05-20
+    assigned_to: TBD
+    jira_ticket: SCRSKY-225
+
+  - severity: LOW
+    issue: "JobService integration incomplete in PlacesDeepService"
+    description: |
+      The background job progress tracking is not fully integrated with the JobService,
+      resulting in limited observability for job status.
+    remediation_plan: |
+      1. Update PlacesDeepService to use JobService for tracking
+      2. Add proper job status updates
+      3. Update UI to display job status
+    target_date: 2025-05-30
+    assigned_to: TBD
+    jira_ticket: SCRSKY-226
+
+# Actionable TODOs with assigned tickets
+actionable_todos:
+  - id: WF2-TODO-1
+    title: "Replace raw SQL queries with SQLAlchemy ORM in places_staging.py"
+    description: |
+      The update_places_status_batch function uses raw SQL statements instead of proper
+      SQLAlchemy ORM operations. This violates the ABSOLUTE_ORM_REQUIREMENT and should
+      be refactored to use proper ORM patterns.
+    file: src/routers/places_staging.py
+    lines: "121-180"
+    ticket: SCRSKY-224
+    target_date: 2025-05-15
+    assigned_to: TBD
+    priority: HIGH
+
+  - id: WF2-TODO-2
+    title: "Remove or implement unused 'trigger_deep_scan' parameter"
+    description: |
+      The API defines a query parameter 'trigger_deep_scan' that is completely ignored in
+      the implementation. Either remove this parameter or implement its functionality.
+    file: src/routers/places_staging.py
+    lines: "240-243"
+    ticket: SCRSKY-225
+    target_date: 2025-05-20
+    assigned_to: TBD
+    priority: MEDIUM
+
+  - id: WF2-TODO-3
+    title: "Complete JobService integration in PlacesDeepService"
+    description: |
+      Integrate PlacesDeepService with JobService for proper progress tracking and
+      observability. Update UI to display job status.
+    file: src/services/places/places_deep_service.py
+    lines: "65-70"
+    ticket: SCRSKY-226
+    target_date: 2025-05-30
+    assigned_to: TBD
+    priority: LOW
+
+  - id: WF2-TODO-4
+    title: "Document producer-consumer relationship with WF1 and WF3"
+    description: |
+      Update documentation in dependency trace and linear steps document to reflect
+      the producer-consumer relationships between workflows.
+    file: Docs/Docs_7_Workflow_Canon/Dependency_Traces/WF2-StagingEditor_dependency_trace.md
+    ticket: SCRSKY-260
+    target_date: 2025-05-10
+    assigned_to: TBD
+    priority: MEDIUM

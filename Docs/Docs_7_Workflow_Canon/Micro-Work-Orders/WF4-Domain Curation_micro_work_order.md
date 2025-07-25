@@ -20,7 +20,7 @@ To perform a bulletproof, fully auditable documentation and artifact audit for t
 - [x] All issues, technical debt, and exceptions must be referenced in both the micro work order and the master WORK_ORDER.md audit log for traceability.
   - Dependency Trace: `Docs_7_Workflow_Canon/Dependency_Traces/4-Domain Curation.md`
   - Linear Steps: `Docs_7_Workflow_Canon/Linear-Steps/WF4-DomainCuration_linear_steps.md`
-  - Canonical YAML: `Docs_7_Workflow_Canon/workflows/WF4-DomainCuration_CANONICAL.yaml`
+  - Canonical YAML: `Docs_7_Workflow_Canon/workflows/v_9_WF4_CANONICAL.yaml`
 
 ### 2. Dependency Trace Audit
 
@@ -40,7 +40,7 @@ To perform a bulletproof, fully auditable documentation and artifact audit for t
 
 ### 4. Canonical YAML Audit
 
-- [x] Open: `Docs_7_Workflow_Canon/workflows/WF4-DomainCuration_CANONICAL.yaml`
+- [x] Open: `Docs_7_Workflow_Canon/workflows/v_9_WF4_CANONICAL.yaml`
 - [x] Ensure all steps, files, and principles are in 1:1 sync with the linear steps doc
 - [x] Explicitly annotate ORM enforcement and architectural mandates for all DB steps
 - [x] Reference all relevant architectural guides

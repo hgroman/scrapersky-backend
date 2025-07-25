@@ -1,0 +1,96 @@
+.specstory/.gitignore
+.specstory/history/2025-05-18_01-07-6-familiarization-with-readme-md.md
+.specstory/history/2025-05-18_15-30-5-ai-persona-interaction.md
+.specstory/history/2025-05-19_21-24-2-supabase-file-audit-system-implementation.md
+.specstory/history/2025-05-20_02-25-0-request-for-ai-persona-david-shepherd.md
+.specstory/history/2025-05-21_04-23-git-push-troubleshooting-without-overwriting.md
+.specstory/history/2025-05-22_06-20-vector-database-architecture-discussion.md
+.specstory/history/2025-06-06_01-42-discussing-knowledge-librarian-persona.md
+Dockerfile
+Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md
+Docs/Docs_10_Final_Audit/v_Layer-4.1-Services_Blueprint.md
+Docs/Docs_10_Final_Audit/v_Layer-4.3-Services_AI_Audit_SOP.md
+Docs/Docs_18_Vector_Operations/Scripts/__pycache__/directory_approval.cpython-313.pyc
+Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md
+Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md
+Docs/Docs_21_SeptaGram_Personas/project_history_timeline.md
+Docs/Docs_5_Project_Working_Docs/52-LAYER5_Gold-Standard-Blue-Print/52.D-Analysis-Layer_Services.md
+Docs/Docs_5_Project_Working_Docs/52-LAYER5_Gold-Standard-Blue-Print/52.E-Analysis-Layer_Data_Models.md
+Docs/Docs_5_Project_Working_Docs/53-LAYER5_Refactor -Naming-to-Service-Layers-1-thru-7/WO1.2-final_audit_report.md
+Docs/Docs_6_Architecture_and_Status/archive-dont-vector/Q&A/WORKFLOW_STANDARDIZATION_Q&A FU1 - Base Identifiers.md
+Docs/Docs_6_Architecture_and_Status/archive-dont-vector/Q&A/WORKFLOW_STANDARDIZATION_Round_1_Answers.md
+Docs/Docs_6_Architecture_and_Status/v_00-30000-FT-PROJECT-OVERVIEW.md
+Docs/Docs_7_Workflow_Canon/Audit/v_13_AUDIT_JOURNAL.md
+Docs/Docs_7_Workflow_Canon/Audit/v_14_WORK_ORDER.md
+Docs/Docs_7_Workflow_Canon/Audit/v_6_SYSTEM_SCOPE_MAP.yaml
+Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF2-StagingEditor_micro_work_order.md
+Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF3-LocalBusinessCuration_micro_work_order.md
+Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF4-Domain Curation_micro_work_order.md
+Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF5-Sitemap Curation_micro_work_order.md
+Docs/Docs_7_Workflow_Canon/Micro-Work-Orders/WF6-SitemapImport_micro_work_order.md
+Docs/Docs_7_Workflow_Canon/README CHEATSHEETS.md
+Docs/Docs_7_Workflow_Canon/README.md
+Docs/Docs_7_Workflow_Canon/Template Resources/v_1_CONTEXT_GUIDE.md
+Docs/Docs_7_Workflow_Canon/Template Resources/v_3_BUILDER_CHEAT_SHEET.md
+Docs/Docs_7_Workflow_Canon/v_0_quick_start_guide.md
+Docs/Docs_7_Workflow_Canon/v_2_WORKFLOW_CANON_README.md
+Docs/Docs_7_Workflow_Canon/v_4_PATTERN_COMPARISON.yaml
+Docs/Docs_7_Workflow_Canon/vectorization_plan.md
+Docs/Docs_7_Workflow_Canon/workflows/README.md
+Docs/Docs_7_Workflow_Canon/workflows/v_10_WF4_CANONICAL.yaml
+Docs/Docs_7_Workflow_Canon/workflows/v_11_WF5_CANONICAL.yaml
+Docs/Docs_7_Workflow_Canon/workflows/v_12_WF6_CANONICAL.yaml
+Docs/Docs_7_Workflow_Canon/workflows/v_5_REFERENCE_IMPLEMENTATION_WF2.yaml
+Docs/Docs_7_Workflow_Canon/workflows/v_7_WF1_CANONICAL.yaml
+Docs/Docs_7_Workflow_Canon/workflows/v_8_WF2_CANONICAL.yaml
+Docs/Docs_7_Workflow_Canon/workflows/v_9_WF3_CANONICAL.yaml
+Docs/Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE-Enhanced.md
+Docs/Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE-Enhancement-Journal_2025-05-07.md
+Docs/Docs_8_Document-X/ScraperSky Workflow-Builder-Cheat-Sheet-TEMPLATE.md
+Docs/Docs_9_Constitution/1-Domain-Content-Extraction-Constitution.md
+Docs/Docs_9_Constitution/2-Domain-Content-Extraction-Launch-Checklist.yaml
+README_ADDENDUM.md
+docker-compose.prod.yml
+docker-compose.yml
+pytest.ini
+requirements.txt
+src/auth/jwt_auth.py
+src/config/settings.py
+src/db/engine.py
+src/main.py
+src/models/__init__.py
+src/models/base.py
+src/models/batch_job.py
+src/models/contact.py
+src/models/domain.py
+src/models/enums.py
+src/models/job.py
+src/models/local_business.py
+src/models/page.py
+src/models/place.py
+src/models/place_search.py
+src/models/profile.py
+src/models/sitemap.py
+src/models/tenant.py
+src/routers/batch_page_scraper.py
+src/routers/batch_sitemap.py
+src/routers/domains.py
+src/routers/google_maps_api.py
+src/routers/local_businesses.py
+src/routers/modernized_page_scraper.py
+src/routers/modernized_sitemap.py
+src/routers/places_staging.py
+src/routers/sitemap_files.py
+src/routers/vector_db_ui.py
+src/schemas/sitemap_file.py
+src/services/domain_scheduler.py
+src/services/domain_sitemap_submission_scheduler.py
+src/services/places/places_search_service.py
+src/services/places/places_service.py
+src/services/places/places_storage_service.py
+src/services/sitemap_files_service.py
+src/services/sitemap_import_scheduler.py
+src/services/sitemap_import_service.py
+src/services/sitemap_scheduler.py
+src/session/async_session.py
+tests/conftest.py

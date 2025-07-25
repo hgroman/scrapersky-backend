@@ -122,7 +122,7 @@ As per `Q&A_Key_Insights.md` (Layer 3: Routers), a specific pattern is acknowled
 
 When auditing Layer 4 components:
 
-1.  **Identify Implemented Pattern:** Determine if the workflow's core logic _currently_ most closely aligns with the **Standard Pattern (Dedicated Service Layer - Section 2)** or the **Exception Pattern (Router-Handled CRUD & Dual-Status Updates - Section 3)**. Reference `workflow-comparison-structured.yaml` or router/service filenames (e.g., `{workflow}_CRUD.py`) for this initial classification of the _current state_.
+1.  **Identify Implemented Pattern:** Determine if the workflow's core logic _currently_ most closely aligns with the **Standard Pattern (Dedicated Service Layer - Section 2)** or the **Exception Pattern (Router-Handled CRUD & Dual-Status Updates - Section 3)**. Reference `v_4_PATTERN_COMPARISON.yaml` or router/service filenames (e.g., `{workflow}_CRUD.py`) for this initial classification of the _current state_.
 
 2.  **Assess Against Ideal & Specific Criteria:**
 

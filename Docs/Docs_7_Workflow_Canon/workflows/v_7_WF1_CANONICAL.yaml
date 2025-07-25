@@ -8,7 +8,7 @@ depends_on_models:
     table: place_searches
   - name: Place
     file_path: src/models/place.py
-    table: places
+    table: places_staging
 depends_on_enums:
   - name: PlaceStatusEnum
     file_path: src/models/place.py  # Enum is defined directly in the place.py model file
@@ -22,13 +22,13 @@ workflow_connections:
   as_producer:
     - consumer_workflow: WF2-StagingEditor
       # Database table that this workflow writes to for the next workflow (MANDATORY)
-      interface_table: places  # Explicit table in DB schema
+      interface_table: places_staging  # Explicit table in DB schema
       # Field that contains the status signal for the next workflow
       handoff_field: status
       # Value that signals readiness for the next workflow
       produced_value: PlaceStatusEnum.New
       connection_details: |
-        WF1 produces place records in the places table with status="New" that are then consumed by
+        WF1 produces place records in the places_staging table with status="New" that are then consumed by
         WF2-StagingEditor. The workflow writes these records through the Layer 4: PlacesService, which
         creates entries with the PlaceStatusEnum.New status.
       connection_source_file: src/services/places_service.py
@@ -36,7 +36,7 @@ workflow_connections:
       connection_target_file: src/routers/places_staging.py
       connection_target_function: get_places
       # Explicit database operation that inserts into the places table
-      production_operation: "INSERT INTO places (id, name, status, ...) VALUES (...)"
+      production_operation: "INSERT INTO places_staging (id, name, status, ...) VALUES (...)"
 
   # WF1 is the first workflow in the chain, so it has no upstream consumer
 

@@ -41,7 +41,7 @@ To audit and document the Sitemap Curation workflow (WF5) where sitemap files ar
 
 ### 4. Canonical YAML Audit
 
-- [x] Updated `Docs_7_Workflow_Canon/workflows/WF5-SitemapCuration_CANONICAL.yaml`
+- [x] Updated `Docs_7_Workflow_Canon/workflows/v_10_WF5_CANONICAL.yaml`
 - [x] Ensured 1:1 sync with the linear steps document
 - [x] Added explicit annotations for ORM enforcement
 - [x] Added architectural references to all guides

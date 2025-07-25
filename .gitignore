@@ -1,4 +1,15 @@
-# Python bytecode
+# IDE and tool-specific
+.specstory/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Archives
+ARCHIVE-Enum-TRAINWRECK/
 __pycache__/
 *.py[cod]
 *$py.class

@@ -56,10 +56,10 @@ The following files and directories were systematically reviewed:
   - `README.md`
   - `WF1-SingleSearch_CANONICAL.yaml`
   - `WF2-StagingEditor_CANONICAL.yaml`
-  - `WF3-LocalBusinessCuration_CANONICAL.yaml`
-  - `WF4-DomainCuration_CANONICAL.yaml`
-  - `WF5-SitemapCuration_CANONICAL.yaml`
-  - `WF6-SitemapImport_CANONICAL.yaml`
+  - `v_8_WF3_CANONICAL.yaml`
+  - `v_9_WF4_CANONICAL.yaml`
+  - `v_10_WF5_CANONICAL.yaml`
+  - `v_11_WF6_CANONICAL.yaml`
 - **Directory 6 (Templates & Guides specified in Work Order):**
   - `Docs/Docs_8_Document-X/Audit_And_Refactor_Workflow_Cheat_Sheet_TEMPLATE.md`
   - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
@@ -90,10 +90,10 @@ The following files were modified to ensure adherence to the layer numbering sta
     -- WF-Sitemap-Import_CANONICAL.yaml
     +- WF1-SingleSearch_CANONICAL.yaml
     +- WF2-StagingEditor_CANONICAL.yaml
-    +- WF3-LocalBusinessCuration_CANONICAL.yaml
-    +- WF4-DomainCuration_CANONICAL.yaml
-    +- WF5-SitemapCuration_CANONICAL.yaml
-    +- WF6-SitemapImport_CANONICAL.yaml
+    +- v_8_WF3_CANONICAL.yaml
+    +- v_9_WF4_CANONICAL.yaml
+    +- v_10_WF5_CANONICAL.yaml
+    +- v_11_WF6_CANONICAL.yaml
 
      ---
     ```

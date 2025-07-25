@@ -323,7 +323,7 @@ For more detailed information, refer to:
 
 1. **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Detailed naming conventions and patterns
 2. **[1.0-ARCH-TRUTH-Definitive_Reference.md](../Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md)** - Definitive architectural reference
-3. **[WF2-StagingEditor_CANONICAL.yaml](../Docs_7_Workflow_Canon/workflows/WF2-StagingEditor_CANONICAL.yaml)** - Example canonical workflow definition
+3. **[v_5_REFERENCE_IMPLEMENTATION_WF2.yaml](../Docs_7_Workflow_Canon/workflows/v_5_REFERENCE_IMPLEMENTATION_WF2.yaml)** - Example canonical workflow definition
 4. **[README Workflow Cannon.md](../Docs_7_Workflow_Canon/README%20Workflow%20Cannon.md)** - Overview of workflow documentation
 5. **[00-30000-FT-PROJECT-OVERVIEW.md](../Docs_6_Architecture_and_Status/00-30000-FT-PROJECT-OVERVIEW.md)** - High-level project overview
 

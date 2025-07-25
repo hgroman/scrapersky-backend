@@ -3,68 +3,12 @@ services:
     build: .
     ports:
       - "8000:8000"
-    environment:
-      # --- External Database Configuration ---
-      # IMPORTANT: This service connects to an EXTERNAL Supabase database.
-      # Database connection details are configured via environment variables below
-      # (typically loaded from a .env file).
-      # This docker-compose file DOES NOT manage a local database service.
-      - DATABASE_URL=${DATABASE_URL}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_POOLER_HOST=${SUPABASE_POOLER_HOST}
-      - SUPABASE_POOLER_PORT=${SUPABASE_POOLER_PORT}
-      - SUPABASE_POOLER_USER=${SUPABASE_POOLER_USER}
-      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      # --- End External Database Configuration ---
-
-      - SCRAPER_API_KEY=${SCRAPER_API_KEY}
-      - DEV_USER_ID=${DEV_USER_ID}
-      - SYSTEM_USER_ID=${SYSTEM_USER_ID}
-      - DEV_TOKEN=${DEV_TOKEN}
-      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
-      - LOG_LEVEL=TRACE
-      - SCRAPER_SKY_DEV_MODE=true
-
-      # --- Database Inspection ---
-      # To inspect the database manually, use the db_inspector.py script.
-      # Run from the project root:
-      # python -m scripts.db.db_inspector --help
-
-      # Domain Scheduler Configuration
-      # How often the scheduler runs (in minutes)
-      - DOMAIN_SCHEDULER_INTERVAL_MINUTES=${DOMAIN_SCHEDULER_INTERVAL_MINUTES:-1}
-      # Number of domains processed in each batch
-      - DOMAIN_SCHEDULER_BATCH_SIZE=${DOMAIN_SCHEDULER_BATCH_SIZE:-10}
-      # Maximum concurrent instances of the scheduler
-      - DOMAIN_SCHEDULER_MAX_INSTANCES=${DOMAIN_SCHEDULER_MAX_INSTANCES:-1}
-
-      # Sitemap Scheduler Configuration
-      # How often the scheduler runs (in minutes)
-      - SITEMAP_SCHEDULER_INTERVAL_MINUTES=${SITEMAP_SCHEDULER_INTERVAL_MINUTES:-1}
-      # Number of sitemaps processed in each batch
-      - SITEMAP_SCHEDULER_BATCH_SIZE=${SITEMAP_SCHEDULER_BATCH_SIZE:-20}
-      # Maximum concurrent instances of the scheduler
-      - SITEMAP_SCHEDULER_MAX_INSTANCES=${SITEMAP_SCHEDULER_MAX_INSTANCES:-1}
-
-      # Sitemap Import Scheduler Configuration (WF-06) - Renamed from Deep Scrape
-      - SITEMAP_IMPORT_SCHEDULER_INTERVAL_MINUTES=${SITEMAP_IMPORT_SCHEDULER_INTERVAL_MINUTES:-1}
-      - SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE=${SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE:-20}
-      - SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES=${SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES:-1}
-
-      # --- Debug/Audit Settings ---
-      - ENABLE_IMPORT_TRACING=true # Set to true to disable reload and enable import logging
-      - DB_CONNECTION_TIMEOUT=60 # Increase connection/command timeout to 60s
-
+    env_file:
+      - .env
     volumes:
-      - ./static:/app/static:ro
-      - ./src:/app/src:ro
-      - ./.env:/app/.env:ro
-      - ./scripts:/app/scripts:ro
-      - ./tools:/app/tools:ro
-      - ./run_server.py:/app/run_server.py:ro
-      - ./logs:/app/logs:rw
-    command: python run_server.py
+      - ./src:/app/src
+      - ./static:/app/static
+      - ./templates:/app/templates
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
