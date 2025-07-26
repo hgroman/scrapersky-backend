@@ -105,7 +105,7 @@ def get_database_url() -> str:
 
         connection_string = (
             f"postgresql+asyncpg://{user_part}:{quote_plus(safe_password)}"
-            f"@{pooler_host}:{pooler_port}/{dbname}"
+            f"@{pooler_host}:{pooler_port}/{dbname}?sslmode=require"
         )
         logger.info(
             f"Using Supabase Supavisor connection pooler at {pooler_host}:{pooler_port}"

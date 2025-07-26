@@ -65,14 +65,14 @@ class DatabaseConfig:
             return (
                 f"postgresql+asyncpg://{self.pooler_user}:"
                 f"{quote_plus(str(self.password))}"
-                f"@{self.pooler_host}:{self.pooler_port}/{self.dbname}"
+                f"@{self.pooler_host}:{self.pooler_port}/{self.dbname}?sslmode=require"
             )
 
         # Fall back to direct connection if pooler not configured
         logging.info(f"Using direct connection to {self.host}")
         return (
             f"postgresql+asyncpg://{self.user}:{quote_plus(str(self.password))}"
-            f"@{self.host}:{self.port}/{self.dbname}"
+            f"@{self.host}:{self.port}/{self.dbname}?sslmode=require"
         )
 
     @property
@@ -171,7 +171,7 @@ engine = create_async_engine(
     max_overflow=settings.db_max_pool_size - settings.db_min_pool_size,
     pool_timeout=settings.db_connection_timeout,
     pool_recycle=1800,
-    echo=settings.db_echo,
+    echo=False,  # Set to True for SQL query logging in development
     connect_args=connect_args,
     # Required Supavisor parameters
     statement_cache_size=0,
