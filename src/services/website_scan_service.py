@@ -49,8 +49,9 @@ class WebsiteScanService:
 
         # Create a new job if no active one is found
         new_job = Job(
+            job_type="website_scan",  # Added: Required job_type field
             domain_id=domain_id,
-            user_id=user_id,
+            created_by=user_id,  # Fixed: Changed user_id to created_by to match Job model
             tenant_id=DEFAULT_TENANT_ID,  # Assuming default tenant
             status=TaskStatus.PENDING,
         )
