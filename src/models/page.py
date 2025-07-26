@@ -23,23 +23,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
-
-
-# --- Page Curation Workflow Enums ---
-class PageCurationStatus(str, Enum):
-    New = "New"
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
-    Skipped = "Skipped"
-
-
-class PageProcessingStatus(str, Enum):
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
+from .enums import PageCurationStatus, PageProcessingStatus
 
 
 class Page(Base, BaseModel):
@@ -118,13 +102,13 @@ class Page(Base, BaseModel):
 
     # --- Page Curation Workflow Columns ---
     page_curation_status: Column[PageCurationStatus] = Column(  # type: ignore
-        PgEnum(PageCurationStatus, name="pagecurationstatus", create_type=False),
+        PgEnum(PageCurationStatus, name="page_curation_status", create_type=False),
         nullable=False,
         default=PageCurationStatus.New,
         index=True,
     )
     page_processing_status: Column[Optional[PageProcessingStatus]] = Column(  # type: ignore
-        PgEnum(PageProcessingStatus, name="pageprocessingstatus", create_type=False),
+        PgEnum(PageProcessingStatus, name="page_processing_status", create_type=False),
         nullable=True,
         index=True,
     )
