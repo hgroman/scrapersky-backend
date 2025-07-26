@@ -18,6 +18,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
+from .enums import HubSpotSyncStatus, HubSpotProcessingStatus
 
 
 # Define Python Enum corresponding to DB Enum
@@ -48,21 +49,7 @@ class ContactProcessingStatus(str, enum.Enum):
     Error = "Error"
 
 
-# HubSpot sync workflow status enums
-class HubotSyncStatus(str, enum.Enum):
-    New = "New"
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
-    Skipped = "Skipped"
-
-
-class HubSyncProcessingStatus(str, enum.Enum):
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
+# HubSpot sync workflow status enums - moved to enums.py
 
 
 class Contact(Base, BaseModel):
@@ -130,16 +117,16 @@ class Contact(Base, BaseModel):
 
     # HubSpot sync workflow status fields
     hubspot_sync_status = Column(
-        SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
+        SQLAlchemyEnum(HubSpotSyncStatus, name="hubspot_sync_status", create_type=False),
         nullable=False,
-        default=HubotSyncStatus.New,
+        default=HubSpotSyncStatus.New,
         server_default="New",
         index=True,
     )
 
     hubspot_processing_status = Column(
         SQLAlchemyEnum(
-            HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
+            HubSpotProcessingStatus, name="hubspot_sync_processing_status", create_type=False
         ),
         nullable=True,
         index=True,

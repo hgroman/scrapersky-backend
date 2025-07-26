@@ -26,6 +26,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from .base import Base, BaseModel, model_to_dict
+from .enums import HubSpotSyncStatus, HubSpotProcessingStatus
 from .tenant import DEFAULT_TENANT_ID
 
 logger = logging.getLogger(__name__)
@@ -44,21 +45,7 @@ class SitemapCurationStatusEnum(enum.Enum):
     Completed = "Completed"  # CRITICAL: Was missing from code, exists in DB
 
 
-# HubSpot sync workflow status enums
-class HubotSyncStatus(str, enum.Enum):
-    New = "New"
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
-    Skipped = "Skipped"
-
-
-class HubSyncProcessingStatus(str, enum.Enum):
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
+# HubSpot sync workflow status enums - moved to enums.py
 
 
 # Define the enum for the sitemap analysis background process status
@@ -214,16 +201,16 @@ class Domain(Base, BaseModel):
 
     # --- HubSpot sync workflow fields --- #
     hubspot_sync_status = Column(
-        SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
+        SQLAlchemyEnum(HubSpotSyncStatus, name="hubspot_sync_status", create_type=False),
         nullable=False,
-        default=HubotSyncStatus.New,
+        default=HubSpotSyncStatus.New,
         server_default="New",
         index=True,
     )
 
     hubspot_processing_status = Column(
         SQLAlchemyEnum(
-            HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
+            HubSpotProcessingStatus, name="hubspot_sync_processing_status", create_type=False
         ),
         nullable=True,
         index=True,
