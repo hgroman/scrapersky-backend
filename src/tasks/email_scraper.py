@@ -324,8 +324,6 @@ async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.U
                 start_url = domain_name
             else:
                 start_url = f"https://{domain_name}"
-            if not start_url.startswith(("http://", "https://")):
-                start_url = "http://" + start_url  # Ensure scheme
 
             visited: Set[str] = set()
             to_visit: Set[str] = {start_url}
