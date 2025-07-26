@@ -84,141 +84,142 @@ async def process_pending_domains(limit: int = 10):
     try:
         # CORRECT: Use a single session and transaction for the entire batch
         async with get_background_session() as session:
-            logger.debug(f"Acquired session for batch: {session}")
+            async with session.begin():  # FIX: Add transaction boundary to commit changes
+                logger.debug(f"Acquired session for batch: {session}")
 
-            # Step 1: Fetch pending domains using ORM
-            stmt = (
-                select(Domain)
-                .where(Domain.status == DomainStatusEnum.pending)  # Use Enum member
-                .order_by(Domain.updated_at.asc())
-                .limit(limit)
-                .with_for_update(skip_locked=True)
-                # .options(selectinload(Domain.some_relationship)) # Optional: Eager load relationships if needed
-            )
-            result = await session.execute(stmt)
-            # --- DEBUG LOGGING ---
-            raw_peek_results = []
-            try:
-                # Peek at first few rows without consuming the whole result yet
-                # Need to handle the raw Row objects returned
-                peek_limit = 5  # Increase peek limit slightly
-                # Use result.partitions() which returns an iterable without consuming
-                # or simply re-execute and fetchmany
-                temp_result = await session.execute(stmt)  # Re-execute for peeking
-                raw_rows = temp_result.fetchmany(peek_limit)
-                if raw_rows:
-                    logger.debug(
-                        f"Peeked {len(raw_rows)} raw rows before scalars().all()"
-                    )
-                    for row_num, row in enumerate(raw_rows):
-                        # Log basic info about the row object
-                        logger.debug(
-                            f"  Raw Row {row_num}: Type={type(row)}, Content={str(row)[:200]}..."
-                        )
-                        try:
-                            # Try accessing common attributes if it's an ORM object
-                            logger.debug(
-                                f"    -> ID: {getattr(row, 'id', 'N/A')}, Domain: {getattr(row, 'domain', 'N/A')}, Status: {getattr(row, 'status', 'N/A')}"
-                            )
-                        except Exception:
-                            pass  # Ignore errors if it's not an ORM object
-                else:
-                    logger.debug("Peeking with fetchmany() returned no rows.")
-                # No need to re-execute again, result is still valid for scalars()
-            except Exception as dbg_err:
-                logger.error(f"Debug logging error: {dbg_err}", exc_info=True)
-            # --- END DEBUG LOGGING ---
-            # Explicitly convert Sequence to List and handle potential None from getattr
-            domains_to_process = list(result.scalars().all())
-            domains_found = len(domains_to_process)
-            logger.info(f"Found {domains_found} pending domain(s).")
-
-            if not domains_to_process:
-                logger.info("No domains to process in this batch.")
-                return  # Context manager handles commit/close
-
-            # Step 2: Process each domain
-            for domain in domains_to_process:
-                domain_id = domain.id
-                # Use getattr to ensure we get the string value, not the Column object
-                url = getattr(domain, "domain", None)
-                domains_processed += 1
-                logger.debug(f"Processing domain {domain_id} ({url})")
-
+                # Step 1: Fetch pending domains using ORM
+                stmt = (
+                    select(Domain)
+                    .where(Domain.status == DomainStatusEnum.pending)  # Use Enum member
+                    .order_by(Domain.updated_at.asc())
+                    .limit(limit)
+                    .with_for_update(skip_locked=True)
+                    # .options(selectinload(Domain.some_relationship)) # Optional: Eager load relationships if needed
+                )
+                result = await session.execute(stmt)
+                # --- DEBUG LOGGING ---
+                raw_peek_results = []
                 try:
-                    # Step 2.1: Update status to 'processing' IN MEMORY using setattr
-                    domain.status = DomainStatusEnum.processing  # Use Enum member
-                    domain.last_error = None  # Clear previous error
-                    domain.updated_at = datetime.utcnow()  # Keep updated_at fresh
-                    logger.debug(
-                        f"Domain {domain_id} status set to '{DomainStatusEnum.processing.value}' in memory."
-                    )
-                    # NO COMMIT here
-
-                    # Step 2.2: Extract metadata
-                    if not url:
-                        raise ValueError(
-                            f"Domain record {domain_id} has no domain/url value."
+                    # Peek at first few rows without consuming the whole result yet
+                    # Need to handle the raw Row objects returned
+                    peek_limit = 5  # Increase peek limit slightly
+                    # Use result.partitions() which returns an iterable without consuming
+                    # or simply re-execute and fetchmany
+                    temp_result = await session.execute(stmt)  # Re-execute for peeking
+                    raw_rows = temp_result.fetchmany(peek_limit)
+                    if raw_rows:
+                        logger.debug(
+                            f"Peeked {len(raw_rows)} raw rows before scalars().all()"
                         )
+                        for row_num, row in enumerate(raw_rows):
+                            # Log basic info about the row object
+                            logger.debug(
+                                f"  Raw Row {row_num}: Type={type(row)}, Content={str(row)[:200]}..."
+                            )
+                            try:
+                                # Try accessing common attributes if it's an ORM object
+                                logger.debug(
+                                    f"    -> ID: {getattr(row, 'id', 'N/A')}, Domain: {getattr(row, 'domain', 'N/A')}, Status: {getattr(row, 'status', 'N/A')}"
+                                )
+                            except Exception:
+                                pass  # Ignore errors if it's not an ORM object
+                    else:
+                        logger.debug("Peeking with fetchmany() returned no rows.")
+                    # No need to re-execute again, result is still valid for scalars()
+                except Exception as dbg_err:
+                    logger.error(f"Debug logging error: {dbg_err}", exc_info=True)
+                # --- END DEBUG LOGGING ---
+                # Explicitly convert Sequence to List and handle potential None from getattr
+                domains_to_process = list(result.scalars().all())
+                domains_found = len(domains_to_process)
+                logger.info(f"Found {domains_found} pending domain(s).")
 
-                    std_domain = standardize_domain(
-                        url
-                    )  # url is now guaranteed to be str or None (handled above)
-                    if not std_domain:
-                        raise ValueError(f"Invalid domain format: {url}")
+                if not domains_to_process:
+                    logger.info("No domains to process in this batch.")
+                    return  # Context manager handles commit/close
 
-                    domain_url = get_domain_url(std_domain)
-                    logger.debug(f"Extracting metadata for: {domain_url}")
-                    metadata = await detect_site_metadata(domain_url, max_retries=3)
-                    logger.debug(f"Metadata extraction complete for {std_domain}")
+                # Step 2: Process each domain
+                for domain in domains_to_process:
+                    domain_id = domain.id
+                    # Use getattr to ensure we get the string value, not the Column object
+                    url = getattr(domain, "domain", None)
+                    domains_processed += 1
+                    logger.debug(f"Processing domain {domain_id} ({url})")
 
-                    if metadata is None:
-                        raise ValueError(
-                            f"Failed to extract metadata from {std_domain}"
-                        )
-
-                    # Step 2.3: Update domain with results IN MEMORY using ORM method
-                    # Assuming Domain model has an update_from_metadata method
-                    # that takes metadata dict and updates relevant fields IN MEMORY
-                    await Domain.update_from_metadata(session, domain, metadata)
-                    domain.status = DomainStatusEnum.completed  # Use Enum member
-                    domain.updated_at = datetime.utcnow()
-
-                    domains_successful += 1
-                    logger.info(
-                        f"Successfully processed and marked domain {domain_id} as '{DomainStatusEnum.completed.value}' in memory."
-                    )
-
-                except Exception as processing_error:
-                    error_message = str(processing_error)
-                    logger.error(
-                        f"Error processing domain {domain_id}: {error_message}",
-                        exc_info=True,
-                    )
-                    domains_failed += 1
-                    # Update status to 'error' IN MEMORY using setattr
                     try:
-                        domain.status = DomainStatusEnum.error  # Use Enum member
-                        domain.last_error = error_message[
-                            :1024
-                        ]  # Truncate if necessary
-                        domain.updated_at = datetime.utcnow()
-                        logger.warning(
-                            f"Marked domain {domain_id} as '{DomainStatusEnum.error.value}' in memory."
+                        # Step 2.1: Update status to 'processing' IN MEMORY using setattr
+                        domain.status = DomainStatusEnum.processing  # Use Enum member
+                        domain.last_error = None  # Clear previous error
+                        domain.updated_at = datetime.utcnow()  # Keep updated_at fresh
+                        logger.debug(
+                            f"Domain {domain_id} status set to '{DomainStatusEnum.processing.value}' in memory."
                         )
-                    except AttributeError:
-                        logger.error(
-                            f"Could not access domain object for {domain_id} after error to mark as failed."
-                        )
-                    # Do NOT re-raise here if we want the batch to continue and commit successes/failures
-                    # If batch atomicity is strict (all fail if one fails), uncomment the next line:
-                    # raise
+                        # NO COMMIT here
 
-            # Step 3: Commit (or rollback if error occurred and wasn't caught/handled above)
-            # The context manager handles this automatically based on whether an exception exited the block.
-            logger.info(
-                "Batch loop finished. Session context manager will now commit/rollback."
-            )
+                        # Step 2.2: Extract metadata
+                        if not url:
+                            raise ValueError(
+                                f"Domain record {domain_id} has no domain/url value."
+                            )
+
+                        std_domain = standardize_domain(
+                            url
+                        )  # url is now guaranteed to be str or None (handled above)
+                        if not std_domain:
+                            raise ValueError(f"Invalid domain format: {url}")
+
+                        domain_url = get_domain_url(std_domain)
+                        logger.debug(f"Extracting metadata for: {domain_url}")
+                        metadata = await detect_site_metadata(domain_url, max_retries=3)
+                        logger.debug(f"Metadata extraction complete for {std_domain}")
+
+                        if metadata is None:
+                            raise ValueError(
+                                f"Failed to extract metadata from {std_domain}"
+                            )
+
+                        # Step 2.3: Update domain with results IN MEMORY using ORM method
+                        # Assuming Domain model has an update_from_metadata method
+                        # that takes metadata dict and updates relevant fields IN MEMORY
+                        await Domain.update_from_metadata(session, domain, metadata)
+                        domain.status = DomainStatusEnum.completed  # Use Enum member
+                        domain.updated_at = datetime.utcnow()
+
+                        domains_successful += 1
+                        logger.info(
+                            f"Successfully processed and marked domain {domain_id} as '{DomainStatusEnum.completed.value}' in memory."
+                        )
+
+                    except Exception as processing_error:
+                        error_message = str(processing_error)
+                        logger.error(
+                            f"Error processing domain {domain_id}: {error_message}",
+                            exc_info=True,
+                        )
+                        domains_failed += 1
+                        # Update status to 'error' IN MEMORY using setattr
+                        try:
+                            domain.status = DomainStatusEnum.error  # Use Enum member
+                            domain.last_error = error_message[
+                                :1024
+                            ]  # Truncate if necessary
+                            domain.updated_at = datetime.utcnow()
+                            logger.warning(
+                                f"Marked domain {domain_id} as '{DomainStatusEnum.error.value}' in memory."
+                            )
+                        except AttributeError:
+                            logger.error(
+                                f"Could not access domain object for {domain_id} after error to mark as failed."
+                            )
+                        # Do NOT re-raise here if we want the batch to continue and commit successes/failures
+                        # If batch atomicity is strict (all fail if one fails), uncomment the next line:
+                        # raise
+
+                # Step 3: Commit (or rollback if error occurred and wasn't caught/handled above)
+                # The context manager handles this automatically based on whether an exception exited the block.
+                logger.info(
+                    "Batch loop finished. Session context manager will now commit/rollback."
+                )
 
         # End of async with session block
 
