@@ -329,7 +329,7 @@ async def process_batch_with_own_session(
             return (domain, result, False)  # False means failure
 
     # Process domains concurrently with a limit on concurrency
-    max_concurrent = 5  # Limit concurrent processing
+    max_concurrent = 25  # Increased from 5 to 25 for better throughput
     semaphore = asyncio.Semaphore(max_concurrent)
 
     async def process_with_semaphore(domain):
