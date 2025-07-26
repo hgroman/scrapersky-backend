@@ -52,7 +52,7 @@ class Settings(BaseSettings):
 
     # Sitemap Scheduler settings
     # How often the scheduler runs (in minutes)
-    SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = 5
+    SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = 1  # Fixed: Changed from 5 to 1 minute to match other schedulers
     # Number of sitemaps processed in each batch
     SITEMAP_SCHEDULER_BATCH_SIZE: int = 5
     # Maximum concurrent instances of the scheduler
