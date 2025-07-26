@@ -317,7 +317,13 @@ async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.U
             await session.commit()  # Commit RUNNING status
 
             # 4. Perform the crawl and scrape
-            start_url = f"https://{getattr(domain_obj, 'domain', '')}"
+            domain_name = getattr(domain_obj, 'domain', '')
+
+            # Handle domains that already have protocol prefix
+            if domain_name.startswith(('http://', 'https://')):
+                start_url = domain_name
+            else:
+                start_url = f"https://{domain_name}"
             if not start_url.startswith(("http://", "https://")):
                 start_url = "http://" + start_url  # Ensure scheme
 
