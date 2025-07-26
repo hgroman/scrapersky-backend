@@ -155,7 +155,7 @@ async def process_pending_domain_sitemap_submissions():
     logger.info(f"   ⏱️  Duration: {batch_duration:.2f}s")
 
 
-def setup_corrected_sitemap_scheduler():
+def setup_domain_sitemap_submission_scheduler():
     """Setup the CORRECTED domain sitemap analysis scheduler."""
     try:
         job_id = "process_pending_domain_sitemap_submissions"
