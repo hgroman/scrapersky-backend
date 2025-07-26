@@ -39,8 +39,8 @@ async def process_pending_domain_sitemap_submissions():
     processes them using the adapter service, handling each domain in its own transaction.
     Uses explicit SQL casting for enum comparison due to raw_sql=True engine config.
     """
-    batch_id = f"domain_sitemap_submission_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
-    logger.info(f"--- Starting Domain Sitemap Submission Batch {batch_id} ---")
+    batch_uuid = uuid.uuid4()
+    logger.info(f"--- Starting Domain Sitemap Submission Batch {batch_uuid} ---")
 
     batch_size = settings.DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE
     domains_found = 0
@@ -84,27 +84,27 @@ async def process_pending_domain_sitemap_submissions():
                 logger.info("No domain IDs found to process in this batch.")
                 # Log final counts before returning
                 logger.info(
-                    f"--- Finished Domain Sitemap Submission Batch {batch_id} --- Found: {domains_found}, Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
+                    f"--- Finished Domain Sitemap Submission Batch {batch_uuid} --- Found: {domains_found}, Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
                 )
                 return
 
     except SQLAlchemyError as e_fetch_sql:
         logger.error(
-            f"SQLAlchemy error fetching domain IDs for batch {batch_id}: {e_fetch_sql}",
+            f"SQLAlchemy error fetching domain IDs for batch {batch_uuid}: {e_fetch_sql}",
             exc_info=True,
         )
         traceback.print_exc()
         logger.info(
-            f"--- Finished Domain Sitemap Submission Batch {batch_id} --- Found: {domains_found} (SQL FETCH ERROR), Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
+            f"--- Finished Domain Sitemap Submission Batch {batch_uuid} --- Found: {domains_found} (SQL FETCH ERROR), Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
         )
         return
     except Exception as e_fetch:
         logger.error(
-            f"Error fetching domain IDs for batch {batch_id}: {e_fetch}", exc_info=True
+            f"Error fetching domain IDs for batch {batch_uuid}: {e_fetch}", exc_info=True
         )
         traceback.print_exc()
         logger.info(
-            f"--- Finished Domain Sitemap Submission Batch {batch_id} --- Found: {domains_found} (FETCH ERROR), Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
+            f"--- Finished Domain Sitemap Submission Batch {batch_uuid} --- Found: {domains_found} (FETCH ERROR), Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
         )
         return
 
@@ -146,6 +146,7 @@ async def process_pending_domain_sitemap_submissions():
                     domain_id=locked_domain.id,
                     user_id=system_user_id,
                     session=session_inner,
+                    batch_id=batch_uuid,  # Pass the batch UUID
                 )
 
                 # 3. Queue the background task
@@ -206,7 +207,7 @@ async def process_pending_domain_sitemap_submissions():
 
     # --- Step 3: Log final counts after processing all IDs ---
     logger.info(
-        f"--- Finished Domain Sitemap Submission Batch {batch_id} --- Found: {domains_found}, Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
+        f"--- Finished Domain Sitemap Submission Batch {batch_uuid} --- Found: {domains_found}, Processed: {domains_processed}, Submitted OK: {domains_submitted_successfully}, Failed: {domains_failed}"
     )
 
 

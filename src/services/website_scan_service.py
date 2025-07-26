@@ -22,6 +22,7 @@ class WebsiteScanService:
         domain_id: uuid.UUID,
         user_id: uuid.UUID,
         session: AsyncSession,
+        batch_id: Optional[uuid.UUID] = None,  # Add optional batch_id
     ) -> Job:
         """
         Initiates a scan by creating a Job record.
@@ -49,11 +50,12 @@ class WebsiteScanService:
 
         # Create a new job if no active one is found
         new_job = Job(
-            job_type="website_scan",  # Added: Required job_type field
+            job_type="website_scan",
             domain_id=domain_id,
-            created_by=user_id,  # Fixed: Changed user_id to created_by to match Job model
-            tenant_id=DEFAULT_TENANT_ID,  # Assuming default tenant
+            created_by=user_id,
+            tenant_id=DEFAULT_TENANT_ID,
             status=TaskStatus.PENDING,
+            batch_id=batch_id,  # Pass batch_id to the constructor
         )
         session.add(new_job)
         await session.flush()  # Flush to get the new job's ID
