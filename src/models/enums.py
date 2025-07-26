@@ -34,6 +34,14 @@ class ContactProcessingStatus(str, Enum):
     Error = "Error"
 
 
+class DomainStatusEnum(str, Enum):
+    """Status values for domain processing workflow"""
+    pending = "pending"      # Ready for metadata extraction
+    processing = "processing"  # Metadata extraction in progress
+    completed = "completed"   # Metadata extraction successful
+    error = "error"          # Metadata extraction failed
+
+
 class HubSpotSyncStatus(str, Enum):
     """Status values for HubSpot sync workflow"""
     New = "New"
