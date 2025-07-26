@@ -87,6 +87,15 @@ class GcpApiDeepScanStatusEnum(str, Enum):
     Failed = "Failed"
 
 
+class SitemapAnalysisStatusEnum(Enum):
+    """Status values for sitemap analysis background process (MUST MATCH DOMAIN.PY)"""
+    pending = "pending"      # Initial state when domain is created/reset
+    queued = "queued"        # Scheduler picked it up, waiting for adapter
+    processing = "processing"  # Adapter sent to API
+    submitted = "submitted"   # API accepted (202)
+    failed = "failed"        # Adapter or API call failed
+
+
 class SitemapCurationStatusEnum(str, Enum):
     """Status values for sitemap curation workflow"""
     New = "New"
