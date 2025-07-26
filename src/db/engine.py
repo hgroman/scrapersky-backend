@@ -13,6 +13,7 @@ These parameters are non-negotiable and mandatory for all deployments.
 """
 
 import logging
+import ssl
 import uuid
 from urllib.parse import quote_plus
 
@@ -135,6 +136,11 @@ def get_compatible_connect_args(is_async=True):
         Dictionary of connection arguments
     """
     if is_async:
+        # Create SSL context for Supabase compatibility
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE  # Required for Supabase self-signed cert chain
+
         # asyncpg specific parameters for Supavisor compatibility
         base_args = {
             "server_settings": {
@@ -142,7 +148,7 @@ def get_compatible_connect_args(is_async=True):
                 "application_name": "scraper_sky",
             },
             "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
-            "ssl": "require",
+            "ssl": ssl_context,  # Use SSL context instead of string
             "command_timeout": settings.db_connection_timeout,
             "statement_cache_size": 0,
             "raw_sql": True,

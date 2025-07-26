@@ -143,13 +143,14 @@ if IS_DEVELOPMENT:
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
 else:
-    # Production: Use Supabase-compatible SSL verification
+    # Production: Disable certificate verification for Supabase compatibility
+    # Supabase uses self-signed certificates in their certificate chain
     logger.info(
-        "Production environment detected: Using Supabase-compatible SSL certificate verification"
+        "Production environment detected: Using SSL encryption with disabled certificate verification for Supabase compatibility"
     )
     ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False  # Supabase certificate chain compatibility
-    ssl_context.verify_mode = ssl.CERT_REQUIRED  # Still require valid certificates
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE  # Required for Supabase self-signed cert chain
 
 # Create connect_args with appropriate settings for Supavisor
 connect_args = {
