@@ -107,7 +107,7 @@ class LocalBusiness(Base):
     status = Column(
         Enum(
             PlaceStatusEnum,
-            name="place_status_enum",
+            name="sitemap_import_curation_status",  # Fixed: Use actual DB enum name (not place_status_enum)
             create_type=False,
             native_enum=True,
         ),
