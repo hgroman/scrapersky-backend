@@ -155,19 +155,33 @@ class Job(Base, BaseModel):
         return result.scalars().first()
 
     @classmethod
-    async def get_by_job_id(cls, session, job_uuid: uuid.UUID) -> Optional["Job"]:
+    async def get_by_job_id(cls, session, job_id: Union[uuid.UUID, str, int]) -> Optional["Job"]:
         """Get a job by its public UUID (job_id) without tenant filtering.
 
         Args:
             session: Database session.
-            job_uuid: The UUID identifier (job_id) of the job.
+            job_id: The identifier of the job, can be UUID, string, or integer.
 
         Returns:
             Optional[Job]: Job if found, None otherwise.
         """
         from sqlalchemy import select
 
-        query = select(cls).where(cls.job_id == job_uuid)
+        # Convert to UUID if needed
+        if isinstance(job_id, int) or (isinstance(job_id, str) and job_id.isdigit()):
+            # If it's an integer ID, use get_by_id instead
+            return await cls.get_by_id(session, job_id)
+        
+        # Handle UUID or string UUID
+        if isinstance(job_id, str):
+            try:
+                job_id = uuid.UUID(job_id)
+            except ValueError:
+                logger.error(f"Invalid UUID format for job_id: {job_id}")
+                return None
+                
+        # Query by UUID
+        query = select(cls).where(cls.job_id == job_id)
         result = await session.execute(query)
         return result.scalars().first()
 
