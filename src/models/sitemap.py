@@ -144,7 +144,7 @@ class SitemapFile(Base, BaseModel):
     deep_scrape_curation_status = Column(
         SQLAlchemyEnum(
             SitemapImportCurationStatusEnum,  # Use renamed Enum
-            name="SitemapCurationStatusEnum",  # Keep DB name for now unless migrated
+            name="sitemap_import_curation_status",  # Fix DB name
             create_type=False,
         ),
         nullable=True,
@@ -155,7 +155,7 @@ class SitemapFile(Base, BaseModel):
     sitemap_import_status = Column(
         SQLAlchemyEnum(
             SitemapImportProcessStatusEnum,  # Use renamed Enum
-            name="sitemapimportprocessingstatus",  # Match actual DB enum type
+            name="sitemap_import_status_enum",  # Fix DB enum type name
             create_type=False,
         ),
         nullable=True,

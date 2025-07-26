@@ -177,7 +177,7 @@ class Domain(Base, BaseModel):
     sitemap_analysis_status = Column(
         SQLAlchemyEnum(
             SitemapAnalysisStatusEnum,
-            name="SitemapAnalysisStatusEnum",
+            name="sitemap_analysis_status",
             create_type=False,
         ),
         nullable=True,
@@ -190,7 +190,7 @@ class Domain(Base, BaseModel):
     sitemap_curation_status = Column(
         SQLAlchemyEnum(
             SitemapCurationStatusEnum,
-            name="SitemapCurationStatusEnum",
+            name="sitemap_curation_status",
             create_type=False,
         ),
         nullable=True,

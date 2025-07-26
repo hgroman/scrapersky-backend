@@ -97,7 +97,7 @@ class Contact(Base, BaseModel):
     # Contact curation workflow status fields
     contact_curation_status = Column(
         SQLAlchemyEnum(
-            ContactCurationStatus, name="contactcurationstatus", create_type=False
+            ContactCurationStatus, name="contact_curation_status", create_type=False
         ),
         nullable=False,
         default=ContactCurationStatus.New,
@@ -107,7 +107,7 @@ class Contact(Base, BaseModel):
 
     contact_processing_status = Column(
         SQLAlchemyEnum(
-            ContactProcessingStatus, name="contactprocessingstatus", create_type=False
+            ContactProcessingStatus, name="contact_processing_status", create_type=False
         ),
         nullable=True,
         index=True,
