@@ -35,6 +35,7 @@ from .batch_job import BatchJob
 from .contact import Contact
 from .domain import Domain
 from .job import Job
+from .local_business import LocalBusiness
 from .page import Page
 from .place import Place
 from .place_search import PlaceSearch
@@ -94,6 +95,7 @@ __all__ = [
     # Core models
     "Job",
     "Domain",
+    "LocalBusiness",
     "BatchJob",
     "Place",
     "PlaceSearch",
