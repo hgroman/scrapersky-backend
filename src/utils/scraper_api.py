@@ -90,6 +90,7 @@ class ScraperAPIClient:
             "render": "true" if render_js else "false",
             "country_code": "us",  # Add geotargeting for better success
             "device_type": "desktop",  # Specify device type
+            "premium": "true",  # Enable premium for protected domains
         }
         api_url = f"{self.base_url}?{urlencode(params)}"
 
