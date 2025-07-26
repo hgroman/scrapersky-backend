@@ -67,7 +67,7 @@ class Job(Base, BaseModel):
 
     # Batch processing field
     batch_id = Column(
-        String, ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"), index=True
+        PGUUID, ForeignKey("batch_jobs.batch_id", ondelete="SET NULL"), index=True
     )
 
     # Relationships
