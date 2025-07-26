@@ -59,12 +59,14 @@ class HubSyncProcessingStatus(str, enum.Enum):
 
 # Define the enum for the sitemap analysis background process status
 class SitemapAnalysisStatusEnum(enum.Enum):
-    Queued = "Queued"
-    Processing = "Processing"
-    Completed = (
-        "Completed"  # Using Completed instead of submitted as per standardization
-    )
-    Error = "Error"  # Using Error instead of failed as per standardization
+    """Status values mapped to SitemapAnalysisStatusEnum in database (MUST MATCH DB DEFINITION)"""
+
+    # Values MUST match database exactly (lowercase)
+    pending = "pending"      # Initial state when domain is created/reset
+    queued = "queued"        # Scheduler picked it up, waiting for adapter
+    processing = "processing"  # Adapter sent to API
+    submitted = "submitted"   # API accepted (202)
+    failed = "failed"        # Adapter or API call failed
 
 
 class Domain(Base, BaseModel):

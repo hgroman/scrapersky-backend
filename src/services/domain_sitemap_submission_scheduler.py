@@ -66,7 +66,7 @@ async def process_pending_domain_sitemap_submissions():
                 select(Domain.id)  # Select only IDs initially
                 .where(
                     # Standard ORM Enum comparison
-                    Domain.sitemap_analysis_status == SitemapAnalysisStatusEnum.Queued,
+                    Domain.sitemap_analysis_status == SitemapAnalysisStatusEnum.queued,
                 )
                 .order_by(Domain.updated_at.asc())
                 .limit(batch_size)
@@ -131,7 +131,7 @@ async def process_pending_domain_sitemap_submissions():
 
                 # 1. Mark as 'processing' (direct assignment)
                 locked_domain.sitemap_analysis_status = (
-                    SitemapAnalysisStatusEnum.Processing
+                    SitemapAnalysisStatusEnum.processing
                 )
                 locked_domain.sitemap_analysis_error = None
                 await session_inner.flush()  # Flush 'processing' state
@@ -152,19 +152,19 @@ async def process_pending_domain_sitemap_submissions():
                 if job.status == TaskStatus.PENDING:
                     asyncio.create_task(scan_website_for_emails(job.id))
                     logger.info(f"Queued background task for job {job.id} for domain {domain_id}.")
-                    # Mark domain as completed since the job is now queued
-                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Completed
+                    # Mark domain as submitted since the job is now queued
+                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.submitted
                     await session_inner.flush()
                     domains_submitted_successfully += 1
                 elif job.status == TaskStatus.RUNNING:
                     logger.info(f"Job {job.id} for domain {domain_id} is already running. No new task queued.")
-                    # Mark domain as completed as a job is already active
-                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Completed
+                    # Mark domain as submitted as a job is already active
+                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.submitted
                     await session_inner.flush()
                     domains_submitted_successfully += 1
                 else:
                     logger.error(f"Failed to initiate scan for domain {domain_id}. Job status: {job.status}")
-                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Error
+                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed
                     locked_domain.sitemap_analysis_error = "Failed to create or find active job for scan."
                     await session_inner.flush()
                     domains_failed += 1

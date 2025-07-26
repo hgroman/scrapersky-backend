@@ -228,11 +228,11 @@ async def update_domain_sitemap_curation_status_batch(
 
             # Conditional logic: If status is 'Selected', queue for analysis
             if db_curation_status == SitemapCurationStatusEnum.Selected:
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.Queued  # type: ignore
+                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.queued  # type: ignore
                 domain.sitemap_analysis_error = None  # type: ignore # Clear previous errors
                 queued_count += 1
                 logger.debug(
-                    f"Setting domain {domain.id} sitemap_analysis_status to Queued"
+                    f"Setting domain {domain.id} sitemap_analysis_status to queued"
                 )
             # Add domain to session implicitly via modification
 
