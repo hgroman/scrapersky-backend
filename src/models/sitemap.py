@@ -155,7 +155,7 @@ class SitemapFile(Base, BaseModel):
     sitemap_import_status = Column(
         SQLAlchemyEnum(
             SitemapImportProcessStatusEnum,  # Use renamed Enum
-            name="sitemap_import_status_enum",  # Fix DB enum type name
+            name="sitemapimportprocessingstatus",  # Match DB enum type name
             create_type=False,
         ),
         nullable=True,
