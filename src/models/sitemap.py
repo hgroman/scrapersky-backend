@@ -54,14 +54,14 @@ class SitemapImportCurationStatusEnum(enum.Enum):
 
 # Rename Enum related to Sitemap Processing status
 class SitemapImportProcessStatusEnum(enum.Enum):
-    """Status values mapped to sitemap_import_status_enum in database (MUST MATCH DB DEFINITION)"""
+    """Status values mapped to sitemapimportprocessingstatus in database (MUST MATCH DB DEFINITION)"""
 
-    # Setting to CAPITALIZED values to match corrected DB schema
+    # Setting values to match actual DB schema
     Queued = "Queued"
     Processing = "Processing"
-    Completed = "Completed"
+    Complete = "Complete"  # Match DB: "Complete" not "Completed"
     Error = "Error"
-    Submitted = "Submitted"
+    # Note: "Submitted" removed - not present in actual DB enum
 
 
 class SitemapFile(Base, BaseModel):
@@ -155,7 +155,7 @@ class SitemapFile(Base, BaseModel):
     sitemap_import_status = Column(
         SQLAlchemyEnum(
             SitemapImportProcessStatusEnum,  # Use renamed Enum
-            name="sitemap_import_status_enum",
+            name="sitemapimportprocessingstatus",  # Match actual DB enum type
             create_type=False,
         ),
         nullable=True,

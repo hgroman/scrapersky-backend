@@ -86,7 +86,7 @@ class SitemapImportService:
                     f"(URL: {sitemap_url_str})"
                 )
                 sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Completed # type: ignore
+                    SitemapImportProcessStatusEnum.Complete # type: ignore
                 )
                 sitemap_file.sitemap_import_error = None # type: ignore
                 await session.commit()
@@ -155,9 +155,9 @@ class SitemapImportService:
                     f"SITEMAP_IMPORT: No new URLs found to insert for "
                     f"SitemapFile {sitemap_file_id}."
                 )
-                # Update status to Completed even if no URLs inserted
+                # Update status to Complete even if no URLs inserted
                 sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Completed # type: ignore
+                    SitemapImportProcessStatusEnum.Complete # type: ignore
                 )
                 sitemap_file.sitemap_import_error = None # type: ignore
                 await session.commit()
@@ -210,7 +210,7 @@ class SitemapImportService:
                 not sitemap_file_to_fail
             ):  # Only mark complete if no fatal error occurred during page insert
                 sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Completed # type: ignore
+                    SitemapImportProcessStatusEnum.Complete # type: ignore
                 )
                 sitemap_file.sitemap_import_error = None # type: ignore
                 logger.info(

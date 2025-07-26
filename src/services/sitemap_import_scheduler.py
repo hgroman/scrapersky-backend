@@ -31,7 +31,7 @@ async def process_pending_sitemap_imports() -> None:
             status_enum=SitemapImportProcessStatusEnum,
             queued_status=SitemapImportProcessStatusEnum.Queued,
             processing_status=SitemapImportProcessStatusEnum.Processing,
-            completed_status=SitemapImportProcessStatusEnum.Completed,
+            completed_status=SitemapImportProcessStatusEnum.Complete,
             failed_status=SitemapImportProcessStatusEnum.Error,
             # Pass the service method as the processing function
             processing_function=service.process_single_sitemap_file,
