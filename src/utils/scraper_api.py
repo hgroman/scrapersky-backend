@@ -43,7 +43,7 @@ class ScraperAPIClient:
         """Ensure aiohttp session exists."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=15)  # Reduced timeout to 15 seconds
+                timeout=aiohttp.ClientTimeout(total=70)  # ScraperAPI recommended timeout
             )
 
     async def close(self) -> None:
@@ -88,6 +88,8 @@ class ScraperAPIClient:
             "api_key": self.api_key,
             "url": url,
             "render": "true" if render_js else "false",
+            "country_code": "us",  # Add geotargeting for better success
+            "device_type": "desktop",  # Specify device type
         }
         api_url = f"{self.base_url}?{urlencode(params)}"
 
@@ -124,7 +126,8 @@ class ScraperAPIClient:
 
             except Exception as e:
                 last_error = f"Attempt {attempt + 1} failed: {str(e)}"
-                logger.error(last_error)
+                logger.error(f"ScraperAPI aiohttp error: {last_error}")
+                logger.error(f"Exception type: {type(e).__name__}, Details: {str(e)}")
                 if attempt == retries - 1:
                     raise Exception(
                         f"All {retries} attempts failed. Last error: {last_error}"
@@ -163,7 +166,8 @@ class ScraperAPIClient:
 
             except Exception as e:
                 last_error = f"SDK Attempt {attempt + 1} failed: {str(e)}"
-                logger.error(last_error)
+                logger.error(f"ScraperAPI SDK error: {last_error}")
+                logger.error(f"Exception type: {type(e).__name__}, Details: {str(e)}")
                 if attempt == retries - 1:
                     raise Exception(
                         f"All SDK {retries} attempts failed. Last error: {last_error}"
