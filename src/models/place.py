@@ -78,7 +78,7 @@ class Place(Base):
     status = Column(
         Enum(
             PlaceStatusEnum,
-            name="place_status_enum",
+            name="place_status",  # Fixed: Use actual DB enum name (not place_status_enum)
             create_type=False,
             native_enum=True,
         ),
