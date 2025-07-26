@@ -65,14 +65,14 @@ class DatabaseConfig:
             return (
                 f"postgresql+asyncpg://{self.pooler_user}:"
                 f"{quote_plus(str(self.password))}"
-                f"@{self.pooler_host}:{self.pooler_port}/{self.dbname}?sslmode=require"
+                f"@{self.pooler_host}:{self.pooler_port}/{self.dbname}"
             )
 
         # Fall back to direct connection if pooler not configured
         logging.info(f"Using direct connection to {self.host}")
         return (
             f"postgresql+asyncpg://{self.user}:{quote_plus(str(self.password))}"
-            f"@{self.host}:{self.port}/{self.dbname}?sslmode=require"
+            f"@{self.host}:{self.port}/{self.dbname}"
         )
 
     @property

@@ -182,7 +182,7 @@ def get_db_url() -> str:
             db_password = os.getenv("SUPABASE_DB_PASSWORD", "")
 
             logger.warning("No DATABASE_URL found. Using Supabase pooler connection.")
-            db_url = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/postgres?sslmode=require"
+            db_url = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/postgres"
         else:
             # Local development fallback
             logger.warning("No DATABASE_URL found. Using local development default.")

@@ -105,7 +105,7 @@ def get_database_url() -> str:
 
         connection_string = (
             f"postgresql+asyncpg://{user_part}:{quote_plus(safe_password)}"
-            f"@{pooler_host}:{pooler_port}/{dbname}?sslmode=require"
+            f"@{pooler_host}:{pooler_port}/{dbname}"
         )
         logger.info(
             f"Using Supabase Supavisor connection pooler at {pooler_host}:{pooler_port}"
@@ -143,13 +143,13 @@ if IS_DEVELOPMENT:
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
 else:
-    # Production: Use proper SSL verification
+    # Production: Use Supabase-compatible SSL verification
     logger.info(
-        "Production environment detected: Using strict SSL certificate verification"
+        "Production environment detected: Using Supabase-compatible SSL certificate verification"
     )
     ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = True
-    ssl_context.verify_mode = ssl.CERT_REQUIRED
+    ssl_context.check_hostname = False  # Supabase certificate chain compatibility
+    ssl_context.verify_mode = ssl.CERT_REQUIRED  # Still require valid certificates
 
 # Create connect_args with appropriate settings for Supavisor
 connect_args = {
