@@ -39,8 +39,11 @@ class PlaceStatusEnum(enum.Enum):
 
 # --- Define the NEW enum specifically for deep scan status --- #
 # This replaces the previous DeepScanStatusEnum which was repurposed
-# Values MUST match the database enum 'gcp_api_deep_scan_status_enum' exactly
+# Values MUST match the database enum 'gcp_api_deep_scan_status' exactly
 class GcpApiDeepScanStatusEnum(enum.Enum):
+    """Deep scan status values mapped to gcp_api_deep_scan_status in database"""
+
+    # Values MUST match database exactly: {Queued,Processing,Completed,Error}
     Queued = "Queued"
     Processing = "Processing"
     Completed = "Completed"
@@ -108,13 +111,12 @@ class Place(Base):
     # --- Add the NEW column for deep scan status --- #
     deep_scan_status = Column(
         Enum(
-            GcpApiDeepScanStatusEnum,  # Use the NEW enum
-            name="gcp_api_deep_scan_status_enum",  # Map to the NEW DB enum name
-            create_type=False,  # Assume the type exists in DB
-            native_enum=True,  # Use native PG enum
+            GcpApiDeepScanStatusEnum,
+            name="gcp_api_deep_scan_status",  # Fixed: Use actual DB enum name
+            create_type=False
         ),
-        nullable=True,  # Allow null for places not involved in deep scan
-        index=True,  # Index for efficient querying by scheduler
+        nullable=True,
+        default=GcpApiDeepScanStatusEnum.Queued
     )
     # ------------------------------------------------- #
 

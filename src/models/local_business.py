@@ -121,12 +121,11 @@ class LocalBusiness(Base):
     domain_extraction_status = Column(
         Enum(
             DomainExtractionStatusEnum,  # Reference the updated Enum
-            name="DomainExtractionStatusEnum",  # Keep DB type name consistent for now
-            create_type=False,
-            native_enum=True,
-            values_callable=lambda obj: [e.value for e in obj],
+            name="domain_extraction_status",  # Fixed: Use actual DB enum name
+            create_type=False
         ),
         nullable=True,
+        default=DomainExtractionStatusEnum.Queued,
         index=True,
     )
     domain_extraction_error = Column(String, nullable=True)  # To store error messages
