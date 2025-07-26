@@ -220,10 +220,11 @@ async def search_places(
                         f"Failed to update error status in database: {str(db_error)}"
                     )
 
-        # Run background task concurrently
-        await process_places_search_background(task_args)
+        # Run background task asynchronously (non-blocking)
+        import asyncio
+        asyncio.create_task(process_places_search_background(task_args))
 
-        # Return job ID and status URL
+        # Return job ID and status URL immediately
         return {
             "job_id": job_id,
             "status_url": f"/api/v3/localminer-discoveryscan/search/status/{job_id}",
