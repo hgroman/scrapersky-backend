@@ -382,7 +382,7 @@ async def process_domain_with_own_session(
     from sqlalchemy import select, update
 
     from ...models.domain import Domain
-    from ...models.sitemap import SitemapFile, SitemapUrl
+    from ...models.sitemap import SitemapFile, SitemapUrl, SitemapFileStatusEnum
     from ...scraper.domain_utils import standardize_domain
     from ...session.async_session import get_background_session
 
@@ -619,7 +619,7 @@ async def process_domain_with_own_session(
                             else job_id,
                             url_count=url_count,
                             tenant_id=uuid.UUID(DEFAULT_TENANT_ID),
-                            status="Completed",
+                            status=SitemapFileStatusEnum.Completed,
                         )
                         session.add(sitemap_obj)
                         # Explicitly flush to get the sitemap ID

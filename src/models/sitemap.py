@@ -41,6 +41,15 @@ class SitemapFileStatusEnum(enum.Enum):
     Error = "Error"
 
 
+class SitemapUrlStatusEnum(enum.Enum):
+    """Status values for sitemap_url_status_enum in database"""
+
+    Pending = "Pending"
+    Processing = "Processing"
+    Completed = "Completed"
+    Error = "Error"
+
+
 # Rename Enum related to Sitemap Curation status
 class SitemapImportCurationStatusEnum(enum.Enum):
     """Status values for Sitemap Import Curation Status"""
@@ -234,7 +243,7 @@ class SitemapFile(Base, BaseModel):
                 tenant_id=tenant_id_obj,
                 created_by=created_by_obj,
                 job_id=job_id,
-                status="pending",
+                status=SitemapFileStatusEnum.Pending,
                 **kwargs,
             )
 
@@ -324,14 +333,32 @@ class SitemapUrl(Base, BaseModel):
     Fields:
         id: UUID primary key (inherited from BaseModel)
         sitemap_id: Foreign key to the parent sitemap file
+        domain_id: Foreign key to the domain (for direct access)
         url: The URL found in the sitemap
+        loc_text: Original location text from sitemap
+        page_type: Type of page (web, image, video, news)
+        status: Processing status of this URL
+        priority: Processing priority (integer)
+        status_code: HTTP status code when accessed
+        error_message: Error message if processing failed
         lastmod: Last modified date from sitemap (if available)
         changefreq: Change frequency from sitemap (if available)
-        priority: Priority value from sitemap (if available)
+        priority_value: Priority value from sitemap (decimal)
+        image_count: Number of images found
+        video_count: Number of videos found
+        news_count: Number of news items found
+        size_bytes: Size of the page content
+        lead_source: Source of this URL
+        user_id: User associated with this URL
+        user_name: Name of the user
+        notes: Optional text notes
+        tags: JSON field for additional tags
+        is_active: Whether this URL is active
+        process_after: When to process this URL
+        discovered_at: When this URL was discovered
+        last_checked_at: When this URL was last checked
         tenant_id: The tenant this URL belongs to (for multi-tenancy)
         created_by: The user who created this record
-        tags: JSON field for additional tags and categorization
-        notes: Optional text notes about this URL
     """
 
     __tablename__ = "sitemap_urls"
@@ -343,12 +370,45 @@ class SitemapUrl(Base, BaseModel):
         nullable=False,
         index=True,
     )
+    domain_id = Column(PGUUID, nullable=True, index=True)
     url = Column(Text, nullable=False)
+    loc_text = Column(Text, nullable=True)
+    page_type = Column(Text, nullable=True)
+
+    # Status and processing fields
+    status = Column(
+        SQLAlchemyEnum(
+            SitemapUrlStatusEnum, name="sitemap_url_status_enum", create_type=False
+        ),
+        nullable=False,
+        default=SitemapUrlStatusEnum.Pending,
+        index=True,
+    )
+    priority = Column(Integer, nullable=True, default=5)
+    status_code = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
 
     # Metadata fields from sitemap
     lastmod = Column(DateTime(timezone=True), nullable=True)
     changefreq = Column(String, nullable=True)
-    priority = Column(Float, nullable=True)
+    priority_value = Column(Float, nullable=True)
+
+    # Content metadata
+    image_count = Column(Integer, nullable=True, default=0)
+    video_count = Column(Integer, nullable=True, default=0)
+    news_count = Column(Integer, nullable=True, default=0)
+    size_bytes = Column(Integer, nullable=True)
+
+    # Additional tracking fields
+    lead_source = Column(Text, nullable=True)
+    user_id = Column(PGUUID, nullable=True)
+    user_name = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    tags = Column(JSONB, nullable=True)
+    is_active = Column(Boolean, nullable=True, default=True)
+    process_after = Column(DateTime(timezone=True), nullable=True)
+    discovered_at = Column(DateTime(timezone=True), nullable=True)
+    last_checked_at = Column(DateTime(timezone=True), nullable=True)
 
     # Security and ownership
     tenant_id = Column(
@@ -359,10 +419,6 @@ class SitemapUrl(Base, BaseModel):
     )
     created_by = Column(PGUUID, nullable=True)
     updated_by = Column(PGUUID, nullable=True)
-
-    # Additional metadata
-    tags = Column(JSONB, nullable=True)
-    notes = Column(Text, nullable=True)
 
     # Relationships
     sitemap = relationship("SitemapFile", back_populates="urls")
@@ -378,9 +434,12 @@ class SitemapUrl(Base, BaseModel):
         sitemap_id: Union[str, uuid.UUID],
         url: str,
         tenant_id: str,
+        domain_id: Optional[str] = None,
+        loc_text: Optional[str] = None,
+        page_type: Optional[str] = None,
         lastmod: Optional[datetime] = None,
         changefreq: Optional[str] = None,
-        priority: Optional[float] = None,
+        priority_value: Optional[float] = None,
         created_by: Optional[str] = None,
         **kwargs,
     ) -> "SitemapUrl":
@@ -392,9 +451,12 @@ class SitemapUrl(Base, BaseModel):
             sitemap_id: ID of the parent sitemap
             url: The URL from the sitemap
             tenant_id: Tenant ID for security
+            domain_id: Domain ID for direct access
+            loc_text: Original location text from sitemap
+            page_type: Type of page (web, image, video, news)
             lastmod: Last modified date if available
             changefreq: Change frequency if available
-            priority: Priority if available
+            priority_value: Priority value if available (decimal)
             created_by: User ID of creator
             **kwargs: Additional fields to set
 
@@ -412,6 +474,14 @@ class SitemapUrl(Base, BaseModel):
                     raise ValueError(
                         f"Invalid UUID format for sitemap_id: {sitemap_id}"
                     )
+
+            domain_id_obj = None
+            if domain_id:
+                try:
+                    domain_id_obj = uuid.UUID(domain_id)
+                except (ValueError, TypeError) as err:
+                    logger.warning(f"Invalid UUID format for domain_id: {domain_id}")
+                    raise ValueError(f"Invalid UUID format for domain_id: {domain_id}") from err
 
             tenant_id_obj = None
             if tenant_id:
@@ -432,12 +502,16 @@ class SitemapUrl(Base, BaseModel):
             # Create the sitemap URL
             sitemap_url = cls(
                 sitemap_id=sitemap_id_obj,
+                domain_id=domain_id_obj,
                 url=url,
+                loc_text=loc_text,
+                page_type=page_type,
                 lastmod=lastmod,
                 changefreq=changefreq,
-                priority=priority,
+                priority_value=priority_value,
                 tenant_id=tenant_id_obj,
                 created_by=created_by_obj,
+                status=SitemapUrlStatusEnum.Pending,
                 **kwargs,
             )
 
