@@ -522,9 +522,10 @@ class Domain(Base, BaseModel):
         Returns:
             List of Domain instances
         """
-        from sqlalchemy import select
+        from sqlalchemy import select, text
 
-        query = select(cls).where(cls.batch_id == batch_id)
+        # Use text() for the UUID comparison to avoid typing issues
+        query = select(cls).where(text("batch_id = :batch_id"))
 
-        result = await session.execute(query)
+        result = await session.execute(query, {"batch_id": batch_id})
         return result.scalars().all()

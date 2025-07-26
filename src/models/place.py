@@ -29,14 +29,11 @@ from .tenant import DEFAULT_TENANT_ID
 class PlaceStatusEnum(enum.Enum):
     """Status values mapped to place_status in database (MUST MATCH DB DEFINITION)"""
 
-    # Values MUST match database exactly: {New,Queued,Processing,Complete,Error,Skipped,Selected,Archived}
+    # Values MUST match database exactly: {New,Selected,Maybe,Not a Fit,Archived}
     New = "New"
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
-    Skipped = "Skipped"
     Selected = "Selected"
+    Maybe = "Maybe"
+    Not_a_Fit = "Not a Fit"  # Note: database uses space, not underscore
     Archived = "Archived"
 
 

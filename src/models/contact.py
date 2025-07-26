@@ -69,32 +69,32 @@ class Contact(Base, BaseModel):
     __tablename__ = "contacts"
 
     # Define columns based on the agreed schema
-    id: Column[uuid.UUID] = Column(
+    id = Column(
         PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    domain_id: Column[uuid.UUID] = Column(
+    domain_id = Column(
         PGUUID(as_uuid=True),
         ForeignKey("domains.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    page_id: Column[uuid.UUID] = Column(
+    page_id = Column(
         PGUUID(as_uuid=True),
         ForeignKey("pages.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    email: Column[str] = Column(Text, nullable=False, index=True)
-    email_type: Column[Optional[ContactEmailTypeEnum]] = Column(
+    email = Column(Text, nullable=False, index=True)
+    email_type = Column(
         SQLAlchemyEnum(
             ContactEmailTypeEnum, name="contact_email_type_enum", create_type=False
         ),
         nullable=True,
     )
-    has_gmail: Column[Optional[bool]] = Column(Boolean, default=False, nullable=True)
-    context: Column[Optional[str]] = Column(Text, nullable=True)
-    source_url: Column[Optional[str]] = Column(Text, nullable=True)
-    source_job_id: Column[Optional[uuid.UUID]] = Column(
+    has_gmail = Column(Boolean, default=False, nullable=True)
+    context = Column(Text, nullable=True)
+    source_url = Column(Text, nullable=True)
+    source_job_id = Column(
         PGUUID(as_uuid=True), ForeignKey("jobs.job_id"), nullable=True
     )
 
@@ -108,7 +108,7 @@ class Contact(Base, BaseModel):
     )  # Consider adding back_populates="contacts" to Job model if needed
 
     # Contact curation workflow status fields
-    contact_curation_status: Column[ContactCurationStatus] = Column(
+    contact_curation_status = Column(
         SQLAlchemyEnum(
             ContactCurationStatus, name="contactcurationstatus", create_type=False
         ),
@@ -118,7 +118,7 @@ class Contact(Base, BaseModel):
         index=True,
     )
 
-    contact_processing_status: Column[Optional[ContactProcessingStatus]] = Column(
+    contact_processing_status = Column(
         SQLAlchemyEnum(
             ContactProcessingStatus, name="contactprocessingstatus", create_type=False
         ),
@@ -126,10 +126,10 @@ class Contact(Base, BaseModel):
         index=True,
     )
 
-    contact_processing_error: Column[Optional[str]] = Column(Text, nullable=True)
+    contact_processing_error = Column(Text, nullable=True)
 
     # HubSpot sync workflow status fields
-    hubspot_sync_status: Column[HubotSyncStatus] = Column(
+    hubspot_sync_status = Column(
         SQLAlchemyEnum(HubotSyncStatus, name="hubotsyncstatus", create_type=False),
         nullable=False,
         default=HubotSyncStatus.New,
@@ -137,7 +137,7 @@ class Contact(Base, BaseModel):
         index=True,
     )
 
-    hubspot_processing_status: Column[Optional[HubSyncProcessingStatus]] = Column(
+    hubspot_processing_status = Column(
         SQLAlchemyEnum(
             HubSyncProcessingStatus, name="hubsyncprocessingstatus", create_type=False
         ),
@@ -145,7 +145,7 @@ class Contact(Base, BaseModel):
         index=True,
     )
 
-    hubspot_processing_error: Column[Optional[str]] = Column(Text, nullable=True)
+    hubspot_processing_error = Column(Text, nullable=True)
 
     # Define table arguments for constraints
     __table_args__ = (

@@ -18,6 +18,7 @@ from sqlalchemy.future import select
 
 from src.config.settings import settings
 from src.models.domain import Domain, SitemapAnalysisStatusEnum
+from src.models import TaskStatus  # Add missing import
 import asyncio
 from src.services.website_scan_service import WebsiteScanService
 from src.tasks.email_scraper import scan_website_for_emails
@@ -129,11 +130,9 @@ async def process_pending_domain_sitemap_submissions():
                     f"Processing domain {domain_id} ({locked_domain.domain}) - Current status: {locked_domain.sitemap_analysis_status}"
                 )
 
-                # 1. Mark as 'processing' (direct assignment)
-                locked_domain.sitemap_analysis_status = (
-                    SitemapAnalysisStatusEnum.processing
-                )
-                locked_domain.sitemap_analysis_error = None
+                # 1. Mark as 'processing' (using setattr for SQLAlchemy compatibility)
+                setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.processing)
+                setattr(locked_domain, 'sitemap_analysis_error', None)
                 await session_inner.flush()  # Flush 'processing' state
                 logger.debug(
                     f"Domain {domain_id} status set to 'processing' and flushed."
@@ -141,7 +140,8 @@ async def process_pending_domain_sitemap_submissions():
 
                 # 2. Initiate the scan directly using the service
                 domains_processed += 1
-                system_user_id = uuid.UUID(settings.SYSTEM_USER_ID)
+                # Use a default system user ID if SYSTEM_USER_ID not in settings
+                system_user_id = uuid.UUID(getattr(settings, 'SYSTEM_USER_ID', '00000000-0000-0000-0000-000000000000'))
                 job = await website_scan_service.initiate_scan(
                     domain_id=locked_domain.id,
                     user_id=system_user_id,
@@ -149,23 +149,29 @@ async def process_pending_domain_sitemap_submissions():
                 )
 
                 # 3. Queue the background task
-                if job.status == TaskStatus.PENDING:
-                    asyncio.create_task(scan_website_for_emails(job.id))
-                    logger.info(f"Queued background task for job {job.id} for domain {domain_id}.")
-                    # Mark domain as submitted since the job is now queued
-                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.submitted
-                    await session_inner.flush()
-                    domains_submitted_successfully += 1
-                elif job.status == TaskStatus.RUNNING:
-                    logger.info(f"Job {job.id} for domain {domain_id} is already running. No new task queued.")
+                job_status = getattr(job, 'status', None)
+                if job_status == TaskStatus.PENDING:
+                    # Add the missing user_id parameter and ensure job.id is UUID
+                    job_id = getattr(job, 'id', None)
+                    if job_id:
+                        asyncio.create_task(scan_website_for_emails(job_id, user_id=system_user_id))
+                        logger.info(f"Queued background task for job {job_id} for domain {domain_id}.")
+                        # Mark domain as submitted since the job is now queued
+                        setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.submitted)
+                        await session_inner.flush()
+                        domains_submitted_successfully += 1
+                elif job_status == TaskStatus.RUNNING:
+                    job_id = getattr(job, 'id', None)
+                    logger.info(f"Job {job_id} for domain {domain_id} is already running. No new task queued.")
                     # Mark domain as submitted as a job is already active
-                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.submitted
+                    setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.submitted)
                     await session_inner.flush()
                     domains_submitted_successfully += 1
                 else:
-                    logger.error(f"Failed to initiate scan for domain {domain_id}. Job status: {job.status}")
-                    locked_domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed
-                    locked_domain.sitemap_analysis_error = "Failed to create or find active job for scan."
+                    job_id = getattr(job, 'id', None)
+                    logger.error(f"Failed to initiate scan for domain {domain_id}. Job status: {job_status}")
+                    setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.failed)
+                    setattr(locked_domain, 'sitemap_analysis_error', "Failed to create or find active job for scan.")
                     await session_inner.flush()
                     domains_failed += 1
 

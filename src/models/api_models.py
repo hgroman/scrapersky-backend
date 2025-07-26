@@ -304,7 +304,7 @@ class LocalBusinessApiStatusEnum(str, Enum):
     New = "New"
     Selected = "Selected"
     Maybe = "Maybe"
-    Not_a_Fit = "Not a Fit"  # Ensure space is handled if API sends it
+    Not_a_Fit = "Not a Fit"  # Changed to match database exactly (space not underscore)
     Archived = "Archived"
 
 

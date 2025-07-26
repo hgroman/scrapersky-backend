@@ -43,13 +43,12 @@ class SitemapImportService:
 
         # --- REINSTATED STATUS CHECK --- #
         # Double-check status before processing ( belt-and-suspenders )
-        if (
-            sitemap_file.sitemap_import_status
-            != SitemapImportProcessStatusEnum.Processing
-        ):
+        # Use getattr to safely get the current status value
+        current_status = getattr(sitemap_file, 'sitemap_import_status', None)
+        if current_status != SitemapImportProcessStatusEnum.Processing:
             logger.warning(
                 f"SitemapFile {sitemap_file_id} is not in Processing state "
-                f"({sitemap_file.sitemap_import_status}). Skipping."
+                f"({current_status}). Skipping."
             )
             return
         # --- END REINSTATED STATUS CHECK --- #
@@ -85,10 +84,8 @@ class SitemapImportService:
                     f"No URLs extracted from SitemapFile {sitemap_file_id} "
                     f"(URL: {sitemap_url_str})"
                 )
-                sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Complete # type: ignore
-                )
-                sitemap_file.sitemap_import_error = None # type: ignore
+                setattr(sitemap_file, 'sitemap_import_status', SitemapImportProcessStatusEnum.Complete)
+                setattr(sitemap_file, 'sitemap_import_error', None)
                 await session.commit()
                 return
 
@@ -156,10 +153,8 @@ class SitemapImportService:
                     f"SitemapFile {sitemap_file_id}."
                 )
                 # Update status to Complete even if no URLs inserted
-                sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Complete # type: ignore
-                )
-                sitemap_file.sitemap_import_error = None # type: ignore
+                setattr(sitemap_file, 'sitemap_import_status', SitemapImportProcessStatusEnum.Complete)
+                setattr(sitemap_file, 'sitemap_import_error', None)
                 await session.commit()
                 return
 
@@ -209,10 +204,8 @@ class SitemapImportService:
             if (
                 not sitemap_file_to_fail
             ):  # Only mark complete if no fatal error occurred during page insert
-                sitemap_file.sitemap_import_status = (
-                    SitemapImportProcessStatusEnum.Complete # type: ignore
-                )
-                sitemap_file.sitemap_import_error = None # type: ignore
+                setattr(sitemap_file, 'sitemap_import_status', SitemapImportProcessStatusEnum.Complete)
+                setattr(sitemap_file, 'sitemap_import_error', None)
                 logger.info(
                     f"Successfully completed URL import for SitemapFile "
                     f"{sitemap_file_id}."
@@ -226,8 +219,8 @@ class SitemapImportService:
                 f"HTTP error fetching sitemap {sitemap_url_str} " # Use string URL
                 f"(SitemapFile {sitemap_file_id}): {e.response.status_code} - {e}"
             )
-            sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Error # type: ignore
-            sitemap_file.sitemap_import_error = f"HTTP Error: {e.response.status_code}" # type: ignore
+            setattr(sitemap_file, 'sitemap_import_status', SitemapImportProcessStatusEnum.Error)
+            setattr(sitemap_file, 'sitemap_import_error', f"HTTP Error: {e.response.status_code}")
             await session.commit()
         except httpx.RequestError as e:
             await session.rollback()
@@ -235,10 +228,8 @@ class SitemapImportService:
                 f"Request error fetching sitemap {sitemap_url_str} " # Use string URL
                 f"(SitemapFile {sitemap_file_id}): {e}"
             )
-            sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Error # type: ignore
-            sitemap_file.sitemap_import_error = (
-                f"Request Error: {str(e)[:1024]}"  # Truncate long errors # type: ignore
-            )
+            setattr(sitemap_file, 'sitemap_import_status', SitemapImportProcessStatusEnum.Error)
+            setattr(sitemap_file, 'sitemap_import_error', f"Request Error: {str(e)[:1024]}")  # Truncate long errors
             await session.commit()
         except Exception as e:
             await session.rollback()
@@ -254,10 +245,8 @@ class SitemapImportService:
                     SitemapFile, sitemap_file_id
                 )
                 if sitemap_file_in_error:
-                    sitemap_file_in_error.sitemap_import_status = (
-                        SitemapImportProcessStatusEnum.Error # type: ignore
-                    )
-                    sitemap_file_in_error.sitemap_import_error = str(e)[:1024] # type: ignore
+                    setattr(sitemap_file_in_error, 'sitemap_import_status', SitemapImportProcessStatusEnum.Error)
+                    setattr(sitemap_file_in_error, 'sitemap_import_error', str(e)[:1024])
                     await session.commit()
                 else:
                     logger.error(
