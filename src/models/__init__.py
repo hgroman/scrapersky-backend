@@ -65,13 +65,18 @@ class DiscoveryMethod(str, Enum):
 
 
 class TaskStatus(str, Enum):
-    """Common status values for tasks and jobs."""
+    """Status values mapped to task_status in database (MUST MATCH DB DEFINITION)"""
 
+    # Values MUST match database exactly: {Queued,InProgress,Completed,Error,ManualReview,Cancelled,Paused,Processing,Complete}
     PENDING = "Queued"
     RUNNING = "InProgress"
     COMPLETE = "Completed"
     FAILED = "Error"
+    MANUAL_REVIEW = "ManualReview"  # MISSING: Was causing runtime errors
     CANCELLED = "Cancelled"
+    PAUSED = "Paused"              # MISSING: Was causing runtime errors
+    PROCESSING = "Processing"       # MISSING: Was causing runtime errors
+    COMPLETE_ALT = "Complete"      # MISSING: Alternative Complete status
 
 
 # Export all models

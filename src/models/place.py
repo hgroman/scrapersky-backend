@@ -27,10 +27,16 @@ from .tenant import DEFAULT_TENANT_ID
 # Define the enum for the ORIGINAL user-facing place status
 # Values MUST match the database enum values exactly (case-sensitive)
 class PlaceStatusEnum(enum.Enum):
+    """Status values mapped to place_status in database (MUST MATCH DB DEFINITION)"""
+
+    # Values MUST match database exactly: {New,Queued,Processing,Complete,Error,Skipped,Selected,Archived}
     New = "New"
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+    Skipped = "Skipped"
     Selected = "Selected"
-    Maybe = "Maybe"
-    Not_a_Fit = "Not a Fit"
     Archived = "Archived"
 
 

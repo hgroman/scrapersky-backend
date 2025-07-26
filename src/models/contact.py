@@ -22,10 +22,13 @@ from .base import Base, BaseModel
 
 # Define Python Enum corresponding to DB Enum
 class ContactEmailTypeEnum(str, enum.Enum):
-    SERVICE = "service"
-    CORPORATE = "corporate"
-    FREE = "free"
-    UNKNOWN = "unknown"
+    """Status values mapped to contact_email_type_enum in database (MUST MATCH DB DEFINITION)"""
+
+    # Values MUST match database exactly: {SERVICE,CORPORATE,FREE,UNKNOWN} (UPPERCASE)
+    SERVICE = "SERVICE"
+    CORPORATE = "CORPORATE"
+    FREE = "FREE"
+    UNKNOWN = "UNKNOWN"
 
 
 # Contact curation workflow status enums

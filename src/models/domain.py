@@ -33,11 +33,15 @@ logger = logging.getLogger(__name__)
 
 # Python Enum for USER curation status
 class SitemapCurationStatusEnum(enum.Enum):
+    """Status values mapped to SitemapCurationStatusEnum in database (MUST MATCH DB DEFINITION)"""
+
+    # Values MUST match database exactly: {New,Selected,Maybe,"Not a Fit",Archived,Completed}
     New = "New"
     Selected = "Selected"
     Maybe = "Maybe"
     Not_a_Fit = "Not a Fit"  # Match API potentially needed space
     Archived = "Archived"
+    Completed = "Completed"  # CRITICAL: Was missing from code, exists in DB
 
 
 # HubSpot sync workflow status enums
