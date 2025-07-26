@@ -2,12 +2,12 @@ import logging
 import re
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 from urllib.parse import urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from sqlalchemy import select  # Import update
+from sqlalchemy import select, update  # Import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.settings import Settings
@@ -167,123 +167,96 @@ async def process_url(
         base_url = get_base_url(url)
         new_links = find_links(soup, base_url) - visited
 
-        if emails_found:
-            # Database operations within the *passed* session
-            try:
-                page_stmt = (
-                    select(Page)
-                    .where(Page.domain_id == domain_obj.id, Page.url == url)
-                    .limit(1)
-                )
-                page_result = await session.execute(page_stmt)
-                page_obj = page_result.scalar_one_or_none()
-
-                if not page_obj:
-                    logger.debug(
-                        f"Job {job_obj.job_id}: Creating Page entry for URL: {url}"
-                    )
-                    new_page = Page(
-                        domain_id=domain_obj.id,
-                        tenant_id=domain_obj.tenant_id,
-                        url=url,
-                        last_scan=datetime.utcnow(),
-                        additional_json={
-                            "emails_found": len(emails_found),
-                            "job_id": str(job_obj.job_id),
-                        },
-                    )
-                    session.add(new_page)
-                    await session.flush()
-                    page_obj = new_page
-                    logger.debug(
-                        f"Job {job_obj.job_id}: Created Page with ID: {page_obj.id}"
-                    )
-                else:
-                    # Use setattr to avoid type errors with SQLAlchemy columns
-                    page_obj.last_scan = datetime.utcnow()
-
-                    # Safe dict handling for SQLAlchemy column
-                    current_json = getattr(page_obj, "additional_json", {}) or {}
-                    if isinstance(current_json, dict):
-                        updated_json = current_json.copy()
-                        updated_json["job_id"] = str(job_obj.job_id)
-                        page_obj.additional_json = updated_json
-                    else:
-                        page_obj.additional_json = {"job_id": str(job_obj.job_id)}
-
-                    session.add(page_obj)
-                    await session.flush()
-                    logger.debug(
-                        f"Job {job_obj.job_id}: Found existing Page with ID: {page_obj.id}"
-                    )
-
-                page_id = page_obj.id
-
-                for email, context in emails_found:
-                    email_lower = email.lower()
-                    contact_check_stmt = (
-                        select(Contact.id)
-                        .where(
-                            Contact.domain_id == domain_obj.id,
-                            Contact.email == email_lower,
-                        )
-                        .limit(1)
-                    )
-                    contact_result = await session.execute(contact_check_stmt)
-                    exists = contact_result.scalar_one_or_none() is not None
-
-                    if not exists:
-                        # Get domain string safely for get_email_type
-                        domain_name = str(getattr(domain_obj, "domain", ""))
-                        email_type = get_email_type(email_lower, domain_name)
-
-                        new_contact = Contact(
-                            domain_id=domain_obj.id,
-                            page_id=page_id,
-                            email=email_lower,
-                            email_type=email_type,
-                            has_gmail=is_gmail_email(email_lower),
-                            context=context,
-                            source_url=url,
-                            source_job_id=job_obj.job_id,
-                        )
-                        session.add(new_contact)
-                        new_contacts_count += 1
-                        logger.info(
-                            f"Job {job_obj.job_id}: Found new contact: {email_lower} on page {url}"
-                        )
-
-                await session.flush()
-
-            except Exception as e:
-                logger.error(
-                    f"Job {job_obj.job_id}: DB error processing URL {url}: {e}",
-                    exc_info=True,
-                )
-                raise
-
-        if new_contacts_count > 0:
-            logger.info(
-                f"Job {job_obj.job_id}: Processed {url}. Found {new_contacts_count} new contacts."
+        # Create or update page record
+        page_check_stmt = (
+            select(Page.id)
+            .where(
+                Page.domain_id == domain_obj.id,
+                Page.url == url,
             )
+            .limit(1)
+        )
+        page_result = await session.execute(page_check_stmt)
+        page_id = page_result.scalar_one_or_none()
+
+        if page_id is None:
+            # Create new page
+            page = Page(
+                domain_id=domain_obj.id,
+                url=url,
+                last_scan=datetime.utcnow(),
+                additional_json={
+                    "links": list(new_links),
+                    "scan_job_id": str(job_obj.job_id),
+                },
+            )
+            session.add(page)
+            await session.flush()
+            page_id = page.id
+        else:
+            # Update existing page using update()
+            await session.execute(
+                update(Page)
+                .where(Page.id == page_id)
+                .values(
+                    last_scan=datetime.utcnow(),
+                    additional_json={
+                        "links": list(new_links),
+                        "scan_job_id": str(job_obj.job_id),
+                    },
+                )
+            )
+
+        # Process found emails...
+        for email, context in emails_found:
+            email_lower = email.lower()
+            contact_check_stmt = (
+                select(Contact.id)
+                .where(
+                    Contact.domain_id == domain_obj.id,
+                    Contact.email == email_lower,
+                )
+                .limit(1)
+            )
+            contact_result = await session.execute(contact_check_stmt)
+            exists = contact_result.scalar_one_or_none() is not None
+
+            if not exists:
+                # Get domain string safely for get_email_type
+                domain_name = str(getattr(domain_obj, "domain", ""))
+                email_type = get_email_type(email_lower, domain_name)
+
+                new_contact = Contact(
+                    domain_id=domain_obj.id,
+                    page_id=page_id,
+                    email=email_lower,
+                    email_type=email_type,
+                    has_gmail=is_gmail_email(email_lower),
+                    context=context,
+                    source_url=url,
+                    source_job_id=job_obj.job_id,
+                )
+                session.add(new_contact)
+                new_contacts_count += 1
+                logger.info(
+                    f"Job {job_obj.job_id}: Found new contact: {email_lower} on page {url}"
+                )
+
+        await session.flush()
         return new_contacts_count, new_links
 
-    except requests.RequestException as e:
-        logger.warning(f"Job {job_obj.job_id}: Request error for {url}: {str(e)}")
-        return 0, set()
     except Exception as e:
         logger.error(
-            f"Job {job_obj.job_id}: Unexpected error processing {url}: {str(e)}",
+            f"Job {job_obj.job_id}: Error processing URL {url}: {e}",
             exc_info=True,
         )
-        return 0, set()
+        raise
 
-
-async def scan_website_for_emails(job_id: uuid.UUID, user_id: uuid.UUID):
+async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.UUID):
     """Crawl a website and scan for emails, updating the Job record."""
     logger.info(
         f"***** TASK STARTED for job_id: {job_id}, initiated by user_id: {user_id} *****"
-    )  # Initial log
+    )
     MAX_PAGES = 100  # Limit crawl depth
 
     async with get_background_session() as session:
@@ -297,10 +270,19 @@ async def scan_website_for_emails(job_id: uuid.UUID, user_id: uuid.UUID):
 
         try:
             # 1. Fetch the Job record using job_id
-            job = await Job.get_by_job_id(session, job_id)
+            if isinstance(job_id, int):
+                # If integer ID provided, fetch by primary key
+                job = await session.get(Job, job_id)
+            else:
+                # If UUID provided, fetch by job_id field
+                job = await Job.get_by_job_id(session, job_id)
+
             if not job:
                 logger.error(f"Job {job_id} not found in database. Aborting task.")
                 return
+
+            # Store the job_id (UUID) for use in queries
+            job_uuid = job.job_id
 
             # 2. Fetch associated Domain using job.domain_id
             domain_id = getattr(job, "domain_id", None)
@@ -321,14 +303,17 @@ async def scan_website_for_emails(job_id: uuid.UUID, user_id: uuid.UUID):
                 logger.error(error_message)
                 return  # Just return early
 
-            # 3. Update Job status to RUNNING
-            logger.info(
-                f"Job {job_id}: Setting status to RUNNING for domain {getattr(domain_obj, 'domain', 'unknown')}"
+            # 3. Update Job status to RUNNING using update()
+            await session.execute(
+                update(Job)
+                .where(Job.id == job.id)
+                .values(
+                    status=TaskStatus.RUNNING.value,
+                    progress=0.0,
+                    error=None,
+                    result_data=[],
+                )
             )
-            job.status = TaskStatus.RUNNING.value
-            job.progress = 0.0  # Reset progress
-            job.error = None  # Clear previous errors
-            job.result_data = []  # Initialize result_data as empty list
             await session.commit()  # Commit RUNNING status
 
             # 4. Perform the crawl and scrape
@@ -374,16 +359,24 @@ async def scan_website_for_emails(job_id: uuid.UUID, user_id: uuid.UUID):
 
             # Fetch all unique contacts associated with this job_id
             contact_stmt = (
-                select(Contact.email).where(Contact.source_job_id == job_id).distinct()
+                select(Contact.email).where(Contact.source_job_id == job_uuid).distinct()
             )
             contact_result = await session.execute(contact_stmt)
             final_emails = [row.email for row in contact_result.all()]
 
-            job.progress = 1.0
-            job.result_data = {"emails": final_emails}  # Store as JSON with a key
-            final_status = (
-                TaskStatus.COMPLETE
-            )  # Mark as complete if no critical error occurred
+            # Update final job status using update()
+            result_data = {"emails": final_emails}
+            await session.execute(
+                update(Job)
+                .where(Job.id == job.id)
+                .values(
+                    status=final_status.value,
+                    progress=1.0,
+                    error="" if final_status == TaskStatus.COMPLETE else "Task completed with errors",
+                    result_data=result_data,
+                )
+            )
+            await session.commit()
 
         except Exception as e:
             # Catch broad exceptions during setup or main loop logic
@@ -392,11 +385,18 @@ async def scan_website_for_emails(job_id: uuid.UUID, user_id: uuid.UUID):
             )
             logger.error(error_message, exc_info=True)
             final_status = TaskStatus.FAILED
-            # Try to update the job record with the error, even if partially failed
+
+            # Try to update the job record with the error using update()
             if job:
-                job.error = error_message[:1024]  # Truncate if needed
-                job.status = final_status.value
                 try:
+                    await session.execute(
+                        update(Job)
+                        .where(Job.id == job.id)
+                        .values(
+                            status=final_status.value,
+                            error=error_message[:1024] if error_message else "Unknown error occurred",
+                        )
+                    )
                     await session.commit()
                 except Exception as commit_err:
                     logger.error(

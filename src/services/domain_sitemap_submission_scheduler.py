@@ -152,24 +152,24 @@ async def process_pending_domain_sitemap_submissions():
                 # 3. Queue the background task
                 job_status = getattr(job, 'status', None)
                 if job_status == TaskStatus.PENDING:
-                    # Add the missing user_id parameter and ensure job.id is UUID
-                    job_id = getattr(job, 'id', None)
-                    if job_id:
-                        asyncio.create_task(scan_website_for_emails(job_id, user_id=system_user_id))
-                        logger.info(f"Queued background task for job {job_id} for domain {domain_id}.")
+                    # Use job.job_id (UUID) instead of job.id (integer)
+                    job_uuid = getattr(job, 'job_id', None)
+                    if job_uuid:
+                        asyncio.create_task(scan_website_for_emails(job_uuid, user_id=system_user_id))
+                        logger.info(f"Queued background task for job {job_uuid} for domain {domain_id}.")
                         # Mark domain as submitted since the job is now queued
                         setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.submitted)
                         await session_inner.flush()
                         domains_submitted_successfully += 1
                 elif job_status == TaskStatus.RUNNING:
-                    job_id = getattr(job, 'id', None)
-                    logger.info(f"Job {job_id} for domain {domain_id} is already running. No new task queued.")
+                    job_uuid = getattr(job, 'job_id', None)
+                    logger.info(f"Job {job_uuid} for domain {domain_id} is already running. No new task queued.")
                     # Mark domain as submitted as a job is already active
                     setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.submitted)
                     await session_inner.flush()
                     domains_submitted_successfully += 1
                 else:
-                    job_id = getattr(job, 'id', None)
+                    job_uuid = getattr(job, 'job_id', None)
                     logger.error(f"Failed to initiate scan for domain {domain_id}. Job status: {job_status}")
                     setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.failed)
                     setattr(locked_domain, 'sitemap_analysis_error', "Failed to create or find active job for scan.")
