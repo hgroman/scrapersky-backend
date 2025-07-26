@@ -15,7 +15,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.future import select
 
 from ..config.settings import settings
-from ..models.domain import Domain  # Import the Domain model
+from ..models.domain import Domain, SitemapAnalysisStatusEnum  # Import the Domain model and SitemapAnalysisStatusEnum
 from ..models.enums import DomainStatusEnum  # Import the new Enum
 
 # Import the shared scheduler instance
@@ -90,7 +90,7 @@ async def process_pending_domains(limit: int = 10):
                 # Step 1: Fetch pending domains using ORM
                 stmt = (
                     select(Domain)
-                    .where(Domain.status == DomainStatusEnum.pending)  # Use Enum member
+                    .where(Domain.status == DomainStatusEnum.pending.value)  # Use enum value for consistency
                     .order_by(Domain.updated_at.asc())
                     .limit(limit)
                     .with_for_update(skip_locked=True)
@@ -184,6 +184,13 @@ async def process_pending_domains(limit: int = 10):
                         await Domain.update_from_metadata(session, domain, metadata)
                         domain.status = DomainStatusEnum.completed  # Use Enum member
                         domain.updated_at = datetime.utcnow()
+
+                        # Step 2.4: CRITICAL WF4→WF5 CONNECTION: Queue domain for sitemap analysis
+                        # This is the missing piece that connects domain processing (WF4) to sitemap analysis (WF5)
+                        setattr(domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.queued)
+                        logger.info(
+                            f"Domain {domain_id} queued for sitemap analysis (WF4→WF5 trigger)"
+                        )
 
                         domains_successful += 1
                         logger.info(
