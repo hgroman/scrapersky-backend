@@ -46,17 +46,17 @@ Map every atomic step in the Domain Curation workflow (WF4) from Layer 6: UI Com
   - Function: `process_pending_domain_sitemap_submissions` [NOVEL]
   - File: `src/scheduler_instance.py` [SHARED]
 
-## 6. Domain-to-Sitemap Adapter
+## 6. Sitemap Analysis
 
-- **Action:** For each queued domain, submits domain for sitemap scan.
-  - File: `src/services/domain_to_sitemap_adapter_service.py` [NOVEL]
-  - Class: `DomainToSitemapAdapterService` [NOVEL]
-  - Function: `submit_domain_for_sitemap_scan` [NOVEL]
+- **Action:** For each queued domain, performs sitemap analysis.
+  - File: `src/scraper/sitemap_analyzer.py` [SHARED]
+  - Class: `SitemapAnalyzer` [SHARED]
+  - Function: `analyze_domain_sitemaps` [SHARED]
 
-## 7. Sitemap Processing (Async)
+## 7. Sitemap Processing
 
-- **Action:** Actual sitemap discovery/scan happens (async, may be external or via processing_service).
-  - File: `src/services/sitemap/processing_service.py` [SHARED]
+- **Action:** Sitemap analysis is performed directly by SitemapAnalyzer.
+  - File: `src/scraper/sitemap_analyzer.py` [SHARED]
 
 ## 8. Status/Result Update
 
@@ -81,9 +81,9 @@ Map every atomic step in the Domain Curation workflow (WF4) from Layer 6: UI Com
 | 4    | src/models/domain.py:SitemapAnalysisStatusEnum                                                 | [SHARED]   |
 | 5    | src/services/domain_sitemap_submission_scheduler.py:process_pending_domain_sitemap_submissions | [NOVEL]    |
 | 5    | src/scheduler_instance.py                                                                      | [SHARED]   |
-| 6    | src/services/domain_to_sitemap_adapter_service.py:DomainToSitemapAdapterService                | [NOVEL]    |
-| 6    | src/services/domain_to_sitemap_adapter_service.py:submit_domain_for_sitemap_scan               | [NOVEL]    |
-| 7    | src/services/sitemap/processing_service.py                                                     | [SHARED]   |
+| 6    | src/scraper/sitemap_analyzer.py:SitemapAnalyzer                                               | [SHARED]   |
+| 6    | src/scraper/sitemap_analyzer.py:analyze_domain_sitemaps                                       | [SHARED]   |
+| 7    | src/scraper/sitemap_analyzer.py                                                               | [SHARED]   |
 | 8    | src/models/domain.py:Domain                                                                    | [SHARED]   |
 
 ---

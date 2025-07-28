@@ -67,25 +67,23 @@ This document traces the full dependency chain for the user workflow where items
     - **Function:** `process_pending_sitemap_submissions()`
       - **Background Process:** Runs periodically based on `DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES`.
       - **Database Query:** Fetches `Domain` (Layer 1: Models & ENUMs) records with `sitemap_analysis_status = "Queued"`
-      - **Consumer Action:** Processes the queued items by calling the domain to sitemap adapter service (Layer 4: Services)
+      - **Consumer Action:** Processes the queued items by calling the sitemap analyzer service (Layer 4: Services)
       - **Event Processing:** Section "Process Pending Sitemap Submissions" identifies and processes events
       - **Connection Point WF4→WF5:** This is where WF4's output (queued domains) is consumed by WF5 (sitemap analysis)
       - **Query Logic:** Selects `Domain.id` (Layer 1: Models & ENUMs) records where `sitemap_analysis_status == SitemapAnalysisStatusEnum.Queued` (Layer 1: Models & ENUMs), ordered by `updated_at`, limited by `DOMAIN_SITEMAP_SCHEDULER_BATCH_SIZE`. Uses `get_background_session()`.
       - **Action:** For each found `Domain` (Layer 1: Models & ENUMs) record (fetched individually within the loop):
-        - Instantiates `DomainToSitemapAdapterService` (Layer 4: Services).
-        - Calls `adapter_service.submit_domain_for_sitemap_scan(domain_id=domain.id, domain_url=domain.domain)`.
-        - Updates `domain.sitemap_analysis_status` (Layer 1: Models & ENUMs) to `Processing`, `Completed`, or `Error` based on the outcome of the submission call.
-2.  **File:** `../../src/services/domain_to_sitemap_adapter_service.py` (Layer 4: Services) [NOVEL]
-    - **Role:** Acts as an adapter to potentially trigger a legacy or external sitemap scanning system/service.
-    - **Class:** `DomainToSitemapAdapterService` (Layer 4: Services)
+        - Instantiates `SitemapAnalyzer` (Layer 4: Services).
+        - Calls `sitemap_analyzer.analyze_domain_sitemaps(domain_url=domain.domain)`.
+        - Updates `domain.sitemap_analysis_status` (Layer 1: Models & ENUMs) to `Processing`, `Completed`, or `Error` based on the outcome of the analysis call.
+2.  **File:** `../../src/scraper/sitemap_analyzer.py` (Layer 4: Services) [SHARED]
+    - **Role:** Contains the actual logic for finding and parsing sitemaps for a given domain.
+    - **Class:** `SitemapAnalyzer` (Layer 4: Services)
       - Instantiated by `domain_sitemap_submission_scheduler.py` (Layer 4: Services).
-    - **Function:** `submit_domain_for_sitemap_scan(domain_id: UUID, domain_url: str)`
-      - **Service Communication:** Connects WF4 to WF5 by submitting the domain for sitemap analysis
-      - **External API Call:** May interact with external services for domain processing
+    - **Function:** `analyze_domain_sitemaps(domain_url: str)`
+      - **Service Communication:** Directly performs sitemap analysis for WF4 domains
+      - **Business Logic:** Discovers and analyzes sitemaps for the provided domain
       - Called by `domain_sitemap_submission_scheduler.py` (Layer 4: Services).
-      - (Assumed Logic - _Needs Verification_): Takes the domain details and initiates the actual sitemap discovery process (e.g., by calling `src/services/sitemap/processing_service.py` (Layer 4: Services)'s relevant function, adding a job to a different queue, or calling an external API). Returns success/failure of the _submission_ step.
-3.  **File:** `src/services/sitemap/processing_service.py` (Layer 4: Services) (Potential Target)
-    - **Role:** May contain the actual logic for finding and parsing sitemaps for a given domain, possibly triggered by the adapter service (Layer 4: Services).
+      - Takes the domain URL and performs sitemap discovery and analysis directly.
 4.  **File:** `src/scheduler_instance.py`
     - **Role:** Defines the shared `AsyncIOScheduler` instance.
 5.  **File:** `src/main.py`
@@ -145,7 +143,7 @@ This document traces the full dependency chain for the user workflow where items
 3. **Database Update**: The router (Layer 3: Routers) fetches the corresponding `Domain` (Layer 1: Models & ENUMs) entities and updates their `sitemap_curation_status` field (Layer 1: Models & ENUMs) with `SitemapCurationStatusEnum.Selected` (Layer 1: Models & ENUMs).
 4. **Workflow Connection Point (Producer)**: When (and only when) the target status is `Selected`, the router (Layer 3: Routers) also sets `sitemap_analysis_status = SitemapAnalysisStatusEnum.Queued` (Layer 1: Models & ENUMs).
 5. **Background Processing**: Periodically, the domain sitemap submission scheduler's (`src/services/domain_sitemap_submission_scheduler.py` (Layer 4: Services)) `process_pending_sitemap_submissions` function runs and checks for `Domain` (Layer 1: Models & ENUMs) records with `sitemap_analysis_status = 'Queued'`.
-6. **Workflow Connection Point (Consumer)**: Any queued records are passed to the domain to sitemap adapter service (`src/services/domain_to_sitemap_adapter_service.py` (Layer 4: Services)) for processing.
+6. **Workflow Connection Point (Consumer)**: Any queued records are passed to the sitemap analyzer (`src/scraper/sitemap_analyzer.py` (Layer 4: Services)) for processing.
 
 **Producer-Consumer Relationship**: WF4-DomainCuration acts as a consumer for WF3-LocalBusinessCuration and as a producer for WF5-SitemapCuration. As a producer, the signal is the status change to "Queued" in the `sitemap_analysis_status` field (Layer 1: Models & ENUMs), which is consumed by the `domain_sitemap_submission_scheduler.py` background process (Layer 4: Services).
 
@@ -164,7 +162,7 @@ This document traces the full dependency chain for the user workflow where items
 
 - **Dual-Status Update Logic:** Verified implementation in `src/routers/domains.py::update_domain_sitemap_curation_status_batch` (Layer 3: Routers). Setting the main `sitemap_curation_status` (Layer 1: Models & ENUMs) to `Selected` automatically sets the `sitemap_analysis_status` (Layer 1: Models & ENUMs) to `Queued`.
 - **Dedicated Scheduler:** This workflow uses a specific scheduler (`src/services/domain_sitemap_submission_scheduler.py` (Layer 4: Services)) distinct from the one handling deep scans and domain extraction (`src/services/sitemap_scheduler.py` (Layer 4: Services)), configured with its own interval/batch settings.
-- **Adapter Service:** The `DomainToSitemapAdapterService` (`src/services/domain_to_sitemap_adapter_service.py` (Layer 4: Services)) acts as an intermediary, decoupling the queue polling from the actual sitemap processing logic.
+- **Analyzer Service:** The `SitemapAnalyzer` (`src/scraper/sitemap_analyzer.py` (Layer 4: Services)) provides the actual sitemap analysis functionality called by the scheduler.
 
 ---
 

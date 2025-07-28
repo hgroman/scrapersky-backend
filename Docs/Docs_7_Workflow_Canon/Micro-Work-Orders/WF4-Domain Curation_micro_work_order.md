@@ -107,22 +107,17 @@ To perform a bulletproof, fully auditable documentation and artifact audit for t
 
 ### Known Issues
 
-1. **Direct API Call to Internal Endpoint** (Severity: LOW)
+1. **Direct Service Integration** (Severity: RESOLVED)
 
-   - The adapter service makes a direct HTTP call to another internal endpoint.
-   - Jira: SCRSKY-232
-   - Remediation: Consider moving to service-to-service communication pattern.
-
-2. **Hardcoded Internal API URL** (Severity: LOW)
-   - The adapter service has a hardcoded `INTERNAL_API_BASE_URL`.
-   - Jira: SCRSKY-233
-   - Remediation: Move to Layer 5: Configuration settings.
+   - The scheduler now directly calls SitemapAnalyzer instead of making HTTP API calls.
+   - Jira: SCRSKY-232 (Resolved)
+   - Resolution: Replaced adapter service with direct service-to-service communication.
 
 ---
 
 ## Notes for Future Auditors
 
-- The domain_to_sitemap_adapter_service.py makes an HTTP request to another internal endpoint, which is an unusual pattern worth reviewing.
+- The scheduler directly calls SitemapAnalyzer for sitemap analysis rather than using HTTP API calls.
 - This workflow implements the Dual-Status Update Pattern seen in multiple workflows, which should be formalized as an architectural pattern.
 - All timestamps use ISO8601 format with timezone for audit traceability.
 

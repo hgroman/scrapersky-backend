@@ -141,17 +141,17 @@ phases:
           Error Handling: true # try/except with logging
         notes: "Well-structured background job (Layer 4: Services) with proper transaction boundaries"
       - step_id: 5.2
-        file: src/services/domain_to_sitemap_adapter_service.py [NOVEL] # Layer 4: Services
-        action: Submits domain to sitemap analysis API
+        file: src/scraper/sitemap_analyzer.py [SHARED] # Layer 4: Services
+        action: Performs sitemap analysis directly
         principles:
           Bg Task Pattern: true # Called by scheduler (Layer 4: Services)
           Txn Boundary: true # Transaction managed by caller
           ORM Req: true # Proper ORM usage (Layer 1: Models & ENUMs)
           Error Handling: true # Comprehensive error handling
-        notes: "Well-implemented adapter pattern (Layer 4: Services) to legacy sitemap API"
+        notes: "Direct sitemap analysis implementation (Layer 4: Services) using SitemapAnalyzer"
       - step_id: 5.3
         file: src/services/domain_sitemap_submission_scheduler.py [NOVEL] # Layer 4: Services
-        action: Updates domain.sitemap_analysis_status (Layer 1: Models & ENUMs) based on submission result
+        action: Updates domain.sitemap_analysis_status (Layer 1: Models & ENUMs) based on analysis result
         principles:
           ORM Req: true # Proper ORM updates (Layer 1: Models & ENUMs)
           Txn Boundary: true # Per-domain transaction commit
