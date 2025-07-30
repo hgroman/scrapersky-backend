@@ -1,4 +1,18 @@
 """
+🚨 NUCLEAR SHARED SERVICE - Multi-Workflow Background Processor
+==============================================================
+⚠️  SERVES: WF2 (Deep Scans), WF3 (Domain Extraction), WF5 (Sitemap Import)
+⚠️  DELETION BREAKS: 3 workflows simultaneously 
+⚠️  GUARDIAN DOC: WF0_Critical_File_Index.md (SHARED.2)
+⚠️  MODIFICATION REQUIRES: Architecture team review
+
+🔒 DISASTER VULNERABILITY: High - Serves multiple critical workflows
+🔒 PROTECTION LEVEL: NUCLEAR - Changes affect 3 workflow pipelines
+🔒 SPLIT NEEDED: Should be separated into workflow-specific processors
+
+URGENT: This shared processor is a single point of failure for multiple 
+workflows. Needs architectural refactoring to reduce risk.
+
 Sitemap Scheduler Service
 
 This module provides a scheduling service that periodically processes sitemaps

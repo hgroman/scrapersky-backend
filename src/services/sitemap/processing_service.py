@@ -382,7 +382,7 @@ async def process_domain_with_own_session(
     from sqlalchemy import select, update
 
     from ...models.domain import Domain
-    from ...models.sitemap import SitemapFile, SitemapUrl, SitemapFileStatusEnum
+    from ...models.sitemap import SitemapFile, SitemapUrl, SitemapFileStatusEnum, SitemapUrlStatusEnum
     from ...scraper.domain_utils import standardize_domain
     from ...session.async_session import get_background_session
 
@@ -579,7 +579,10 @@ async def process_domain_with_own_session(
                         url_count = sitemap.get("url_count", 0)
                         sitemap_size = sitemap.get("size_bytes", 0)
                         sitemap_urls = sitemap.get("urls", [])
-
+                        logger.info(f"SITEMAP DEBUG: sitemap.get('urls') returned {len(sitemap_urls) if sitemap_urls else 0} URLs for {sitemap_url}")
+                        if sitemap_urls and len(sitemap_urls) > 0:
+                            logger.info(f"SITEMAP DEBUG: First URL data: {sitemap_urls[0] if sitemap_urls else 'None'}")
+                        
                         # Update the total URL count
                         total_url_count += url_count
 
@@ -641,7 +644,7 @@ async def process_domain_with_own_session(
                             batch_size = 100
                             total_urls = len(sitemap_urls)
                             logger.info(
-                                f"Processing {total_urls} URLs in batches of {batch_size}"
+                                f"SITEMAP PROCESSING: Starting to process {total_urls} URLs in batches of {batch_size}"
                             )
 
                             for i in range(0, total_urls, batch_size):
@@ -672,10 +675,13 @@ async def process_domain_with_own_session(
                                             # Create URL record
                                             url_obj = SitemapUrl(
                                                 sitemap_id=sitemap_obj.id,
+                                                domain_id=domain_obj.id,
                                                 url=url_value,
+                                                loc_text=url_value,
                                                 lastmod=lastmod,
                                                 changefreq=changefreq,
-                                                priority=priority,
+                                                priority_value=priority,
+                                                status=SitemapUrlStatusEnum.Pending,
                                                 tenant_id=uuid.UUID(DEFAULT_TENANT_ID),
                                                 created_by=user_uuid,
                                             )
@@ -693,8 +699,8 @@ async def process_domain_with_own_session(
                                         session.add_all(url_batch)
                                         # Flush after each batch for better performance
                                         await session.flush()
-                                        logger.debug(
-                                            f"Added batch of {len(url_batch)} URLs"
+                                        logger.info(
+                                            f"Successfully added batch of {len(url_batch)} URLs to database"
                                         )
 
                                 except Exception as batch_error:
@@ -703,6 +709,10 @@ async def process_domain_with_own_session(
                                     )
                                     # Continue with next batch
                                     continue
+                        else:
+                            logger.warning(
+                                f"SITEMAP PROCESSING: No URLs found in sitemap data for {sitemap_url}"
+                            )
             except Exception as sitemap_error:
                 logger.error(f"Error processing sitemap: {str(sitemap_error)}")
                 # Continue with next sitemap, this one failed

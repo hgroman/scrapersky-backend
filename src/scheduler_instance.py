@@ -1,4 +1,19 @@
 """
+🚨 NUCLEAR SHARED SERVICE - APScheduler Core Engine
+=====================================================
+⚠️  SERVES: ALL WORKFLOWS (WF1-WF7) - Complete background processing
+⚠️  DELETION BREAKS: Entire ScraperSky automation pipeline
+⚠️  GUARDIAN DOC: WF0_Critical_File_Index.md (SHARED.1)
+⚠️  MODIFICATION REQUIRES: System-wide architecture review
+
+🔒 DISASTER HISTORY: Part of June 28, 2025 refactoring disaster
+🔒 PROTECTION LEVEL: NUCLEAR - DO NOT MODIFY without understanding all workflows
+🔒 DEPENDENCIES: WF2 deep scans, WF3 domain extraction, WF4 sitemap submission, 
+                 WF5 sitemap processing, WF6 URL import, domain analysis
+
+CRITICAL: This is the heart of ALL background processing. Deletion or 
+modification will break multiple workflows simultaneously.
+
 Centralized APScheduler Instance
 
 This module initializes and provides a single, shared instance of

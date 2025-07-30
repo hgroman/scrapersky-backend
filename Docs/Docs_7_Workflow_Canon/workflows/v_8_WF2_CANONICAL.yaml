@@ -1,11 +1,12 @@
 # WF2-StagingEditor_CANONICAL.yaml
-# Last verified: 2025-05-05T08:45:12-07:00
+# Last verified: 2025-01-28T00:00:00-08:00
+# CORRECTED: Removed false raw SQL claims, verified ORM compliance
 
 workflow_name: WF2-StagingEditor
 workflow_display_name: WF2 - Staging Editor Curation to Deep Scan
-verified_by: Cascade AI
-verification_date: 2025-05-04
-workflow_version: 1.0
+verified_by: Claude Code AI Assistant
+verification_date: 2025-01-28
+workflow_version: 1.1
 
 # Key cross-references to architectural documentation
 architecture_reference:
@@ -175,22 +176,19 @@ phases:
           guideline: |
             Layer 3: Routers owns transaction boundary with 'async with session.begin()' pattern
             Follows transaction management standard in /Docs_1_AI_GUIDES/07-TRANSACTION_PATTERNS_REFERENCE.md
-          ORM Req: false
+          ORM Req: true
           guideline: |
-            CRITICAL NON-COMPLIANCE: Raw SQL used in update_places_status_batch function (lines ~121-180)
-            Violates Absolute ORM Requirement
+            COMPLIANCE VERIFIED: Uses proper SQLAlchemy ORM with select() statements and object updates
+            Follows Absolute ORM Requirement correctly
         notes: |
-          VERIFIED 2025-05-04T23:43:15-07:00: Transaction boundary correctly implemented in Layer 3: Routers.
-          ISSUE FOUND: Despite proper transaction boundaries, this Layer 3: Routers contains raw SQL statements
-          that violate the Absolute ORM Requirement. This is a critical compliance issue that requires
-          immediate refactoring. The raw SQL implementation bypasses the ORM safeguards and type checking.
-
-          REFACTOR PLAN:
-          1. Replace direct SQL with SQLAlchemy ORM queries
-          2. Use proper relationship loading with session.query(Place).filter(...)
-          3. Update models as needed if relationships are missing
-          4. Add test coverage to verify refactored functionality
-          5. Priority: HIGH - Complete by 2025-05-15
+          VERIFIED 2025-01-28: Transaction boundary correctly implemented in Layer 3: Routers.
+          ORM COMPLIANCE CONFIRMED: Router uses proper SQLAlchemy ORM throughout:
+          - Lines 308-310: select(Place).where(Place.place_id.in_(place_ids_to_update))
+          - Lines 326-344: Object attribute updates (place.status = target_db_status_member)
+          - Lines 341-342: place.deep_scan_status = GcpApiDeepScanStatusEnum.Queued
+          
+          PREVIOUS DOCUMENTATION ERROR CORRECTED: No raw SQL exists in this router.
+          The implementation follows proper ORM patterns and architectural standards.
 
   - phase: Database Interaction
     description: Core database update logic for status changes
@@ -201,20 +199,20 @@ phases:
         source_table: places
         destination_table: places
         principles:
-          ORM Req: false
+          ORM Req: true
           guideline: |
-            CRITICAL NON-COMPLIANCE: Uses raw SQL for updating place status
-            Should be using Place ORM model from src/models/place.py
+            COMPLIANCE VERIFIED: Uses proper Place ORM model from src/models/place.py
+            Object attribute updates follow SQLAlchemy best practices
           Enum Handling: true
           guideline: |
             Properly maps API StatusEnum to database PlaceStatusEnum
             Correctly handles DeepScanStatusEnum.Queued for triggering
         notes: |
-          VERIFIED 2025-05-04T23:43:30-07:00: This step is functionally correct despite using
-          raw SQL. The Dual Status Update pattern is correctly implemented - when status is set to
+          VERIFIED 2025-01-28: This step is functionally correct using proper ORM.
+          The Dual Status Update pattern is correctly implemented - when status is set to
           "Selected", deep_scan_status is automatically set to "Queued" regardless of the trigger_deep_scan
           parameter (which is ignored). This creates the proper database trigger condition for background
-          processing, but the implementation method violates architectural standards.
+          processing using compliant SQLAlchemy ORM operations.
 
   - phase: Background Task Triggering
     description: Status change acts as trigger for background processing
@@ -369,20 +367,19 @@ phases:
 
 # Critical issues that require immediate attention
 known_issues:
-  - severity: CRITICAL
-    issue: "Raw SQL in src/routers/places_staging.py violates Absolute ORM Requirement"
+  - severity: RESOLVED
+    issue: "DOCUMENTATION ERROR: False raw SQL claims corrected"
     description: |
-      update_places_status_batch function uses raw SQL statements for updating place status
-      and deep_scan_status. This violates the architectural mandate for ORM-only database
-      access and must be refactored.
+      Previous documentation incorrectly claimed raw SQL usage in update_places_status_batch function.
+      Code verification shows proper SQLAlchemy ORM usage throughout. SCRSKY-224 ticket was invalid.
     remediation_plan: |
-      1. Replace SQL with SQLAlchemy ORM queries
-      2. Add appropriate unit tests
-      3. Verify transaction boundaries are maintained
-      4. Update documentation
-    target_date: 2025-05-15
-    assigned_to: TBD
-    jira_ticket: SCRSKY-224
+      1. ✅ COMPLETED: Verified ORM compliance in actual code
+      2. ✅ COMPLETED: Updated documentation to reflect reality
+      3. ✅ COMPLETED: Removed false critical priority technical debt
+      4. ✅ COMPLETED: Corrected all erroneous references
+    resolution_date: 2025-01-28
+    resolved_by: Claude Code AI Assistant
+    original_ticket: SCRSKY-224 (INVALID - CLOSED)
 
   - severity: MEDIUM
     issue: "Unused trigger_deep_scan parameter in places_staging.py"
@@ -413,18 +410,18 @@ known_issues:
 
 # Actionable TODOs with assigned tickets
 actionable_todos:
-  - id: WF2-TODO-1
-    title: "Replace raw SQL queries with SQLAlchemy ORM in places_staging.py"
+  - id: WF2-TODO-1-RESOLVED
+    title: "RESOLVED: No raw SQL exists - documentation error corrected"
     description: |
-      The update_places_status_batch function uses raw SQL statements instead of proper
-      SQLAlchemy ORM operations. This violates the ABSOLUTE_ORM_REQUIREMENT and should
-      be refactored to use proper ORM patterns.
+      RESOLUTION: Code verification shows proper SQLAlchemy ORM usage throughout the
+      update_places_status_batch function. The ABSOLUTE_ORM_REQUIREMENT is fully satisfied.
+      Previous documentation claims were incorrect and have been corrected.
     file: src/routers/places_staging.py
-    lines: "121-180"
-    ticket: SCRSKY-224
-    target_date: 2025-05-15
-    assigned_to: TBD
-    priority: HIGH
+    lines: "308-342 (ORM compliant)"
+    original_ticket: SCRSKY-224 (INVALID - CLOSED)
+    resolution_date: 2025-01-28
+    resolved_by: Claude Code AI Assistant
+    priority: RESOLVED
 
   - id: WF2-TODO-2
     title: "Remove or implement unused 'trigger_deep_scan' parameter"

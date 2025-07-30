@@ -1,4 +1,19 @@
 """
+🚨 CRITICAL WF4 COMPONENT - Domain Sitemap Submission Scheduler
+==============================================================
+⚠️  SERVES: WF4 Domain Curation (Background Processing)
+⚠️  DELETION BREAKS: Domain → Sitemap analysis pipeline
+⚠️  GUARDIAN DOC: WF4_Domain_Curation_Guardian_v3.md
+⚠️  MODIFICATION REQUIRES: Understanding of WF4 adapter architecture
+
+🔒 DISASTER HISTORY: Broken June 28, 2025 - Fixed to use DomainToSitemapAdapterService
+🔒 PROTECTION LEVEL: CRITICAL - Core WF4 background processing
+🔒 BUSINESS LOGIC: Polls domains with sitemap_analysis_status='queued'
+🔒 CALLS: DomainToSitemapAdapterService.submit_domain_to_legacy_sitemap()
+
+NEVER MODIFY: Part of emergency WF4 restoration. Uses proper adapter service
+instead of broken email scraping that was incorrectly substituted.
+
 CORRECTED Domain Sitemap Submission Scheduler Service
 
 This module fixes the critical disconnection where Tab 4 (Domain Curation) was
@@ -11,7 +26,6 @@ FIXED CORRECT FLOW:
 Tab 4 → domain_sitemap_submission_scheduler.py → SitemapAnalyzer → analyze_domain_sitemaps() → SITEMAP DISCOVERY
 """
 
-import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -19,12 +33,10 @@ from typing import List
 
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
 from src.config.settings import settings
 from src.models.domain import Domain, SitemapAnalysisStatusEnum
-from src.models import TaskStatus
-from src.scraper.sitemap_analyzer import SitemapAnalyzer
+from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
 from src.session.async_session import get_background_session
 from src.scheduler_instance import scheduler
 
@@ -51,7 +63,7 @@ async def process_pending_domain_sitemap_submissions():
     domains_failed = 0
     stale_threshold_minutes = 15
 
-    sitemap_analyzer = SitemapAnalyzer()
+    adapter_service = DomainToSitemapAdapterService()
     domain_ids_to_process: List[uuid.UUID] = []
 
     # Step 1: Fetch domains that need sitemap analysis
@@ -100,48 +112,32 @@ async def process_pending_domain_sitemap_submissions():
                     await session_inner.flush()
                     logger.info(f"🔄 Processing sitemap analysis for domain {domain_id}")
 
-                    # PERFORM REAL SITEMAP ANALYSIS (NOT EMAIL SCRAPING!)
+                    # Call the adapter service to submit to proper sitemap processing
                     domains_processed += 1
-                    domain_url = getattr(locked_domain, 'domain', None)
+                    submitted_ok = await adapter_service.submit_domain_to_legacy_sitemap(
+                        domain_id=locked_domain.id,
+                        session=session_inner,
+                    )
 
-                    if not domain_url:
-                        logger.error(f"❌ Domain {domain_id} has no URL")
+                    # Check adapter result
+                    current_status_after_adapter = getattr(locked_domain, "sitemap_analysis_status", None)
+                    if current_status_after_adapter not in [
+                        SitemapAnalysisStatusEnum.submitted,
+                        SitemapAnalysisStatusEnum.Completed,
+                        SitemapAnalysisStatusEnum.failed,
+                        SitemapAnalysisStatusEnum.Error,
+                    ]:
+                        logger.error(f"Adapter failed to update status for domain {domain_id}! Current status: {locked_domain.sitemap_analysis_status}. Forcing 'failed'.")
                         setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.failed)
-                        setattr(locked_domain, 'sitemap_analysis_error', "No domain URL available")
+                        setattr(locked_domain, 'sitemap_analysis_error', "Adapter did not set final status")
+                        await session_inner.flush()
                         domains_failed += 1
-                        continue
-
-                    try:
-                        # THIS IS THE CORRECT CODE: Use SitemapAnalyzer for sitemap discovery
-                        logger.info(f"🔍 Analyzing sitemaps for: {domain_url}")
-                        sitemap_results = await sitemap_analyzer.analyze_domain_sitemaps(str(domain_url))
-
-                        if sitemap_results and not sitemap_results.get('error'):
-                            # Successfully found sitemaps!
-                            sitemaps_found = len(sitemap_results.get('sitemaps', []))
-                            total_urls_found = sitemap_results.get('total_urls', 0)
-
-                            # Mark as successfully processed
-                            setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.submitted)
-                            setattr(locked_domain, 'sitemap_analysis_error', None)
-
-                            logger.info(f"✅ SUCCESS: Found {sitemaps_found} sitemaps with {total_urls_found} URLs for {domain_url}")
-                            domains_submitted_successfully += 1
-
-                        else:
-                            # Handle analysis failure
-                            error_msg = sitemap_results.get('error', 'Unknown sitemap analysis error') if sitemap_results else 'Sitemap analysis returned None'
-                            logger.error(f"❌ Sitemap analysis failed for {domain_url}: {error_msg}")
-                            setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.failed)
-                            setattr(locked_domain, 'sitemap_analysis_error', error_msg[:1024])
-                            domains_failed += 1
-
-                    except Exception as analysis_error:
-                        error_msg = str(analysis_error)
-                        logger.error(f"💥 Exception during sitemap analysis for {domain_url}: {error_msg}", exc_info=True)
-                        setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.failed)
-                        setattr(locked_domain, 'sitemap_analysis_error', error_msg[:1024])
+                    elif submitted_ok:
+                        domains_submitted_successfully += 1
+                        logger.info(f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter.")
+                    else:
                         domains_failed += 1
+                        logger.warning(f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter. Error: {getattr(locked_domain, 'sitemap_analysis_error', 'N/A')}")
 
         except Exception as domain_error:
             logger.error(f"💥 Error processing domain {domain_id}: {domain_error}", exc_info=True)
@@ -156,31 +152,31 @@ async def process_pending_domain_sitemap_submissions():
 
 
 def setup_domain_sitemap_submission_scheduler():
-    """Setup the CORRECTED domain sitemap analysis scheduler."""
+    """Setup the domain sitemap submission scheduler using the restored adapter service."""
     try:
         job_id = "process_pending_domain_sitemap_submissions"
         interval_minutes = 1  # Check every minute
 
-        logger.info(f"🔧 Setting up CORRECTED sitemap scheduler (runs every {interval_minutes} minute)")
+        logger.info(f"🔧 Setting up domain sitemap submission scheduler (runs every {interval_minutes} minute)")
 
-        # Remove broken job if exists
+        # Remove existing job if exists
         if scheduler.get_job(job_id):
             scheduler.remove_job(job_id)
-            logger.info(f"🗑️  Removed old broken job '{job_id}'")
+            logger.info(f"🗑️  Removed existing job '{job_id}'")
 
-        # Add corrected job
+        # Add the job
         scheduler.add_job(
             process_pending_domain_sitemap_submissions,
             trigger=IntervalTrigger(minutes=interval_minutes),
             id=job_id,
-            name="CORRECTED Domain Sitemap Analysis",
+            name="Domain Sitemap Submission Scheduler",
             replace_existing=True,
             max_instances=1,
             coalesce=True,
             misfire_grace_time=60,
         )
 
-        logger.info(f"✅ Added CORRECTED job '{job_id}' - now uses SitemapAnalyzer instead of email scraping!")
+        logger.info(f"✅ Added job '{job_id}' - uses DomainToSitemapAdapterService for proper storage")
 
     except Exception as e:
-        logger.error(f"💥 Error setting up corrected sitemap scheduler: {e}", exc_info=True)
+        logger.error(f"💥 Error setting up domain sitemap submission scheduler: {e}", exc_info=True)

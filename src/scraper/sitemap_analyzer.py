@@ -1067,6 +1067,7 @@ class SitemapAnalyzer:
                     {
                         "sitemap_type": parsed.get("sitemap_type"),
                         "url_count": parsed.get("url_count", 0),
+                        "urls": parsed.get("urls", []),  # FIX: Add URLs to individual sitemap
                         "has_lastmod": parsed.get("has_lastmod", False),
                         "has_priority": parsed.get("has_priority", False),
                         "has_changefreq": parsed.get("has_changefreq", False),
