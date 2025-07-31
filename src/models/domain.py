@@ -53,11 +53,11 @@ class SitemapAnalysisStatusEnum(enum.Enum):
     """Status values mapped to SitemapAnalysisStatusEnum in database (MUST MATCH DB DEFINITION)"""
 
     # Values MUST match database exactly (lowercase)
-    pending = "pending"      # Initial state when domain is created/reset
-    queued = "queued"        # Scheduler picked it up, waiting for adapter
+    pending = "pending"  # Initial state when domain is created/reset
+    queued = "queued"  # Scheduler picked it up, waiting for adapter
     processing = "processing"  # Adapter sent to API
-    submitted = "submitted"   # API accepted (202)
-    failed = "failed"        # Adapter or API call failed
+    submitted = "submitted"  # API accepted (202)
+    failed = "failed"  # Adapter or API call failed
 
 
 class Domain(Base, BaseModel):
@@ -201,7 +201,9 @@ class Domain(Base, BaseModel):
 
     # --- HubSpot sync workflow fields --- #
     hubspot_sync_status = Column(
-        SQLAlchemyEnum(HubSpotSyncStatus, name="hubspot_sync_status", create_type=False),
+        SQLAlchemyEnum(
+            HubSpotSyncStatus, name="hubspot_sync_status", create_type=False
+        ),
         nullable=False,
         default=HubSpotSyncStatus.New,
         server_default="New",
@@ -210,7 +212,9 @@ class Domain(Base, BaseModel):
 
     hubspot_processing_status = Column(
         SQLAlchemyEnum(
-            HubSpotProcessingStatus, name="hubspot_sync_processing_status", create_type=False
+            HubSpotProcessingStatus,
+            name="hubspot_sync_processing_status",
+            create_type=False,
         ),
         nullable=True,
         index=True,

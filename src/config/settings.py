@@ -52,7 +52,9 @@ class Settings(BaseSettings):
 
     # Sitemap Scheduler settings
     # How often the scheduler runs (in minutes)
-    SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = 1  # Fixed: Changed from 5 to 1 minute to match other schedulers
+    SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = (
+        1  # Fixed: Changed from 5 to 1 minute to match other schedulers
+    )
     # Number of sitemaps processed in each batch
     SITEMAP_SCHEDULER_BATCH_SIZE: int = 25  # Increased from 5 to 25
     # Maximum concurrent instances of the scheduler
@@ -180,9 +182,9 @@ class Settings(BaseSettings):
         if self.environment == "production":
             assert self.supabase_url, "SUPABASE_URL is required in production"
             assert self.supabase_anon_key, "SUPABASE_ANON_KEY is required in production"
-            assert (
-                self.supabase_service_role_key
-            ), "SUPABASE_SERVICE_ROLE_KEY is required in production"
+            assert self.supabase_service_role_key, (
+                "SUPABASE_SERVICE_ROLE_KEY is required in production"
+            )
 
         # Log warning if database credentials aren't set
         if (

@@ -26,7 +26,7 @@ import yaml
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,12 @@ logger = logging.getLogger(__name__)
 DB_HOST = os.getenv("SUPABASE_DB_HOST", "aws-0-us-west-1.pooler.supabase.com")
 DB_PORT = os.getenv("SUPABASE_DB_PORT", "6543")
 DB_NAME = os.getenv("SUPABASE_DB_NAME", "postgres")
-DB_USER = os.getenv("SUPABASE_DB_USER", "postgres.ddfldwzhdhhzhxywqnyz")  # Format: postgres.[project-ref]
-DB_PASSWORD = os.getenv("SUPABASE_DB_PASSWORD", "")  # Set in environment variable for security
+DB_USER = os.getenv(
+    "SUPABASE_DB_USER", "postgres.ddfldwzhdhhzhxywqnyz"
+)  # Format: postgres.[project-ref]
+DB_PASSWORD = os.getenv(
+    "SUPABASE_DB_PASSWORD", ""
+)  # Set in environment variable for security
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -58,8 +62,8 @@ async def get_database_files() -> List[Dict]:
             server_settings={
                 "raw_sql": "true",
                 "no_prepare": "true",
-                "statement_cache_size": "0"
-            }
+                "statement_cache_size": "0",
+            },
         )
 
         logger.info("Connected to database successfully")
@@ -111,7 +115,9 @@ def get_filesystem_files() -> List[str]:
     return sorted(python_files)
 
 
-def detect_orphans_and_phantoms(db_files: List[Dict], fs_files: List[str]) -> Tuple[List[str], List[Dict]]:
+def detect_orphans_and_phantoms(
+    db_files: List[Dict], fs_files: List[str]
+) -> Tuple[List[str], List[Dict]]:
     """
     Compare database records with filesystem files to identify orphans and phantoms.
 
@@ -123,7 +129,7 @@ def detect_orphans_and_phantoms(db_files: List[Dict], fs_files: List[str]) -> Tu
         Tuple of (orphaned_files, phantom_files)
     """
     # Extract file paths from database records
-    db_file_paths = {file['file_path'] for file in db_files}
+    db_file_paths = {file["file_path"] for file in db_files}
 
     # Convert filesystem paths to the same format as database paths
     fs_file_paths = set(fs_files)
@@ -132,12 +138,14 @@ def detect_orphans_and_phantoms(db_files: List[Dict], fs_files: List[str]) -> Tu
     orphans = sorted(list(fs_file_paths - db_file_paths))
 
     # Find phantoms (in database but not in filesystem)
-    phantoms = [file for file in db_files if file['file_path'] not in fs_file_paths]
+    phantoms = [file for file in db_files if file["file_path"] not in fs_file_paths]
 
     return orphans, phantoms
 
 
-def export_to_yaml(db_files: List[Dict], orphans: List[str], phantoms: List[Dict]) -> None:
+def export_to_yaml(
+    db_files: List[Dict], orphans: List[str], phantoms: List[Dict]
+) -> None:
     """Export data to YAML files for version control."""
     # Create reports directory if it doesn't exist
     REPORTS_DIR.mkdir(exist_ok=True)
@@ -153,7 +161,7 @@ def export_to_yaml(db_files: List[Dict], orphans: List[str], phantoms: List[Dict
         "total_orphans": len(orphans),
         "total_phantoms": len(phantoms),
         "orphans": orphans,
-        "phantoms": [file['file_path'] for file in phantoms]
+        "phantoms": [file["file_path"] for file in phantoms],
     }
 
     with open(REPORTS_DIR / "orphan_phantom_report.yaml", "w") as f:
@@ -164,8 +172,12 @@ def export_to_yaml(db_files: List[Dict], orphans: List[str], phantoms: List[Dict
 
 async def main():
     """Main function to run the file discovery and orphan detection."""
-    parser = argparse.ArgumentParser(description="File discovery and orphan detection tool")
-    parser.add_argument("--export-yaml", action="store_true", help="Export results to YAML files")
+    parser = argparse.ArgumentParser(
+        description="File discovery and orphan detection tool"
+    )
+    parser.add_argument(
+        "--export-yaml", action="store_true", help="Export results to YAML files"
+    )
     args = parser.parse_args()
 
     logger.info("Starting file discovery and orphan detection...")
@@ -188,7 +200,9 @@ async def main():
     if phantoms:
         logger.warning(f"Found {len(phantoms)} phantom files:")
         for phantom in phantoms:
-            logger.warning(f"  - {phantom['file_path']} (File ID: {phantom['file_number']})")
+            logger.warning(
+                f"  - {phantom['file_path']} (File ID: {phantom['file_number']})"
+            )
     else:
         logger.info("No phantom files found. Database is in sync with the filesystem!")
 

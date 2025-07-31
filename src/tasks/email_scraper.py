@@ -252,6 +252,7 @@ async def process_url(
         )
         raise
 
+
 async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.UUID):
     """Crawl a website and scan for emails, updating the Job record."""
     logger.info(
@@ -317,10 +318,10 @@ async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.U
             await session.commit()  # Commit RUNNING status
 
             # 4. Perform the crawl and scrape
-            domain_name = getattr(domain_obj, 'domain', '')
+            domain_name = getattr(domain_obj, "domain", "")
 
             # Handle domains that already have protocol prefix
-            if domain_name.startswith(('http://', 'https://')):
+            if domain_name.startswith(("http://", "https://")):
                 start_url = domain_name
             else:
                 start_url = f"https://{domain_name}"
@@ -363,7 +364,9 @@ async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.U
 
             # Fetch all unique contacts associated with this job_id
             contact_stmt = (
-                select(Contact.email).where(Contact.source_job_id == job_uuid).distinct()
+                select(Contact.email)
+                .where(Contact.source_job_id == job_uuid)
+                .distinct()
             )
             contact_result = await session.execute(contact_stmt)
             final_emails = [row.email for row in contact_result.all()]
@@ -376,7 +379,9 @@ async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.U
                 .values(
                     status=final_status.value,
                     progress=1.0,
-                    error="" if final_status == TaskStatus.COMPLETE else "Task completed with errors",
+                    error=""
+                    if final_status == TaskStatus.COMPLETE
+                    else "Task completed with errors",
                     result_data=result_data,
                 )
             )
@@ -398,7 +403,9 @@ async def scan_website_for_emails(job_id: Union[int, uuid.UUID], user_id: uuid.U
                         .where(Job.id == job.id)
                         .values(
                             status=final_status.value,
-                            error=error_message[:1024] if error_message else "Unknown error occurred",
+                            error=error_message[:1024]
+                            if error_message
+                            else "Unknown error occurred",
                         )
                     )
                     await session.commit()

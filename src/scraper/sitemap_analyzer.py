@@ -1027,7 +1027,7 @@ class SitemapAnalyzer:
         # Critical debug logging for each sitemap
         for i, sitemap in enumerate(sitemaps):
             logger.info(
-                f"SITEMAP DEBUG: Sitemap #{i+1}: URL={sitemap.get('url')}, method={sitemap.get('discovery_method')}"
+                f"SITEMAP DEBUG: Sitemap #{i + 1}: URL={sitemap.get('url')}, method={sitemap.get('discovery_method')}"
             )
 
         result = {
@@ -1067,7 +1067,9 @@ class SitemapAnalyzer:
                     {
                         "sitemap_type": parsed.get("sitemap_type"),
                         "url_count": parsed.get("url_count", 0),
-                        "urls": parsed.get("urls", []),  # FIX: Add URLs to individual sitemap
+                        "urls": parsed.get(
+                            "urls", []
+                        ),  # FIX: Add URLs to individual sitemap
                         "has_lastmod": parsed.get("has_lastmod", False),
                         "has_priority": parsed.get("has_priority", False),
                         "has_changefreq": parsed.get("has_changefreq", False),

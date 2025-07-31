@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ if DATABASE_URL and "postgresql+asyncpg://" in DATABASE_URL:
 if not DATABASE_URL:
     logger.error("DATABASE_URL environment variable not set.")
     sys.exit(1)
+
 
 class OrphanDetector:
     def __init__(self, conn):
@@ -56,19 +57,26 @@ class OrphanDetector:
                 print("-" * len(header))
                 for orphan in orphans:
                     # Ensure title is not excessively long for display
-                    title_display = (orphan['title'][:35] + '...') if orphan['title'] and len(orphan['title']) > 38 else orphan['title']
+                    title_display = (
+                        (orphan["title"][:35] + "...")
+                        if orphan["title"] and len(orphan["title"]) > 38
+                        else orphan["title"]
+                    )
                     print(f"{orphan['id']:<12} | {title_display:<35}")
                 print("\n")
             else:
                 logger.info("No orphaned entries found in project_docs.")
-            
+
             return orphans
         except Exception as e:
             logger.error(f"An error occurred while detecting orphans: {e}")
             return []
 
+
 async def main():
-    parser = argparse.ArgumentParser(description="Detects orphaned entries in the vector database (project_docs).")
+    parser = argparse.ArgumentParser(
+        description="Detects orphaned entries in the vector database (project_docs)."
+    )
     # No arguments needed for detection itself, but parser is good for consistency
     args = parser.parse_args()
 
@@ -82,6 +90,7 @@ async def main():
     finally:
         if conn:
             await conn.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

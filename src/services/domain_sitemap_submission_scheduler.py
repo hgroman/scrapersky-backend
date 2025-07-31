@@ -71,7 +71,9 @@ async def process_pending_domain_sitemap_submissions():
         async with get_background_session() as session_fetch:
             stmt_fetch = (
                 select(Domain.id)
-                .where(Domain.sitemap_analysis_status == SitemapAnalysisStatusEnum.queued)
+                .where(
+                    Domain.sitemap_analysis_status == SitemapAnalysisStatusEnum.queued
+                )
                 .order_by(Domain.updated_at.asc())
                 .limit(10)
             )
@@ -86,7 +88,10 @@ async def process_pending_domain_sitemap_submissions():
             return
 
     except Exception as fetch_error:
-        logger.error(f"❌ Error fetching domains for sitemap analysis: {fetch_error}", exc_info=True)
+        logger.error(
+            f"❌ Error fetching domains for sitemap analysis: {fetch_error}",
+            exc_info=True,
+        )
         return
 
     # Step 2: Process each domain with real sitemap analysis
@@ -108,46 +113,74 @@ async def process_pending_domain_sitemap_submissions():
                         continue
 
                     # Update status to processing
-                    setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.processing)
+                    setattr(
+                        locked_domain,
+                        "sitemap_analysis_status",
+                        SitemapAnalysisStatusEnum.processing,
+                    )
                     await session_inner.flush()
-                    logger.info(f"🔄 Processing sitemap analysis for domain {domain_id}")
+                    logger.info(
+                        f"🔄 Processing sitemap analysis for domain {domain_id}"
+                    )
 
                     # Call the adapter service to submit to proper sitemap processing
                     domains_processed += 1
-                    submitted_ok = await adapter_service.submit_domain_to_legacy_sitemap(
-                        domain_id=locked_domain.id,
-                        session=session_inner,
+                    submitted_ok = (
+                        await adapter_service.submit_domain_to_legacy_sitemap(
+                            domain_id=locked_domain.id,
+                            session=session_inner,
+                        )
                     )
 
                     # Check adapter result
-                    current_status_after_adapter = getattr(locked_domain, "sitemap_analysis_status", None)
+                    current_status_after_adapter = getattr(
+                        locked_domain, "sitemap_analysis_status", None
+                    )
                     if current_status_after_adapter not in [
                         SitemapAnalysisStatusEnum.submitted,
                         SitemapAnalysisStatusEnum.Completed,
                         SitemapAnalysisStatusEnum.failed,
                         SitemapAnalysisStatusEnum.Error,
                     ]:
-                        logger.error(f"Adapter failed to update status for domain {domain_id}! Current status: {locked_domain.sitemap_analysis_status}. Forcing 'failed'.")
-                        setattr(locked_domain, 'sitemap_analysis_status', SitemapAnalysisStatusEnum.failed)
-                        setattr(locked_domain, 'sitemap_analysis_error', "Adapter did not set final status")
+                        logger.error(
+                            f"Adapter failed to update status for domain {domain_id}! Current status: {locked_domain.sitemap_analysis_status}. Forcing 'failed'."
+                        )
+                        setattr(
+                            locked_domain,
+                            "sitemap_analysis_status",
+                            SitemapAnalysisStatusEnum.failed,
+                        )
+                        setattr(
+                            locked_domain,
+                            "sitemap_analysis_error",
+                            "Adapter did not set final status",
+                        )
                         await session_inner.flush()
                         domains_failed += 1
                     elif submitted_ok:
                         domains_submitted_successfully += 1
-                        logger.info(f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter.")
+                        logger.info(
+                            f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter."
+                        )
                     else:
                         domains_failed += 1
-                        logger.warning(f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter. Error: {getattr(locked_domain, 'sitemap_analysis_error', 'N/A')}")
+                        logger.warning(
+                            f"Domain {domain_id} marked as '{current_status_after_adapter}' by adapter. Error: {getattr(locked_domain, 'sitemap_analysis_error', 'N/A')}"
+                        )
 
         except Exception as domain_error:
-            logger.error(f"💥 Error processing domain {domain_id}: {domain_error}", exc_info=True)
+            logger.error(
+                f"💥 Error processing domain {domain_id}: {domain_error}", exc_info=True
+            )
             domains_failed += 1
 
     # Summary
     batch_duration = (datetime.now(timezone.utc) - batch_start).total_seconds()
     logger.info(f"🏁 Sitemap analysis batch {batch_uuid} complete:")
     logger.info(f"   📊 Found: {domains_found} | Processed: {domains_processed}")
-    logger.info(f"   ✅ Success: {domains_submitted_successfully} | ❌ Failed: {domains_failed}")
+    logger.info(
+        f"   ✅ Success: {domains_submitted_successfully} | ❌ Failed: {domains_failed}"
+    )
     logger.info(f"   ⏱️  Duration: {batch_duration:.2f}s")
 
 
@@ -157,7 +190,9 @@ def setup_domain_sitemap_submission_scheduler():
         job_id = "process_pending_domain_sitemap_submissions"
         interval_minutes = 1  # Check every minute
 
-        logger.info(f"🔧 Setting up domain sitemap submission scheduler (runs every {interval_minutes} minute)")
+        logger.info(
+            f"🔧 Setting up domain sitemap submission scheduler (runs every {interval_minutes} minute)"
+        )
 
         # Remove existing job if exists
         if scheduler.get_job(job_id):
@@ -176,7 +211,12 @@ def setup_domain_sitemap_submission_scheduler():
             misfire_grace_time=60,
         )
 
-        logger.info(f"✅ Added job '{job_id}' - uses DomainToSitemapAdapterService for proper storage")
+        logger.info(
+            f"✅ Added job '{job_id}' - uses DomainToSitemapAdapterService for proper storage"
+        )
 
     except Exception as e:
-        logger.error(f"💥 Error setting up domain sitemap submission scheduler: {e}", exc_info=True)
+        logger.error(
+            f"💥 Error setting up domain sitemap submission scheduler: {e}",
+            exc_info=True,
+        )

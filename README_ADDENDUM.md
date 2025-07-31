@@ -21,6 +21,7 @@
 | Deployment (Render)    | [Deployment](#deployment)     |
 | DART MCP Integration   | [DART MCP Integration](#dart-mcp-integration) |
 | Vector DB & Semantic Search | [Vector Database & Semantic Search](#vector-database--semantic-search) |
+| Debug Tools & Development Infrastructure | [Debug Tools](#debug-tools--development-infrastructure) |
 | Architecture diagram   | [Architecture](#architecture) |
 
 ## Docker
@@ -188,6 +189,46 @@ Render blueprint lives at `render.yaml`.
 ```bash
 render deploy
 ```
+
+## Debug Tools & Development Infrastructure
+
+**Layer 5 Configuration & Tooling**: Comprehensive debugging system with zero production overhead.
+
+### Components
+- **Runtime File Tracer** (`src/debug_tools/runtime_tracer.py`): Real-time Python file import tracking using `sys.settrace()`
+- **Debug Middleware** (`src/debug_tools/middleware.py`): HTTP request/response logging
+- **Debug Routes** (`src/debug_tools/routes.py`): Introspection endpoints
+- **Conditional Loading** (`src/debug_tools/__init__.py`): Environment-controlled activation
+
+### Usage
+
+**Enable Debug Mode:**
+```bash
+export FASTAPI_DEBUG_MODE=true
+python run_server.py
+```
+
+**Production Mode (Default):**
+```bash
+export FASTAPI_DEBUG_MODE=false  # or unset
+python run_server.py
+```
+
+### Debug Endpoints
+- `/debug/routes` - Complete FastAPI route introspection
+- `/debug/loaded-src-files` - Real-time file tracking (Docker: `/app/src/*.py`)
+
+### Implementation Details
+- **Zero Production Cost**: Debug code only loads when `FASTAPI_DEBUG_MODE=true`
+- **Thread-Safe**: File tracking uses proper locking mechanisms
+- **Docker Aware**: Filters for `/app/src/*.py` patterns in containerized environments
+- **Uvicorn Integration**: Automatically disables reload when debug mode is active
+
+### Documentation
+Complete restoration procedures, architecture details, and troubleshooting guide:
+[`Docs/Docs_30_Debug_Tools/debug_tools_comprehensive_guide.md`](Docs/Docs_30_Debug_Tools/debug_tools_comprehensive_guide.md)
+
+---
 
 ## Architecture
 

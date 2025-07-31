@@ -31,7 +31,9 @@ ALGORITHM = "HS256"  # As per Supabase default
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "30"))
 
 # Log the configuration on startup to aid debugging
-logger.info(f"JWT Auth Initialized. Algorithm: {ALGORITHM}, Secret Key Hint: '{SECRET_KEY[:8]}...'.")
+logger.info(
+    f"JWT Auth Initialized. Algorithm: {ALGORITHM}, Secret Key Hint: '{SECRET_KEY[:8]}...'."
+)
 
 # Default tenant for development/testing
 DEFAULT_TENANT_ID = os.getenv(
@@ -65,7 +67,9 @@ def decode_token(token: str) -> Dict[str, Any]:
     Decode and validate a JWT token.
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], audience="authenticated")
+        payload = jwt.decode(
+            token, SECRET_KEY, algorithms=[ALGORITHM], audience="authenticated"
+        )
         return payload
     except JWTError as e:
         logger.error(f"JWT decode error: {str(e)}")
@@ -88,7 +92,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     # This block provides a bypass for JWT validation in development environments.
     # It uses a hardcoded token ('scraper_sky_2024') and should NEVER be enabled in staging or production.
     # The primary purpose is to allow backend testing without a live frontend session.
-    if token == "scraper_sky_2024" and settings.environment.lower() in ["development", "dev"]:
+    if token == "scraper_sky_2024" and settings.environment.lower() in [
+        "development",
+        "dev",
+    ]:
         logger.info("Using development token for authentication")
 
         # --- DEVELOPMENT TOKEN USER ID CHANGE (2025-04-11) ---

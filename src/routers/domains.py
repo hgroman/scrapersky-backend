@@ -126,7 +126,7 @@ async def list_domains(
     # Correctly build the count query by applying filters individually
     count_query = select(func.count(Domain.id)).select_from(Domain)
     if filters:
-        count_query = count_query.where(*filters) # Apply filters correctly here too
+        count_query = count_query.where(*filters)  # Apply filters correctly here too
 
     count_result = await session.execute(count_query)
     total = count_result.scalar_one()

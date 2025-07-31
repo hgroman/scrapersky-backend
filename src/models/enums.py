@@ -10,6 +10,7 @@ from enum import Enum
 
 class ContactEmailTypeEnum(str, Enum):
     """Status values mapped to contact_email_type_enum in database"""
+
     SERVICE = "SERVICE"
     CORPORATE = "CORPORATE"
     FREE = "FREE"
@@ -18,6 +19,7 @@ class ContactEmailTypeEnum(str, Enum):
 
 class ContactCurationStatus(str, Enum):
     """Status values for contact curation workflow"""
+
     New = "New"
     Queued = "Queued"
     Processing = "Processing"
@@ -28,6 +30,7 @@ class ContactCurationStatus(str, Enum):
 
 class ContactProcessingStatus(str, Enum):
     """Status values for contact processing workflow"""
+
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
@@ -36,14 +39,16 @@ class ContactProcessingStatus(str, Enum):
 
 class DomainStatusEnum(str, Enum):
     """Status values for domain processing workflow"""
-    pending = "pending"      # Ready for metadata extraction
+
+    pending = "pending"  # Ready for metadata extraction
     processing = "processing"  # Metadata extraction in progress
-    completed = "completed"   # Metadata extraction successful
-    error = "error"          # Metadata extraction failed
+    completed = "completed"  # Metadata extraction successful
+    error = "error"  # Metadata extraction failed
 
 
 class HubSpotSyncStatus(str, Enum):
     """Status values for HubSpot sync workflow"""
+
     New = "New"
     Queued = "Queued"
     Processing = "Processing"
@@ -54,6 +59,7 @@ class HubSpotSyncStatus(str, Enum):
 
 class HubSpotProcessingStatus(str, Enum):
     """Status values for HubSpot processing workflow"""
+
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
@@ -62,6 +68,7 @@ class HubSpotProcessingStatus(str, Enum):
 
 class PageCurationStatus(str, Enum):
     """Status values for page curation workflow"""
+
     New = "New"
     Queued = "Queued"
     Processing = "Processing"
@@ -72,6 +79,7 @@ class PageCurationStatus(str, Enum):
 
 class PageProcessingStatus(str, Enum):
     """Status values for page processing workflow"""
+
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
@@ -80,6 +88,7 @@ class PageProcessingStatus(str, Enum):
 
 class PlaceStatusEnum(str, Enum):
     """Status values for places"""
+
     New = "New"
     Selected = "Selected"
     Maybe = "Maybe"
@@ -89,6 +98,7 @@ class PlaceStatusEnum(str, Enum):
 
 class GcpApiDeepScanStatusEnum(str, Enum):
     """Status values for GCP API deep scan"""
+
     Pending = "Pending"
     Running = "Running"
     Complete = "Complete"
@@ -97,15 +107,17 @@ class GcpApiDeepScanStatusEnum(str, Enum):
 
 class SitemapAnalysisStatusEnum(Enum):
     """Status values for sitemap analysis background process (MUST MATCH DOMAIN.PY)"""
-    pending = "pending"      # Initial state when domain is created/reset
-    queued = "queued"        # Scheduler picked it up, waiting for adapter
+
+    pending = "pending"  # Initial state when domain is created/reset
+    queued = "queued"  # Scheduler picked it up, waiting for adapter
     processing = "processing"  # Adapter sent to API
-    submitted = "submitted"   # API accepted (202)
-    failed = "failed"        # Adapter or API call failed
+    submitted = "submitted"  # API accepted (202)
+    failed = "failed"  # Adapter or API call failed
 
 
 class SitemapCurationStatusEnum(str, Enum):
     """Status values for sitemap curation workflow"""
+
     New = "New"
     Selected = "Selected"
     Maybe = "Maybe"
@@ -116,6 +128,7 @@ class SitemapCurationStatusEnum(str, Enum):
 
 class SitemapFileStatusEnum(str, Enum):
     """Status values for sitemap files"""
+
     New = "New"
     Processing = "Processing"
     Complete = "Complete"
@@ -124,6 +137,7 @@ class SitemapFileStatusEnum(str, Enum):
 
 class SitemapImportCurationStatusEnum(str, Enum):
     """Status values for sitemap import curation workflow"""
+
     New = "New"
     Queued = "Queued"
     Processing = "Processing"
@@ -134,6 +148,7 @@ class SitemapImportCurationStatusEnum(str, Enum):
 
 class SitemapImportProcessStatusEnum(str, Enum):
     """Status values for sitemap import process workflow"""
+
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
@@ -142,6 +157,7 @@ class SitemapImportProcessStatusEnum(str, Enum):
 
 class DomainExtractionStatusEnum(str, Enum):
     """Status values for domain extraction workflow"""
+
     Pending = "pending"
     Queued = "queued"
     Processing = "processing"

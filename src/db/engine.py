@@ -139,7 +139,9 @@ def get_compatible_connect_args(is_async=True):
         # Create SSL context for Supabase compatibility
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE  # Required for Supabase self-signed cert chain
+        ssl_context.verify_mode = (
+            ssl.CERT_NONE
+        )  # Required for Supabase self-signed cert chain
 
         # asyncpg specific parameters for Supavisor compatibility
         base_args = {

@@ -13,17 +13,19 @@ if __name__ == "__main__":
     # Get port from environment variable for Render compatibility
     port = int(os.getenv("PORT", "8000"))
 
-    # Determine if runtime import tracing is enabled via environment variable
-    enable_tracing = os.getenv("ENABLE_IMPORT_TRACING", "false").lower() == "true"
+    # Determine if debug mode is enabled via environment variable
+    debug_mode = os.getenv("FASTAPI_DEBUG_MODE", "false").lower() == "true"
 
-    # Disable reload if tracing is enabled, otherwise use standard logic
-    reload_enabled = (not enable_tracing) and (settings.environment.lower() == "development")
+    # Disable reload if debug mode is enabled, otherwise use standard logic
+    reload_enabled = (not debug_mode) and (
+        settings.environment.lower() == "development"
+    )
 
-    if enable_tracing:
-        print("INFO: ENABLE_IMPORT_TRACING=true, Uvicorn reload DISABLED.")
+    if debug_mode:
+        print("INFO: FASTAPI_DEBUG_MODE=true, Uvicorn reload DISABLED.")
     else:
         print(
-            f"INFO: ENABLE_IMPORT_TRACING=false/unset, Uvicorn reload={'ENABLED' if reload_enabled else 'DISABLED'}."
+            f"INFO: FASTAPI_DEBUG_MODE=false/unset, Uvicorn reload={'ENABLED' if reload_enabled else 'DISABLED'}."
         )
 
     uvicorn.run(

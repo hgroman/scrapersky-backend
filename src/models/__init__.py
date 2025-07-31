@@ -75,9 +75,9 @@ class TaskStatus(str, Enum):
     FAILED = "Error"
     MANUAL_REVIEW = "ManualReview"  # MISSING: Was causing runtime errors
     CANCELLED = "Cancelled"
-    PAUSED = "Paused"              # MISSING: Was causing runtime errors
-    PROCESSING = "Processing"       # MISSING: Was causing runtime errors
-    COMPLETE_ALT = "Complete"      # MISSING: Alternative Complete status
+    PAUSED = "Paused"  # MISSING: Was causing runtime errors
+    PROCESSING = "Processing"  # MISSING: Was causing runtime errors
+    COMPLETE_ALT = "Complete"  # MISSING: Alternative Complete status
 
 
 # Export all models

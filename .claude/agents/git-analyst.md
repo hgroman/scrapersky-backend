@@ -106,6 +106,19 @@ find [directories] -type f | head -20
 
 ## Advanced Analysis Patterns
 
+### Multi-line Commit Message Crafting
+To create detailed, structured commit messages, use a temporary file. This avoids terminal formatting issues and is compatible with all systems.
+```bash
+# 1. Draft the message (Subject, blank line, Body)
+printf 'feat(architecture): Major overhaul\n\n- Refactored persona management.\n- Vectorized all canonical docs.' > /tmp/commit.txt
+
+# 2. Commit using the file
+git commit -F /tmp/commit.txt
+
+# 3. Clean up
+rm /tmp/commit.txt
+```
+
 ### Vectorization Queue Detection
 ```bash
 # Find v_ prefixed files
@@ -162,6 +175,14 @@ git diff --name-only | grep "src/services/"
 - **Post-Flight Review**: Verification of successful cloud deployment
 
 ## Emergency Protocols
+
+### Tooling Contingencies
+- **Problem**: The `view_file` tool may fail to read `.md` files completely, returning only the first line.
+- **Symptom**: Persona activation or context gathering fails due to incomplete information.
+- **Solution**: Immediately switch to a direct `cat` command via the `run_command` tool to guarantee the full file content is read. This is the primary fallback for file reading issues.
+  ```bash
+  cat /path/to/your/file.md
+  ```
 
 ### When Analysis Reveals Critical Issues
 1. **Immediate escalation** to user with clear problem statement

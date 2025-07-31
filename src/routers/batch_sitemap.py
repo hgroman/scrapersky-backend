@@ -386,7 +386,7 @@ async def process_sitemap_batch_with_own_session(
 
                         await session.flush()
                         logger.debug(
-                            f"Updated batch progress: {completed_count} completed, {failed_count} failed, {i+1}/{len(results)} processed"
+                            f"Updated batch progress: {completed_count} completed, {failed_count} failed, {i + 1}/{len(results)} processed"
                         )
             except Exception as update_error:
                 logger.error(

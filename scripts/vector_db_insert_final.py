@@ -37,15 +37,15 @@ if DATABASE_URL and "postgresql+asyncpg://" in DATABASE_URL:
 # Load patterns from JSON file
 PATTERNS_FILE = "scripts/patterns.json"
 try:
-    with open(PATTERNS_FILE, 'r') as f:
+    with open(PATTERNS_FILE, "r") as f:
         PATTERNS = json.load(f)
     logger.info(f"Loaded {len(PATTERNS)} patterns from {PATTERNS_FILE}")
 except FileNotFoundError:
     logger.error(f"Error: Patterns file not found at {PATTERNS_FILE}")
-    PATTERNS = [] # Initialize as empty list to prevent errors
+    PATTERNS = []  # Initialize as empty list to prevent errors
 except json.JSONDecodeError as e:
     logger.error(f"Error decoding JSON from {PATTERNS_FILE}: {e}")
-    PATTERNS = [] # Initialize as empty list to prevent errors
+    PATTERNS = []  # Initialize as empty list to prevent errors
 
 
 async def generate_embedding(text: str) -> List[float]:
@@ -55,59 +55,63 @@ async def generate_embedding(text: str) -> List[float]:
     return [0.0] * 1536
 
 
-async def create_embeddings_for_pattern(pattern: Dict[str, Any]) -> Dict[str, List[float]]:
+async def create_embeddings_for_pattern(
+    pattern: Dict[str, Any],
+) -> Dict[str, List[float]]:
     """Create embeddings for different aspects of a pattern."""
     embeddings = {}
 
     # Content embedding (title, description, problem_type, etc.)
     content_text = f"""
-    TITLE: {pattern.get('title', '')}
-    DESCRIPTION: {pattern.get('description', '')}
-    PROBLEM TYPE: {pattern.get('problem_type', '')}
-    CODE TYPE: {pattern.get('code_type', '')}
-    SEVERITY: {pattern.get('severity', '')}
-    PROBLEM DESCRIPTION: {pattern.get('problem_description', '')}
-    SOLUTION STEPS: {pattern.get('solution_steps', '')}
-    VERIFICATION STEPS: {pattern.get('verification_steps', '')}
-    LEARNINGS: {pattern.get('learnings', '')}
-    PREVENTION GUIDANCE: {pattern.get('prevention_guidance', '')}
+    TITLE: {pattern.get("title", "")}
+    DESCRIPTION: {pattern.get("description", "")}
+    PROBLEM TYPE: {pattern.get("problem_type", "")}
+    CODE TYPE: {pattern.get("code_type", "")}
+    SEVERITY: {pattern.get("severity", "")}
+    PROBLEM DESCRIPTION: {pattern.get("problem_description", "")}
+    SOLUTION STEPS: {pattern.get("solution_steps", "")}
+    VERIFICATION STEPS: {pattern.get("verification_steps", "")}
+    LEARNINGS: {pattern.get("learnings", "")}
+    PREVENTION GUIDANCE: {pattern.get("prevention_guidance", "")}
     """
-    embeddings['content_embedding'] = await generate_embedding(content_text)
+    embeddings["content_embedding"] = await generate_embedding(content_text)
 
     # Code embedding (now conceptual, as code is in DART)
     # This embedding will represent the conceptual nature of the code pattern,
     # derived from its description and solution steps, not literal code.
     code_conceptual_text = f"""
-    PROBLEM DESCRIPTION: {pattern.get('problem_description', '')}
-    SOLUTION STEPS: {pattern.get('solution_steps', '')}
+    PROBLEM DESCRIPTION: {pattern.get("problem_description", "")}
+    SOLUTION STEPS: {pattern.get("solution_steps", "")}
     """
-    embeddings['code_embedding'] = await generate_embedding(code_conceptual_text)
+    embeddings["code_embedding"] = await generate_embedding(code_conceptual_text)
 
     # Problem embedding (problem_description, verification_steps)
     problem_text = f"""
-    PROBLEM DESCRIPTION: {pattern.get('problem_description', '')}
-    VERIFICATION STEPS: {pattern.get('verification_steps', '')}
+    PROBLEM DESCRIPTION: {pattern.get("problem_description", "")}
+    VERIFICATION STEPS: {pattern.get("verification_steps", "")}
     """
-    embeddings['problem_embedding'] = await generate_embedding(problem_text)
+    embeddings["problem_embedding"] = await generate_embedding(problem_text)
 
     # Pattern vector (combined embedding for general search, excluding literal code)
     pattern_text = f"""
-    TITLE: {pattern.get('title', '')}
-    DESCRIPTION: {pattern.get('description', '')}
-    PROBLEM TYPE: {pattern.get('problem_type', '')}
-    CODE TYPE: {pattern.get('code_type', '')}
-    SEVERITY: {pattern.get('severity', '')}
-    PROBLEM DESCRIPTION: {pattern.get('problem_description', '')}
-    SOLUTION STEPS: {pattern.get('solution_steps', '')}
-    LEARNINGS: {pattern.get('learnings', '')}
-    PREVENTION GUIDANCE: {pattern.get('prevention_guidance', '')}
+    TITLE: {pattern.get("title", "")}
+    DESCRIPTION: {pattern.get("description", "")}
+    PROBLEM TYPE: {pattern.get("problem_type", "")}
+    CODE TYPE: {pattern.get("code_type", "")}
+    SEVERITY: {pattern.get("severity", "")}
+    PROBLEM DESCRIPTION: {pattern.get("problem_description", "")}
+    SOLUTION STEPS: {pattern.get("solution_steps", "")}
+    LEARNINGS: {pattern.get("learnings", "")}
+    PREVENTION GUIDANCE: {pattern.get("prevention_guidance", "")}
     """
-    embeddings['pattern_vector'] = await generate_embedding(pattern_text)
+    embeddings["pattern_vector"] = await generate_embedding(pattern_text)
 
     return embeddings
 
 
-async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, List[float]]) -> None:
+async def insert_pattern(
+    conn, pattern: Dict[str, Any], embeddings: Dict[str, List[float]]
+) -> None:
     """Insert a pattern with its embeddings into the fix_patterns table."""
 
     # Convert embedding lists to string format for vector type
@@ -147,7 +151,7 @@ async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, Li
         pattern.get("file_types"),
         pattern.get("problem_description"),
         pattern.get("solution_steps"),
-        pattern.get("code_before", None), # Pass None if not present
+        pattern.get("code_before", None),  # Pass None if not present
         pattern.get("code_after", None),  # Pass None if not present
         pattern.get("verification_steps"),
         pattern.get("learnings"),
@@ -169,7 +173,7 @@ async def insert_pattern(conn, pattern: Dict[str, Any], embeddings: Dict[str, Li
         pattern.get("source_file_audit_id"),
         pattern.get("applied_to_files"),
         pattern.get("avg_time_saved"),
-        pattern.get("knowledge_type")
+        pattern.get("knowledge_type"),
     )
 
     logger.info(f"Pattern '{pattern.get('title', 'Unknown')}' inserted successfully")
@@ -202,12 +206,14 @@ async def test_vector_search(conn) -> None:
             similarity DESC
         LIMIT 5
         """,
-        test_embedding_str
+        test_embedding_str,
     )
 
     logger.info("Vector search results:")
     for result in results:
-        logger.info(f"Pattern: {result['title']} ({result['problem_type']}/{result['code_type']}) - Similarity: {result['similarity']:.4f}")
+        logger.info(
+            f"Pattern: {result['title']} ({result['problem_type']}/{result['code_type']}) - Similarity: {result['similarity']:.4f}"
+        )
 
 
 async def main():
@@ -237,13 +243,13 @@ async def main():
         conn = await asyncpg.connect(
             connection_url,
             ssl="require",
-            statement_cache_size=0  # Disable statement cache for pgbouncer compatibility
+            statement_cache_size=0,  # Disable statement cache for pgbouncer compatibility
         )
 
         # Ensure vector extension is enabled
-        await conn.execute('''
+        await conn.execute("""
             CREATE EXTENSION IF NOT EXISTS vector;
-        ''')
+        """)
         logger.info("Connected to database")
     except Exception as e:
         logger.error(f"Error connecting to database: {e}")
@@ -270,7 +276,7 @@ async def main():
     except Exception as e:
         logger.error(f"Error processing patterns: {e}")
     finally:
-        if 'conn' in locals():
+        if "conn" in locals():
             await conn.close()
             logger.info("Database connection closed")
 

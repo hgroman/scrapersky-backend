@@ -39,21 +39,19 @@ if db_url and "postgresql+asyncpg://" in db_url:
 else:
     DATABASE_URL = db_url
 
+
 async def generate_embedding(text: str) -> List[float]:
     """
     Generate an embedding for the given text using OpenAI's API.
-    
+
     Args:
         text: The text to generate an embedding for
-        
+
     Returns:
         A list of floats representing the embedding
     """
     try:
-        response = openai.embeddings.create(
-            input=text,
-            model=EMBEDDING_MODEL
-        )
+        response = openai.embeddings.create(input=text, model=EMBEDDING_MODEL)
         return response.data[0].embedding
     except Exception as e:
         logger.error(f"Error generating embedding: {e}")
@@ -61,24 +59,27 @@ async def generate_embedding(text: str) -> List[float]:
         logger.warning("Using placeholder embedding as fallback")
         return [0.0] * 1536
 
-async def search_documents(conn: asyncpg.Connection, query: str, threshold: float = 0.5) -> List[Dict[str, Any]]:
+
+async def search_documents(
+    conn: asyncpg.Connection, query: str, threshold: float = 0.5
+) -> List[Dict[str, Any]]:
     """
     Search for documents similar to the query.
-    
+
     Args:
         conn: Database connection
         query: The query text
         threshold: Similarity threshold (0-1)
-        
+
     Returns:
         A list of documents with similarity scores
     """
     # Generate embedding for the query
     query_embedding = await generate_embedding(query)
-    
+
     # Convert embedding to string format for pgvector
     embedding_str = f"[{','.join(map(str, query_embedding))}]"
-    
+
     # Perform vector search
     results = await conn.fetch(
         """
@@ -96,59 +97,65 @@ async def search_documents(conn: asyncpg.Connection, query: str, threshold: floa
         LIMIT 5
         """,
         embedding_str,
-        threshold
+        threshold,
     )
-    
+
     return [dict(r) for r in results]
+
 
 async def test_vector_search():
     """Test vector search functionality."""
     logger.info("Connecting to database...")
     conn = await asyncpg.connect(
         DATABASE_URL,
-        statement_cache_size=0  # Disable statement cache for pgbouncer compatibility
+        statement_cache_size=0,  # Disable statement cache for pgbouncer compatibility
     )
-    
+
     try:
         # First, try to directly query for the document by title
-        logger.info("Checking if v_34-DART_MCP_GUIDE.md exists in project_docs table...")
+        logger.info(
+            "Checking if v_34-DART_MCP_GUIDE.md exists in project_docs table..."
+        )
         direct_check = await conn.fetch(
             """
             SELECT id, title, content FROM public.project_docs 
             WHERE title = 'v_34-DART_MCP_GUIDE.md'
             """
         )
-        
+
         if direct_check:
-            logger.info("✅ FOUND: v_34-DART_MCP_GUIDE.md exists in the vector database!")
+            logger.info(
+                "✅ FOUND: v_34-DART_MCP_GUIDE.md exists in the vector database!"
+            )
             logger.info(f"Document ID: {direct_check[0]['id']}")
             logger.info(f"Content preview: {direct_check[0]['content'][:150]}...")
         else:
-            logger.info("❌ NOT FOUND: v_34-DART_MCP_GUIDE.md does not exist in the vector database.")
-        
+            logger.info(
+                "❌ NOT FOUND: v_34-DART_MCP_GUIDE.md does not exist in the vector database."
+            )
+
         # Test pattern to search for DART MCP related content
         test_pattern = "DART MCP guide integration model context protocol"
         logger.info(f"Testing vector search with pattern: '{test_pattern}'")
-        
+
         # Search for documents
         results = await search_documents(conn, test_pattern)
-        
+
         if results:
             logger.info(f"Found {len(results)} matching documents:")
             for i, doc in enumerate(results):
-                logger.info(f"Result {i+1}:")
+                logger.info(f"Result {i + 1}:")
                 logger.info(f"  Title: {doc['title']}")
                 logger.info(f"  Similarity: {doc['similarity']}")
                 logger.info(f"  Content Preview: {doc['content'][:100]}...")
                 logger.info("---")
         else:
             logger.warning("No matching documents found")
-            
 
-            
     finally:
         await conn.close()
         logger.info("Test complete")
+
 
 if __name__ == "__main__":
     asyncio.run(test_vector_search())

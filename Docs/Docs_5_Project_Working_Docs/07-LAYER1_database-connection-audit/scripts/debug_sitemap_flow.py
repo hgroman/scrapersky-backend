@@ -16,16 +16,16 @@ from datetime import datetime
 from pprint import pprint
 
 # Constants for local development (from README.md)
-DEFAULT_TENANT_ID = os.getenv("DEFAULT_TENANT_ID", "550e8400-e29b-41d4-a716-446655440000")
+DEFAULT_TENANT_ID = os.getenv(
+    "DEFAULT_TENANT_ID", "550e8400-e29b-41d4-a716-446655440000"
+)
 DEV_TOKEN = os.getenv("DEV_TOKEN", "scraper_sky_2024")
 
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
 logger = logging.getLogger("sitemap_debugger")
@@ -55,7 +55,10 @@ except Exception as e:
 try:
     # IMPORTANT: We should be using the proper service function that accepts a session
     # instead of creating its own session
-    from src.services.sitemap.processing_service import SitemapScrapingRequest, _job_statuses
+    from src.services.sitemap.processing_service import (
+        SitemapScrapingRequest,
+        _job_statuses,
+    )
     from src.routers.modernized_sitemap import scan_domain
     from fastapi import BackgroundTasks
 
@@ -64,6 +67,7 @@ except Exception as e:
     logger.error(f"❌ Failed to import service modules: {str(e)}")
     traceback.print_exc()
     sys.exit(1)
+
 
 async def check_database_connection():
     """Check if database connection is working"""
@@ -81,6 +85,7 @@ async def check_database_connection():
         traceback.print_exc()
         return False
 
+
 async def check_database_tables():
     """Check if required database tables exist (without tenant filtering)"""
     logger.info("🔍 Checking if required database tables exist...")
@@ -89,7 +94,9 @@ async def check_database_tables():
         async with get_session() as session:
             # Check if we can access the tables without tenant filtering
             # Just check if tables exist by querying metadata
-            query = text("SELECT tablename FROM pg_tables WHERE schemaname = 'public' LIMIT 5")
+            query = text(
+                "SELECT tablename FROM pg_tables WHERE schemaname = 'public' LIMIT 5"
+            )
             result = await session.execute(query)
             tables = result.scalars().all()
 
@@ -104,6 +111,7 @@ async def check_database_tables():
         traceback.print_exc()
         return False
 
+
 async def check_auth_system():
     """Check if the authentication system is properly configured"""
     logger.info("🔍 Checking authentication system configuration...")
@@ -112,6 +120,7 @@ async def check_auth_system():
     logger.info("✅ Supabase Auth system is configured (not directly accessible)")
     return True
 
+
 async def check_job_tables():
     """Check if job tables exist and have expected structure"""
     logger.info("🔍 Checking job tables...")
@@ -119,14 +128,20 @@ async def check_job_tables():
         # Use the proper session factory that works with Supabase
         async with get_session() as session:
             # Check Job table using raw SQL to avoid ORM model mismatches
-            job_query = text("SELECT id, job_type, status, error FROM jobs WHERE job_type = 'sitemap_scan' LIMIT 5")
+            job_query = text(
+                "SELECT id, job_type, status, error FROM jobs WHERE job_type = 'sitemap_scan' LIMIT 5"
+            )
             job_result = await session.execute(job_query)
             jobs = job_result.fetchall()
 
             if jobs:
-                logger.info(f"✅ Job table exists and has {len(jobs)} sitemap scan records")
+                logger.info(
+                    f"✅ Job table exists and has {len(jobs)} sitemap scan records"
+                )
                 for job in jobs:
-                    logger.info(f"  - Job ID: {job.id}, Status: {job.status}, Error: {job.error if job.error else 'None'}")
+                    logger.info(
+                        f"  - Job ID: {job.id}, Status: {job.status}, Error: {job.error if job.error else 'None'}"
+                    )
             else:
                 logger.info("ℹ️ Job table exists but has no sitemap scan records")
 
@@ -136,9 +151,13 @@ async def check_job_tables():
             sitemaps = sitemap_result.fetchall()
 
             if sitemaps:
-                logger.info(f"✅ SitemapFile table exists and has {len(sitemaps)} records")
+                logger.info(
+                    f"✅ SitemapFile table exists and has {len(sitemaps)} records"
+                )
                 for sitemap in sitemaps:
-                    logger.info(f"  - Sitemap ID: {sitemap.id}, URL: {sitemap.url[:50] if len(sitemap.url) > 50 else sitemap.url}...")
+                    logger.info(
+                        f"  - Sitemap ID: {sitemap.id}, URL: {sitemap.url[:50] if len(sitemap.url) > 50 else sitemap.url}..."
+                    )
             else:
                 logger.info("ℹ️ SitemapFile table exists but has no records")
 
@@ -147,6 +166,7 @@ async def check_job_tables():
         logger.error(f"❌ Error checking job tables: {str(e)}")
         traceback.print_exc()
         return False
+
 
 async def trace_sitemap_scan_flow(domain="https://www.alleganyeye.com", max_pages=5):
     """Trace the execution flow of the sitemap scan process"""
@@ -180,7 +200,7 @@ async def trace_sitemap_scan_flow(domain="https://www.alleganyeye.com", max_page
             "id": "00000000-0000-0000-0000-000000000000",  # Use a valid UUID format
             "user_id": "00000000-0000-0000-0000-000000000000",
             "tenant_id": DEFAULT_TENANT_ID,
-            "roles": ["admin"]
+            "roles": ["admin"],
         }
         logger.info(f"✅ Created mock user: {current_user}")
     except Exception as e:
@@ -197,7 +217,7 @@ async def trace_sitemap_scan_flow(domain="https://www.alleganyeye.com", max_page
                 request=request,
                 background_tasks=background_tasks,
                 session=session,
-                current_user=current_user
+                current_user=current_user,
             )
             logger.info(f"✅ scan_domain function returned: {result}")
 
@@ -224,7 +244,9 @@ async def trace_sitemap_scan_flow(domain="https://www.alleganyeye.com", max_page
             # Check job status in database using raw SQL to avoid ORM issues
             async with get_session() as session:
                 # Query the job table directly with raw SQL
-                job_query = text("SELECT id, job_id, status, error, metadata FROM jobs WHERE job_id = :job_id")
+                job_query = text(
+                    "SELECT id, job_id, status, error, metadata FROM jobs WHERE job_id = :job_id"
+                )
                 job_result = await session.execute(job_query, {"job_id": job_id})
                 job = job_result.fetchone()
 
@@ -240,6 +262,7 @@ async def trace_sitemap_scan_flow(domain="https://www.alleganyeye.com", max_page
     except Exception as e:
         logger.error(f"❌ Error in scan_domain flow: {str(e)}")
         traceback.print_exc()
+
 
 async def main():
     """Main function to run all checks"""
@@ -269,6 +292,7 @@ async def main():
         # Suggest fixes
         # No specific suggestions needed for auth system
         pass
+
 
 if __name__ == "__main__":
     asyncio.run(main())

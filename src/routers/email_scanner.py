@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 SessionDep = Depends(get_session_dependency)
 CurrentUserDep = Depends(get_current_user)
 
+
 class EmailScanningResponse(BaseModel):
     domain_id: uuid.UUID
     domain: str
@@ -46,12 +47,11 @@ class EmailScanningResponse(BaseModel):
 # scan_jobs: Dict[uuid.UUID, EmailScanningResponse] = {}
 
 
-
 @router.get("/scan/status/{job_id}", response_model=JobStatusResponse)
 async def get_scan_status_api(
     job_id: uuid.UUID,  # Use UUID type hint for path parameter
     session: AsyncSession = SessionDep,
-    current_user: Dict[str, Any] = CurrentUserDep # Auth usually needed here too
+    current_user: Dict[str, Any] = CurrentUserDep,  # Auth usually needed here too
 ):
     """Retrieve the status and results of a specific email scan job by its UUID."""
     # Add authentication check if needed based on requirements

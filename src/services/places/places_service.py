@@ -27,9 +27,7 @@ class PlacesService:
     """
 
     @staticmethod
-    async def get_by_id(
-        session: AsyncSession, place_id: str
-    ) -> Optional[Place]:
+    async def get_by_id(session: AsyncSession, place_id: str) -> Optional[Place]:
         """
         Get a place by its place_id.
 

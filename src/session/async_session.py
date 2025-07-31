@@ -150,7 +150,9 @@ else:
     )
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE  # Required for Supabase self-signed cert chain
+    ssl_context.verify_mode = (
+        ssl.CERT_NONE
+    )  # Required for Supabase self-signed cert chain
 
 # Create connect_args with appropriate settings for Supavisor
 connect_args = {

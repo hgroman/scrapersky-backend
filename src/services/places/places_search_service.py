@@ -310,7 +310,8 @@ class PlacesSearchService:
             return None
 
 
-async def process_places_search_background(session: AsyncSession,
+async def process_places_search_background(
+    session: AsyncSession,
     job_id: str,
     business_type: str,
     location: str,

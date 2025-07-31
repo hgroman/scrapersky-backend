@@ -25,7 +25,7 @@ from datetime import datetime
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,12 @@ logger = logging.getLogger(__name__)
 DB_HOST = os.getenv("SUPABASE_DB_HOST", "aws-0-us-west-1.pooler.supabase.com")
 DB_PORT = os.getenv("SUPABASE_DB_PORT", "6543")
 DB_NAME = os.getenv("SUPABASE_DB_NAME", "postgres")
-DB_USER = os.getenv("SUPABASE_DB_USER", "postgres.ddfldwzhdhhzhxywqnyz")  # Format: postgres.[project-ref]
-DB_PASSWORD = os.getenv("SUPABASE_DB_PASSWORD", "")  # Set in environment variable for security
+DB_USER = os.getenv(
+    "SUPABASE_DB_USER", "postgres.ddfldwzhdhhzhxywqnyz"
+)  # Format: postgres.[project-ref]
+DB_PASSWORD = os.getenv(
+    "SUPABASE_DB_PASSWORD", ""
+)  # Set in environment variable for security
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -57,8 +61,8 @@ async def get_database_connection():
             server_settings={
                 "raw_sql": "true",
                 "no_prepare": "true",
-                "statement_cache_size": "0"
-            }
+                "statement_cache_size": "0",
+            },
         )
         logger.info("Connected to database successfully")
         return conn
@@ -123,8 +127,9 @@ async def generate_by_layer_report() -> Dict[str, Any]:
     # Query files by layer
     files_by_layer = {}
     for layer in layer_stats:
-        layer_num = layer['layer_number']
-        layer_files = await conn.fetch("""
+        layer_num = layer["layer_number"]
+        layer_files = await conn.fetch(
+            """
             SELECT
                 file_number,
                 file_path,
@@ -136,7 +141,9 @@ async def generate_by_layer_report() -> Dict[str, Any]:
             FROM file_audit
             WHERE layer_number = $1
             ORDER BY file_number
-        """, layer_num)
+        """,
+            layer_num,
+        )
 
         files_by_layer[f"layer_{layer_num}"] = [dict(f) for f in layer_files]
 
@@ -145,7 +152,7 @@ async def generate_by_layer_report() -> Dict[str, Any]:
         "generated_at": datetime.now().isoformat(),
         "report_type": "files_by_layer",
         "summary": [dict(s) for s in layer_stats],
-        "layers": files_by_layer
+        "layers": files_by_layer,
     }
 
     await conn.close()
@@ -170,12 +177,13 @@ async def generate_by_workflow_report() -> Dict[str, Any]:
     """)
 
     # Get all workflows
-    workflows = [w['workflow'] for w in workflow_stats]
+    workflows = [w["workflow"] for w in workflow_stats]
 
     # Query files by workflow
     files_by_workflow = {}
     for workflow in workflows:
-        wf_files = await conn.fetch("""
+        wf_files = await conn.fetch(
+            """
             SELECT
                 file_number,
                 file_path,
@@ -188,7 +196,9 @@ async def generate_by_workflow_report() -> Dict[str, Any]:
             FROM file_audit
             WHERE $1 = ANY(workflows)
             ORDER BY layer_number, file_number
-        """, workflow)
+        """,
+            workflow,
+        )
 
         files_by_workflow[workflow] = [dict(f) for f in wf_files]
 
@@ -197,7 +207,7 @@ async def generate_by_workflow_report() -> Dict[str, Any]:
         "generated_at": datetime.now().isoformat(),
         "report_type": "files_by_workflow",
         "summary": [dict(s) for s in workflow_stats],
-        "workflows": files_by_workflow
+        "workflows": files_by_workflow,
     }
 
     await conn.close()
@@ -254,7 +264,7 @@ async def generate_technical_debt_report() -> Dict[str, Any]:
         "report_type": "technical_debt",
         "summary": dict(debt_stats[0]),
         "debt_by_layer": [dict(l) for l in debt_by_layer],
-        "debt_files": [dict(f) for f in debt_files]
+        "debt_files": [dict(f) for f in debt_files],
     }
 
     await conn.close()
@@ -305,16 +315,28 @@ async def generate_audit_progress_report() -> Dict[str, Any]:
 
 async def main():
     """Main function to generate the file registry."""
-    parser = argparse.ArgumentParser(description="Generate file registry reports from Supabase")
-    parser.add_argument("--by-layer", action="store_true", help="Generate files by layer report")
-    parser.add_argument("--by-workflow", action="store_true", help="Generate files by workflow report")
-    parser.add_argument("--technical-debt", action="store_true", help="Generate technical debt report")
-    parser.add_argument("--audit-progress", action="store_true", help="Generate audit progress report")
+    parser = argparse.ArgumentParser(
+        description="Generate file registry reports from Supabase"
+    )
+    parser.add_argument(
+        "--by-layer", action="store_true", help="Generate files by layer report"
+    )
+    parser.add_argument(
+        "--by-workflow", action="store_true", help="Generate files by workflow report"
+    )
+    parser.add_argument(
+        "--technical-debt", action="store_true", help="Generate technical debt report"
+    )
+    parser.add_argument(
+        "--audit-progress", action="store_true", help="Generate audit progress report"
+    )
     parser.add_argument("--all", action="store_true", help="Generate all reports")
     args = parser.parse_args()
 
     # Default to complete registry if no specific report is requested
-    generate_all = args.all or not (args.by_layer or args.by_workflow or args.technical_debt or args.audit_progress)
+    generate_all = args.all or not (
+        args.by_layer or args.by_workflow or args.technical_debt or args.audit_progress
+    )
 
     logger.info("Generating file registry exports...")
 
@@ -322,13 +344,20 @@ async def main():
     if generate_all:
         registry = await get_complete_registry()
         with open(REGISTRY_DIR / "file_registry_complete.yaml", "w") as f:
-            yaml.dump({
-                "generated_at": datetime.now().isoformat(),
-                "report_type": "complete_registry",
-                "file_count": len(registry),
-                "files": registry
-            }, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Complete registry exported to {REGISTRY_DIR / 'file_registry_complete.yaml'}")
+            yaml.dump(
+                {
+                    "generated_at": datetime.now().isoformat(),
+                    "report_type": "complete_registry",
+                    "file_count": len(registry),
+                    "files": registry,
+                },
+                f,
+                default_flow_style=False,
+                sort_keys=False,
+            )
+        logger.info(
+            f"Complete registry exported to {REGISTRY_DIR / 'file_registry_complete.yaml'}"
+        )
 
     # Generate by layer report
     if generate_all or args.by_layer:
@@ -342,21 +371,27 @@ async def main():
         workflow_report = await generate_by_workflow_report()
         with open(REGISTRY_DIR / "files_by_workflow.yaml", "w") as f:
             yaml.dump(workflow_report, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Workflow report exported to {REGISTRY_DIR / 'files_by_workflow.yaml'}")
+        logger.info(
+            f"Workflow report exported to {REGISTRY_DIR / 'files_by_workflow.yaml'}"
+        )
 
     # Generate technical debt report
     if generate_all or args.technical_debt:
         debt_report = await generate_technical_debt_report()
         with open(REGISTRY_DIR / "technical_debt.yaml", "w") as f:
             yaml.dump(debt_report, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Technical debt report exported to {REGISTRY_DIR / 'technical_debt.yaml'}")
+        logger.info(
+            f"Technical debt report exported to {REGISTRY_DIR / 'technical_debt.yaml'}"
+        )
 
     # Generate audit progress report
     if generate_all or args.audit_progress:
         progress_report = await generate_audit_progress_report()
         with open(REGISTRY_DIR / "audit_progress.yaml", "w") as f:
             yaml.dump(progress_report, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Audit progress report exported to {REGISTRY_DIR / 'audit_progress.yaml'}")
+        logger.info(
+            f"Audit progress report exported to {REGISTRY_DIR / 'audit_progress.yaml'}"
+        )
 
     logger.info("All requested reports generated successfully!")
 

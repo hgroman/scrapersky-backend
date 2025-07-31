@@ -8,10 +8,10 @@
 
 🔒 DISASTER HISTORY: Part of June 28, 2025 refactoring disaster
 🔒 PROTECTION LEVEL: NUCLEAR - DO NOT MODIFY without understanding all workflows
-🔒 DEPENDENCIES: WF2 deep scans, WF3 domain extraction, WF4 sitemap submission, 
+🔒 DEPENDENCIES: WF2 deep scans, WF3 domain extraction, WF4 sitemap submission,
                  WF5 sitemap processing, WF6 URL import, domain analysis
 
-CRITICAL: This is the heart of ALL background processing. Deletion or 
+CRITICAL: This is the heart of ALL background processing. Deletion or
 modification will break multiple workflows simultaneously.
 
 Centralized APScheduler Instance

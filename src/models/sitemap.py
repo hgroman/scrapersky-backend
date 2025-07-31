@@ -224,7 +224,9 @@ class SitemapFile(Base, BaseModel):
                     tenant_id_obj = uuid.UUID(tenant_id)
                 except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
-                    raise ValueError(f"Invalid UUID format for tenant_id: {tenant_id}") from err
+                    raise ValueError(
+                        f"Invalid UUID format for tenant_id: {tenant_id}"
+                    ) from err
 
             created_by_obj = None
             if created_by:
@@ -232,7 +234,9 @@ class SitemapFile(Base, BaseModel):
                     created_by_obj = uuid.UUID(created_by)
                 except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for created_by: {created_by}")
-                    raise ValueError(f"Invalid UUID format for created_by: {created_by}") from err
+                    raise ValueError(
+                        f"Invalid UUID format for created_by: {created_by}"
+                    ) from err
 
             # Create the sitemap file
             sitemap_file = cls(
@@ -481,7 +485,9 @@ class SitemapUrl(Base, BaseModel):
                     domain_id_obj = uuid.UUID(domain_id)
                 except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for domain_id: {domain_id}")
-                    raise ValueError(f"Invalid UUID format for domain_id: {domain_id}") from err
+                    raise ValueError(
+                        f"Invalid UUID format for domain_id: {domain_id}"
+                    ) from err
 
             tenant_id_obj = None
             if tenant_id:
@@ -489,7 +495,9 @@ class SitemapUrl(Base, BaseModel):
                     tenant_id_obj = uuid.UUID(tenant_id)
                 except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for tenant_id: {tenant_id}")
-                    raise ValueError(f"Invalid UUID format for tenant_id: {tenant_id}") from err
+                    raise ValueError(
+                        f"Invalid UUID format for tenant_id: {tenant_id}"
+                    ) from err
 
             created_by_obj = None
             if created_by:
@@ -497,7 +505,9 @@ class SitemapUrl(Base, BaseModel):
                     created_by_obj = uuid.UUID(created_by)
                 except (ValueError, TypeError) as err:
                     logger.warning(f"Invalid UUID format for created_by: {created_by}")
-                    raise ValueError(f"Invalid UUID format for created_by: {created_by}") from err
+                    raise ValueError(
+                        f"Invalid UUID format for created_by: {created_by}"
+                    ) from err
 
             # Create the sitemap URL
             sitemap_url = cls(

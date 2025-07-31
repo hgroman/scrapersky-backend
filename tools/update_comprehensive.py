@@ -15,15 +15,16 @@ from pathlib import Path
 DOC_PATH = "../Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md"
 FILE_DATA_PATH = "file_numbers.txt"
 
+
 # Process the database file information
 def create_file_lookup(file_data_path):
     """Create a lookup dictionary from file data."""
     file_lookup = {}
 
-    with open(file_data_path, 'r') as f:
+    with open(file_data_path, "r") as f:
         for line in f:
             # Parse line format: file_number, file_path, file_name
-            parts = line.strip().split(',')
+            parts = line.strip().split(",")
             if len(parts) >= 2:
                 file_number = parts[0].strip()
                 file_path = parts[1].strip()
@@ -31,16 +32,17 @@ def create_file_lookup(file_data_path):
 
     return file_lookup
 
+
 # Update the comprehensive document
 def update_document(doc_path, file_lookup):
     """Update the comprehensive document with file numbers."""
     # Read the document
-    with open(doc_path, 'r') as f:
+    with open(doc_path, "r") as f:
         content = f.read()
 
     # Find all backtick-delimited Python file paths
     # Pattern for file path in backticks without a file number already present
-    pattern = r'`(src/[^`]+\.py)`(?!\s*\[FILE:\d+\])'
+    pattern = r"`(src/[^`]+\.py)`(?!\s*\[FILE:\d+\])"
 
     # Count updates
     count = 0
@@ -51,17 +53,18 @@ def update_document(doc_path, file_lookup):
         file_path = match.group(1)
         if file_path in file_lookup:
             count += 1
-            return f'`{file_path}` [FILE:{file_lookup[file_path]}]'
+            return f"`{file_path}` [FILE:{file_lookup[file_path]}]"
         return match.group(0)
 
     # Update content
     updated_content = re.sub(pattern, replace_match, content)
 
     # Write updated content back to file
-    with open(doc_path, 'w') as f:
+    with open(doc_path, "w") as f:
         f.write(updated_content)
 
     return count
+
 
 # Main process
 if __name__ == "__main__":
@@ -73,7 +76,10 @@ if __name__ == "__main__":
 
     # Adjust path if running from tools directory
     if not os.path.exists(doc_path):
-        doc_path = os.path.join(current_dir.parent, "Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md")
+        doc_path = os.path.join(
+            current_dir.parent,
+            "Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md",
+        )
 
     # Check if document exists
     if not os.path.exists(doc_path):
@@ -89,7 +95,7 @@ if __name__ == "__main__":
         # Create sample file data if it doesn't exist
         if not os.path.exists(file_data_path):
             print(f"Creating file data at {file_data_path}")
-            with open(file_data_path, 'w') as f:
+            with open(file_data_path, "w") as f:
                 f.write("0001, src/main.py, main.py\n")
                 f.write("0003, src/db/engine.py, engine.py\n")
                 f.write("0004, src/db/session.py, session.py\n")

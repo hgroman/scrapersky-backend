@@ -30,13 +30,33 @@ ENDPOINTS = [
     # Health check endpoints (no auth required)
     {"path": "/health", "method": "GET", "auth": False, "name": "Health Check"},
     {"path": "/health/db", "method": "GET", "auth": False, "name": "DB Health Check"},
-
     # API endpoints (auth required)
-    {"path": f"/api/{API_VERSION}/domains", "method": "GET", "auth": True, "name": "Domains List"},
-    {"path": f"/api/{API_VERSION}/local-businesses", "method": "GET", "auth": True, "name": "Local Businesses"},
-    {"path": f"/api/{API_VERSION}/sitemap", "method": "GET", "auth": True, "name": "Sitemap List"},
-    {"path": f"/api/{API_VERSION}/sitemap-files", "method": "GET", "auth": True, "name": "Sitemap Files"},
+    {
+        "path": f"/api/{API_VERSION}/domains",
+        "method": "GET",
+        "auth": True,
+        "name": "Domains List",
+    },
+    {
+        "path": f"/api/{API_VERSION}/local-businesses",
+        "method": "GET",
+        "auth": True,
+        "name": "Local Businesses",
+    },
+    {
+        "path": f"/api/{API_VERSION}/sitemap",
+        "method": "GET",
+        "auth": True,
+        "name": "Sitemap List",
+    },
+    {
+        "path": f"/api/{API_VERSION}/sitemap-files",
+        "method": "GET",
+        "auth": True,
+        "name": "Sitemap Files",
+    },
 ]
+
 
 async def test_endpoint(client, endpoint):
     """Test a single endpoint and return the result."""
@@ -82,6 +102,7 @@ async def test_endpoint(client, endpoint):
             "error": str(e),
         }
 
+
 async def main():
     """Main function to test all endpoints."""
     logger.info("Starting API endpoint tests")
@@ -114,7 +135,9 @@ async def main():
 
     for result in results:
         status = "✅ SUCCESS" if result.get("success", False) else "❌ FAILED"
-        logger.info(f"{status} - {result['endpoint']} ({result.get('status_code', 'N/A')})")
+        logger.info(
+            f"{status} - {result['endpoint']} ({result.get('status_code', 'N/A')})"
+        )
 
     # Check for common issues
     if success_count == 0:
@@ -124,6 +147,7 @@ async def main():
         logger.warning("3. Database connection might be failing")
         logger.warning("4. API versioning might be inconsistent")
         logger.warning("\nCheck server logs for more details")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

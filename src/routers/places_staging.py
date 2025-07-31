@@ -342,10 +342,14 @@ async def update_places_status_batch(
                     place.deep_scan_error = None  # type: ignore
                     place.updated_at = now  # type: ignore
                     actually_queued_count += 1
-                elif error_message is not None: # Check if error_message is provided
-                    place.deep_scan_status = GcpApiDeepScanStatusEnum.Error.value # Set deep_scan_status to Error value # type: ignore
-                    place.deep_scan_error = error_message # Assign the error message # type: ignore
-                    place.updated_at = now # Update timestamp # type: ignore
+                elif error_message is not None:  # Check if error_message is provided
+                    place.deep_scan_status = (
+                        GcpApiDeepScanStatusEnum.Error.value
+                    )  # Set deep_scan_status to Error value # type: ignore
+                    place.deep_scan_error = (
+                        error_message  # Assign the error message # type: ignore
+                    )
+                    place.updated_at = now  # Update timestamp # type: ignore
 
             # 3. Commit the transaction
             logger.info(f"ORM updates prepared for {updated_count} places.")

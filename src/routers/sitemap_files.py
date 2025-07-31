@@ -45,7 +45,6 @@ sitemap_files_service = SitemapFilesService()
 # Order matters: Specific paths should generally come before parameterized paths
 
 
-
 @router.get(
     "/",
     response_model=PaginatedSitemapFileResponse,

@@ -5,11 +5,16 @@ from dotenv import load_dotenv
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
+
 async def verify_document_status():
-    load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env'))
+    load_dotenv(
+        dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env")
+    )
     database_url = os.getenv("DATABASE_URL")
 
     if not database_url:
@@ -25,7 +30,7 @@ async def verify_document_status():
         conn = await asyncpg.connect(database_url)
         logger.info("Successfully connected to the database.")
 
-        doc_title_to_check = 'v_34-DART_MCP_GUIDE.md'
+        doc_title_to_check = "v_34-DART_MCP_GUIDE.md"
 
         # Query 1: Check document_registry
         logger.info(f"Querying document_registry for title: {doc_title_to_check}")
@@ -35,13 +40,17 @@ async def verify_document_status():
             FROM public.document_registry
             WHERE title = $1;
             """,
-            doc_title_to_check
+            doc_title_to_check,
         )
 
         if registry_row:
-            logger.info(f"Found in document_registry: ID={registry_row['id']}, Title='{registry_row['title']}', Path='{registry_row['file_path']}', ShouldBeVectorized={registry_row['should_be_vectorized']}, EmbeddingStatus='{registry_row['embedding_status']}', ErrorMessage='{registry_row['error_message']}'")
+            logger.info(
+                f"Found in document_registry: ID={registry_row['id']}, Title='{registry_row['title']}', Path='{registry_row['file_path']}', ShouldBeVectorized={registry_row['should_be_vectorized']}, EmbeddingStatus='{registry_row['embedding_status']}', ErrorMessage='{registry_row['error_message']}'"
+            )
         else:
-            logger.warning(f"Document '{doc_title_to_check}' NOT FOUND in document_registry.")
+            logger.warning(
+                f"Document '{doc_title_to_check}' NOT FOUND in document_registry."
+            )
 
         # Query 2: Check project_docs
         logger.info(f"Querying project_docs for title: {doc_title_to_check}")
@@ -51,13 +60,17 @@ async def verify_document_status():
             FROM public.project_docs
             WHERE doc_title = $1;
             """,
-            doc_title_to_check
+            doc_title_to_check,
         )
 
         if project_doc_row:
-            logger.info(f"Found in project_docs: ID={project_doc_row['doc_id']}, Title='{project_doc_row['doc_title']}', Path='{project_doc_row['doc_source_path']}', LastUpdatedAt='{project_doc_row['last_updated_at']}', HasEmbedding={project_doc_row['has_embedding']}")
+            logger.info(
+                f"Found in project_docs: ID={project_doc_row['doc_id']}, Title='{project_doc_row['doc_title']}', Path='{project_doc_row['doc_source_path']}', LastUpdatedAt='{project_doc_row['last_updated_at']}', HasEmbedding={project_doc_row['has_embedding']}"
+            )
         else:
-            logger.warning(f"Document '{doc_title_to_check}' NOT FOUND in project_docs.")
+            logger.warning(
+                f"Document '{doc_title_to_check}' NOT FOUND in project_docs."
+            )
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
@@ -65,6 +78,7 @@ async def verify_document_status():
         if conn:
             await conn.close()
             logger.info("Database connection closed.")
+
 
 if __name__ == "__main__":
     asyncio.run(verify_document_status())

@@ -222,6 +222,7 @@ async def search_places(
 
         # Run background task asynchronously (non-blocking)
         import asyncio
+
         asyncio.create_task(process_places_search_background(task_args))
 
         # Return job ID and status URL immediately

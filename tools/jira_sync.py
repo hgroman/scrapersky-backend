@@ -20,18 +20,15 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('jira_doc.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("jira_doc.log")],
 )
 logger = logging.getLogger(__name__)
 
 # Configuration
 JIRA_EMAIL = "hank@lastapple.com"
 JIRA_DOMAIN = "lastapple.atlassian.net"
-JIRA_API_TOKEN = os.getenv('JIRA')  # Get from environment
+JIRA_API_TOKEN = os.getenv("JIRA")  # Get from environment
 
 if not JIRA_API_TOKEN:
     raise ValueError("JIRA API token not found in environment variables")
@@ -39,13 +36,14 @@ if not JIRA_API_TOKEN:
 # Ensure API token is a string
 JIRA_API_TOKEN = str(JIRA_API_TOKEN)
 
+
 class JiraDoc:
     def __init__(self):
         self.session: Optional[aiohttp.ClientSession] = None
         self.auth = aiohttp.BasicAuth(JIRA_EMAIL, JIRA_API_TOKEN)
         self.headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            "Accept": "application/json",
+            "Content-Type": "application/json",
         }
         self.available_issue_types: List[Dict] = []
         self.project_key: Optional[str] = None
@@ -73,7 +71,9 @@ class JiraDoc:
             async with self.session.get(url) as response:
                 response.raise_for_status()
                 user_data = await response.json()
-                logger.info(f"Successfully connected to JIRA as {user_data.get('emailAddress')}")
+                logger.info(
+                    f"Successfully connected to JIRA as {user_data.get('emailAddress')}"
+                )
                 return True
         except Exception as e:
             logger.error(f"Failed to connect to JIRA: {e}")
@@ -95,7 +95,7 @@ class JiraDoc:
                     logger.info(f"- {project.get('name')} (Key: {project.get('key')})")
                     # Use the first project we find
                     if not self.project_key:
-                        self.project_key = project.get('key')
+                        self.project_key = project.get("key")
                 return projects
         except Exception as e:
             logger.error(f"Failed to get projects: {e}")
@@ -107,18 +107,23 @@ class JiraDoc:
             raise RuntimeError("Session not initialized or no project key available")
 
         url = f"https://{JIRA_DOMAIN}/rest/api/3/issue/createmeta"
-        params = {"projectKeys": self.project_key, "expand": "projects.issuetypes.fields"}
+        params = {
+            "projectKeys": self.project_key,
+            "expand": "projects.issuetypes.fields",
+        }
 
         try:
             async with self.session.get(url, params=params) as response:
                 response.raise_for_status()
                 meta = await response.json()
                 self.available_issue_types = []
-                projects = meta.get('projects', [])
+                projects = meta.get("projects", [])
                 if projects:
-                    for issuetype in projects[0].get('issuetypes', []):
+                    for issuetype in projects[0].get("issuetypes", []):
                         self.available_issue_types.append(issuetype)
-                        logger.info(f"- {issuetype.get('name')} (ID: {issuetype.get('id')})")
+                        logger.info(
+                            f"- {issuetype.get('name')} (ID: {issuetype.get('id')})"
+                        )
                 else:
                     logger.warning("No issue types found for project.")
                 return self.available_issue_types
@@ -129,16 +134,14 @@ class JiraDoc:
     def to_adf(self, markdown_text: str) -> Dict:
         """Convert plain text/markdown to Atlassian Document Format (ADF)"""
         # For now, treat each line as a paragraph
-        lines = [line.strip() for line in markdown_text.strip().split('\n') if line.strip()]
-        content = [{
-            "type": "paragraph",
-            "content": [{"type": "text", "text": line}]
-        } for line in lines]
-        return {
-            "type": "doc",
-            "version": 1,
-            "content": content
-        }
+        lines = [
+            line.strip() for line in markdown_text.strip().split("\n") if line.strip()
+        ]
+        content = [
+            {"type": "paragraph", "content": [{"type": "text", "text": line}]}
+            for line in lines
+        ]
+        return {"type": "doc", "version": 1, "content": content}
 
     async def create_document(self, title: str, content: str) -> Optional[str]:
         """Create a document in JIRA"""
@@ -148,7 +151,14 @@ class JiraDoc:
         # Try to find Documentation issue type, fallback to Task
         issue_type = "Task"
         if self.available_issue_types:
-            doc_type = next((t for t in self.available_issue_types if t.get('name') == "Documentation"), None)
+            doc_type = next(
+                (
+                    t
+                    for t in self.available_issue_types
+                    if t.get("name") == "Documentation"
+                ),
+                None,
+            )
             if doc_type:
                 issue_type = "Documentation"
             else:
@@ -160,7 +170,7 @@ class JiraDoc:
                 "project": {"key": self.project_key},
                 "summary": title,
                 "description": self.to_adf(content),
-                "issuetype": {"name": issue_type}
+                "issuetype": {"name": issue_type},
             }
         }
 
@@ -172,12 +182,13 @@ class JiraDoc:
                     return None
                 response.raise_for_status()
                 result = await response.json()
-                issue_key = result.get('key')
+                issue_key = result.get("key")
                 logger.info(f"Created document: {issue_key}")
                 return issue_key
         except Exception as e:
             logger.error(f"Failed to create document: {e}")
             return None
+
 
 async def main():
     """Main entry point"""
@@ -219,8 +230,7 @@ async def main():
         """
 
         doc_key = await doc.create_document(
-            "Page Curation Workflow Documentation",
-            content
+            "Page Curation Workflow Documentation", content
         )
 
         if doc_key:
@@ -230,6 +240,7 @@ async def main():
 
     finally:
         await doc.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

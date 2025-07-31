@@ -4,13 +4,12 @@ import re
 import json
 import logging
 
+
 class DomainContentExtractor:
     def __init__(self):
         self.crawler = AsyncWebCrawler(max_concurrent_tasks=5)
         self.config = CrawlerRunConfig(
-            stream=True,
-            check_robots_txt=True,
-            user_agent="ScraperSkyBot/1.0"
+            stream=True, check_robots_txt=True, user_agent="ScraperSkyBot/1.0"
         )
 
     async def crawl_domain(self, url):

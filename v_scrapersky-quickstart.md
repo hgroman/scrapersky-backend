@@ -26,7 +26,7 @@ This isn't just a scraper—it's an **enterprise-grade platform** with:
 
 ---
 
-## 🛠️ The Six Essential Tools
+## 🛠️ The Seven Essential Tools
 
 ### 1. **Semantic Search** - Your Navigation System
 Vector-based search across all project documentation.
@@ -83,6 +83,28 @@ Every task requires:
 - Filed flight plan (DART task)
 - Proper classification (Emergency/Passenger/Cargo)
 - Guardian approval for significant changes
+
+### 7. **Debug Tools & Development Infrastructure** - Layer 5 Tooling
+Comprehensive debugging system for development and production troubleshooting.
+
+**Core Components:**
+- **Runtime File Tracer**: Tracks all loaded/imported Python files in real-time
+- **Request/Response Logger**: HTTP middleware for debugging API calls  
+- **Debug Routes**: `/debug/routes` and `/debug/loaded-src-files` introspection endpoints
+- **Conditional Loading**: Zero production overhead via `FASTAPI_DEBUG_MODE` environment control
+
+**Activation:**
+```bash
+# Enable debug mode
+export FASTAPI_DEBUG_MODE=true
+python run_server.py
+
+# Production mode (default)
+export FASTAPI_DEBUG_MODE=false  # or unset
+python run_server.py
+```
+
+**Reference**: Complete restoration guide at `Docs/Docs_30_Debug_Tools/debug_tools_comprehensive_guide.md`
 
 ---
 

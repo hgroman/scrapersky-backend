@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ if DATABASE_URL and "postgresql+asyncpg://" in DATABASE_URL:
 if not DATABASE_URL:
     logger.error("DATABASE_URL environment variable not set.")
     sys.exit(1)
+
 
 class OrphanPurger:
     def __init__(self, conn):
@@ -59,19 +60,27 @@ class OrphanPurger:
             logger.info("No orphaned entries found in project_docs to purge.")
             return
 
-        logger.info(f"Found {len(orphans)} orphaned entries in project_docs scheduled for purging:")
+        logger.info(
+            f"Found {len(orphans)} orphaned entries in project_docs scheduled for purging:"
+        )
         print("\n=== Detected Orphaned Vector DB Entries for Purging ===")
         header = "Vector DB ID | Title                              "
         print(header)
         print("-" * len(header))
         for orphan in orphans:
-            title_display = (orphan['title'][:35] + '...') if orphan['title'] and len(orphan['title']) > 38 else orphan['title']
+            title_display = (
+                (orphan["title"][:35] + "...")
+                if orphan["title"] and len(orphan["title"]) > 38
+                else orphan["title"]
+            )
             print(f"{orphan['id']:<12} | {title_display:<35}")
         print("\n")
 
         if not auto_approve:
-            confirm = input(f"Are you sure you want to PERMANENTLY DELETE these {len(orphans)} entries from project_docs? [y/N]: ")
-            if confirm.lower() != 'y':
+            confirm = input(
+                f"Are you sure you want to PERMANENTLY DELETE these {len(orphans)} entries from project_docs? [y/N]: "
+            )
+            if confirm.lower() != "y":
                 logger.info("Purge operation cancelled by user.")
                 return
 
@@ -80,20 +89,31 @@ class OrphanPurger:
         async with self.conn.transaction():
             for orphan in orphans:
                 try:
-                    await self.conn.execute("DELETE FROM project_docs WHERE id = $1", orphan['id'])
-                    logger.info(f"Successfully deleted orphan with ID {orphan['id']} ('{orphan['title']}') from project_docs.")
+                    await self.conn.execute(
+                        "DELETE FROM project_docs WHERE id = $1", orphan["id"]
+                    )
+                    logger.info(
+                        f"Successfully deleted orphan with ID {orphan['id']} ('{orphan['title']}') from project_docs."
+                    )
                     deleted_count += 1
                 except Exception as e:
-                    logger.error(f"Failed to delete orphan with ID {orphan['id']} ('{orphan['title']}'): {e}")
-        
-        logger.info(f"Successfully purged {deleted_count} out of {len(orphans)} targeted orphaned entries.")
+                    logger.error(
+                        f"Failed to delete orphan with ID {orphan['id']} ('{orphan['title']}'): {e}"
+                    )
+
+        logger.info(
+            f"Successfully purged {deleted_count} out of {len(orphans)} targeted orphaned entries."
+        )
+
 
 async def main():
-    parser = argparse.ArgumentParser(description="Purges orphaned entries from the vector database (project_docs).")
+    parser = argparse.ArgumentParser(
+        description="Purges orphaned entries from the vector database (project_docs)."
+    )
     parser.add_argument(
         "--auto-approve",
         action="store_true",
-        help="Automatically approve the purge operation without interactive confirmation."
+        help="Automatically approve the purge operation without interactive confirmation.",
     )
     args = parser.parse_args()
 
@@ -107,6 +127,7 @@ async def main():
     finally:
         if conn:
             await conn.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

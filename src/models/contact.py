@@ -56,9 +56,7 @@ class Contact(Base, BaseModel):
     __tablename__ = "contacts"
 
     # Define columns based on the agreed schema
-    id = Column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     domain_id = Column(
         PGUUID(as_uuid=True),
         ForeignKey("domains.id", ondelete="CASCADE"),
@@ -117,7 +115,9 @@ class Contact(Base, BaseModel):
 
     # HubSpot sync workflow status fields
     hubspot_sync_status = Column(
-        SQLAlchemyEnum(HubSpotSyncStatus, name="hubspot_sync_status", create_type=False),
+        SQLAlchemyEnum(
+            HubSpotSyncStatus, name="hubspot_sync_status", create_type=False
+        ),
         nullable=False,
         default=HubSpotSyncStatus.New,
         server_default="New",
@@ -126,7 +126,9 @@ class Contact(Base, BaseModel):
 
     hubspot_processing_status = Column(
         SQLAlchemyEnum(
-            HubSpotProcessingStatus, name="hubspot_sync_processing_status", create_type=False
+            HubSpotProcessingStatus,
+            name="hubspot_sync_processing_status",
+            create_type=False,
         ),
         nullable=True,
         index=True,

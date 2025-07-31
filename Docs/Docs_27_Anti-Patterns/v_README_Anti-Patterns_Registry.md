@@ -13,6 +13,8 @@ This registry maintains institutional memory of critical failures, anti-patterns
 
 **Core Principle:** Learn from history to build resilient systems and collaborative practices.
 
+**AI Integration:** This registry is vectorized and searchable. AI assistants MUST query before making changes to prevent repeating documented failures.
+
 ---
 
 ## Anti-Pattern Classification System
@@ -32,6 +34,60 @@ This registry maintains institutional memory of critical failures, anti-patterns
 
 ---
 
+## AI Assistant Instructions
+
+### MANDATORY Pre-Change Protocol
+
+**Before making ANY code changes, AI assistants MUST:**
+
+1. **Query Anti-Patterns by Context:**
+   ```yaml
+   workflow: "[Target Workflow]"
+   layer: "[Target Layer]"
+   component: "[Target Component]"
+   technology: "[Technology Being Modified]"
+   ```
+
+2. **Check Consultation Requirements:**
+   - If `consultation_required` is populated, STOP and request human review
+   - If `danger_level: "WORKFLOW_BREAKING"`, STOP and request approval
+   - If `severity: "CRITICAL"` + same component, STOP and consult documentation
+
+3. **Verify Against Patterns:**
+   - Review "The Correct Pattern" section in relevant anti-patterns
+   - Ensure proposed changes don't recreate documented failures
+   - Follow prevention measures from related anti-patterns
+
+### YAML Metadata System
+
+Each anti-pattern document contains structured metadata for AI discovery:
+
+```yaml
+# Architecture Location (WHERE)
+workflow: "WF1-WF5 or CROSS_WORKFLOW"
+layer: "LAYER1-LAYER7"
+component: "scheduler|router|service|model"
+
+# Business Context (WHY IT MATTERS)
+business_process: "What business function is affected"
+affects_handoff: ["WF1->WF2", "WF3->WF4"]
+user_facing: true|false
+
+# AI Context (WHEN TO CONSULT)
+danger_level: "WORKFLOW_BREAKING|DATA_CORRUPTION|PERFORMANCE|MINOR"
+consultation_required: ["Guardian_Document", "Architecture_Docs"]
+```
+
+### Creating New Anti-Patterns
+
+1. **Use the Template:** Copy `TEMPLATE_Anti-Pattern.md`
+2. **Fill ALL Required Fields:** Every YAML field marked "REQUIRED"
+3. **Follow Naming Convention:** `YYYYMMDD_Pattern_Name_SEVERITY.md`
+4. **Update This Registry:** Add entry to appropriate severity table
+5. **Tag Appropriately:** 5-10 searchable tags for AI discovery
+
+---
+
 ## Current Anti-Patterns Registry
 
 ### CRITICAL Severity
@@ -39,6 +95,8 @@ This registry maintains institutional memory of critical failures, anti-patterns
 | Date | ID | Workflow | Pattern Name | Category | Document |
 |------|----|---------|--------------|-----------| ---------|
 | 2025-06-28 | AP-20250628-001 | WF4 | Email Scraping Substitution | AI Collaboration | [20250628_WF4_Email_Scraping_Substitution_CRITICAL.md](20250628_WF4_Email_Scraping_Substitution_CRITICAL.md) |
+| 2025-07-30 | AP-20250730-002 | WF4 | Database Connection Long Hold | Architectural | [20250730_Database_Connection_Long_Hold_CRITICAL.md](20250730_Database_Connection_Long_Hold_CRITICAL.md) |
+| 2025-07-31 | AP-20250731-003 | WF4 | Double Transaction Management | Architectural | [20250731_WF4_Double_Transaction_Management_CRITICAL.md](20250731_WF4_Double_Transaction_Management_CRITICAL.md) |
 
 ### HIGH Severity
 *None currently documented*
@@ -48,6 +106,45 @@ This registry maintains institutional memory of critical failures, anti-patterns
 
 ### LOW Severity
 *None currently documented*
+
+---
+
+## Template Usage
+
+### For AI Assistants
+
+**When documenting a new anti-pattern:**
+
+1. Copy `TEMPLATE_Anti-Pattern.md` to new file
+2. Replace ALL placeholder text:
+   - `[Workflow Name]` → Actual workflow (WF1, WF2, etc.)
+   - `[SEVERITY]` → CRITICAL, HIGH, MEDIUM, or LOW
+   - `YYYYMMDD` → Actual date (20250730)
+   - `XXX` → Sequential number (001, 002, etc.)
+
+3. **YAML Metadata Rules:**
+   - `anti_pattern_id`: Must be unique (AP-YYYYMMDD-XXX)
+   - `workflow`: Must match ScraperSky workflow names
+   - `layer`: Must match 7-layer architecture (LAYER1-LAYER7)
+   - `danger_level`: Determines AI blocking behavior
+   - `tags`: Include technology, component, and failure mode
+
+4. **Content Requirements:**
+   - Include actual code examples (wrong vs. right)
+   - Specify exact error messages for detection
+   - List concrete prevention measures
+   - Reference existing documentation
+
+### For Human Reviewers
+
+**Quality Checklist:**
+- [ ] YAML metadata complete and accurate
+- [ ] Anti-pattern ID follows format and is unique
+- [ ] Code examples are actual, not hypothetical
+- [ ] Detection signals are specific and actionable
+- [ ] Prevention measures are concrete and implementable
+- [ ] References link to existing documentation
+- [ ] Registry table updated with new entry
 
 ---
 

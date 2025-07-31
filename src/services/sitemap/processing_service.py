@@ -382,7 +382,12 @@ async def process_domain_with_own_session(
     from sqlalchemy import select, update
 
     from ...models.domain import Domain
-    from ...models.sitemap import SitemapFile, SitemapUrl, SitemapFileStatusEnum, SitemapUrlStatusEnum
+    from ...models.sitemap import (
+        SitemapFile,
+        SitemapUrl,
+        SitemapFileStatusEnum,
+        SitemapUrlStatusEnum,
+    )
     from ...scraper.domain_utils import standardize_domain
     from ...session.async_session import get_background_session
 
@@ -489,7 +494,7 @@ async def process_domain_with_own_session(
             # Log details about discovered sitemaps
             for i, sitemap in enumerate(sitemaps):
                 logger.info(
-                    f"Sitemap #{i+1}: URL={sitemap.get('url')}, type={sitemap.get('sitemap_type')}, method={sitemap.get('discovery_method')}"
+                    f"Sitemap #{i + 1}: URL={sitemap.get('url')}, type={sitemap.get('sitemap_type')}, method={sitemap.get('discovery_method')}"
                 )
 
         # STEP 1: Check or create domain record with dedicated session
@@ -579,10 +584,14 @@ async def process_domain_with_own_session(
                         url_count = sitemap.get("url_count", 0)
                         sitemap_size = sitemap.get("size_bytes", 0)
                         sitemap_urls = sitemap.get("urls", [])
-                        logger.info(f"SITEMAP DEBUG: sitemap.get('urls') returned {len(sitemap_urls) if sitemap_urls else 0} URLs for {sitemap_url}")
+                        logger.info(
+                            f"SITEMAP DEBUG: sitemap.get('urls') returned {len(sitemap_urls) if sitemap_urls else 0} URLs for {sitemap_url}"
+                        )
                         if sitemap_urls and len(sitemap_urls) > 0:
-                            logger.info(f"SITEMAP DEBUG: First URL data: {sitemap_urls[0] if sitemap_urls else 'None'}")
-                        
+                            logger.info(
+                                f"SITEMAP DEBUG: First URL data: {sitemap_urls[0] if sitemap_urls else 'None'}"
+                            )
+
                         # Update the total URL count
                         total_url_count += url_count
 

@@ -35,7 +35,11 @@ class WebsiteScanService:
         stmt_existing = (
             select(Job)
             .where(Job.domain_id == domain_id)
-            .where(cast(Job.status, String).in_([TaskStatus.PENDING.value, TaskStatus.RUNNING.value]))
+            .where(
+                cast(Job.status, String).in_(
+                    [TaskStatus.PENDING.value, TaskStatus.RUNNING.value]
+                )
+            )
             .order_by(Job.created_at.desc())
             .limit(1)
         )

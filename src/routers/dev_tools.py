@@ -999,10 +999,14 @@ async def trigger_website_scan(
         return {"status": "success", "message": "Website scan initiated successfully."}
 
     except HTTPException as http_exc:
-        logger.error(f"HTTP error triggering website scan for domain {domain_id}: {http_exc.detail}")
+        logger.error(
+            f"HTTP error triggering website scan for domain {domain_id}: {http_exc.detail}"
+        )
         raise http_exc
     except Exception as e:
-        logger.error(f"Error triggering website scan for domain {domain_id}: {e}", exc_info=True)
+        logger.error(
+            f"Error triggering website scan for domain {domain_id}: {e}", exc_info=True
+        )
         raise HTTPException(
             status_code=500, detail=f"Failed to trigger website scan: {str(e)}"
         )

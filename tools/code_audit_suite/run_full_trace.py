@@ -48,8 +48,7 @@ def run_command(cmd_list, description):
     except FileNotFoundError:
         # Line length fixed
         print(
-            f"Error: Command '{cmd_list[0]}' not found. "
-            f"Is it installed and in PATH?",
+            f"Error: Command '{cmd_list[0]}' not found. Is it installed and in PATH?",
             file=sys.stderr,
         )
         sys.exit(1)

@@ -16,7 +16,7 @@ from .job_service import job_service  # Modernized SQLAlchemy job_service
 # feature_service = FeatureService()
 
 # Service instances - ensure these align with active services
-#rbac_service = RBACService()  # Removed
+# rbac_service = RBACService()  # Removed
 # domain_service = DomainService() # Removed
 
 # Explicitly define what gets exported

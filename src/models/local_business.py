@@ -122,7 +122,7 @@ class LocalBusiness(Base):
         Enum(
             DomainExtractionStatusEnum,  # Reference the updated Enum
             name="domain_extraction_status",  # Fixed: Use actual DB enum name
-            create_type=False
+            create_type=False,
         ),
         nullable=True,
         default=DomainExtractionStatusEnum.Queued,

@@ -113,10 +113,10 @@ class Place(Base):
         Enum(
             GcpApiDeepScanStatusEnum,
             name="gcp_api_deep_scan_status",  # Fixed: Use actual DB enum name
-            create_type=False
+            create_type=False,
         ),
         nullable=True,
-        default=GcpApiDeepScanStatusEnum.Queued
+        default=GcpApiDeepScanStatusEnum.Queued,
     )
     # ------------------------------------------------- #
 

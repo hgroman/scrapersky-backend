@@ -43,7 +43,9 @@ class ScraperAPIClient:
         """Ensure aiohttp session exists."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=70)  # ScraperAPI recommended timeout
+                timeout=aiohttp.ClientTimeout(
+                    total=70
+                )  # ScraperAPI recommended timeout
             )
 
     async def close(self) -> None:
@@ -103,7 +105,9 @@ class ScraperAPIClient:
         last_error = None
         for attempt in range(retries):
             try:
-                logger.info(f"ScraperAPI attempt {attempt+1}/{retries} for URL: {url}")
+                logger.info(
+                    f"ScraperAPI attempt {attempt + 1}/{retries} for URL: {url}"
+                )
                 async with self._session.get(api_url) as response:
                     if response.status == 200:
                         content = await response.text()
@@ -115,7 +119,7 @@ class ScraperAPIClient:
                         return content
                     elif response.status == 429:  # Rate limit
                         logger.warning(
-                            f"ScraperAPI rate limit hit (429) on attempt {attempt+1}, applying backoff"
+                            f"ScraperAPI rate limit hit (429) on attempt {attempt + 1}, applying backoff"
                         )
                         await asyncio.sleep(2**attempt)  # Exponential backoff
                         continue
@@ -155,7 +159,7 @@ class ScraperAPIClient:
         for attempt in range(retries):
             try:
                 logger.info(
-                    f"ScraperAPI SDK attempt {attempt+1}/{retries} for URL: {url}"
+                    f"ScraperAPI SDK attempt {attempt + 1}/{retries} for URL: {url}"
                 )
                 response = self._sdk_client.get(url=api_url)
                 if not response:
