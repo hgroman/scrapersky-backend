@@ -677,7 +677,16 @@ async def process_domain_with_own_session(
                                                 continue
 
                                             # Extract metadata
-                                            lastmod = url_data.get("lastmod")
+                                            lastmod_str = url_data.get("lastmod")
+                                            lastmod = None
+                                            if lastmod_str:
+                                                try:
+                                                    # Convert string to datetime object
+                                                    lastmod = datetime.fromisoformat(lastmod_str.replace('Z', '+00:00'))
+                                                except (ValueError, AttributeError) as e:
+                                                    logger.warning(f"Invalid lastmod format '{lastmod_str}': {e}")
+                                                    lastmod = None
+                                            
                                             changefreq = url_data.get("changefreq")
                                             priority = url_data.get("priority")
 

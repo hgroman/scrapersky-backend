@@ -97,6 +97,7 @@ consultation_required: ["Guardian_Document", "Architecture_Docs"]
 | 2025-06-28 | AP-20250628-001 | WF4 | Email Scraping Substitution | AI Collaboration | [20250628_WF4_Email_Scraping_Substitution_CRITICAL.md](20250628_WF4_Email_Scraping_Substitution_CRITICAL.md) |
 | 2025-07-30 | AP-20250730-002 | WF4 | Database Connection Long Hold | Architectural | [20250730_Database_Connection_Long_Hold_CRITICAL.md](20250730_Database_Connection_Long_Hold_CRITICAL.md) |
 | 2025-07-31 | AP-20250731-003 | WF4 | Double Transaction Management | Architectural | [20250731_WF4_Double_Transaction_Management_CRITICAL.md](20250731_WF4_Double_Transaction_Management_CRITICAL.md) |
+| 2025-07-31 | AP-20250731-005 | WF4 | Invalid Enum Reference | Architectural | [20250731_WF4_Invalid_Enum_Reference_CRITICAL.md](20250731_WF4_Invalid_Enum_Reference_CRITICAL.md) |
 
 ### HIGH Severity
 *None currently documented*

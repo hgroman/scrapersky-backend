@@ -138,9 +138,7 @@ async def process_pending_domain_sitemap_submissions():
                     )
                     if current_status_after_adapter not in [
                         SitemapAnalysisStatusEnum.submitted,
-                        SitemapAnalysisStatusEnum.Completed,
                         SitemapAnalysisStatusEnum.failed,
-                        SitemapAnalysisStatusEnum.Error,
                     ]:
                         logger.error(
                             f"Adapter failed to update status for domain {domain_id}! Current status: {locked_domain.sitemap_analysis_status}. Forcing 'failed'."
