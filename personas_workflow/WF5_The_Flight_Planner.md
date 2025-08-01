@@ -1,11 +1,11 @@
-# WF5 Sitemap Curation Guardian v3 - TRUTH DOCUMENT
+# WF5 - The Flight Planner Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - OXYGEN SYSTEM LEVEL IMPORTANCE**
 
 **Version:** 3.1 (Corrected after background service discovery)  
 **Created:** 2025-01-28  
 **Updated:** 2025-01-28 - Corrected broken status after discovering working implementation  
-**Purpose:** Complete operational authority for WF5 Sitemap Curation workflow  
+**Purpose:** Complete operational authority for WF5 - The Flight Planner workflow  
 **Audience:** Future AI partners who need to understand WF5 operations  
 
 ---

@@ -1,10 +1,10 @@
-# WF6 Sitemap Import Guardian v3 - TRUTH DOCUMENT
+# WF6 - The Recorder Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - OXYGEN SYSTEM LEVEL IMPORTANCE**
 
 **Version:** 3.0 (Code Truth Authority)  
 **Created:** 2025-01-28  
-**Purpose:** Complete operational authority for WF6 Sitemap Import workflow  
+**Purpose:** Complete operational authority for WF6 - The Recorder workflow  
 **Audience:** Future AI partners who need to understand and fix WF6 quickly  
 
 ---

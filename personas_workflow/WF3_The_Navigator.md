@@ -1,10 +1,10 @@
-# WF3 Local Business Curation Guardian v3 - TRUTH DOCUMENT
+# WF3 - The Navigator Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - OXYGEN SYSTEM LEVEL IMPORTANCE**
 
 **Version:** 3.0 (Code Truth Authority)  
 **Created:** 2025-01-28  
-**Purpose:** Complete operational authority for WF3 Local Business Curation workflow  
+**Purpose:** Complete operational authority for WF3 - The Navigator workflow  
 **Audience:** Future AI partners who need to understand and fix WF3 quickly  
 
 ---

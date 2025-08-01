@@ -270,10 +270,43 @@ Here's a common sequence for using the registry management scripts to get your d
     *   To see which directories are approved: `python 1-registry-directory-manager.py --list-approved`
     *   To get a count of total vs. `v_` (vectorization-ready) files in your active, approved directories: `python 1-registry-directory-manager.py --status`
 
-6.  **Process the Embedding Queue**:
-    *   Run the primary vectorization script: `python ../Docs_18_Vector_Operations/Scripts/insert_architectural_docs.py`.
-    *   This script processes all documents in the `document_registry` with `embedding_status = 'queue'` or `needs_update = TRUE`.
-    *   It generates embeddings using OpenAI, inserts/updates the document and its vector in the `project_docs` table (using the `id` from `document_registry` as the primary key), and then updates the `embedding_status` to `active` (or `error_processing` if an issue occurs) in `document_registry`.
+6.  **Phase 4: Auto-Vectorization Handoff Protocol**:
+    
+    **CRITICAL WORKFLOW ENHANCEMENT**: After completing registry management (phases 1-3), I automatically transition to vectorization completion to eliminate handoff confusion.
+    
+    **Auto-Detection and Handoff Sequence**:
+    
+    a) **Queue Status Check**:
+       ```sql
+       SELECT COUNT(*) as queued_count 
+       FROM document_registry 
+       WHERE embedding_status = 'queue' OR needs_update = TRUE;
+       ```
+    
+    b) **Knowledge Librarian v2.0 Integration**:
+       - If `queued_count > 0`, automatically invoke Knowledge Librarian v2.0 protocols
+       - Execute initialization sequence: database connectivity verification
+       - Test semantic search pipeline functionality
+    
+    c) **Seamless Vectorization Execution**:
+       ```bash
+       python ../Docs_18_Vector_Operations/Scripts/insert_architectural_docs.py
+       ```
+       - This script processes all documents with `embedding_status = 'queue'` or `needs_update = TRUE`
+       - Generates embeddings using OpenAI API
+       - Inserts/updates documents and vectors in `project_docs` table
+       - Updates `embedding_status` to `active` (or `error_processing` if issues occur)
+    
+    d) **Unified Completion Reporting**:
+       - Registry phase summary (directories scanned, files queued, archives processed)
+       - Vectorization phase summary (embeddings created, database updated, search verified)
+       - Combined success metrics and any error resolution needed
+    
+    **Benefits of This Enhanced Workflow**:
+    - Eliminates confusion between Registry Librarian (Docs_19) and Knowledge Librarian (Docs_18)
+    - Provides single-persona experience for complete git-diff → vector-database sync
+    - Maintains architectural separation while improving user experience
+    - Reduces manual context switching and duplicate explanations
 
 7.  **Managing Re-Vectorization for Updated Documents**:
     *   When a document's content has changed but its filename remains the same, use:

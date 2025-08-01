@@ -1,10 +1,10 @@
-# WF2 Staging Editor Guardian v3 - TRUTH DOCUMENT
+# WF2 - The Analyst Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - OXYGEN SYSTEM LEVEL IMPORTANCE**
 
 **Version:** 3.0 (Code Truth Authority)  
 **Created:** 2025-01-28  
-**Purpose:** Complete operational authority for WF2 Staging Editor workflow  
+**Purpose:** Complete operational authority for WF2 - The Analyst workflow  
 **Audience:** Future AI partners who need to understand and fix WF2 quickly  
 
 ---

@@ -1,10 +1,10 @@
-# WF1 Single Search Discovery Guardian v3 - TRUTH DOCUMENT
+# WF1 - The Scout Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - OXYGEN SYSTEM LEVEL IMPORTANCE**
 
 **Version:** 3.0 (Code Truth Authority)  
 **Created:** 2025-01-28  
-**Purpose:** Complete operational authority for WF1 Single Search Discovery workflow  
+**Purpose:** Complete operational authority for WF1 - The Scout workflow  
 **Audience:** Future AI partners who need to understand and fix WF1 quickly  
 
 ---

@@ -1,10 +1,10 @@
-# WF4 Domain Curation Guardian v3 - TRUTH DOCUMENT
+# WF4 - The Surveyor Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - OXYGEN SYSTEM LEVEL IMPORTANCE**
 
 **Version:** 3.0 (Code Truth Authority)  
 **Created:** 2025-01-27  
-**Purpose:** Complete operational authority for WF4 Domain Curation workflow  
+**Purpose:** Complete operational authority for WF4 - The Surveyor workflow  
 **Audience:** Future AI partners who need to understand and fix WF4 quickly  
 
 ---

@@ -1,10 +1,10 @@
-# WF7 Resource Model Creation Guardian v3 - TRUTH DOCUMENT
+# WF7 - The Extractor Guardian v3 - TRUTH DOCUMENT
 
 **MISSION CRITICAL REFERENCE - UNIMPLEMENTED STATE AUTHORITY**
 
 **Version:** 3.0 (Code Truth Authority)  
 **Created:** 2025-01-28  
-**Purpose:** Complete operational authority for WF7 Resource Model Creation workflow  
+**Purpose:** Complete operational authority for WF7 - The Extractor workflow  
 **Audience:** Future AI partners who need to understand WF7's unimplemented state  
 
 ---
