@@ -108,7 +108,7 @@ class Settings(BaseSettings):
     system_user_id: str = "00000000-0000-0000-0000-000000000000"
     default_tenant_id: str = "550e8400-e29b-41d4-a716-446655440000"
     dev_user_id: Optional[str] = None
-    DEV_TOKEN: Optional[str] = None  # Token for internal/dev API calls
+    # DEV_TOKEN removed - production uses proper service authentication
 
     # Path settings
     base_dir: Optional[Path] = None
