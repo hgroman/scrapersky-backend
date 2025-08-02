@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE: int = 20  # Default batch size
     SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES: int = 1  # Default max instances
 
+    # V2 WF7 - Page Curation Scheduler
+    PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES: int = 5
+    PAGE_CURATION_SCHEDULER_BATCH_SIZE: int = 10
+    PAGE_CURATION_SCHEDULER_MAX_INSTANCES: int = 1
+
     # External API Keys
     # openai_api_key: Optional[str] = None  # Removed OpenAI API key
     scraper_api_key: Optional[str] = None

@@ -279,13 +279,13 @@ This directory lists the **Decision Authority** personas (Tier 1) who are author
 
 | ID  | Guardian Persona        | Domain                      | Dartboard ID |
 | :-- | :---------------------- | :-------------------------- | :----------- |
-| WF1 | WF1 - The Scout         | Single Search Discovery - Performs initial, wide-area reconnaissance to find potential targets | `[ID_WF1]`   |
-| WF2 | WF2 - The Analyst       | Staging Editor - Reviews the Scout's raw data and assesses which targets are viable | `[ID_WF2]`   |
-| WF3 | WF3 - The Navigator     | Local Business Curation - Plots the specific digital course (the domain) to a viable target | `[ID_WF3]`   |
-| WF4 | WF4 - The Surveyor      | Domain Curation - Creates a detailed map (the sitemap) of the target's domain | `[ID_WF4]`   |
-| WF5 | WF5 - The Flight Planner| Sitemap Curation - Reviews the map and selects the most promising flight paths | `[ID_WF5]`   |
-| WF6 | WF6 - The Recorder      | Sitemap Import - Meticulously logs every point along the selected path, creating Page records | `[ID_WF6]`   |
-| WF7 | WF7 - The Extractor     | Resource Model Creation - Analyzes the recorded data to extract valuable intelligence (contacts, etc.) | `[ID_WF7]`   |
+| WF1 | WF1_The_Scout           | Single Search Discovery - Performs initial, wide-area reconnaissance to find potential targets | `[ID_WF1]`   |
+| WF2 | WF2_The_Analyst         | Staging Editor - Reviews the Scout's raw data and assesses which targets are viable | `[ID_WF2]`   |
+| WF3 | WF3_The_Navigator       | Local Business Curation - Plots the specific digital course (the domain) to a viable target | `[ID_WF3]`   |
+| WF4 | WF4_The_Surveyor        | Domain Curation - Creates a detailed map (the sitemap) of the target's domain | `[ID_WF4]`   |
+| WF5 | WF5_The_Flight_Planner  | Sitemap Curation - Reviews the map and selects the most promising flight paths | `[ID_WF5]`   |
+| WF6 | WF6_The_Recorder        | Sitemap Import - Meticulously logs every point along the selected path, creating Page records | `[ID_WF6]`   |
+| WF7 | WF7_The_Extractor       | Resource Model Creation - Analyzes the recorded data to extract valuable intelligence (contacts, etc.) | `[ID_WF7]`   |
 
 *(Note: Dartboard IDs are placeholders to be filled in from the persona documents.)*
 

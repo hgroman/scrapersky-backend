@@ -27,6 +27,8 @@ from .config.logging_config import setup_logging
 setup_logging()
 
 from src.services.sitemap_import_scheduler import setup_sitemap_import_scheduler
+from src.services.page_curation_scheduler import setup_page_curation_scheduler
+from src.routers.v2.pages import router as v2_pages_router
 from .health.db_health import check_database_connection
 from .routers.batch_page_scraper import router as batch_page_scraper_api_router
 from .routers.batch_sitemap import router as batch_sitemap_api_router
@@ -107,6 +109,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(
             f"Failed to setup Sitemap Import scheduler job: {e}", exc_info=True
+        )
+
+    try:
+        setup_page_curation_scheduler()
+    except Exception as e:
+        logger.error(
+            f"Failed to setup Page Curation scheduler job: {e}", exc_info=True
         )
 
     logger.info("Finished adding jobs to shared scheduler.")
@@ -255,6 +264,7 @@ logger.info("Including API routers...")
 # --- END IMPORTANT ROUTER PREFIX CONVENTION --- #
 
 # Include all routers
+app.include_router(v2_pages_router)
 app.include_router(google_maps_api_router)
 app.include_router(modernized_sitemap_api_router)
 app.include_router(
