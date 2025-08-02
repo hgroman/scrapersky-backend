@@ -94,16 +94,21 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     # This is used by services like domain_to_sitemap_adapter_service for internal /api/v3/sitemap/scan calls.
     if token == "scraper_sky_2024":
         current_env = settings.environment.lower()
-        logger.info(f"Internal token detected. Current environment: '{current_env}'")
+        allow_internal = os.getenv("ALLOW_INTERNAL_TOKEN", "false").lower() == "true"
         
-        # Allow in development OR when explicitly enabled
-        if current_env in ["development", "dev"] or os.getenv("ALLOW_INTERNAL_TOKEN", "false").lower() == "true":
-            logger.info("Internal token authorized for authentication bypass")
+        # Only allow in development environments OR when explicitly enabled via environment variable
+        if current_env in ["development", "dev", "local"] or allow_internal:
+            logger.debug("Internal token authorized for authentication bypass")
         else:
-            logger.warning(f"Internal token blocked - environment '{current_env}' not in dev list and ALLOW_INTERNAL_TOKEN not set")
-            # For now, allow it anyway to fix the immediate issue - TODO: tighten security later
-            logger.info("Temporarily allowing internal token for service continuity")
-        logger.info("Using development token for authentication")
+            logger.error(
+                f"Internal token rejected - environment '{current_env}' not authorized. "
+                f"Set ALLOW_INTERNAL_TOKEN=true to enable in non-dev environments."
+            )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Internal token not allowed in this environment",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         # --- DEVELOPMENT TOKEN USER ID CHANGE (2025-04-11) ---
         # Previous hardcoded value "00000000-0000-0000-0000-000000000000"
