@@ -1,12 +1,14 @@
 # Layer 1: Models & ENUMs - Architectural Blueprint
 
-**Version:** 1.0
-**Date:** 2025-05-14
-**Derived From:**
+**Version:** 2.0 - CONSOLIDATED
+**Date:** 2025-08-01
+**Consolidated From:**
 
-- `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Core Layer 1 Responsibilities & Architectural Principles)
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Primarily Section 2)
-- `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (General principles, specific Layer 1 clarifications if present)
+- `v_1.0-ARCH-TRUTH-Definitive_Reference.md` (Core architectural principles & layer responsibilities)
+- `CONVENTIONS_AND_PATTERNS_GUIDE.md` (Master naming conventions & structural patterns)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md` (Layer-specific implementation details & technical debt)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md` (Detailed Layer 1 conventions)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Foundational naming patterns)
 
 **Contextual References:**
 
@@ -33,6 +35,8 @@ Layer 1 is designated as "The Data Foundation." Its core principles are:
 - **Define Truth:** To serve as the single source of truth for data structure, types, relationships, and permissible states within the application.
 - **Standardization:** To enforce consistent naming, structure, and patterns for all database models and enumerated types, facilitating clarity and maintainability.
 - **ORM Exclusivity:** To ensure all database entity definitions and interactions are managed through the SQLAlchemy ORM, abstracting raw SQL.
+- **Schema Management:** ALL SCHEMA CHANGES MUST BE MANAGED VIA SUPABASE MCP with version control and audit trails.
+- **Transaction Neutrality:** Database operations NEVER handle JWT or tenant authentication - authentication is handled at Layer 3.
 
 ---
 
@@ -95,38 +99,41 @@ These criteria are primarily derived from `CONVENTIONS_AND_PATTERNS_GUIDE.md` (S
 
 #### 2.2.2. Python ENUMs (Status ENUMs & General ENUMs)
 
-- **Naming & Definition (Strict Conventions for Status ENUMs from `CONVENTIONS_AND_PATTERNS_GUIDE.md`):**
+- **Naming & Definition (Strict Conventions for Status ENUMs):**
   1.  **Workflow-Specific Status Enum Class Names:** Must be `{WorkflowNameTitleCase}CurationStatus` or `{WorkflowNameTitleCase}ProcessingStatus`.
       - _Example:_ `PageCurationStatus`, `PageProcessingStatus`.
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
-  2.  **Base Class:** Must inherit from `(str, Enum)`. (e.g., `class PageCurationStatus(str, Enum):`). The "Enum" suffix on the class name itself is discouraged by the guide (e.g. `PageCurationStatus` not `PageCurationStatusEnum`).
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md` (also `1.0-ARCH-TRUTH-Definitive_Reference.md` example `Status enums inherit from (str, Enum) without the "Enum" suffix`)
-  3.  **Location:** Typically defined in the corresponding model's file (e.g., `PageCurationStatus` in `src/models/page.py`).
+      - _Rationale:_ Ensures clear association with specific workflow and maintains universal consistency.
+  2.  **Base Class:** Must inherit from `(str, Enum)`. (e.g., `class PageCurationStatus(str, Enum):`). The "Enum" suffix on the class name itself is discouraged.
+      - _Technical Debt:_ Existing deviations like `SitemapImportCurationStatusEnum` using "Enum" suffix are non-compliant.
+  3.  **Location:** **CONFLICT EXISTS** - Blueprint allows model files OR `src/models/enums.py`, but `src/models/enums.py` header mandates centralization. **Current reality**: Enums scattered between both locations.
+
 - **Standard Values (Mandatory for New Workflow Status ENUMs):**
-  1.  `{WorkflowNameTitleCase}CurationStatus` members **MUST** include: `New = "New"`, `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`, `Skipped = "Skipped"`. No custom additions to this primary curation enum are permitted.
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
-  2.  `{WorkflowNameTitleCase}ProcessingStatus` members **MUST** include: `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`.
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
+  1.  **`{WorkflowNameTitleCase}CurationStatus`** members **MUST** include: 
+      - `New = "New"`, `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`, `Skipped = "Skipped"`
+      - **No custom additions** to this primary curation enum are permitted.
+  2.  **`{WorkflowNameTitleCase}ProcessingStatus`** members **MUST** include:
+      - `Queued = "Queued"`, `Processing = "Processing"`, `Complete = "Complete"`, `Error = "Error"`
+
 - **Model Column Association (for Status ENUMs):**
-  1.  Curation Status Column Name: `{workflow_name}_curation_status`.
-      - _Type:_ `Column(PgEnum({WorkflowNameTitleCase}CurationStatus, name="{workflow_name}curationstatus", create_type=False), ...)`
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
-  2.  Processing Status Column Name: `{workflow_name}_processing_status`.
-      - _Type:_ `Column(PgEnum({WorkflowNameTitleCase}ProcessingStatus, name="{workflow_name}processingstatus", create_type=False), ...)`
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
-  3.  Processing Error Column Name: `{workflow_name}_processing_error` (Type: `Text`).
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
+  1.  **Curation Status Column**: `{workflow_name}_curation_status`
+      - **Type Example**: `Column(PgEnum(PageCurationStatus, name="pagecurationstatus", create_type=False), nullable=False, server_default=PageCurationStatus.New.value, index=True)`
+  2.  **Processing Status Column**: `{workflow_name}_processing_status`
+      - **Type Example**: `Column(PgEnum(PageProcessingStatus, name="pageprocessingstatus", create_type=False), nullable=True, index=True)`
+  3.  **Processing Error Column**: `{workflow_name}_processing_error` (Type: `Text`, nullable=True)
+
 - **General ENUMs (Non-Status):**
-  1.  If not workflow-specific status ENUMs, should still inherit from `(str, Enum)` if string-based values are desired for database storage/API usage.
-  2.  Naming should be clear and PascalCase (e.g., `UserRole`, `TaskType`).
-  3.  Values should be meaningful strings.
+  1.  Should inherit from `(str, Enum)` for string-based database storage
+  2.  Naming: Clear PascalCase (e.g., `UserRole`, `TaskType`)
+  3.  Values: Meaningful strings
+
 - **Handling Justified Non-Standard User States (Additional Status Fields):**
-  1.  **MUST NOT** modify the standard `{WorkflowNameTitleCase}CurationStatus` or `{WorkflowNameTitleCase}ProcessingStatus` Enums or their primary columns.
-  2.  Requires a **new, separate status field** on the SQLAlchemy model and a **new, dedicated Python Enum class**.
-  3.  Additional Status Column Name: `{workflow_name}_{status_purpose}_status`.
-  4.  Additional Python Enum Class Name: `{WorkflowNameTitleCase}{StatusPurpose}Status`.
-  5.  This is **strongly discouraged** and requires significant justification and approval.
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
+  1.  **CRITICAL**: **MUST NOT** modify standard `{WorkflowNameTitleCase}CurationStatus` or `{WorkflowNameTitleCase}ProcessingStatus` Enums
+  2.  **Solution**: Create new, separate status field with dedicated Python Enum class
+  3.  **Naming Pattern**: 
+      - Column: `{workflow_name}_{status_purpose}_status`
+      - Enum Class: `{WorkflowNameTitleCase}{StatusPurpose}Status`
+  4.  **Requires**: Significant justification, formal review, and approval
+  5.  **Strongly discouraged** to maintain system simplicity
 
 ---
 
@@ -135,6 +142,59 @@ These criteria are primarily derived from `CONVENTIONS_AND_PATTERNS_GUIDE.md` (S
 For Layer 1 (Models & ENUMs), the "Standard Pattern" described in Section 2 is comprehensive and mandatory. There are no documented "exception patterns" in the sense of alternative ways to define core data structures.
 
 Deviations from the criteria in Section 2.2 are to be considered technical debt. The handling of "Justified Non-Standard User States" (Section 2.2.2) is a specific, rule-bound extension within the standard pattern, not an exception pattern itself.
+
+---
+
+## 3. Critical Implementation Context
+
+### 3.1. Base Identifiers Foundation
+
+All Layer 1 components must derive from standardized base identifiers:
+
+- **`workflow_name`**: `snake_case` format (e.g., `page_curation`, `domain_curation`)
+  - Defines core workflow purpose
+  - Must follow `{entity}_curation` or `{entity}_import` patterns
+  - Avoid SQL reserved words and system conflicts
+
+- **`source_table_name`**: Singular `snake_case` (e.g., `page`, `domain`, `sitemap_file`)
+  - Represents primary database table
+  - Corresponds directly to model file naming
+  - Must avoid SQL reserved words
+
+- **Derived Formats**:
+  - `{WorkflowNameTitleCase}`: `PageCuration`, `DomainCuration`
+  - `{SourceTableTitleCase}`: `Page`, `Domain`, `SitemapFile`
+  - `source_table_plural_name`: `pages`, `domains`, `sitemap_files`
+
+### 3.2. The ENUM Technical Debt Crisis
+
+**CRITICAL CONTEXT**: Layer 1 previously experienced "The ENUM Catastrophe" where autonomous enum refactoring broke the entire system for a week. This has resulted in:
+
+- **Location Conflict**: 
+  - Blueprint allows enums in model files OR `src/models/enums.py`
+  - `src/models/enums.py` header mandates "All enums MUST be defined here"
+  - **Reality**: Enums are scattered between both locations
+
+- **SQLAlchemy Enum Conversion Issue** (P1 Technical Debt):
+  - SQLAlchemy converting enum values ("Queued") to names ("QUEUED")
+  - Causing background scheduler errors
+  - Documented in `TECHNICAL_DEBT_ENUM_CONVERSION.md`
+  - Temporary workarounds not fully effective
+
+- **Legacy Technical Debt**:
+  - `SitemapCurationStatusEnum` (uses "Enum" suffix - non-compliant)
+  - `SitemapImportCurationStatusEnum` (uses "Enum" suffix - non-compliant)
+  - Non-standard enum values ("Selected" vs "Queued")
+
+**Advisory Mandate**: Layer 1 must remain advisory-only. NEVER attempt autonomous enum refactoring.
+
+### 3.3. Current Architecture Status
+
+- **Compliance Level**: ~80% compliant with architectural standards
+- **Tenant Isolation**: Completely removed from system - no tenant filtering in database operations
+- **Authentication Boundary**: Database operations are authentication-neutral
+- **Connection Pattern**: Supavisor pooling with specific SQLAlchemy 2.0 configurations
+- **Reference Implementation**: `src/models/page.py` with `PageCurationStatus` and `PageProcessingStatus`
 
 ---
 

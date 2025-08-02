@@ -288,7 +288,7 @@ Create v1.3 "Knowledge Optimized" persona with 30-70% reduction in mandatory rea
 
 **Example for Layer 6 UI Virtuoso:**
 - ❌ Remove: `blueprint-zero-persona-framework.md` (meta-knowledge)
-- ✅ Keep: `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md` (domain patterns)
+- ✅ Keep: `Docs/CONSOLIDATION_WORKSPACE/Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md` (domain patterns)
 
 ##### 2. Truth Document Substitution
 **Remove:** Discovery-based documents that require exploration

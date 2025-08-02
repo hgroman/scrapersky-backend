@@ -124,7 +124,7 @@ CONFIGURATION ANALYSIS for [Requesting Workflow]:
 *   `Docs/Docs_10_Final_Audit/v_Layer-5.1-Configuration_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-5.2-Configuration_Audit-Plan.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-5.3-Configuration_AI_Audit_SOP.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer5_Configuration.md`
+*   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer5_Configuration/v_Layer-5.1-Configuration_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 5/v_Layer5_Configuration_Audit_Report.md`
 
 **Deliverable Required:** I will create and log a boot compliance checklist (see Section 3).
@@ -199,7 +199,7 @@ Review my mandatory reading list and propose knowledge optimization:
 5. `v_Layer-5.1-Configuration_Blueprint.md`
 6. `v_Layer-5.2-Configuration_Audit-Plan.md`
 7. `v_Layer-5.3-Configuration_AI_Audit_SOP.md`
-8. `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer5_Configuration.md`
+8. `Docs/CONSOLIDATION_WORKSPACE/Layer5_Configuration/v_Layer-5.1-Configuration_Blueprint.md`
 9. `v_Layer5_Configuration_Audit_Report.md`
 
 **My Optimization Proposal:**

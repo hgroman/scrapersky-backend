@@ -37,5 +37,5 @@
 *   **Relevant Standards:**
     *   Layer 3 Blueprint (`Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md`) - Section 1 (Transaction Management), Section 2.2.3.2 (Transaction Management)
     *   Standard Dependency Injection Patterns (`Docs/Docs_1_AI_GUIDES/30-LAYER3_STANDARD_DEPENDENCY_INJECTION_PATTERNS.md`) - Section 1 (Database Session Dependency)
-    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Reinforces layered architecture and session handling.
+    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Reinforces layered architecture and session handling.
 *   **Related Audit Findings:** Layer 3 Routers Audit Report (`Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md`) - Section 2.3 (Medium Severity Gaps - Transaction Management in Router), detailed findings for numerous router files.

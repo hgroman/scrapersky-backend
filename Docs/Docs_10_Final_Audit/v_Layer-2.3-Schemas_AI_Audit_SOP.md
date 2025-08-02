@@ -8,7 +8,7 @@
 
 ## Introduction: Context from Architectural Truth
 
-This SOP is designed to be used in conjunction with the `Layer-2-Schemas_Blueprint.md` (Version 1.0 or later). Both documents are informed by the overarching architectural standards outlined in `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` and its supporting documents, particularly `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`. The focus is on ensuring API contracts are well-defined, consistent, and properly validated.
+This SOP is designed to be used in conjunction with the `Layer-2-Schemas_Blueprint.md` (Version 1.0 or later). Both documents are informed by the overarching architectural standards outlined in `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md` and its supporting documents. The focus is on ensuring API contracts are well-defined, consistent, and properly validated.
 
 ---
 
@@ -20,7 +20,7 @@ Before starting the audit of Layer 2 components, ensure you have access to and h
     - `Docs/Docs_10_Final_Audit/Layer-2-Schemas_Blueprint.md` (This is the primary standard defining "what good looks like" for Pydantic schemas.)
 2.  **Core Architectural & Convention Guides:**
     - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Especially Section 3 for Schema conventions).
+    - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Especially Section 3 for Schema conventions).
     - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (For any general clarifications or specific Q&A related to schema design if available).
 3.  **Target for Audit Output:**
     - The specific audit checklist, report document, or section of a workflow-specific cheat sheet where Layer 2 findings will be recorded.

@@ -51,13 +51,13 @@ My knowledge is built upon the following canonical documents. This list represen
 *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+*   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 
 **Layer 6 Specific Knowledge:**
 *   `Docs/Docs_10_Final_Audit/v_Layer-6.1-UI-Components_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-6.2-UI-Components_Audit-Plan.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-6.3-UI-Components_AI_Audit_SOP.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md`
+*   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 6/v_Layer6_UI_Components_Audit_Report.md`
 
 ## 6. Tools (HOW)

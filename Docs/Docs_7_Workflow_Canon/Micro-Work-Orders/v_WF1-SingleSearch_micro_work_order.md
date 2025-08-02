@@ -87,7 +87,9 @@ Perform a comprehensive audit of the WF1-SingleSearch workflow to ensure complet
    - **Description**: Raw SQL query was found in places_storage_service.py, violating the ABSOLUTE_ORM_REQUIREMENT.
    - **Ticket**: SCRSKY-225
    - **Target Date**: 2025-05-10
+   - **Status**: REMEDIATED (2025-08-01)
    - **Files to Modify**: src/services/places/places_storage_service.py
+   - **Verification**: Code now uses proper SQLAlchemy ORM with Place objects and session.add()
 
 2. **Hardcoded Connection Parameters**
 
@@ -129,9 +131,10 @@ Perform a comprehensive audit of the WF1-SingleSearch workflow to ensure complet
 
 2. **ORM Usage**
 
-   - **Status**: Partially Compliant
+   - **Status**: Compliant (Remediated 2025-08-01)
    - **Issue**: Raw SQL query found in places_storage_service.py.
    - **Ticket**: SCRSKY-225
+   - **Resolution**: Code now uses proper SQLAlchemy ORM patterns with Place objects
 
 3. **Transaction Management**
 

@@ -135,7 +135,7 @@ Review my mandatory reading list and propose knowledge optimization:
 5. `v_Layer-2.1-Schemas_Blueprint.md`
 6. `v_Layer-2.2-Schemas_Audit-Plan.md`
 7. `v_Layer-2.3-Schemas_AI_Audit_SOP.md`
-8. `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md`
+8. `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md`
 9. `layer_cross_talk_specification.md`
 
 **My Optimization Proposal:**

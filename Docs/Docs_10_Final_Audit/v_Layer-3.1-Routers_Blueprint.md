@@ -1,12 +1,14 @@
 # Layer 3: Routers - Architectural Blueprint
 
-**Version:** 1.0
-**Date:** 2025-05-14
-**Derived From:**
+**Version:** 2.0 - CONSOLIDATED
+**Date:** 2025-08-01
+**Consolidated From:**
 
-- `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Core Layer 3 Responsibilities & Architectural Principles)
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Primarily Section 4)
-- `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (Specific Layer 3 clarifications, transaction/session management)
+- `v_1.0-ARCH-TRUTH-Definitive_Reference.md` (Core architectural principles & transaction management)
+- `CONVENTIONS_AND_PATTERNS_GUIDE.md` (Master naming conventions & structural patterns)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md` (Layer-specific implementation details & technical debt)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md` (Detailed Layer 3 conventions)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Foundational naming patterns)
 
 **Contextual References:**
 
@@ -99,7 +101,75 @@ These criteria are primarily derived from `CONVENTIONS_AND_PATTERNS_GUIDE.md` (S
 
 ---
 
-## 3. Documented Exception Pattern(s)
+## 3. Critical Implementation Context
+
+### 3.1. Transaction Management Architecture
+
+**Core Principle**: "Routers own transaction boundaries, services are transaction-aware but do not create transactions"
+
+**Router Transaction Ownership**:
+- Routers **MUST** own transaction boundaries using `async with session.begin()`
+- Ensures atomicity of operations spanning multiple service calls
+- Services accept session parameters but never create transactions
+- Background tasks create their own sessions and manage transactions independently
+
+**Standard Transaction Pattern**:
+```python
+@router.put("/status")
+async def update_status_batch(
+    request: BatchStatusUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_active_user)
+):
+    async with db.begin():
+        result = await service_function(db=db, request=request)
+        return result
+```
+
+### 3.2. Authentication & Authorization Boundaries
+
+**JWT Authentication**:
+- JWT authentication happens **ONLY** at API gateway endpoints (Layer 3)
+- Database operations **NEVER** handle JWT or tenant authentication
+- **No tenant isolation** across the system (completely removed)
+- Authentication boundaries enforced at router layer, not services
+
+**Standard Authentication Pattern**:
+- Use `current_user: UserRead = Depends(get_current_active_user)` for authenticated endpoints
+- Basic authorization checks can occur in router for simple role checks
+- Complex permission logic belongs in Layer 4 services
+
+### 3.3. API Versioning & Standardization
+
+**Version Prefix**: All endpoints use `/api/v3/` prefix
+- **Applied at**: Application level in `main.py` or parent router inclusion
+- **Consistency**: Uniform versioning across all endpoints
+- **Technical Debt**: Some endpoints still using `/v1/` prefix (non-compliant)
+
+**Endpoint Naming Standards**:
+- RESTful conventions with proper HTTP methods
+- Dedicated endpoints for bulk operations (batch status updates)
+- Query parameters for filtering, not path parameters
+- Path parameters only for resource identifiers
+
+### 3.4. Current Architecture Status
+
+- **Compliance Level**: ~82% compliant with architectural standards
+- **Reference Implementation**: `src/routers/google_maps_api.py` for transaction patterns
+- **Error Handling**: FastAPI native error handling (custom ErrorService removed)
+- **Response Structure**: Consistent response formatting across all endpoints
+
+### 3.5. Known Technical Debt
+
+- **API Versioning**: Some endpoints using outdated `/v1/` prefix
+- **Transaction Boundaries**: Inconsistent implementation in older routers
+- **Endpoint Paths**: Inconsistent path patterns in legacy routers
+- **Function Naming**: Existing functions not following strict shortening rules
+- **Authentication Documentation**: Some boundary documentation needs updates
+
+---
+
+## 4. Documented Exception Pattern(s)
 
 (This section mirrors the structure from Layer 4's Blueprint, adapting it for Layer 3. Define any allowed, documented deviations here.)
 

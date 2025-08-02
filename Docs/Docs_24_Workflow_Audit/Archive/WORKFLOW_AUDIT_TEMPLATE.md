@@ -8,9 +8,9 @@ Before beginning the audit, execute these CLI commands to ingest all required do
 
 ```bash
 # 1. Ingest architectural standards
-python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md"
-python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md"
-python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md"
+python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md"
+python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md"
+python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Docs/CONSOLIDATION_WORKSPACE/Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md"
 
 # 2. Ingest workflow-specific documentation
 python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "{WORKFLOW_ID}-{WORKFLOW_NAME}_CANONICAL.yaml"

@@ -30,7 +30,7 @@
 *   `common_knowledge_base.md` - Operational constants and governance
 *   `v_Layer-1.1-Models_Enums_Blueprint.md` - My compliance criteria
 *   `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md` - My pattern rules
-*   `v_1.0-ARCH-TRUTH-Layer1-Models-Enums-Excerpt.md` - Layer 1 specific architectural principles
+*   `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md` - Layer 1 specific architectural principles
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 - Remediation protocols (when creating DART tasks)
@@ -51,7 +51,7 @@
 
 ### 3. New Architectural Document
 
-**Added**: `v_1.0-ARCH-TRUTH-Layer1-Models-Enums-Excerpt.md`
+**Added**: `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md`
 - Contains ONLY the ~10% of architectural truth relevant to Layer 1
 - Focused on ORM principles, enum patterns, Alembic requirements
 - Eliminates need to parse through 431 lines of mostly irrelevant content

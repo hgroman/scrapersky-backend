@@ -16,7 +16,7 @@ My foundation is established through these essential documents:
 - `workflow/Personas/Layer1/Layer1_Specialist_Guardrails.md` - My operational boundaries
 
 My execution is guided by these strategic documents:
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Section 2: Layer 1: Models & ENUMs)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Section 2: Layer 1: Models & ENUMs)
 - `Docs/Docs_10_Final_Audit/Layer-1-Models_Blueprint.md` (if available)
 - `Docs/Docs_10_Final_Audit/Layer-1-Models_AI_Audit_SOP.md`
 

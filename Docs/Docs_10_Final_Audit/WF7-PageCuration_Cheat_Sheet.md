@@ -52,7 +52,7 @@ For each component type below, assess the current state of the `page_curation` w
 
 ### 2.4 Python Backend - Services (Processing Logic & Schedulers)
 
-- **Relevant `CONVENTIONS_AND_PATTERNS_GUIDE.md` Section(s):** Section 4.2 and 4.3
+- **Authoritative Blueprint:** `v_Layer-2.1-Schemas_Blueprint.md`
 - **Relevant `Q&A_Key_Insights.md` Section(s):** "Layer 4: Python Backend - Services", "Layer 4: Python Backend - Task Management"
 
 | Service/Scheduler File(s) & Path(s) | Current State Assessment (Function Naming, Logic Separation, Registration) | Standard Comparison & Gap Analysis (Deviations) | Prescribed Refactoring Actions | Verification Checklist | Status |

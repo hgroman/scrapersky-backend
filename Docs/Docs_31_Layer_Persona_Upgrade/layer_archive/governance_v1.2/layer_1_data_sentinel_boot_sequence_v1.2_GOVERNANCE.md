@@ -116,11 +116,11 @@ PATTERN ANALYSIS for [Requesting Workflow]:
 *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+*   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-1.1-Models_Enums_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-1.2-Models_Enums_Audit-Plan.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-1.3-Models_Enums_AI_Audit_SOP.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md`
+*   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_cross_talk_specification.md`
 
 **Deliverable Required:** I will create and log a boot compliance checklist (see Section 3).

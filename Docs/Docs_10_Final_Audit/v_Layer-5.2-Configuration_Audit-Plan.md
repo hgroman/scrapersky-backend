@@ -128,7 +128,7 @@ This checklist integrates the Blueprint's compliance criteria and the SOP's audi
 - `Docs/Docs_10_Final_Audit/Layer-5.3-Configuration_AI_Audit_SOP.md`
 - `Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md`
 - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+- `../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 
 ## 7. Output
 

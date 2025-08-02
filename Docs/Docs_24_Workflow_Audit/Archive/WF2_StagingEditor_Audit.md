@@ -2,8 +2,8 @@
 
 **Architectural References:**
 - **Base Conventions:** `v_CONVENTIONS_AND_PATTERNS_GUIDE-Base_Identifiers.md`
-- **Layer 1 (Models):** `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md`
-- **Layer 2 (Schemas):** `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md`
+- **Layer 1 (Models):** `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md`
+- **Layer 2 (Schemas):** `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md`
 - **Layer 3 (Routers):** `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md`
 - **Workflow Definition:** `WF2-StagingEditor_CANONICAL.yaml`
 
@@ -270,8 +270,8 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py \
 ## 10. References
 
 1. **Architectural Standards**
-   - `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md`
-   - `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md`
+   - `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md`
+   - `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md`
    - `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md`
 
 2. **Workflow Definition**

@@ -31,7 +31,7 @@ You are to process all relevant files within the following locations:
   - Includes all `_CANONICAL.yaml` files AND `README.md`.
 - **Directory 6 (Templates & Guides - as per `layer-numbering-guidance.md`):**
   - `Docs/Docs_8_Document-X/Audit_And_Refactor_Workflow_Cheat_Sheet_TEMPLATE.md`
-  - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+  - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
   - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`
   - (Also consider any files in `Docs/Docs_5_Project_Working_Docs/` if they explicitly reference these architectural layers by name only).
 

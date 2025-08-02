@@ -85,10 +85,10 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+*   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-7.3-Testing_AI_Audit_SOP.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer7_Testing.md`
+*   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer7_Testing/v_Layer-7.1-Testing_Blueprint.md`
 *   Audit Report as declared in L7_GUARDIAN_BOOT_NOTE subtask
 
 **Note:** Layer 7 is missing the Audit Plan document (`v_Layer-7.2-Testing_Audit-Plan.md`) as noted in the layer documents breakdown.

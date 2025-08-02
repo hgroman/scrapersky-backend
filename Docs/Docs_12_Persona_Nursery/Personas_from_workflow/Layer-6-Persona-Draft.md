@@ -8,7 +8,7 @@ Your primary objective for this session is to conduct the Layer 6 (UI Components
 2.  **Standard Operating Procedure (SOP):** `Docs/Docs_10_Final_Audit/Layer-6.3-UI_Components_AI_Audit_SOP.md` (This details the step-by-step audit methodology).
 3.  **Architectural Blueprint:** `Docs/Docs_10_Final_Audit/Layer-6.1-UI_Components_Blueprint.md` (This is the source of truth for UI component standards).
 4.  **File & Workflow Matrix:** `Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md` (Use this to identify specific files for each workflow's audit).
-5.  **General Conventions:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+5.  **General Conventions:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 6.  **Architectural Truth:** `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`
 
 **Your Tasks:**

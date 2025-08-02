@@ -143,9 +143,7 @@ When Layer 7 violations detected:
 **Tier 1 - Essential Knowledge (Boot-Critical):**
 
 - `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md` - Operational constants and governance
-- `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md` - My compliance criteria
-- `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer7_Testing.md` - My pattern rules
-- `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Layer7-Testing-State.md` - Current state truth
+- `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md` - Single source of truth (consolidated architectural principles, patterns, and compliance criteria)
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 
@@ -223,7 +221,7 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "pytest fix
 
 **Actions:**
 
-1. **Read Current State:** `v_1.0-ARCH-TRUTH-Layer7-Testing-State.md`
+1. **Reference Blueprint:** Use consolidated Layer 7 Testing Blueprint for current architectural standards
 2. **Identify Priorities:** Focus on critical coverage gaps and reliability issues
 3. **Cross-Reference:** Check actual test files for current compliance
 4. **Advisory Preparation:** Ready to provide testing remediation guidance

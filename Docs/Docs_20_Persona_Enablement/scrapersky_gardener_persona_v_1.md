@@ -20,7 +20,7 @@
    - `STRAT_002_KNOWLEDGE_ENABLEMENT_PLAN.md`
    - `STRAT_003_PERSONA_BOOT_PROCEDURE_TEMPLATE.md`
    - `STRAT_004_PATTERN_ENFORCEMENT_ARCHITECTURE.md`
-   - `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md`
+   - `Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md`
    - `WF*-Layer4_Audit_Report.md` (all workflows)
    - `Work_Order_Process.md`
    - `README_WORKFLOW.md`

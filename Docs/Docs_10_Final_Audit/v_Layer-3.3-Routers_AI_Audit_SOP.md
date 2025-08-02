@@ -8,7 +8,7 @@
 
 ## Introduction: Context from Architectural Truth
 
-This SOP is designed to be used in conjunction with the `Layer-3-Routers_Blueprint.md` (Version 1.0 or later). Both documents are informed by the overarching architectural standards outlined in `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` and its supporting documents, particularly `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`. The focus is on ensuring API endpoints are correctly defined, manage transactions appropriately, handle authentication, and delegate business logic correctly.
+This SOP is designed to be used in conjunction with the `Layer-3-Routers_Blueprint.md` (Version 1.0 or later). Both documents are informed by the overarching architectural standards outlined in `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md` and its supporting documents. The focus is on ensuring API endpoints are correctly defined, manage transactions appropriately, handle authentication, and delegate business logic correctly.
 
 ---
 
@@ -20,7 +20,7 @@ Before starting the audit of Layer 3 components, ensure you have access to and h
     - `Docs/Docs_10_Final_Audit/Layer-3-Routers_Blueprint.md` (Primary standard for routers).
 2.  **Core Architectural & Convention Guides:**
     - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Especially Transaction Responsibility Pattern, Authentication, API Standardization).
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Especially Section 4 for Router conventions).
+    - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Especially Section 4 for Router conventions).
     - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (Clarifications on session/transaction handling).
 3.  **Supporting Layer Blueprints:**
     - `Docs/Docs_10_Final_Audit/Layer-2-Schemas_Blueprint.md` (To understand expected schema usage).

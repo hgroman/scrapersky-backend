@@ -34,5 +34,5 @@
 *   **Relevant Standards:**
     *   Layer 3 Blueprint (`Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md`) - Section 2.2.5 (Logic & Delegation - implies interaction via service interface)
     *   Layer 4 Services Blueprint (Conceptual/Referenced) - Defines service responsibilities and encapsulation.
-    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Reinforces layered architecture and encapsulation principles.
+    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Reinforces layered architecture and encapsulation principles.
 *   **Related Audit Findings:** Layer 3 Routers Audit Report (`Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md`) - Section 2.2 (High Severity Gaps - Direct Internal Variable Access/Manipulation (from Services)), detailed findings for specific router files.

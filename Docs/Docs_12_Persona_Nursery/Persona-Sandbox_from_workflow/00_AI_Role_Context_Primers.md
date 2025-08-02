@@ -22,7 +22,7 @@ By providing this focused context, we aim to:
 
 1.  **`Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`**
     - **Purpose:** Understand the target 7-layer architecture, core architectural principles (ORM-only, transaction management, API versioning, etc.), and key technologies.
-2.  **`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`**
+2.  **`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`**
     - **Purpose:** Learn the detailed, mandatory naming and structural conventions for all code layers (models, schemas, routers, services, UI elements, tests, etc.).
 3.  **`Docs/Docs_6_Architecture_and_Status/4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md`**
     - **Purpose:** Get a clear picture of the current implementation status, compliance metrics (e.g., transaction boundary compliance, API versioning gaps), known technical debt, and immediate project priorities.
@@ -44,7 +44,7 @@ By providing this focused context, we aim to:
 
 1.  **`Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`**
     - **Purpose:** Understand the target 7-layer architecture and the core architectural principles the codebase should adhere to.
-2.  **`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`**
+2.  **`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`**
     - **Purpose:** Internalize the specific, mandatory naming and structural rules. This is critical for identifying deviations and refactoring code to meet standards.
 3.  **`Docs/Docs_6_Architecture_and_Status/4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md`**
     - **Purpose:** Identify areas with known technical debt, low compliance metrics, and where refactoring efforts are most needed according to current project priorities.

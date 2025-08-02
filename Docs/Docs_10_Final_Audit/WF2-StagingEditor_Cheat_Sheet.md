@@ -17,7 +17,7 @@
 
 **Key Reference Documents for this Audit:**
 
-1.  **Target Standard:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+1.  **Target Standard:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 2.  **Standard Clarifications:** `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`
 3.  **Source Code:** Direct review of `src/` files related to `staging_editor`.
 
@@ -51,7 +51,7 @@ For each component type below, assess the current state of the `staging_editor` 
 
 ### 2.4 Python Backend - Services (Processing Logic & Schedulers)
 
-- **Relevant `CONVENTIONS_AND_PATTERNS_GUIDE.md` Section(s):** Section 4.2 and 4.3
+- **Authoritative Blueprint:** `v_Layer-2.1-Schemas_Blueprint.md`
 - **Relevant `Q&A_Key_Insights.md` Section(s):** "Layer 4: Python Backend - Services", "Layer 4: Python Backend - Task Management"
 
 | Service/Scheduler File(s) & Path(s) | Current State Assessment (Function Naming, Logic Separation, Registration) | Standard Comparison & Gap Analysis (Deviations) | Prescribed Refactoring Actions | Verification Checklist | Status |

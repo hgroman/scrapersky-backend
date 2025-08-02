@@ -98,13 +98,13 @@ class DomainToSitemapAdapterService:
                 # "max_pages": 1000
             }
 
-            # 3. Make HTTP POST request
-            api_key = settings.DEV_TOKEN or "scraper_sky_2024"  # Fallback to dev token
+            # 3. Make HTTP POST request - PRODUCTION AUTHENTICATION
+            api_key = settings.supabase_service_role_key or settings.supabase_anon_key
             if not api_key:
-                logger.error("Adapter Service: DEV_TOKEN not found in settings.")
+                logger.error("Adapter Service: No valid service key found in settings.")
                 domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
                 domain.sitemap_analysis_error = (
-                    "Configuration Error: DEV_TOKEN missing."  # type: ignore
+                    "Configuration Error: Service key missing."  # type: ignore
                 )
                 return False
 

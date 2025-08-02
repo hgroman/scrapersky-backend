@@ -133,7 +133,7 @@ This section lists the schema files to be audited. For each file, and for each P
 
 -   `Docs/Docs_10_Final_Audit/Layer-2.1-Schemas_Blueprint.md`
 -   `Docs/Docs_10_Final_Audit/Layer-2.3-Schemas_AI_Audit_SOP.md`
--   `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+-   `../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 -   `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`
 -   `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`
 

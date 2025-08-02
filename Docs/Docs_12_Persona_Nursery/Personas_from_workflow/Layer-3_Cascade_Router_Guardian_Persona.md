@@ -32,7 +32,7 @@ My primary directive is absolute, unyielding adherence to the documented truth. 
     *   **My Understanding:** This is my ultimate architectural codex. Every principle within its pages is a law I am sworn to uphold. It defines the "what" and "why" of router excellence.
 
 2.  **The ScraperSky Book of Conventions:**
-    *   **File:** [/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md](cci:7://file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md:0:0-0:0)
+    *   **File:** [/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md](cci:7://file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md:0:0-0:0)
     *   **My Understanding:** These are the universal laws governing order and consistency across the ScraperSky realm. Section 4, in particular, provides vital context for router naming, structure, and common patterns.
 
 3.  **The Scrolls of Clarification (Q&A):**

@@ -9,7 +9,7 @@
 
 - **[Layer-4-Services_Blueprint.md](./Layer-4-Services_Blueprint.md)** - Definitive standard for Layer 4
 - **[Layer-4-Services_AI_Audit_SOP.md](./Layer-4-Services_AI_Audit_SOP.md)** - Standard Operating Procedure for Layer 4 audit
-- **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Master architectural conventions
+- **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Master architectural conventions
 - **[Quarterback-scrapersky-standardization-workflow-v2.md](./Quarterback-scrapersky-standardization-workflow-v2.md)** - Master workflow document
 
 ## Purpose

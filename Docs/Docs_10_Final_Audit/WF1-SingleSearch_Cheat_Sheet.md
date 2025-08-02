@@ -17,7 +17,7 @@
 
 **Key Reference Documents for this Audit:**
 
-1.  **Target Standard:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+1.  **Target Standard:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 2.  **Standard Clarifications:** `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`
 3.  **Existing Workflow Analysis (if available, e.g., from `Docs/Docs_5_Project_Working_Docs/52-Gold-Standard-Blue-Print/`):**
     - `52.B-Analysis-Layer_Main_App_Integration.md` (for `single_search` if covered)
@@ -80,7 +80,7 @@
 
 ### 2.4 Python Backend - Services (Processing Logic & Schedulers)
 
-- **Relevant `CONVENTIONS_AND_PATTERNS_GUIDE.md` Section(s):** Section 5 (Services), Section 9 (Schedulers & Background Tasks) in older guide version, now primarily Section 5 in unified guide.
+- **Authoritative Blueprint:** `v_Layer-4.1-Services_Blueprint.md`
 - **Relevant `Q&A_Key_Insights.md` Section(s):** "Python Backend - Services", "Python Backend - Task Management"
 - **Current Progress:** [0/3] components standardized.
 

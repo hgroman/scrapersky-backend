@@ -2,7 +2,7 @@
 
 **Date:** 2025-05-07
 **Associated Template:** `Docs/Docs_8_Document-X/v_3_WORKFLOW_BUILDER_CHEAT_SHEET.md`
-**Related Guide:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+**Related Guide:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 
 **Purpose:** This journal tracks significant enhancements made to the master Workflow Builder Cheat Sheet template, explaining the rationale and linking changes to established project standards.
 

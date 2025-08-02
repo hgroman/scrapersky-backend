@@ -55,7 +55,7 @@ The following findings are grouped by severity and apply across multiple files a
     *   **Impact:** Reduces semantic clarity, potentially harming accessibility and maintainability.
 
 *   **G2: Undocumented Naming Conventions**
-    *   **Observation:** The project uses `kebab-case` for CSS classes and `camelCase` for HTML IDs, but this is not documented in the `CONVENTIONS_AND_PATTERNS_GUIDE.md`.
+    *   **Observation:** The project uses `kebab-case` for CSS classes and `camelCase` for HTML IDs, which is now documented in the `v_Layer-6.1-UI_Components_Blueprint.md`.
     *   **Impact:** Lack of documentation can lead to inconsistency.
 
 *   **G3: Limited Accessibility (ARIA)**

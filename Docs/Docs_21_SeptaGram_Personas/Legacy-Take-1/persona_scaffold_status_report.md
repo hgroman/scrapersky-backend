@@ -28,8 +28,8 @@ The initial audit performed during the persona scaffolding initiative correctly 
 
 However, this gap has since been fully remediated. The following canonical documents now provide the necessary foundational knowledge for these layers:
 
-*   **Layer 2:** `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md`
-*   **Layer 6:** `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md`
+*   **Layer 2:** `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md`
+*   **Layer 6:** `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md`
 
 With the creation of these guides, all architectural layers now have foundational documentation, enabling the effective operation of their respective Guardian Personas.
 

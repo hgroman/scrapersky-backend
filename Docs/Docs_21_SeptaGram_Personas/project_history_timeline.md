@@ -18,12 +18,12 @@
 
 *   **Event: Establishing the Architectural "Truth"**
     *   A definitive set of non-negotiable architectural rules was created to guide all future development.
-    *   🏛️ **Key Document:** `v_1.0-ARCH-TRUTH-Definitive_Reference.md` - *The bedrock document defining core patterns like ORM-only and Transaction Management.*
+    *   🏛️ **Key Document:** `v_Layer-1.1-Models_Enums_Blueprint.md` - *The consolidated architectural blueprint defining core patterns like ORM-only and Transaction Management.*
 
 *   **Event: Defining Implementation & Layers**
     *   With the "what" defined, the "how" was detailed, breaking the system into logical layers.
-    *   🏛️ **Key Document:** `v_2.0-ARCH-TRUTH-Implementation_Strategy.md`
-    *   🏛️ **Key Document:** `v_3.0-ARCH-TRUTH-Layer_Classification_Analysis_Concise.md`
+    *   🏛️ **Key Document:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+    *   🏛️ **Key Document:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 
 *   **Event: Issuing the Mandate for Change**
     *   A formal work order was created to implement the new architectural standards across the codebase.
@@ -53,7 +53,7 @@
 
 *   **Event: Defining Layer 3 Conventions & Blueprint**
     *   Specific rules and the ideal state for Layer 3 were formally documented.
-    *   🔍 **Key Document:** `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md`
+    *   🔍 **Key Document:** `Docs/CONSOLIDATION_WORKSPACE/Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md`
     *   🔍 **Key Document:** `Layer-3.1-Routers_Blueprint.md`
 
 *   **Event: Planning and Executing the Audit**

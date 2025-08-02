@@ -11,7 +11,7 @@
 
 1.  **AI Collaboration Constitution:** `Docs/Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md` (Establishes foundational rules of AI engagement).
 2.  **Project Work Order (This Refactoring Initiative):** `Docs/Docs_5_Project_Working_Docs/52-Gold-Standard-Blue-Print/52.0-Draft-Work-Order.md` (Outlines the overall strategy and goals for codebase standardization).
-3.  **The Golden Standard Blueprint:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The definitive source for all target naming conventions and structural patterns).
+3.  **The Golden Standard Blueprint:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The definitive source for all target naming conventions and structural patterns).
 4.  **Blueprint Clarifications & Q&A:** `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (Actionable answers to common implementation questions).
 5.  **Active Audit & Refactor Cheat Sheet (This Workflow's Instance):** `Docs/Docs_8_Document-X/INSTANCES/Audit_And_Refactor_{WorkflowName}_Cheat_Sheet.md` (This is the primary document for recording audit findings and refactoring plans for the current workflow. **This session will focus on populating and actioning this document.**)
 6.  **This Document:** Sets the immediate task focus for the current AI session.

@@ -20,7 +20,7 @@ cat "Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md"
 cat "Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md"
 
 # Architectural Truth Document
-cat "Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md"
+cat "Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md"
 
 # Guardian Remediation Protocol
 cat "Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md"

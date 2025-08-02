@@ -94,6 +94,6 @@ Based on the documented findings:
 -   Router Prefix Convention (`Docs/Docs_1_AI_GUIDES/23-LAYER3_FASTAPI_ROUTER_PREFIX_CONVENTION.md`)
 -   Standard Dependency Injection Patterns (`Docs/Docs_1_AI_GUIDES/30-LAYER3_STANDARD_DEPENDENCY_INJECTION_PATTERNS.md`)
 -   Layer 3 Audit Report (`Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md`)
--   Relevant sections of the Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`)
+-   Relevant sections of the Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`)
 -   Vector DB Knowledge System (fix_patterns table)
 -   Historical project documents and work orders related to Layer 3 remediation efforts.

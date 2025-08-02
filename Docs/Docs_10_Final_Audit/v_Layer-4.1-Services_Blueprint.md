@@ -1,12 +1,14 @@
 # Layer 4: Services & Schedulers - Architectural Blueprint
 
-**Version:** 2.1
-**Date:** 2025-05-13
-**Derived From:**
+**Version:** 3.0 - CONSOLIDATED
+**Date:** 2025-08-01
+**Consolidated From:**
 
-- `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Core Layer 4 Responsibilities & Architectural Principles)
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Primarily Section 5)
-- `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (Primarily Layer 3 & Layer 4 sections)
+- `v_1.0-ARCH-TRUTH-Definitive_Reference.md` (Core architectural principles & background processing)
+- `CONVENTIONS_AND_PATTERNS_GUIDE.md` (Master naming conventions & structural patterns)
+- `v_1.0-ARCH-TRUTH-Layer4-Services-Schedulers-Excerpt.md` (Layer-specific implementation details)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md` (Detailed Layer 4 conventions)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Foundational naming patterns)
 
 **Contextual References:**
 
@@ -20,9 +22,16 @@ The standards herein for Layer 4 directly support and implement the Core Archite
 
 ---
 
-## 1. Core Principle: Separation of Concerns
+## 1. Core Principles: Business Logic & Background Processing
 
-The primary architectural principle for Layer 4 is the separation of business logic from API routing and data access primitives. As a general standard, **business logic, workflow orchestration, and interactions with external systems belong in dedicated service files.**
+Layer 4 is designated as the "Business Logic & Background Processing" layer. Its core principles are:
+
+- **Separation of Concerns**: Business logic isolated from API routing and data access primitives
+- **Transaction Awareness**: Services are transaction-aware but NEVER create transactions (routers own transaction boundaries)
+- **Status-Driven Workflows**: Producer-consumer pattern driven by status changes
+- **Standardized Background Processing**: Single shared APScheduler instance for all background tasks
+- **Session Management**: Services accept session parameters, schedulers manage their own sessions
+- **External System Integration**: Centralized interaction with external APIs and services
 
 ---
 

@@ -25,7 +25,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-1.1-Models_Enums_Blueprint.md`
 - `v_Layer-1.2-Models_Enums_Audit-Plan.md` 
 - `v_Layer-1.3-Models_Enums_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md`
 
 **Audit Reports:**
 - `v_Layer1_Models_Enums_Audit_Report.md`
@@ -35,7 +35,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-2.1-Schemas_Blueprint.md`
 - `v_Layer-2.2-Schemas_Audit-Plan.md`
 - `v_Layer-2.3-Schemas_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer2_Schemas.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md`
 
 **Audit Reports:**
 - `v_Layer2_Schemas_Audit_Report.md`
@@ -45,7 +45,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-3.1-Routers_Blueprint.md`
 - `v_Layer-3.2-Routers_Audit-Plan.md`
 - `v_Layer-3.3-Routers_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer3_Routers.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md`
 
 **Audit Reports:**
 - `v_Layer3_Routers_Audit_Report.md`
@@ -55,7 +55,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-4.1-Services_Blueprint.md`
 - `v_Layer-4.2-Services_Audit-Plan.md`
 - `v_Layer-4.3-Services_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md`
 
 **Workflow-Specific Audit Reports:**
 - `v_WF1-SingleSearch_Layer4_Audit_Report.md`
@@ -71,7 +71,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-5.1-Configuration_Blueprint.md`
 - `v_Layer-5.2-Configuration_Audit-Plan.md`
 - `v_Layer-5.3-Configuration_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer5_Configuration.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer5_Configuration/v_Layer-5.1-Configuration_Blueprint.md`
 
 **Audit Reports:**
 - `v_Layer5_Configuration_Audit_Report.md`
@@ -81,7 +81,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-6.1-UI_Components_Blueprint.md`
 - `v_Layer-6.2-UI_Components_Audit-Plan.md`
 - `v_Layer-6.3-UI_Components_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md`
 
 **Component-Specific Audit Reports:**
 - `v_Layer6_UI_Components_Audit_Report.md` (master report)
@@ -98,7 +98,7 @@ Based on the vectorization work order, here's the complete document structure su
 - `v_Layer-7.1-Testing_Blueprint.md`
 - ❌ `v_Layer-7.2-Testing_Audit-Plan.md` (Missing)
 - `v_Layer-7.3-Testing_AI_Audit_SOP.md`
-- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer7_Testing.md`
+- `Docs/CONSOLIDATION_WORKSPACE/Layer7_Testing/v_Layer-7.1-Testing_Blueprint.md`
 
 **Audit Reports:**
 - `v_Layer7_Testing_Audit_Report.md`

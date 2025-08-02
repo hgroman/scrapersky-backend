@@ -163,7 +163,7 @@ Start general, dive specific as needed:
    - `Docs/Docs_7_Workflow_Canon/v_0_quick_start_guide.md` - Complete navigation guide
 
 2. **Architecture & Standards**
-   - `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md` - Architectural law
+   - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md` - The high-level architectural overview, linking to all layer blueprints.
    - `Docs/Docs_7_Workflow_Canon/v_2_WORKFLOW_CANON_README.md` - Workflow structure
 
 3. **Operational Protocols**
@@ -181,7 +181,7 @@ Start general, dive specific as needed:
 | Component | Path | Purpose |
 |-----------|------|---------|
 | **Semantic Search CLI** | `Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py` | Knowledge discovery |
-| **Architecture Truth** | `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md` | Layer definitions |
+| **Architecture Truth** | `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md` | Layer definitions |
 | **Workflow Canon** | `Docs/Docs_7_Workflow_Canon/` | All workflow docs |
 | **DART Protocol** | `workflow/README_WORKFLOW V2.md` | Flight control ops |
 | **Guardian Personas** | `Docs/Docs_21_SeptaGram_Personas/` | AI specialists |

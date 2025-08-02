@@ -42,7 +42,7 @@ Any new router files added during the audit period will also be included. [__ini
 The audit will be performed in strict adherence to the principles and procedures outlined in the following documents:
 - **`Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md`**: Defines the architectural standards, design patterns, and compliance criteria for Layer 3 Routers. This is the primary reference for evaluating router implementations.
 - **`Docs/Docs_10_Final_Audit/Layer-3.3-Routers_AI_Audit_SOP.md`**: Details the step-by-step Standard Operating Procedure for the AI to conduct the Layer 3 audit.
-- **`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`**: Provides general project-wide conventions relevant to routers.
+- **`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`**: Provides general project-wide conventions relevant to routers.
 - **`Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`**: Contains answers to specific architectural questions that may impact router design.
 
 ### 3.2. Auditor Persona:

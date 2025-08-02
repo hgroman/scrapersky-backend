@@ -96,7 +96,7 @@ Rationale: Irrelevant to operational function
 *   `common_knowledge_base.md` - Operational constants and governance
 *   `v_Layer-1.1-Models_Enums_Blueprint.md` - My compliance criteria
 *   `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1.md` - My pattern rules
-*   `v_1.0-ARCH-TRUTH-Layer1-Models-Enums-Excerpt.md` - Layer 1 specific architectural principles
+*   `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md` - Layer 1 specific architectural principles
 
 **Tier 2 - Reference Library (On-Demand):**
 *   Query via semantic search when needed:
@@ -157,13 +157,13 @@ To address the "90% irrelevant" issue with the full architectural truth document
 | Layer | Excerpt Document | Focus Area | Key Content |
 |-------|-----------------|------------|-------------|
 | Layer 0 | `v_1.0-ARCH-TRUTH-Layer0-Chronicle-Excerpt.md` | Historical Evolution | Project phases, documentation principles |
-| Layer 1 | `v_1.0-ARCH-TRUTH-Layer1-Models-Enums-Excerpt.md` | Data Foundation | ORM-only rules, enum patterns, Alembic |
-| Layer 2 | `v_1.0-ARCH-TRUTH-Layer2-Schemas-Excerpt.md` | API Contracts | Pydantic patterns, validation rules |
-| Layer 3 | `v_1.0-ARCH-TRUTH-Layer3-Routers-Excerpt.md` | Transaction Management | Router ownership, JWT boundaries |
-| Layer 4 | `v_1.0-ARCH-TRUTH-Layer4-Services-Schedulers-Excerpt.md` | Business Logic | Service patterns, scheduler config |
-| Layer 5 | `v_1.0-ARCH-TRUTH-Layer5-Configuration-Excerpt.md` | Cross-Cutting Concerns | Settings, project structure |
-| Layer 6 | `v_1.0-ARCH-TRUTH-Layer6-UI-Components-Excerpt.md` | User Interface | Tab patterns, JavaScript modules |
-| Layer 7 | `v_1.0-ARCH-TRUTH-Layer7-Testing-Excerpt.md` | Testing | Pytest patterns, test organization |
+| Layer 1 | `Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md` | Data Foundation | ORM-only rules, enum patterns, Alembic |
+| Layer 2 | `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md` | API Contracts | Pydantic patterns, validation rules |
+| Layer 3 | `Docs/CONSOLIDATION_WORKSPACE/Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md` | Transaction Management | Router ownership, JWT boundaries |
+| Layer 4 | `Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md` | Business Logic | Service patterns, scheduler config |
+| Layer 5 | `Docs/CONSOLIDATION_WORKSPACE/Layer5_Configuration/v_Layer-5.1-Configuration_Blueprint.md` | Cross-Cutting Concerns | Settings, project structure |
+| Layer 6 | `Docs/CONSOLIDATION_WORKSPACE/Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md` | User Interface | Tab patterns, JavaScript modules |
+| Layer 7 | `Docs/CONSOLIDATION_WORKSPACE/Layer7_Testing/v_Layer-7.1-Testing_Blueprint.md` | Testing | Pytest patterns, test organization |
 
 **Location**: All excerpts are in `/Docs/Docs_6_Architecture_and_Status/`
 

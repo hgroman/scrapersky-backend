@@ -8,7 +8,7 @@
 
 ## Introduction: Context from Architectural Truth
 
-This SOP is designed to be used in conjunction with the `Layer-1-Models_Enums_Blueprint.md` (Version 1.0 or later). Both documents are informed by the overarching architectural standards outlined in `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` and its supporting documents, particularly `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`.
+This SOP is designed to be used in conjunction with the `Layer-1-Models_Enums_Blueprint.md` (Version 1.0 or later). Both documents are informed by the overarching architectural standards outlined in `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md` and its supporting documents, particularly `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`.
 
 ---
 
@@ -20,7 +20,7 @@ Before starting the audit of Layer 1 components, ensure you have access to and h
     - `Docs/Docs_10_Final_Audit/Layer-1-Models_Enums_Blueprint.md` (This is the primary standard defining "what good looks like" for models and ENUMs.)
 2.  **Core Architectural & Convention Guides:**
     - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Especially Section 2 for Model and ENUM conventions).
+    - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Especially Section 2 for Model and ENUM conventions).
     - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (For any general clarifications or specific Q&A related to data modeling if available).
 3.  **Target for Audit Output:**
     - The specific audit checklist, report document, or section of a workflow-specific cheat sheet where Layer 1 findings will be recorded.

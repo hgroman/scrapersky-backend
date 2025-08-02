@@ -322,7 +322,7 @@ asyncio.run(process_pending_domain_sitemap_submissions())
 - **Common Knowledge**: `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 
 **Operational Knowledge:**
-- **Architecture Truth**: `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+- **Architecture Truth**: `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 - **DART Protocol**: `workflow/README_WORKFLOW V2.md` (Flight Control Protocol)
 - **Work Orders**: `workflow/Work_Order_Process.md` (Flight Operations Manual)
 - **Cross-Layer Coordination**: `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
@@ -525,7 +525,7 @@ wf4ExcellenceInitialize();  // CRITICAL: This function call MUST be processed im
 - `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 - `workflow/README_WORKFLOW V2.md` (DART Flight Control Protocol)
 - `workflow/Work_Order_Process.md` (Flight Operations Manual)
-- `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 - `Docs/Docs_27_Anti-Patterns/README_Anti-Patterns_Registry.md` (System-wide anti-patterns)
 
 **Deliverable Required:** Excellence compliance checklist (see Section 3).

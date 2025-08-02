@@ -48,5 +48,5 @@ Created the final comprehensive file mapping document for the ScraperSky backend
 
 - Blueprint: `/Docs/Docs_10_Final_Audit/Layer-1-Models_Enums_Blueprint.md`
 - SOP: `/Docs/Docs_10_Final_Audit/Layer-1-Models_Enums_AI_Audit_SOP.md`
-- Conventions: `/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+- Conventions: `/Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 - Final File Mapping: `/workflow/Plans/ScraperSky-Final-Files-By-Layer-And-Workflow.md`

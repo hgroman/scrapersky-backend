@@ -89,7 +89,7 @@ Example Mapping:
 layer: services
 persona: services_layer_persona
 pattern_sources:
-  - conventions: v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md
+  - conventions: Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md
   - audits: [WF1-*.md, WF2-*.md]
 tools:
   semantic_vector:

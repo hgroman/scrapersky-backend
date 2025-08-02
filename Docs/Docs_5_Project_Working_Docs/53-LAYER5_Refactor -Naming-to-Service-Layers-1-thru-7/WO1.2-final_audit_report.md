@@ -62,7 +62,7 @@ The following files and directories were systematically reviewed:
   - `v_11_WF6_CANONICAL.yaml`
 - **Directory 6 (Templates & Guides specified in Work Order):**
   - `Docs/Docs_8_Document-X/Audit_And_Refactor_Workflow_Cheat_Sheet_TEMPLATE.md`
-  - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+  - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
   - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`
 
 ---
@@ -98,7 +98,7 @@ The following files were modified to ensure adherence to the layer numbering sta
      ---
     ```
 
-- **File:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+- **File:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
   - **Description:** Added "Layer X:" prefixes to relevant section headers to align with the 7-layer architectural numbering system, as per the Golden Standard.
   - **Summary of Changes (Specific Lines):**
     - Header `### Python Backend - Models & ENUMs` (approx. line 281 originally) changed to `### Layer 1: Python Backend - Models & ENUMs`.

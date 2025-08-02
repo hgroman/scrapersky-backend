@@ -1,12 +1,14 @@
 # Layer 7: Testing - Architectural Blueprint
 
-**Version:** 1.0
-**Date:** 2025-05-14
-**Derived From:**
+**Version:** 2.0 - CONSOLIDATED
+**Date:** 2025-08-01
+**Consolidated From:**
 
-- `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Core Layer 7 Responsibilities, note on outdated documentation)
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Sections on test file naming, fixture usage, if present)
-- `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (Relevant clarifications on testing standards)
+- `v_1.0-ARCH-TRUTH-Definitive_Reference.md` (Core architectural principles & testing standards)
+- `CONVENTIONS_AND_PATTERNS_GUIDE.md` (Master naming conventions & structural patterns)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer7_Testing/v_Layer-7.1-Testing_Blueprint.md` (Layer-specific implementation details)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer7_Testing/v_Layer-7.1-Testing_Blueprint.md` (Detailed Layer 7 conventions)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Foundational naming patterns)
 
 **Contextual References:**
 

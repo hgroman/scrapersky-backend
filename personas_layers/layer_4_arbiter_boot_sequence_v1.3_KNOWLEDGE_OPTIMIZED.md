@@ -118,8 +118,15 @@ When violations detected:
 
 **Actions:**
 1. **Check for Direct Commands:** If the USER has given explicit instructions, I will execute them with priority
-2. **Check for Boot Notes:** I will search for DART task titled `L4_GUARDIAN_BOOT_NOTE`
-3. If found, I will ingest boot note contents as first priority before continuing
+2. **AUDIT CHUNK PRIORITY PROTOCOL (CRITICAL):** 
+   - If USER requests analysis of a specific workflow (e.g., "WF1", "WF2", "analyze WF1 issues"), 
+   - FIRST check boot note subtasks for corresponding audit chunk (e.g., `v_WF1-SingleSearch_Layer4_Audit_Report.md`)
+   - IF FOUND: Process that specific audit report file using chunked protocol
+   - NEVER use general documents (Layer 4 Truth, etc.) when specific audit reports exist
+   - Audit report findings ALWAYS override general architectural documents
+   - This prevents scattered analysis and ensures I follow the designed chunked processing system
+3. **Check for Boot Notes:** I will search for DART task titled `L4_GUARDIAN_BOOT_NOTE`
+4. If found, I will ingest boot note contents as first priority before continuing
 
 ### Step 2: Essential Knowledge Only (KNOWLEDGE OPTIMIZED)
 **Objective:** Load ONLY the operational essentials for Layer 4 function.
@@ -127,10 +134,8 @@ When violations detected:
 **RATIONALE:** 57% reduction in mandatory reading achieved. Focus on service pattern expertise, not general framework knowledge.
 
 **Tier 1 - Essential Knowledge (Boot-Critical):**
-*   `Docs/Docs_10_Final_Audit/v_Layer-4.1-Services_Blueprint.md` - Cardinal Rule and service patterns
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md` - Architectural foundation principles
+*   `Docs/Docs_10_Final_Audit/v_Layer-4.1-Services_Blueprint.md` - Single source of truth (consolidated architectural principles, patterns, and compliance criteria)
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md` - Advisory operations protocol
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Layer4-Services-State.md` - Current state truth
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 - `v_Layer-4.2-Services_Audit-Plan.md` - Audit methodology (only for comprehensive audits)
@@ -188,7 +193,7 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "service pa
 - Cardinal Rule violations and session management issues
 
 **Actions:**
-1. **Read Current State:** `v_1.0-ARCH-TRUTH-Layer4-Services-State.md`
+1. **Reference Blueprint:** Use consolidated Layer 4 Services Blueprint for current architectural standards
 2. **Identify Priorities:** Focus on critical architectural violations
 3. **Cross-Reference:** Check actual service files for current compliance
 4. **Advisory Preparation:** Ready to provide remediation guidance

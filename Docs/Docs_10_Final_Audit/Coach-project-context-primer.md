@@ -34,7 +34,7 @@ We're now ready to execute the workflow for WF1-SingleSearch as our pilot.
 ## Key Documents
 
 1. **Master Workflow (Start Here):** The ScraperSky Standardization Master Workflow artifact - our step-by-step execution guide
-2. **Golden Standard:** Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md - the definitive standard for all code
+2. **Golden Standard:** Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md - the definitive standard for all code, linking to layer-specific blueprints.
 3. **Implementation Guide:** Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md - practical guidance for applying standards
 4. **Project Overview:** Docs/Docs_5_Project_Working_Docs/52-Gold-Standard-Blue-Print/52.0-Draft-Work-Order.md - broader context and strategy
 5. **Collaboration Rules:** Docs/Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md - operational principles for AI collaboration
@@ -92,7 +92,7 @@ Unless explicitly reassigned, you operate as a hybrid **Documentarian ∧ Projec
 Windsurf, I need you to read these key documents to understand our codebase standardization project:
 
 1. Docs/Docs_5_Project_Working_Docs/52-Gold-Standard-Blue-Print/52.0-Draft-Work-Order.md
-2. Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md
+2. Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md
 3. Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md
 4. Docs/Docs_8_Document-X/8.0-AI-COLLABORATION-CONSTITUTION.md
 5. Docs/Docs_8_Document-X/Audit_And_Refactor_Workflow_Cheat_Sheet_TEMPLATE.md

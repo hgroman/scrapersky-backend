@@ -89,7 +89,7 @@ These documents provide foundational understanding applicable across the entire 
 
 *   **`Docs/Docs_15_Master_Plan/00_Master_Plan.md`**: The overarching vision, core architecture, and key components of the AI-Native Engineering System.
 *   **`Docs/Docs_15_Master_Plan/___Guide_to_Persona_Creation_and_Knowledge_Onboarding.md`**: This guide itself, detailing the process of becoming a specialized persona.
-*   **`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`**: Definitive guide for naming and structural conventions across the backend project.
+*   **`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`**: Definitive guide for naming and structural conventions across the backend project.
 *   **`Docs/ARCHITECTURE_EVOLUTION.md`**: (To be reviewed and potentially added if it contains general architectural evolution narrative).
 *   **`Docs/Documentation-Dependency-Tree.md`**: (To be reviewed and potentially added if it contains general documentation structure).
 *   **`workflow/README_WORKFLOW.md`**: Standardized workflow system, emphasizing DART task management.

@@ -36,5 +36,5 @@
 *   **Relevant Standards:**
     *   Layer 3 Blueprint (`Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md`) - Section 2.1 (Delegation), Section 2.2.5 (Logic & Delegation)
     *   Layer 4 Services Blueprint (Conceptual/Referenced) - Defines where business logic should reside.
-    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Reinforces layered architecture.
+    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Reinforces layered architecture.
 *   **Related Audit Findings:** Layer 3 Routers Audit Report (`Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md`) - Section 2.2 (High Severity Gaps - Business Logic in Router), detailed findings for numerous router files.

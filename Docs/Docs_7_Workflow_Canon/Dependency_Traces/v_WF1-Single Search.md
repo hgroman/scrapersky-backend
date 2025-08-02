@@ -182,7 +182,9 @@ The transaction boundary pattern should be improved to follow the architectural 
 
 ### ORM Compliance
 
-Any raw SQL in `src/services/places/places_storage_service.py` (Layer 4: Services) should be replaced with proper SQLAlchemy ORM code (SCRSKY-225). This is a critical architectural requirement.
+~~Any raw SQL in `src/services/places/places_storage_service.py` (Layer 4: Services) should be replaced with proper SQLAlchemy ORM code (SCRSKY-225). This is a critical architectural requirement.~~
+
+**REMEDIATED (2025-08-01)**: Raw SQL in `src/services/places/places_storage_service.py` has been replaced with proper SQLAlchemy ORM code (SCRSKY-225). The service now uses Place objects and session.add() patterns as required.
 
 ### Configuration Externalization
 

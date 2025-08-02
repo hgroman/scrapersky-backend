@@ -53,5 +53,5 @@ Created a comprehensive, actionable audit plan for Layer 1 (Models & ENUMs) of t
 
 - Blueprint: `/Docs/Docs_10_Final_Audit/Layer-1-Models_Enums_Blueprint.md`
 - SOP: `/Docs/Docs_10_Final_Audit/Layer-1-Models_Enums_AI_Audit_SOP.md`
-- Conventions: `/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+- Conventions: `/Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
 - Comprehensive File Mapping: `/workflow/Plans/ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md`

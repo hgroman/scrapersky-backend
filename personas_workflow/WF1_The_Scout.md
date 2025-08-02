@@ -200,12 +200,12 @@ Created → status = 'New' (ready for WF2 Staging Editor)
 
 ## TECHNICAL DEBT ISSUES (DOCUMENTED & TRACKED)
 
-### 1. Raw SQL Violation (CRITICAL)
+### 1. Raw SQL Violation (REMEDIATED)
 - **Location:** `/src/services/places/places_storage_service.py`
-- **Issue:** Uses raw SQL instead of SQLAlchemy ORM
+- **Issue:** Formerly used raw SQL. Now correctly uses the SQLAlchemy ORM.
 - **Ticket:** SCRSKY-225
-- **Priority:** HIGH
-- **Target:** 2025-05-10
+- **Status:** **REMEDIATED** (Verified 2025-08-01)
+- **Priority:** N/A
 
 ### 2. Hardcoded Configuration (MEDIUM)
 - **Location:** `/src/services/places/places_service.py`

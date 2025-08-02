@@ -251,7 +251,7 @@ Each anti-pattern document must include:
 
 ### Institutional Knowledge
 - **Guardian Framework:** `Docs/Docs_21_SeptaGram_Personas/persona_blueprint_framework_v_1_3 _2025.07.13.md`
-- **Architecture Truth:** `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+- **Architecture Truth:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 - **DART Protocol:** `workflow/README_WORKFLOW V2.md`
 
 ### Recovery Resources

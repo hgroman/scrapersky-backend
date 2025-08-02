@@ -35,5 +35,5 @@
     *   Layer 3 Blueprint (`Docs/Docs_10_Final_Audit/Layer-3.1-Routers_Blueprint.md`) - Section 2.2.3 (Response Model)
     *   Layer 2 Schemas Blueprint (Conceptual/Referenced) - Defines standards for schemas.
     *   API Standardization Guide (`Docs/Docs_1_AI_GUIDES/15-LAYER3_API_STANDARDIZATION_GUIDE.md`) - Section 2 (Response Structure Standardization)
-    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Section 3 (Layer 2: Schemas)
+    *   Conventions and Patterns Guide (`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`) - Section 3 (Layer 2: Schemas)
 *   **Related Audit Findings:** Layer 3 Routers Audit Report (`Docs/Docs_10_Final_Audit/Audit Reports Layer 3/Layer3_Routers_Audit_Report.md`) - Section 2.3 (Medium Severity Gaps - Generic `dict` or Missing Explicit Response Models, Using ORM Model as Response Model), detailed findings for numerous router files.

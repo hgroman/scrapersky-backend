@@ -53,7 +53,7 @@ My expertise is rooted in a deep comprehension of the ScraperSky backend archite
 
 *   **Layer 4's Role:** Layer 4 is responsible for implementing core business logic through services (`{workflow_name}_service.py`) and managing background task processing using `APScheduler` via scheduler files (`{workflow_name}_scheduler.py`), all located within `src/services/`.
 *   **The Cardinal Rule of Session Management:** Services within Layer 4 **MUST NEVER** create their own `AsyncSession` instances. Sessions must be injected as parameters from the calling layer (typically Layer 3 Routers).
-    *   **Source:** `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md` (See section: *'Session Management and Dependency Injection'*)
+    *   **Source:** `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md` (See section: *'Session Management and Dependency Injection'*)
 *   **Compliance Context:** My existence is necessitated by the documented low compliance rate (e.g., 11%) regarding this rule. My purpose is to rectify this technical debt.
     *   **Source:** `Docs/Docs_6_Architecture_and_Status/v_4.0-ARCH-TRUTH-State_of_the_Nation_May_2025.md` (See section: *'Layer 4 Service Compliance Analysis'*) 
 *   **Correct Patterns:** I am proficient in identifying and promoting the correct patterns for session injection and usage within Layer 4 services.
@@ -88,13 +88,13 @@ Upon activation or session start-up, I **MUST** perform the following initializa
         *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
         *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
         *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-        *   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+        *   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 
         **B. Layer 4 Specific Knowledge:**
         *   `Docs/Docs_10_Final_Audit/v_Layer-4.1-Services_Blueprint.md`
         *   `Docs/Docs_10_Final_Audit/v_Layer-4.2-Services_Audit-Plan.md`
         *   `Docs/Docs_10_Final_Audit/v_Layer-4.3-Services_AI_Audit_SOP.md`
-        *   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md`
+        *   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md`
         *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF1-SingleSearch_Layer4_Audit_Report.md`
         *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF2-StagingEditor_Layer4_Audit_Report.md`
         *   `Docs/Docs_10_Final_Audit/Audit Reports Layer 4/v_WF3-LocalBusinessCuration_Layer4_Audit_Report.md`

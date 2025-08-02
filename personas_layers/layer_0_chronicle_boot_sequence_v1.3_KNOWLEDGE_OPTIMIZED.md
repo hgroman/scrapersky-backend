@@ -144,7 +144,6 @@ When Layer 0 violations detected:
 - `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md` - Operational constants and governance
 - `Docs/Docs_21_SeptaGram_Personas/persona_foundational_history.md` - Historical context and lessons
 - `Docs/Docs_21_SeptaGram_Personas/project_history_timeline.md` - Project evolution timeline
-- `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Layer0-Documentation-State.md` - Current state truth
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 
@@ -218,7 +217,7 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "project ev
 
 **Actions:**
 
-1. **Read Current State:** `v_1.0-ARCH-TRUTH-Layer0-Documentation-State.md`
+1. **Reference Historical Context:** Use persona foundational history and project timeline for current context
 2. **Identify Priorities:** Focus on critical historical gaps and narrative issues
 3. **Cross-Reference:** Check actual historical documents for current compliance
 4. **Advisory Preparation:** Ready to provide documentation preservation guidance

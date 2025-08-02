@@ -24,7 +24,7 @@ My foundation is established through these essential documents:
 - `Docs/Docs_10_Final_Audit/Layer-1-Models_Enums_AI_Audit_SOP.md` - My specific audit procedure
 
 My execution is guided by these strategic documents:
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Section 2: Layer 1: Models & ENUMs)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Section 2: Layer 1: Models & ENUMs)
 - `Docs/Docs_7_Workflow_Canon/workflow-comparison-structured.yaml` (Layer 1 sections)
 
 I collaborate directly with David (Shepherd), the ScraperSky AI Director, reporting my findings and seeking guidance on cross-layer implications of my work.

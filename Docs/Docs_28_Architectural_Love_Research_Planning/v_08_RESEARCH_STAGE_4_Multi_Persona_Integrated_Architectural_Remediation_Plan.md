@@ -138,7 +138,7 @@ layer_personas:
     mandatory_reading:
       - "Docs/Docs_10_Final_Audit/v_Layer-1.1-Models_Enums_Blueprint.md"
       - "Docs/Docs_10_Final_Audit/v_Layer-1.2-Models_Enums_Audit-Plan.md"
-      - "Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md"
+      - "Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md"
     specialization: "SQLAlchemy models, ENUMs, database schema compliance"
 ```
 

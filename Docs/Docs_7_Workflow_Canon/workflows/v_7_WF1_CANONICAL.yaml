@@ -163,8 +163,11 @@ known_issues:
     severity: "HIGH"
     ticket: "SCRSKY-225"
     target_date: "2025-05-10"
+    status: "REMEDIATED"
+    remediation_date: "2025-08-01"
     workaround: "Manually construct query using SQLAlchemy ORM (Layer 1: Models & ENUMs)"
     actionable_todo: "Replace raw SQL query with SQLAlchemy ORM (Layer 1: Models & ENUMs) in store_places method"
+    remediation_details: "Code now uses proper SQLAlchemy ORM with Place objects and session.add() patterns"
     files_to_modify:
       - "src/services/places/places_storage_service.py"
 

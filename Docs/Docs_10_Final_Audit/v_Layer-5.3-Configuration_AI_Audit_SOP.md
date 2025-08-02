@@ -20,7 +20,7 @@ Before starting the audit of Layer 5 components, ensure you have access to and h
     - `Docs/Docs_10_Final_Audit/Layer-5-Configuration_Blueprint.md` (Primary standard).
 2.  **Core Architectural & Convention Guides:**
     - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`.
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`.
+    - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`.
     - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`.
 3.  **Target for Audit Output:**
     - The specific audit checklist, report document, or section where Layer 5 findings will be recorded.

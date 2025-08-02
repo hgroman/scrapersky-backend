@@ -1,12 +1,14 @@
 # Layer 2: Schemas - Architectural Blueprint
 
-**Version:** 1.0
-**Date:** 2025-05-14
-**Derived From:**
+**Version:** 2.0 - CONSOLIDATED
+**Date:** 2025-08-01
+**Consolidated From:**
 
-- `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Core Layer 2 Responsibilities & Architectural Principles)
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Primarily Section 3)
-- `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (General principles, specific Layer 2 clarifications if present)
+- `v_1.0-ARCH-TRUTH-Definitive_Reference.md` (Core architectural principles & API standardization)
+- `CONVENTIONS_AND_PATTERNS_GUIDE.md` (Master naming conventions & structural patterns)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md` (Layer-specific implementation details & technical debt)
+- `Docs/CONSOLIDATION_WORKSPACE/Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md` (Detailed Layer 2 conventions)
+- `v_CONVENTIONS_AND_PATTERNS_GUIDE-Base_Identifiers.md` (Foundational naming patterns)
 
 **Contextual References:**
 
@@ -35,6 +37,8 @@ Layer 2 is designated as the "API Contracts" layer. Its core principles are:
 - **Validation:** To enforce data validation rules at the API boundary, ensuring data integrity before it reaches Layer 3 (Routers) or Layer 4 (Services).
 - **Serialization/Deserialization:** To manage the transformation of data between Python objects (used internally) and JSON (used in API communication).
 - **Clarity and Consistency:** To ensure schemas are clearly named, consistently structured, and easy to understand.
+- **API Standardization:** Support uniform `/api/v3/` versioning prefix with consistent endpoint naming patterns.
+- **Type Safety:** Leverage Pydantic's type system for compile-time safety and self-documenting contracts.
 
 ---
 
@@ -45,9 +49,13 @@ This is the **sole and mandatory pattern** for defining API request/response sch
 ### 2.1. Definition & Scope
 
 - **Purpose:** To define the expected shape, types, and validation rules for data exchanged via API endpoints.
-- **Location & File Naming (Conventions from `CONVENTIONS_AND_PATTERNS_GUIDE.md` Section 3):**
-  - **Schema Files:** `src/schemas/{entity_name}.py` (singular, snake_case). Example: `src/schemas/page.py`, `src/schemas/user.py`.
-  - **Shared/Common Schemas:** Can be placed in `src/schemas/common.py` (e.g., for pagination, standard error responses).
+- **Location & File Naming (Workflow-Centric Organization):**
+  - **Primary Convention (Mandatory for New Workflows):** For workflow-specific actions (batch updates, workflow operations): `src/schemas/{workflow_name}.py`
+    - **Rationale:** Aligns with clear separation of concerns and emphasizes workflow-specific nature
+    - **Example**: `src/schemas/page_curation.py` contains `PageCurationUpdateRequest`, `PageCurationUpdateResponse`
+  - **Secondary Convention (Generic Entity Schemas):** For generic CRUD operations unrelated to specific workflows: `src/schemas/{source_table_name}.py`
+    - **Example**: `src/schemas/sitemap_file.py` contains `SitemapFileBase`, `SitemapFileCreate`, `SitemapFileRead`
+  - **Shared/Common Schemas:** Common patterns in `src/schemas/common.py` (pagination, standard error responses)
 - **Responsibilities:**
   - Defining input (request body/query parameters) and output (response body) structures.
   - Specifying data types for each field using Python type hints.
@@ -63,12 +71,24 @@ These criteria are primarily derived from `CONVENTIONS_AND_PATTERNS_GUIDE.md` (S
 - **Naming & Location:**
   1.  **File Name:** Must be `src/schemas/{entity_name}.py` (singular, snake_case).
       - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`
-  2.  **Class Name:** Must clearly indicate the entity and purpose, using PascalCase. Follow the Base/Create/Update/Read pattern where applicable:
-      - `{EntityName}Base`: Common fields shared across create/update/read.
-      - `{EntityName}Create`: Fields required for creation (inherits from Base).
-      - `{EntityName}Update`: Fields allowed for update (inherits from Base, often all optional).
-      - `{EntityName}Read` or `{EntityName}`: Fields returned in responses (inherits from Base, includes ID, timestamps, potentially related data schemas).
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`, Pydantic best practices.
+  2.  **Class Name Patterns:**
+      - **For Workflow-Specific Actions (Primary Pattern):**
+        - **Prefix:** MUST use `{WorkflowNameTitleCase}` prefix (ensures clarity and consistency)
+        - **Suffixes:** Request models MUST end with "Request", Response models MUST end with "Response"
+        - **Structure:**
+          - Request: `{WorkflowNameTitleCase}[ActionDescription][Batch]Request`
+          - Response: `{WorkflowNameTitleCase}[ActionDescription][Batch]Response`
+        - **Examples:**
+          - `PageCurationBatchStatusUpdateRequest`
+          - `PageCurationBatchStatusUpdateResponse`
+          - `PageCurationUpdateRequest`
+          - `PageCurationUpdateResponse`
+      - **For Generic Entity CRUD (Secondary Pattern):**
+        - `{EntityName}Base`: Common fields shared across operations
+        - `{EntityName}Create`: Fields required for creation
+        - `{EntityName}Update`: Fields allowed for update (often optional)
+        - `{EntityName}Read`: Fields returned in responses (includes ID, timestamps)
+      - **Technical Debt:** Existing schemas like `SitemapFileBatchUpdate` missing "Request"/"Response" suffix or wrong prefix are non-compliant
 - **Base Class:**
   1.  Must inherit from `pydantic.BaseModel`.
 - **Fields:**
@@ -90,10 +110,12 @@ These criteria are primarily derived from `CONVENTIONS_AND_PATTERNS_GUIDE.md` (S
       - `Create` inherits `Base`, adds creation-specific fields.
       - `Update` inherits `Base`, makes fields optional as needed.
       - `Read` inherits `Base`, adds read-only fields (like `id`, `created_at`) and potentially nested schemas for related data.
-- **ENUM Usage:**
-  1.  Fields representing controlled vocabularies (like status) **MUST** use the corresponding `Enum` defined in Layer 1 (`src/models/`).
-      - _Example:_ `status: PageCurationStatus` where `PageCurationStatus` is imported from `src/models/page.py` or `src/models/enums.py`.
-      - _Source:_ `CONVENTIONS_AND_PATTERNS_GUIDE.md`, `1.0-ARCH-TRUTH-Definitive_Reference.md` (Layered Awareness principle).
+- **ENUM Usage (Layer Integration):**
+  1.  Fields representing controlled vocabularies (like status) **MUST** use the corresponding `Enum` defined in Layer 1.
+      - **Import Pattern**: Import from `src/models/page.py` or `src/models/enums.py`
+      - **Example**: `status: PageCurationStatus` in schema
+      - **Rationale**: Maintains layered architectural awareness and single source of truth
+      - **Note**: Addresses the Layer 1 ENUM location conflict by accepting both import sources
 - **Docstrings & Descriptions:**
   1.  Schema classes should have a docstring explaining their purpose (e.g., "Schema for creating a new user.").
   2.  Fields can have a `description` in `Field(..., description="...")` for OpenAPI documentation clarity.
@@ -105,6 +127,44 @@ These criteria are primarily derived from `CONVENTIONS_AND_PATTERNS_GUIDE.md` (S
 For Layer 2 (Schemas), the "Standard Pattern" using Pydantic `BaseModel` and the associated conventions (Section 2) is mandatory. There are no documented "exception patterns" for defining API contracts.
 
 Deviations from the criteria in Section 2.2 are considered technical debt.
+
+---
+
+## 3. Critical Implementation Context
+
+### 3.1. Schema Organization Strategy
+
+**Workflow-Centric Approach**:
+- **Primary Pattern**: Workflow-specific schemas belong in `src/schemas/{workflow_name}.py`
+- **Rationale**: Clear separation of concerns, emphasizes workflow-specific nature of operations
+- **Example**: `PageCurationUpdateRequest` belongs in `src/schemas/page_curation.py`, NOT `src/schemas/page.py`
+
+**Entity-Centric Fallback**:
+- **Secondary Pattern**: Generic CRUD operations in `src/schemas/{source_table_name}.py`
+- **Use Case**: Genuinely generic schemas intended for reuse across multiple workflows
+- **Example**: `SitemapFileBase`, `SitemapFileCreate`, `SitemapFileRead` in `src/schemas/sitemap_file.py`
+
+### 3.2. Naming Convention Hierarchy
+
+**Request/Response Naming Rules**:
+1. **Workflow Actions**: `{WorkflowNameTitleCase}[Action][Batch]Request/Response`
+2. **Generic CRUD**: `{EntityName}Base/Create/Update/Read`
+3. **Batch Operations**: Include "Batch" in the name for bulk operations
+4. **Version Compatibility**: Schema changes must maintain API compatibility
+
+### 3.3. Current Architecture Status
+
+- **Compliance Level**: ~75% compliant with architectural standards
+- **Schema Migration**: Reorganization from api_models to dedicated schema files (mostly complete)
+- **API Versioning**: Uniform `/api/v3/` prefix implementation
+- **Reference Implementation**: `src/schemas/page_curation.py` with `PageCurationUpdateRequest`
+
+### 3.4. Known Technical Debt
+
+- **Missing Suffixes**: `SitemapFileBatchUpdate` lacks "Request" suffix
+- **Wrong Organization**: Workflow-specific schemas in entity files instead of workflow files
+- **Non-Workflow Prefixes**: Some schemas use entity prefixes instead of workflow prefixes
+- **Validation Location**: Some business logic validation in schemas instead of Layer 4
 
 ---
 

@@ -148,6 +148,7 @@ Users initiate a business discovery search via the "Single Search" UI tab, resul
 - **Type**: ORM Violation
 - **Discovered By**: Cascade AI
 - **Timestamp**: 2025-05-05T08:05:10-07:00
+- **Status**: REMEDIATED (2025-08-01)
 
 **Description**:
 The storage service uses raw SQL queries for place data insertion and updates, violating the ABSOLUTE_ORM_REQUIREMENT architectural principle. This is particularly concerning because it creates an inconsistent pattern across the codebase and bypasses SQLAlchemy's protections.
@@ -164,6 +165,12 @@ The storage service uses raw SQL queries for place data insertion and updates, v
 1. Replace raw SQL with SQLAlchemy ORM queries
 2. Add proper relationship handling through ORM models
 3. Add tests to verify functionality after refactoring
+
+**REMEDIATION COMPLETED (2025-08-01)**:
+- **Verification Method**: Direct code review of the store_places method in places_storage_service.py
+- **Verification Details**: The method now correctly uses SQLAlchemy ORM objects (Place) and session management (session.add()), eliminating the previous raw SQL calls
+- **Code Evidence**: Lines 136, 263-264 show proper ORM usage with select() queries and Place(**data) object creation
+- **Verified By**: Layer 4 Arbiter (Service Guardian)
 
 **Reference(s)**:
 
@@ -659,7 +666,7 @@ During standardization research, we identified inconsistent naming patterns and 
 | WF3-2    | Naming confusion in sitemap_scheduler.py               | LOW      | SCRSKY-231 | 2025-05-30  | OPEN     | -                                          |
 | WF4-1    | Direct API call to internal endpoint                   | LOW      | SCRSKY-232 | 2025-05-30  | OPEN     | -                                          |
 | WF4-2    | Hardcoded internal API URL                             | LOW      | SCRSKY-233 | 2025-05-30  | OPEN     | -                                          |
-| WF1-1    | Raw SQL query in places_storage_service.py             | HIGH     | SCRSKY-225 | 2025-05-10  | OPEN     | -                                          |
+| WF1-1    | Raw SQL query in places_storage_service.py             | HIGH     | SCRSKY-225 | 2025-05-10  | REMEDIATED | 2025-08-01                                 |
 | WF1-2    | Hardcoded connection params in places_service.py       | MEDIUM   | SCRSKY-226 | 2025-05-15  | OPEN     | -                                          |
 | WF1-3    | Missing transaction boundary in API router             | MEDIUM   | SCRSKY-250 | 2025-05-15  | OPEN     | -                                          |
 | WF1-4    | Insufficient error handling for API failures           | MEDIUM   | SCRSKY-251 | 2025-05-18  | OPEN     | -                                          |

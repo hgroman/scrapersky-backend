@@ -154,7 +154,7 @@ Complete section 2.1 (Layer 1: Models & ENUMs):
 
 1. Analyze src/models/place_search.py and src/models/place.py
 2. Document the current state in the cheat sheet
-3. Compare with the standards in CONVENTIONS_AND_PATTERNS_GUIDE.md
+3. Compare with the standards in the relevant blueprint.
 4. Identify gaps and prescribed refactoring actions
 5. Set status to "To Do" for all items
 

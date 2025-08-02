@@ -138,9 +138,7 @@ When Layer 1 violations detected:
 
 **Tier 1 - Essential Knowledge (Boot-Critical):**
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md` - Operational constants and governance
-*   `Docs/Docs_10_Final_Audit/v_Layer-1.1-Models_Enums_Blueprint.md` - My compliance criteria
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer1_Models_Enums.md` - My pattern rules
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Layer1-Models-Enums-Excerpt.md` - Layer 1 specific architectural principles
+*   `Docs/Docs_10_Final_Audit/v_Layer-1.1-Models_Enums_Blueprint.md` - Single source of truth (consolidated architectural principles, patterns, and compliance criteria)
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 - Remediation protocols (when creating DART tasks)
@@ -150,7 +148,7 @@ When Layer 1 violations detected:
 **REMOVED from Mandatory Reading (70% reduction):**
 - ❌ `blueprint-zero-persona-framework.md` - Meta-knowledge about persona design
 - ❌ `layer_guardian_remediation_protocol.md` - Process document, reference when needed
-- ❌ `v_1.0-ARCH-TRUTH-Definitive_Reference.md` - 90% irrelevant to Layer 1
+- ✅ `v_1.0-ARCH-TRUTH-Definitive_Reference.md` - The high-level architectural overview, linking to all layer blueprints.
 - ❌ `v_Layer-1.2-Models_Enums_Audit-Plan.md` - Historical audit planning
 - ❌ `v_Layer-1.3-Models_Enums_AI_Audit_SOP.md` - Process documentation
 - ❌ `layer_cross_talk_specification.md` - Rarely used, reference when needed

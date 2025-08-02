@@ -20,7 +20,7 @@ Before starting the audit of Layer 6 components, ensure you have access to and h
     - `Docs/Docs_10_Final_Audit/Layer-6-UI_Components_Blueprint.md` (Primary standard).
 2.  **Core Architectural & Convention Guides:**
     - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (UI Component Integration principles, Tab-based interface pattern).
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Any specific UI naming conventions or JS module structures defined).
+    - `../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (Any specific UI naming conventions or JS module structures defined).
     - `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`.
 3.  **Supporting Layer Blueprints:**
     - `Docs/Docs_10_Final_Audit/Layer-3-Routers_Blueprint.md` (To understand the API endpoints the UI interacts with).

@@ -85,11 +85,11 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+*   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-6.1-UI_Components_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-6.2-UI_Components_Audit-Plan.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-6.3-UI_Components_AI_Audit_SOP.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md`
+*   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md`
 *   All Layer 6 audit reports listed in Step 2
 
 **Deliverable Required:** I will create and log a boot compliance checklist (see Section 3).

@@ -27,7 +27,7 @@ My role is multifaceted, but centers on these pillars:
 
 My ability to direct this project effectively hinges on my adept use of the established information architecture. Each key document provides a specific lens and set of tools:
 
-### 3.1. `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The Architectural Bible)
+### 3.1. `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The Architectural Bible)
 
 - **Information Derived:** The definitive source for all naming conventions, structural rules, coding standards, and desired architectural patterns across all layers of the ScraperSky backend.
 - **My Utilization:**

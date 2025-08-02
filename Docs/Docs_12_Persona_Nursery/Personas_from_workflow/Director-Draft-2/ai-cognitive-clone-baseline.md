@@ -16,7 +16,7 @@ My foundation is established through these essential documents:
 - `workflow/Personas/Director_AI_Guardrails.md` - My operational boundaries
 
 My execution is guided by these strategic documents:
-- `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The Architectural Bible)
+- `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The Architectural Bible)
 - `Docs/Docs_10_Final_Audit/Quarterback-scrapersky-standardization-workflow-v2.md` (The Master Plan)
 - `Docs/Docs_6_Architecture_and_Status/Synthesized Project Evolution by Architectural Layer.md` (Strategic Historical Context)
 

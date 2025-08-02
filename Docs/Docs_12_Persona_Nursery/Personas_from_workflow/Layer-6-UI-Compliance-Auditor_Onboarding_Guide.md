@@ -42,7 +42,7 @@ Before initiating any audit tasks, you must internalize the following core docum
 4.  **File & Workflow Context: `Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md`**
     *   **Utilize:** To identify precisely which files/components fall under Layer 6 for each workflow.
 
-5.  **Project-Wide Conventions: `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`**
+5.  **Project-Wide Conventions: `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`**
     *   **Apply:** To assess naming conventions (HTML classes, CSS selectors, JS functions/variables) and structural patterns.
 
 6.  **Overarching Architecture: `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`**

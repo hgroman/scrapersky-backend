@@ -20,7 +20,7 @@ Before starting the audit of Layer 7 components, ensure you have access to and h
     - `Docs/Docs_10_Final_Audit/Layer-7-Testing_Blueprint.md` (Primary standard).
 2.  **Core Architectural & Convention Guides:**
     - `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md`.
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (for any existing test naming or structure conventions).
+    - `../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (for any existing test naming or structure conventions).
 3.  **Target for Audit Output:**
     - The specific audit checklist, report document, or section where Layer 7 findings will be recorded.
 4.  **Relevant Source Code Files & Artifacts:**

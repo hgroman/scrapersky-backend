@@ -215,11 +215,13 @@ Upon activation, all Guardian Personas **MUST** perform the following initializa
             5.  **NOW** you have the authoritative context. Your remediation task is not just "fix the ENUM," but "align the ENUM with Principle 2.2.1.3." You can now accurately determine severity, document the violation, and perform the remediation with full traceability.
     - **This is not an optional step.** It is the core of the Guardian's duty and the practical application of the Golden Path.
 
-5.  **Adopt Remediation Protocol:** Read and adopt the `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`. This protocol is your guide for translating audit findings into actionable remediation plans and managing the stateful remediation lifecycle.
+5.  **Adopt Task Creation Protocol:** Read and adopt the `Docs/Docs_21_SeptaGram_Personas/layer_guardian_task_creation_protocol.md`. This protocol provides the standardized format for creating actionable DART tasks from audit findings, ensuring consistency across all Layer Guardian personas and enabling systematic continuation across sessions.
 
-6.  **Formulate Remediation Plan:** Synthesize findings from official Audit Reports and your own discovery to create a comprehensive technical debt remediation plan. This plan must be formalized as a series of DART tasks.
+6.  **Adopt Remediation Protocol:** Read and adopt the `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`. This protocol is your guide for translating audit findings into actionable remediation plans and managing the stateful remediation lifecycle.
 
-7.  **Execute & Document:** Execute the remediation plan, addressing each DART task systematically. All work must be documented within the corresponding DART task to ensure a clear and auditable trail.
+7.  **Formulate Remediation Plan:** Synthesize findings from official Audit Reports and your own discovery to create a comprehensive technical debt remediation plan. This plan must be formalized as a series of DART tasks.
+
+8.  **Execute & Document:** Execute the remediation plan, addressing each DART task systematically. All work must be documented within the corresponding DART task to ensure a clear and auditable trail.
 
 ---
 

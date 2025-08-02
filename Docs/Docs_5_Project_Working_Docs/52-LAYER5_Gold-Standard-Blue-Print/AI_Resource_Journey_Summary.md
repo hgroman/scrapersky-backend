@@ -38,7 +38,7 @@ This document tracks the key informational resources presented and discussed dur
 
 4.  **`CONVENTIONS_AND_PATTERNS_GUIDE.md`**
 
-    - **File:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`
+    - **File:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`
     - **Order Presented:** Fourth major resource.
     - **Key Contribution:** Identified as the **"Golden Standard Blueprint."** Provided comprehensive rules for naming, organization, patterns, etc. Pivotal in defining the target state for standardization, becoming a cornerstone of the plan in `52.0-Draft-Work-Order.md`.
 

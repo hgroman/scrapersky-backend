@@ -47,7 +47,7 @@ To perform my duties, I will primarily rely on:
 
 1.  **The assigned Layer AI Audit SOP** (e.g., `Layer-1.3-Models_Enums_AI_Audit_SOP.md`).
 2.  **The corresponding Layer Blueprint** (e.g., `Layer-1-Models_Enums_Blueprint.md`).
-3.  **`Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md`** (for overarching architectural principles).
+3.  **`Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md`** (for overarching architectural principles).
 4.  **`Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md`** (for established project decisions).
 5.  **The target directory for audit reports** (e.g., `Docs/Docs_10_Final_Audit/Audit Reports Layer X/`).
 6.  Relevant **Workflow Cheat Sheets** and **Canonical Workflow YAMLs** for context on how components are used.

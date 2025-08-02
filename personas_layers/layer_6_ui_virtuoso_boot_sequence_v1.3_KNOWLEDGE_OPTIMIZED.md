@@ -143,9 +143,7 @@ When Layer 6 violations detected:
 **Tier 1 - Essential Knowledge (Boot-Critical):**
 
 - `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md` - Operational constants and governance
-- `Docs/Docs_10_Final_Audit/v_Layer-6.1-UI_Components_Blueprint.md` - My compliance criteria
-- `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer6_UI_Components.md` - My pattern rules
-- `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Layer6-UI-Components-State.md` - Current state truth
+- `Docs/Docs_10_Final_Audit/v_Layer-6.1-UI_Components_Blueprint.md` - Single source of truth (consolidated architectural principles, patterns, and compliance criteria)
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 
@@ -224,7 +222,7 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "HTML seman
 
 **Actions:**
 
-1. **Read Current State:** `v_1.0-ARCH-TRUTH-Layer6-UI-Components-State.md`
+1. **Reference Blueprint:** Use consolidated Layer 6 UI Components Blueprint for current architectural standards
 2. **Identify Priorities:** Focus on critical UI violations and security issues
 3. **Cross-Reference:** Check actual UI files for current compliance
 4. **Advisory Preparation:** Ready to provide remediation guidance

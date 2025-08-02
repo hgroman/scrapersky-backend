@@ -276,4 +276,4 @@ This audit plan provides a systematic approach to reviewing Layer 4 (Services & 
 
 - **Blueprint:** [Layer-4-Services_Blueprint.md](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_10_Final_Audit/Layer-4-Services_Blueprint.md)
 - **SOP:** [Layer-4-Services_AI_Audit_SOP.md](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_10_Final_Audit/Layer-4-Services_AI_Audit_SOP.md)
-- **Conventions:** [CONVENTIONS_AND_PATTERNS_GUIDE.md](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)
+- **Conventions:** [CONVENTIONS_AND_PATTERNS_GUIDE.md](../../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)

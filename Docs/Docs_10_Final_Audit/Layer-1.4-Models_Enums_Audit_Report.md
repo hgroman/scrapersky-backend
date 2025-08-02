@@ -10,7 +10,7 @@
 - **[Layer-1.1-Models_Enums_Blueprint.md](./Layer-1.1-Models_Enums_Blueprint.md)** - Definitive standard for Layer 1
 - **[Layer-1.3-Models_Enums_AI_Audit_SOP.md](./Layer-1.3-Models_Enums_AI_Audit_SOP.md)** - Standard Operating Procedure for Layer 1 audit
 - **[Layer-1.2-Models_Enums_Audit-Plan.md](./Layer-1.2-Models_Enums_Audit-Plan.md)** - Actionable audit plan for Layer 1
-- **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Master architectural conventions
+- **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Master architectural conventions
 
 ## Purpose
 

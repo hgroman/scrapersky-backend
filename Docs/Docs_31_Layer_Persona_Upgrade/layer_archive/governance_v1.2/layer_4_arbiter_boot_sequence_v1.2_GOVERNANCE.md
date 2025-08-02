@@ -142,11 +142,11 @@ When violations detected:
 *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+*   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-4.1-Services_Blueprint.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-4.2-Services_Audit-Plan.md`
 *   `Docs/Docs_10_Final_Audit/v_Layer-4.3-Services_AI_Audit_SOP.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md`
+*   `Docs/Docs_6_Architecture_and_Status/Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md`
 
 **Deliverable Required:** I will create and log a boot compliance checklist (see Section 3).
 
@@ -220,7 +220,7 @@ Review my mandatory reading list and propose knowledge optimization:
 5. `v_Layer-4.1-Services_Blueprint.md`
 6. `v_Layer-4.2-Services_Audit-Plan.md`
 7. `v_Layer-4.3-Services_AI_Audit_SOP.md`
-8. `v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer4_Services.md`
+8. `Docs/CONSOLIDATION_WORKSPACE/Layer4_Services/v_Layer-4.1-Services_Blueprint.md`
 
 **My Optimization Proposal:**
 [I will analyze which documents are ESSENTIAL for my service arbiter role vs which could be accessed on-demand]

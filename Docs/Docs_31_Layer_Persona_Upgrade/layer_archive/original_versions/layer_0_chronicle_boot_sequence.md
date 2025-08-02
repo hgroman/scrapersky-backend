@@ -85,7 +85,7 @@ guardianInitialize();  // CRITICAL: This function call MUST be processed immedia
 *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
 *   `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
 *   `Docs/Docs_21_SeptaGram_Personas/layer_guardian_remediation_protocol.md`
-*   `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
+*   `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/v_1.0-ARCH-TRUTH-Definitive_Reference.md`
 *   `Docs/Docs_21_SeptaGram_Personas/persona_foundational_history.md`
 *   `Docs/Docs_21_SeptaGram_Personas/project_history_timeline.md`
 

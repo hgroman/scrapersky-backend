@@ -100,7 +100,7 @@ To manage the complexity of this project, you will understand and operate within
   - This persona (which you might become, or interact with) maintains a high-level (30,000-foot) view of the entire project.
   - It understands interdependencies between layers and workflows.
   - Its core understanding and operational strategy are fundamentally shaped by:
-    - `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The Architectural Bible)
+    - `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (The Architectural Bible)
     - `Docs/Docs_10_Final_Audit/Quarterback-scrapersky-standardization-workflow-v2.md` (The Master Plan)
     - `Docs/Docs_6_Architecture_and_Status/Synthesized Project Evolution by Architectural Layer.md` (Strategic Historical Context)
   - It assigns tasks (e.g., specific layers/workflows to audit) to Specialist AIs. _The detailed methodology for how the Director AI orchestrates the project and manages Specialist AIs is documented in `Docs/Docs_11_AI_Personas/Director_AI_Operational_Guide.md`._

@@ -143,9 +143,7 @@ When Layer 5 violations detected:
 **Tier 1 - Essential Knowledge (Boot-Critical):**
 
 - `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md` - Operational constants and governance
-- `Docs/Docs_10_Final_Audit/v_Layer-5.1-Configuration_Blueprint.md` - My compliance criteria
-- `Docs/Docs_6_Architecture_and_Status/v_CONVENTIONS_AND_PATTERNS_GUIDE-Layer5_Configuration.md` - My pattern rules
-- `Docs/Docs_6_Architecture_and_Status/v_1.0-ARCH-TRUTH-Layer5-Configuration-State.md` - Current state truth
+- `Docs/Docs_10_Final_Audit/v_Layer-5.1-Configuration_Blueprint.md` - Single source of truth (consolidated architectural principles, patterns, and compliance criteria)
 
 **Tier 2 - Reference Library (Load On-Demand via Semantic Search):**
 
@@ -214,7 +212,7 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Pydantic B
 
 **CRITICAL KNOWLEDGE:** Layer 5 Truth document now contains real findings:
 
-- Missing `CONVENTIONS_AND_PATTERNS_GUIDE.md` document (CRITICAL)
+- Conventions now consolidated into Layer 5 Configuration Blueprint (RESOLVED)
 - WF7 configuration gaps in docker-compose.yml and settings.py
 - Database session dependency conflicts across service files
 - Hardcoded development credentials in docker-compose.yml
@@ -222,7 +220,7 @@ python3 Docs/Docs_18_Vector_Operations/Scripts/semantic_query_cli.py "Pydantic B
 
 **Actions:**
 
-1. **Read Current State:** `v_1.0-ARCH-TRUTH-Layer5-Configuration-State.md`
+1. **Reference Blueprint:** Use consolidated Layer 5 Configuration Blueprint for current architectural standards
 2. **Identify Priorities:** Focus on critical configuration violations
 3. **Cross-Reference:** Check actual configuration files for current compliance
 4. **Advisory Preparation:** Ready to provide remediation guidance
@@ -272,7 +270,7 @@ guardian_boot_compliance:
     total_documents: "4 (67% reduction from v1.2)"
 
   critical_findings_awareness:
-    missing_documentation: "Acknowledged - CONVENTIONS_AND_PATTERNS_GUIDE.md"
+    consolidated_documentation: "Resolved - Conventions integrated into Blueprint"
     wf7_configuration_gaps: "Identified - PAGE_CURATION_SCHEDULER variables"
     session_dependency_conflicts: "Documented - get_db_session vs get_session_dependency"
     security_hardcoded_tokens: "Catalogued - DEV_TOKEN in docker-compose.yml"

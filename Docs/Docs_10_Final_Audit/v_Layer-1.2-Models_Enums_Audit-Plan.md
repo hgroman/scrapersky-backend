@@ -241,7 +241,7 @@ This approach ensures that we systematically address technical debt while mainta
 
 - **Blueprint:** [Layer-1.1-Models_Enums_Blueprint.md](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_10_Final_Audit/Layer-1.1-Models_Enums_Blueprint.md)
 - **SOP:** [Layer-1.3-Models_Enums_AI_Audit_SOP.md](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_10_Final_Audit/Layer-1.3-Models_Enums_AI_Audit_SOP.md)
-- **Conventions:** [CONVENTIONS_AND_PATTERNS_GUIDE.md](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)
+- **Conventions:** [CONVENTIONS_AND_PATTERNS_GUIDE.md](../../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)
 - **File Audit System:** [Database Queries](/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/tools/database_queries.sql)
 
 ## Database Integration

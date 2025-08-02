@@ -18,7 +18,7 @@ The audit process will be guided by the following authoritative documents:
 -   **Primary Blueprint:** `Docs/Docs_10_Final_Audit/Layer-6.1-UI_Components_Blueprint.md` (Defines standards for Layer 6)
 -   **Audit SOP:** `Docs/Docs_10_Final_Audit/Layer-6.3-UI_Components_AI_Audit_SOP.md` (Details audit procedures)
 -   **File Matrix:** `Docs/Docs_10_Final_Audit/0-ScraperSky-Comprehensive-Files-By-Layer-And-Workflow.md` (Lists Layer 6 files per workflow)
--   **Core Conventions:** `Docs/Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md` (General naming and structural patterns)
+-   **Core Conventions:** `Docs/Docs_6_Architecture_and_Status/archive-dont-vector/CONVENTIONS_AND_PATTERNS_GUIDE.md` (General naming and structural patterns)
 -   **Architectural Truth:** `Docs/Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md` (Overarching principles)
 -   **Clarifications:** `Docs/Docs_6_Architecture_and_Status/Q&A_Key_Insights.md` (Relevant Q&A)
 
@@ -41,7 +41,7 @@ Derived from the `Layer-6.1-UI_Components_Blueprint.md`, the following principle
 
 **C. CSS Styling (Blueprint Section 2.2):**
 1.  **External Stylesheets:** All significant CSS in external `.css` files.
-2.  **Naming Conventions:** CSS class names follow conventions (e.g., BEM, `kebab-case`) as per `CONVENTIONS_AND_PATTERNS_GUIDE.md`.
+2.  **Naming Conventions:** CSS class names follow conventions (e.g., BEM, `kebab-case`) as per the relevant blueprint.
 3.  **Modularity:** CSS organized into logical modules/components.
 4.  **Specificity Management:** Avoid overly specific selectors and excessive use of `!important`.
 5.  **Readability:** Well-formatted and readable CSS.

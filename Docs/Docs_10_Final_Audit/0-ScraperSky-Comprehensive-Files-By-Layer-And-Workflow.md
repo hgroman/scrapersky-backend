@@ -182,7 +182,7 @@ Each workflow has specific technical issues that have been identified and assign
 
 | Workflow | Technical Issues | Jira Tickets | Severity | Resolution Plan |
 |----------|------------------|--------------|----------|-----------------|
-| WF1-SingleSearch | Raw SQL query, hardcoded connection parameters, missing transaction boundary | SCRSKY-225, SCRSKY-226, SCRSKY-250, SCRSKY-251 | HIGH, MEDIUM, MEDIUM, MEDIUM | Replace raw SQL with SQLAlchemy ORM, move connection parameters to settings, add explicit transaction boundaries, enhance error handling |
+| WF1-SingleSearch | ~~Raw SQL query~~ (REMEDIATED 2025-08-01), hardcoded connection parameters, missing transaction boundary | ~~SCRSKY-225~~ (REMEDIATED), SCRSKY-226, SCRSKY-250, SCRSKY-251 | ~~HIGH~~ (RESOLVED), MEDIUM, MEDIUM, MEDIUM | ~~Replace raw SQL with SQLAlchemy ORM~~ (COMPLETED), move connection parameters to settings, add explicit transaction boundaries, enhance error handling |
 | WF2-StagingEditor | Raw SQL in places_staging.py, misleading API parameter, incomplete JobService integration | SCRSKY-224, SCRSKY-225, SCRSKY-226 | CRITICAL, MEDIUM, LOW | Replace raw SQL with SQLAlchemy ORM, clarify or remove misleading API parameters, complete JobService integration |
 | WF3-LocalBusinessCuration | No eligibility check before queueing domain extraction, naming confusion in scheduler | SCRSKY-230, SCRSKY-231 | MEDIUM, LOW | Add eligibility check based on website_url field, create dedicated scheduler file for local business workflow |
 | WF4-DomainCuration | Direct API call to internal endpoint, hardcoded internal API URL | SCRSKY-232, SCRSKY-233 | LOW, LOW | Replace direct API call with service-to-service communication, move URL to configuration settings |
@@ -321,7 +321,7 @@ gantt
 
 For more detailed information, refer to:
 
-1. **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - Detailed naming conventions and patterns
+1. **[CONVENTIONS_AND_PATTERNS_GUIDE.md](../../Docs_6_Architecture_and_Status/CONVENTIONS_AND_PATTERNS_GUIDE.md)** - The high-level guide and index for all naming and structural standards.
 2. **[1.0-ARCH-TRUTH-Definitive_Reference.md](../Docs_6_Architecture_and_Status/1.0-ARCH-TRUTH-Definitive_Reference.md)** - Definitive architectural reference
 3. **[v_5_REFERENCE_IMPLEMENTATION_WF2.yaml](../Docs_7_Workflow_Canon/workflows/v_5_REFERENCE_IMPLEMENTATION_WF2.yaml)** - Example canonical workflow definition
 4. **[README Workflow Cannon.md](../Docs_7_Workflow_Canon/README%20Workflow%20Cannon.md)** - Overview of workflow documentation
