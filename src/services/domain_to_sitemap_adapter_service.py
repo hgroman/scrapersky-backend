@@ -99,12 +99,12 @@ class DomainToSitemapAdapterService:
             }
 
             # 3. Make HTTP POST request
-            api_key = settings.DEV_TOKEN or "scraper_sky_2024"  # Fallback to dev token
+            api_key = settings.dev_token or "scraper_sky_2024"  # Fallback to dev token
             if not api_key:
-                logger.error("Adapter Service: DEV_TOKEN not found in settings.")
+                logger.error("Adapter Service: dev_token not found in settings.")
                 domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
                 domain.sitemap_analysis_error = (
-                    "Configuration Error: DEV_TOKEN missing."  # type: ignore
+                    "Configuration Error: dev_token missing."  # type: ignore
                 )
                 return False
 
