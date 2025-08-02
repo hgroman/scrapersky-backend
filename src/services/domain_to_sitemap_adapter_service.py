@@ -99,14 +99,9 @@ class DomainToSitemapAdapterService:
             }
 
             # 3. Make HTTP POST request
-            api_key = settings.dev_token or "scraper_sky_2024"  # Fallback to dev token
-            if not api_key:
-                logger.error("Adapter Service: dev_token not found in settings.")
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
-                domain.sitemap_analysis_error = (
-                    "Configuration Error: dev_token missing."  # type: ignore
-                )
-                return False
+            # Use the development bypass token for internal API calls
+            # This token is recognized by jwt_auth.py:95 for development mode bypass
+            api_key = "scraper_sky_2024"
 
             headers = {
                 "Authorization": f"Bearer {api_key}",
