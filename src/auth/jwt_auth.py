@@ -114,6 +114,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
         return {
             "user_id": dev_user_uuid,
             "id": dev_user_uuid,
+            "sub": dev_user_uuid,  # Add sub field for consistency with JWT standard
             "tenant_id": DEFAULT_TENANT_ID,
             "exp": datetime.utcnow() + timedelta(days=30),
         }
@@ -132,6 +133,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     user = {
         "user_id": user_id,
         "id": user_id,
+        "sub": user_id,  # Include sub field for compatibility with routers expecting JWT standard fields
         "tenant_id": DEFAULT_TENANT_ID,
         "exp": payload.get("exp"),
     }
