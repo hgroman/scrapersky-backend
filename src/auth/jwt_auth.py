@@ -91,24 +91,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any
     # --- SECURITY WARNING: INTERNAL API CALLS ONLY ---
     # This block provides a bypass for JWT validation for internal service-to-service calls.
     # It uses a hardcoded token ('scraper_sky_2024') for internal API communication.
-    # This is used by services like domain_to_sitemap_adapter_service for internal /api/v3/sitemap/scan calls.
+    # CRITICAL: DO NOT MODIFY THIS BLOCK - PRODUCTION DEPENDS ON IT
+    # This internal token MUST work in ALL environments including production
+    # Last broken by unauthorized AI change on 2025-08-17 causing production outage
+    # DO NOT ADD ENVIRONMENT CHECKS HERE - EVER
     if token == "scraper_sky_2024":
-        current_env = settings.environment.lower()
-        allow_internal = os.getenv("ALLOW_INTERNAL_TOKEN", "false").lower() == "true"
-        
-        # Only allow in development environments OR when explicitly enabled via environment variable
-        if current_env in ["development", "dev", "local"] or allow_internal:
-            logger.debug("Internal token authorized for authentication bypass")
-        else:
-            logger.error(
-                f"Internal token rejected - environment '{current_env}' not authorized. "
-                f"Set ALLOW_INTERNAL_TOKEN=true to enable in non-dev environments."
-            )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Internal token not allowed in this environment",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        logger.debug("Internal token authorized for authentication bypass")
 
         # --- DEVELOPMENT TOKEN USER ID CHANGE (2025-04-11) ---
         # Previous hardcoded value "00000000-0000-0000-0000-000000000000"

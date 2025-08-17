@@ -76,43 +76,43 @@ These are the foundational names from which many others are derived. Every new w
 
 ### 2. Layer 1: Models & ENUMs
 
-The definitive conventions for this layer are now maintained in the **[Layer 1: Models & ENUMs - Architectural Blueprint](./Layer1_Models_Enums/v_Layer-1.1-Models_Enums_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 1: Models & ENUMs - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-1.1-Models_Enums_Blueprint.md)**.
 
 ---
 
 ### 3. Layer 2: Schemas
 
-The definitive conventions for this layer are now maintained in the **[Layer 2: Schemas - Architectural Blueprint](./Layer2_Schemas/v_Layer-2.1-Schemas_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 2: Schemas - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-2.1-Schemas_Blueprint.md)**.
 
 ---
 
 ### 4. Layer 3: Routers
 
-The definitive conventions for this layer are now maintained in the **[Layer 3: Routers - Architectural Blueprint](./Layer3_Routers/v_Layer-3.1-Routers_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 3: Routers - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-3.1-Routers_Blueprint.md)**.
 
 ---
 
 ### 5. Layer 4: Services & Schedulers
 
-The definitive conventions for this layer are now maintained in the **[Layer 4: Services & Schedulers - Architectural Blueprint](./Layer4_Services/v_Layer-4.1-Services_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 4: Services & Schedulers - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-4.1-Services_Blueprint.md)**.
 
 ---
 
 ### 6. Layer 5: Configuration
 
-The definitive conventions for this layer are now maintained in the **[Layer 5: Configuration - Architectural Blueprint](./Layer5_Configuration/v_Layer-5.1-Configuration_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 5: Configuration - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-5.1-Configuration_Blueprint.md)**.
 
 ---
 
 ### 7. Layer 6: UI Components
 
-The definitive conventions for this layer are now maintained in the **[Layer 6: UI Components - Architectural Blueprint](./Layer6_UI_Components/v_Layer-6.1-UI_Components_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 6: UI Components - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-6.1-UI_Components_Blueprint.md)**.
 
 ---
 
 ### 8. Layer 7: Testing
 
-The definitive conventions for this layer are now maintained in the **[Layer 7: Testing - Architectural Blueprint](./Layer7_Testing/v_Layer-7.1-Testing_Blueprint.md)**.
+The definitive conventions for this layer are now maintained in the **[Layer 7: Testing - Architectural Blueprint](../../Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md)**.
 
 ---
 
