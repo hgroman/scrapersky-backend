@@ -8,6 +8,7 @@ from sqlalchemy.future import select
 from src.db.session import get_db_session
 from src.models.page import Page
 from src.models.enums import PageCurationStatus, PageProcessingStatus
+from src.models.WF7_V2_L1_1of1_ContactModel import Contact
 
 router = APIRouter(prefix="/api/v2/pages", tags=["V2 - Page Curation"])
 
@@ -42,13 +43,14 @@ async def update_page_curation_status_batch(
             )
 
         for page in pages_to_update:
-            page.page_curation_status = request.status
+            page.page_curation_status = request.status  # type: ignore[assignment]
             updated_count += 1
 
             # Dual-Status Update Pattern
-            if request.status == PageCurationStatus.Selected:
-                page.page_processing_status = PageProcessingStatus.Queued
-                page.page_processing_error = None  # Clear previous errors
+            # Trigger processing when page curation status is Queued
+            if request.status == PageCurationStatus.Queued:
+                page.page_processing_status = PageProcessingStatus.Queued  # type: ignore[assignment]
+                page.page_processing_error = None  # type: ignore[assignment]
                 queued_count += 1
 
     return BatchUpdateResponse(updated_count=updated_count, queued_count=queued_count)

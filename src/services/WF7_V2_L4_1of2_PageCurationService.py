@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from src.models.page import Page
-from src.models.contact import Contact
+from src.models.WF7_V2_L1_1of1_ContactModel import Contact
 from src.services.domain_content_service import DomainContentExtractor
 import logging
 
@@ -45,6 +45,7 @@ class PageCurationService:
         # In a real implementation, we would parse crawled_data.content
         try:
             new_contact = Contact(
+                domain_id=page.domain_id,
                 page_id=page.id,
                 name="Placeholder Name",
                 email="placeholder@example.com",

@@ -1,10 +1,10 @@
 import logging
 from sqlalchemy import asc
 from src.common.curation_sdk.scheduler_loop import run_job_loop
-from src.config.settings import get_settings
-from src.models.page import Page
-from src.models.enums import PageProcessingStatus
-from src.services.page_curation_service import PageCurationService
+from ..config.settings import settings
+from ..models.page import Page
+from ..models.enums import PageProcessingStatus
+from .WF7_V2_L4_1of2_PageCurationService import PageCurationService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ async def process_page_curation_queue():
     """
     Processes pages marked as 'Queued' for curation using the SDK job loop.
     """
-    settings = get_settings()
+    # settings already imported at module level
     service = PageCurationService()
     logger.info("Starting page curation queue processing cycle.")
 
@@ -39,9 +39,9 @@ def setup_page_curation_scheduler():
     scheduler.add_job(
         process_page_curation_queue,
         "interval",
-        minutes=get_settings().PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES,
+        minutes=settings.PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES,
         id="v2_page_curation_processor",
         replace_existing=True,
-        max_instances=get_settings().PAGE_CURATION_SCHEDULER_MAX_INSTANCES,
+        max_instances=settings.PAGE_CURATION_SCHEDULER_MAX_INSTANCES,
     )
     logger.info("Page curation scheduler job added.")
