@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.settings import Settings
 from ..models import TaskStatus  # Import TaskStatus enum
-from ..models.contact import Contact, ContactEmailTypeEnum
+from ..models.WF7_V2_L1_1of1_ContactModel import Contact
+from ..models.enums import ContactEmailTypeEnum
 from ..models.domain import Domain
 from ..models.job import Job  # Import Job model
 from ..models.page import Page

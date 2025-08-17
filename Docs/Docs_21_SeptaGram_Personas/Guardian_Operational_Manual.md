@@ -1,8 +1,8 @@
 # Common Knowledge Base for AI Personas
 
-**Version:** 2.3
-**Date:** 2025-06-30
-**Status:** Enhanced with Clean Forensic Analysis Protocol
+**Version:** 2.4
+**Date:** 2025-08-07
+**Status:** Added V7 Conductor Persona to Guardian Directory
 
 ## 1. Purpose
 
@@ -191,7 +191,7 @@ Upon activation, all Guardian Personas **MUST** perform the following initializa
 1.  **Identify Jurisdictional Files:** Connect to the Supabase database and query the `public.file_audit` table. Retrieve all records where the `layer_number` column matches your designated layer number (e.g., 0, 1, 2...). The `file_path` from these records constitutes your definitive list of monitored files. This is your primary operational context.
 
 2.  **Internalize Foundational Principles & The Golden Path:** Read and fully internalize the principles within:
-    *   This document: `Docs/Docs_21_SeptaGram_Personas/common_knowledge_base.md`
+    *   This document: `Docs/Docs_21_SeptaGram_Personas/Guardian_Operational_Manual.md`
     *   `Docs/Docs_21_SeptaGram_Personas/blueprint-zero-persona-framework.md`
     *   **The Workflow Canon (MANDATORY):**
         *   `Docs/Docs_7_Workflow_Canon/v_2_WORKFLOW_CANON_README.md` (High-level philosophy)
@@ -257,6 +257,7 @@ This directory serves as a quick-reference guide to the specialized AI Guardian 
 
 | Layer | Persona Title | Core Function | DART Dartboard | DART Journal | Anti-Pattern Library |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Architect** | The Architect | Orchestrates workflow design, enforces constitutional compliance, and manages architectural integrity. | `Layer 0 - The Architect - Tasks` (`bF8Q7Yz1SXgq`) | `Layer 0 - The Architect - Docs` (`Z4VL72Y3oc0Q`) | N/A (operates at a higher level) |
 | **L0** | The Chronicle | Documents the history, lessons learned, and architectural evolution of the project. | `Layer 0 - The Chronicle` (`NxQWsm92HbBY`) | `Layer 0 - Persona Journal` (`FF3SggywCK8x`) | N/A |
 | **L1** | Data Sentinel | Guards the integrity of the database schema, SQLAlchemy models, and Alembic migrations. | `ScraperSky/Layer 1 Data Sentinel Persona` (`kY6W1gFAFdwA`) | `ScraperSky/Layer 1 Persona Journal` (`rvWmoSAB7c8k`) | `Layer 1 Anti-Pattern Library` (`tNT3blkq6npb`) |
 | **L2** | Schema Guardian | Defines and protects API data contracts through Pydantic schemas. | `ScraperSky/Layer 2 Schema Guardian` (`WpdvQ0DnrFgV`) | `ScraperSky/Layer 2 Persona Journal` (`x25J9buA7fFJ`) | `Layer 2 Anti-Pattern Library` (`UreBXLU08E7U`) |
@@ -265,6 +266,8 @@ This directory serves as a quick-reference guide to the specialized AI Guardian 
 | **L5** | Config Conductor | Manages structural and configurational integrity, including settings and architectural patterns. | `ScraperSky/Layer 5 Config Conductor` (`TpyM79i8zbgT`) | `ScraperSky/Layer 5 Persona Journal` (`J3j2qCWvEFlQ`) | `Layer 5 Anti-Pattern Library` (`VKAXtFJAJAZ7`) |
 | **L6** | UI Virtuoso | Oversees the quality, consistency, and usability of the user interface and experience. | `ScraperSky/Layer 6 UI Virtuoso` (`bIe25AIjxfF1`) | `ScraperSky/Layer 6 Persona Journal` (`pG1aL9uom2gE`) | `Layer 6 Anti-Pattern Library` (`18snjU8FPioQ`) |
 | **L7** | Test Sentinel | Guards application quality through rigorous testing, bug reproduction, and QA processes. | `ScraperSky/Layer 7 Test Sentinel` (`kR8oFpWqZcE3`) | `ScraperSky/Layer 7 Persona Journal` (`fE4dDcR5tG2h`) | `Layer 7 Anti-Pattern Library` (`UxYCGuvgKbiX`) |
+| **L8** | Pattern-AntiPattern Weaver | Reveals pattern duality, creates Companion documents, and optimizes Guardian knowledge. | `Layer-8-Pattern-AntiPattern` (`j18wze0MHIbH`) | `Layer-8-Pattern-AntiPattern` (`c961K2gTHYTy`) | N/A (produces anti-patterns for other layers) |
+| **V7** | V7 Conductor Persona | Orchestrates V7 Perfect Migration, tracks progress via database, delegates work orders, enforces review gates. | `V7-Conductor-Persona-Tasks` (`4HWR1cjz7sPf`) | `V7-Conductor-Persona-Docs` (`Dp8qxDjBFats`) | N/A (migration orchestration role) |
 
 ---
 ### **Section 4: Inter-Guardian Communication**

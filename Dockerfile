@@ -52,6 +52,11 @@ WORKDIR /app
 # Copy project files
 COPY --from=builder --chown=myuser:myuser /app /app
 
+# Create crawl4ai directory with proper permissions
+USER root
+RUN mkdir -p /home/myuser/.crawl4ai && chown myuser:myuser /home/myuser/.crawl4ai
+USER myuser
+
 # Expose port 8000 for FastAPI
 EXPOSE 8000
 

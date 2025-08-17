@@ -13,13 +13,11 @@ class DomainContentExtractor:
         )
 
     async def crawl_domain(self, url):
-        """Crawl a single domain homepage and return the results."""
+        """Crawl a single URL and return the result of the run."""
         try:
-            results = []
-            async for result in self.crawler.arun(url, self.config):
-                results.append(result)
-
-            return results[0] if results else None
+            # arun returns a coroutine; await it to get the run result
+            result = await self.crawler.arun(url, self.config)
+            return result
         except Exception as e:
             logging.error(f"Error crawling {url}: {e}")
             return None

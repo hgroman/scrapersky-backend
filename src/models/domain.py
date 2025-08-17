@@ -231,9 +231,6 @@ class Domain(Base, BaseModel):
         "SitemapFile", back_populates="domain", cascade="all, delete-orphan"
     )
     pages = relationship("Page", back_populates="domain", cascade="all, delete-orphan")
-    contacts = relationship(
-        "Contact", back_populates="domain", cascade="all, delete-orphan"
-    )
 
     def to_dict(self) -> Dict[str, Any]:
         """

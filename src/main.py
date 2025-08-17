@@ -27,8 +27,9 @@ from .config.logging_config import setup_logging
 setup_logging()
 
 from src.services.sitemap_import_scheduler import setup_sitemap_import_scheduler
-from src.services.page_curation_scheduler import setup_page_curation_scheduler
-from src.routers.v2.pages import router as v2_pages_router
+from src.services.WF7_V2_L4_2of2_PageCurationScheduler import setup_page_curation_scheduler
+from src.routers.v2.WF7_V2_L3_1of1_PagesRouter import router as v2_pages_router
+from src.routers.v3.WF7_V3_L3_1of1_PagesRouter import router as v3_pages_router
 from .health.db_health import check_database_connection
 from .routers.batch_page_scraper import router as batch_page_scraper_api_router
 from .routers.batch_sitemap import router as batch_sitemap_api_router
@@ -265,6 +266,7 @@ logger.info("Including API routers...")
 
 # Include all routers
 app.include_router(v2_pages_router)
+app.include_router(v3_pages_router)  # V3 compliant version
 app.include_router(google_maps_api_router)
 app.include_router(modernized_sitemap_api_router)
 app.include_router(

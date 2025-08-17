@@ -15,7 +15,7 @@ psycopg[binary]==3.2.5 # Install with pre-compiled binary extras
 greenlet==3.1.1
 
 # HTTP and API
-aiohttp==3.9.3
+aiohttp>=3.9.3
 httpx
 requests==2.32.3
 python-multipart==0.0.6
@@ -38,8 +38,9 @@ email-validator==2.2.0
 
 # Scraping
 beautifulsoup4==4.13.3
-lxml==5.2.2 # Updated for Python 3.13 compatibility
+lxml>=5.2.2 # Updated for Python 3.13 compatibility
 scraperapi-sdk==1.5.3
+crawl4ai
 
 # Scheduling
 APScheduler==3.10.4

@@ -32,7 +32,7 @@ from .api_models import (
 )
 from .base import Base, BaseModel, model_to_dict
 from .batch_job import BatchJob
-from .contact import Contact
+from .WF7_V2_L1_1of1_ContactModel import Contact
 from .domain import Domain
 from .job import Job
 from .local_business import LocalBusiness

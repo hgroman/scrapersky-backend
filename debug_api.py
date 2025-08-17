@@ -9,6 +9,8 @@ import logging
 import os
 import sys
 from urllib.parse import urljoin
+import jwt
+import datetime
 
 import httpx
 
@@ -22,7 +24,6 @@ logger = logging.getLogger("debug_api")
 
 # API configuration
 BASE_URL = "http://localhost:8000"  # Adjust if your server is on a different port
-DEV_TOKEN = "scraper_sky_2024"  # Token from JavaScript files
 API_VERSION = "v3"
 
 # Endpoints to test
@@ -57,14 +58,25 @@ ENDPOINTS = [
     },
 ]
 
+def generate_jwt():
+    secret = os.environ.get("SUPABASE_JWT_SECRET")
+    if not secret:
+        raise ValueError("SUPABASE_JWT_SECRET not set in environment")
+    payload = {
+        "sub": "56adcb98-d218-40ad-8a1c-997c54d83154",
+        "role": "authenticated",
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    }
+    return jwt.encode(payload, secret, algorithm="HS256")
 
-async def test_endpoint(client, endpoint):
+
+async def test_endpoint(client, endpoint, token):
     """Test a single endpoint and return the result."""
     url = urljoin(BASE_URL, endpoint["path"])
     headers = {}
 
     if endpoint["auth"]:
-        headers["Authorization"] = f"Bearer {DEV_TOKEN}"
+        headers["Authorization"] = f"Bearer {token}"
 
     logger.info(f"Testing {endpoint['name']} - {endpoint['method']} {url}")
 
@@ -121,10 +133,13 @@ async def main():
         logger.error("Make sure the server is running before running this script")
         return
 
+    token = generate_jwt()
+    print(f"Generated JWT: {token}")
+
     results = []
     async with httpx.AsyncClient(timeout=10.0) as client:
         for endpoint in ENDPOINTS:
-            result = await test_endpoint(client, endpoint)
+            result = await test_endpoint(client, endpoint, token)
             if result:
                 results.append(result)
 
@@ -150,4 +165,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    if "--get-token" in sys.argv:
+        print(generate_jwt())
+    else:
+        asyncio.run(main())
