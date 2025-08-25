@@ -114,8 +114,8 @@ async def update_page_curation_status_batch(
             page.page_curation_status = request.status  # type: ignore[assignment]
             updated_count += 1
 
-            # Dual-Status Update Pattern - trigger when Queued
-            if request.status == PageCurationStatus.Queued:
+            # Dual-Status Update Pattern - trigger when Selected
+            if request.status == PageCurationStatus.Selected:
                 page.page_processing_status = PageProcessingStatus.Queued  # type: ignore[assignment]
                 page.page_processing_error = None  # type: ignore[assignment]
                 queued_count += 1

@@ -70,6 +70,7 @@ class PageCurationStatus(str, Enum):
     """Status values for page curation workflow"""
 
     New = "New"
+    Selected = "Selected"
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
