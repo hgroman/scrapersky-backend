@@ -28,6 +28,44 @@ from src.models.enums import PageCurationStatus, PageProcessingStatus
 router = APIRouter(prefix="/api/v3/pages", tags=["V3 - Page Curation"])
 
 
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_pages(
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict = Depends(get_current_user),
+    limit: int = 100,
+    offset: int = 0
+):
+    """
+    Get pages for WF7 curation interface.
+    
+    Returns paginated list of pages with their curation and processing status.
+    """
+    stmt = select(Page).offset(offset).limit(limit)
+    result = await session.execute(stmt)
+    pages = result.scalars().all()
+    
+    return {
+        "pages": [
+            {
+                "id": str(page.id),
+                "url": page.url,
+                "title": page.title,
+                "domain_name": page.domain.name if page.domain else None,
+                "sitemap_url": page.sitemap_url,
+                "curation_status": page.page_curation_status.value if page.page_curation_status else None,
+                "processing_status": page.page_processing_status.value if page.page_processing_status else None,
+                "content_length": len(page.content) if page.content else 0,
+                "updated_at": page.updated_at.isoformat() if page.updated_at else None,
+                "error": page.page_processing_error
+            }
+            for page in pages
+        ],
+        "total": len(pages),
+        "offset": offset,
+        "limit": limit
+    }
+
+
 @router.put("/status", response_model=PageCurationBatchUpdateResponse, status_code=status.HTTP_200_OK)
 async def update_page_curation_status_batch(
     request: PageCurationBatchStatusUpdateRequest,
