@@ -1,4 +1,4 @@
-"""
+    """
 Page Curation Router - WF7 V3 Compliant
 Layer 3 Component per ScraperSky Constitutional Standards
 
@@ -40,6 +40,12 @@ async def get_pages(
     
     Returns paginated list of pages with their curation and processing status.
     """
+    # Get total count for pagination
+    count_stmt = select(Page)
+    count_result = await session.execute(count_stmt)
+    total_count = len(count_result.scalars().all())
+    
+    # Get paginated pages with domain relationship
     stmt = select(Page).offset(offset).limit(limit)
     result = await session.execute(stmt)
     pages = result.scalars().all()
@@ -50,17 +56,16 @@ async def get_pages(
                 "id": str(page.id),
                 "url": page.url,
                 "title": page.title,
-                "domain_name": page.domain.name if page.domain else None,
-                "sitemap_url": page.sitemap_url,
+                "domain_id": str(page.domain_id) if page.domain_id else None,
                 "curation_status": page.page_curation_status.value if page.page_curation_status else None,
                 "processing_status": page.page_processing_status.value if page.page_processing_status else None,
-                "content_length": len(page.content) if page.content else 0,
                 "updated_at": page.updated_at.isoformat() if page.updated_at else None,
+                "created_at": page.created_at.isoformat() if page.created_at else None,
                 "error": page.page_processing_error
             }
             for page in pages
         ],
-        "total": len(pages),
+        "total": total_count,
         "offset": offset,
         "limit": limit
     }
