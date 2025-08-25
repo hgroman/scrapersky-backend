@@ -32,7 +32,7 @@ class PageCurationService:
         try:
             # Assuming page.url holds the URL to be crawled
             crawled_data = await self.content_extractor.crawl_domain(page.url)
-            if not crawled_data or not crawled_data.content:
+            if not crawled_data or not crawled_data.markdown:
                 logging.warning(f"No content extracted from URL: {page.url}")
                 # Decide if this is a hard failure or not. For now, we'll continue.
                 pass # Or return False if content is mandatory
