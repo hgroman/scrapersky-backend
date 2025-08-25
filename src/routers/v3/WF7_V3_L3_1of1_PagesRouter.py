@@ -1,4 +1,4 @@
-    """
+"""
 Page Curation Router - WF7 V3 Compliant
 Layer 3 Component per ScraperSky Constitutional Standards
 
