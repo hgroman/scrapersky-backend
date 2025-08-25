@@ -57,8 +57,8 @@ async def get_pages(
                 "url": page.url,
                 "title": page.title,
                 "domain_id": str(page.domain_id) if page.domain_id else None,
-                "curation_status": page.page_curation_status.value if page.page_curation_status else None,
-                "processing_status": page.page_processing_status.value if page.page_processing_status else None,
+                "curation_status": str(page.page_curation_status) if page.page_curation_status else None,
+                "processing_status": str(page.page_processing_status) if page.page_processing_status else None,
                 "updated_at": page.updated_at.isoformat() if page.updated_at else None,
                 "created_at": page.created_at.isoformat() if page.created_at else None,
                 "error": page.page_processing_error
