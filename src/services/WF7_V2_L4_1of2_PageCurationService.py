@@ -23,6 +23,7 @@ class PageCurationService:
         """
         logging.info(f"Starting curation for page_id: {page_id}")
 
+        # SDK passes session but we manage our own transaction per SDK requirements
         async with session.begin():
             # 1. Fetch the Page object
             stmt = select(Page).where(Page.id == page_id)
@@ -122,5 +123,7 @@ class PageCurationService:
             # Use setattr to properly update the column value
             setattr(page, 'page_processing_status', PageProcessingStatus.Complete)
             logging.info(f"Set page {page.id} status to Complete")
+            
+            # Transaction auto-commits when exiting async with session.begin()
 
         return True
