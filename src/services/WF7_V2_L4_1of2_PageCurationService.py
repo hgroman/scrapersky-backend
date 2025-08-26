@@ -89,30 +89,15 @@ class PageCurationService:
                 
                 contact_phone = phones[0] if phones else "Phone not found"
                 
-                # Use UPSERT pattern to handle duplicate domain_id + email combinations
-                from sqlalchemy.dialects.postgresql import insert
-                
-                stmt = insert(Contact).values(
+                new_contact = Contact(
                     domain_id=page.domain_id,
                     page_id=page.id,
                     name=contact_name,
                     email=contact_email,
                     phone_number=contact_phone[:50],  # Limit length
                 )
-                
-                # On conflict, update the contact with new page_id and updated info
-                stmt = stmt.on_conflict_do_update(
-                    index_elements=['domain_id', 'email'],
-                    set_=dict(
-                        page_id=stmt.excluded.page_id,
-                        name=stmt.excluded.name,
-                        phone_number=stmt.excluded.phone_number,
-                        updated_at=stmt.excluded.updated_at
-                    )
-                )
-                
-                await session.execute(stmt)
-                logging.info(f"UPSERTED real contact for {domain_name}: {contact_email} | {contact_phone}")
+                session.add(new_contact)
+                logging.info(f"Created REAL contact for {domain_name}: {contact_email} | {contact_phone}")
 
             except Exception as e:
                 logging.error(f"Error creating contact for page {page.id}: {e}")
