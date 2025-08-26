@@ -2,6 +2,7 @@ import uuid
 import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import and_
 from src.models.page import Page
 from src.models.WF7_V2_L1_1of1_ContactModel import Contact
 from src.utils.scraper_api import ScraperAPIClient
@@ -90,8 +91,10 @@ class PageCurationService:
                 
                 # Check if contact already exists for this domain and email
                 existing_contact_stmt = select(Contact).where(
-                    Contact.domain_id == page.domain_id,
-                    Contact.email == contact_email
+                    and_(
+                        Contact.domain_id == page.domain_id,
+                        Contact.email == contact_email
+                    )
                 )
                 existing_result = await session.execute(existing_contact_stmt)
                 existing_contact = existing_result.scalar_one_or_none()
