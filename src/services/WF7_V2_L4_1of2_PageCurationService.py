@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy import and_
 from src.models.page import Page
 from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.enums import PageProcessingStatus, PageCurationStatus
 from src.utils.scraper_api import ScraperAPIClient
 import logging
 
@@ -34,6 +35,10 @@ class PageCurationService:
             if not page:
                 logging.error(f"Page with id {page_id} not found.")
                 return False
+
+            # 2. Set page_processing_status to Processing at start
+            setattr(page, 'page_processing_status', PageProcessingStatus.Processing)
+            logging.info(f"Set page {page.id} processing status to Processing")
 
             # 2. Use ScraperAPI to fetch real content (bypasses bot detection)
             page_url = str(page.url)
@@ -122,10 +127,10 @@ class PageCurationService:
                 return False
             
             # 4. Set page status to Complete (required by run_job_loop SDK)
-            from src.models.enums import PageProcessingStatus
-            # Use setattr to properly update the column value
+            # Set both statuses to Complete when done
             setattr(page, 'page_processing_status', PageProcessingStatus.Complete)
-            logging.info(f"Set page {page.id} status to Complete")
+            setattr(page, 'page_curation_status', PageCurationStatus.Complete)
+            logging.info(f"Set page {page.id} processing status and curation status to Complete")
             
             # Transaction auto-commits when exiting async with session.begin()
 

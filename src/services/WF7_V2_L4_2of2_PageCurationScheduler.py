@@ -3,7 +3,7 @@ from sqlalchemy import asc
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from ..config.settings import settings
 from ..models.page import Page
-from ..models.enums import PageProcessingStatus
+from ..models.enums import PageProcessingStatus, PageCurationStatus
 from .WF7_V2_L4_1of2_PageCurationService import PageCurationService
 
 logging.basicConfig(level=logging.INFO)
@@ -19,15 +19,15 @@ async def process_page_curation_queue():
 
     await run_job_loop(
         model=Page,
-        status_enum=PageProcessingStatus,
-        queued_status=PageProcessingStatus.Queued,
-        processing_status=PageProcessingStatus.Processing,
-        completed_status=PageProcessingStatus.Complete,
-        failed_status=PageProcessingStatus.Error,
+        status_enum=PageCurationStatus,
+        queued_status=PageCurationStatus.Selected,
+        processing_status=PageCurationStatus.Processing,
+        completed_status=PageCurationStatus.Complete,
+        failed_status=PageCurationStatus.Error,
         processing_function=service.process_single_page_for_curation,
         batch_size=settings.PAGE_CURATION_SCHEDULER_BATCH_SIZE,
         order_by_column=asc(Page.updated_at),
-        status_field_name="page_processing_status",
+        status_field_name="page_curation_status",
         error_field_name="page_processing_error",
     )
     logger.info("Finished page curation queue processing cycle.")
