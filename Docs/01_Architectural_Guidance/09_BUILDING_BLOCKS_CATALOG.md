@@ -81,6 +81,106 @@ mcp__supabase_mcp_server__execute_sql(
 
 ---
 
+### Pattern: Server-Side Filtering Enhancement
+
+**Origin:** WF7 Scalability Enhancement (2025-08-26) - Frontend bottleneck with millions of records
+
+**The Problem:**
+```javascript
+// ❌ FAILED - Frontend trying to filter millions of records client-side
+const allPages = await fetch('/api/v3/pages/?limit=1000000');
+const filtered = allPages.filter(page => page.status === 'Selected'); // Browser crashes
+```
+
+**The Solution:**
+```python
+# ✅ PRODUCTION VERIFIED - Server-side filtering with Query parameters
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_items_filtered(
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict = Depends(get_current_user),
+    limit: int = 100,
+    offset: int = 0,
+    # Server-side filter parameters
+    status_filter: Optional[YourStatusEnum] = Query(None, description="Filter by status"),
+    text_contains: Optional[str] = Query(None, description="Filter by text content (case-insensitive)"),
+    foreign_key_filter: Optional[uuid.UUID] = Query(None, description="Filter by related entity")
+):
+    # Build conditional filters
+    filters = []
+    if status_filter is not None:
+        filters.append(YourModel.status_field == status_filter)
+    if text_contains:
+        filters.append(YourModel.text_field.ilike(f"%{text_contains}%"))
+    if foreign_key_filter:
+        filters.append(YourModel.foreign_key == foreign_key_filter)
+    
+    # Apply filters to count query
+    count_stmt = select(YourModel)
+    if filters:
+        count_stmt = count_stmt.where(*filters)
+    count_result = await session.execute(count_stmt)
+    total_count = len(count_result.scalars().all())
+    
+    # Apply filters to data query
+    stmt = select(YourModel).offset(offset).limit(limit)
+    if filters:
+        stmt = stmt.where(*filters)
+    result = await session.execute(stmt)
+    items = result.scalars().all()
+    
+    return {
+        "items": [
+            {
+                "id": str(item.id),
+                "status": str(item.status_field) if item.status_field is not None else None,
+                "text_field": item.text_field,
+                "created_at": item.created_at.isoformat() if item.created_at else None
+            }
+            for item in items
+        ],
+        "total": total_count,
+        "offset": offset,
+        "limit": limit,
+        # Debugging metadata
+        "filters_applied": {
+            "status_filter": str(status_filter) if status_filter else None,
+            "text_contains": text_contains,
+            "foreign_key_filter": str(foreign_key_filter) if foreign_key_filter else None
+        }
+    }
+```
+
+**Key Implementation Details:**
+1. **All filters optional**: Default `None` values maintain backwards compatibility
+2. **Conditional WHERE clauses**: Only applied when filter parameters provided
+3. **Database indexes utilized**: Enum and foreign key columns should be indexed
+4. **Case-insensitive text search**: Use `ilike()` for PostgreSQL
+5. **Filter debugging**: Include `filters_applied` in response for frontend debugging
+
+**Performance Optimization:**
+- Separate count and data queries for accuracy
+- Leverage existing database indexes on enum and foreign key columns
+- Use `*filters` unpacking for clean conditional WHERE application
+
+**Frontend Usage:**
+```javascript
+// ✅ Efficient server-side filtering
+const filtered = await fetch('/api/v3/items/?status_filter=Selected&text_contains=electric&limit=50');
+const data = await filtered.json();
+console.log(`Found ${data.total} matches, showing ${data.items.length}`);
+```
+
+**Production Deployment Checklist:**
+- [ ] All filter parameters have `Optional[Type] = Query(None)` signature
+- [ ] Database indexes exist on filtered columns
+- [ ] Backwards compatibility verified (no required parameters added)
+- [ ] OpenAPI documentation auto-generates parameter descriptions
+- [ ] Case-insensitive text search tested with `ilike()`
+- [ ] `filters_applied` metadata included for debugging
+
+---
+
 ### Pattern: Batch Status Updates with Dual-Status Pattern
 
 **Origin:** WF7 Router Implementation - Pages curation workflow

@@ -1,0 +1,437 @@
+# WF6 (The Recorder) - Comprehensive Test Tracking Configuration
+# This YAML serves as the foundational testing framework for ALL ScraperSky workflows
+# Version: 1.0
+# Created: 2025-08-18
+# Test Sentinel: Layer 7 Testing Guardian
+
+metadata:
+  workflow_id: "WF6"
+  workflow_name: "The Recorder"
+  version: "1.0"
+  test_framework_version: "1.0"
+  created_date: "2025-08-18"
+  last_updated: "2025-08-18"
+  test_sentinel_version: "1.6"
+  docker_required: true
+  production_safe: true
+
+# Foundational Test Framework Structure
+test_framework:
+  phases:
+    - name: "environment_setup"
+      description: "Docker environment validation and health checks"
+      required: true
+      blocking: true
+    - name: "component_testing"
+      description: "Individual component validation"
+      required: true
+      blocking: true
+    - name: "integration_testing"
+      description: "Cross-component integration validation"
+      required: true
+      blocking: true
+    - name: "error_handling"
+      description: "Error scenarios and edge cases"
+      required: true
+      blocking: false
+    - name: "end_to_end"
+      description: "Complete workflow pipeline validation"
+      required: true
+      blocking: false
+    - name: "performance_validation"
+      description: "Performance and resource usage validation"
+      required: false
+      blocking: false
+
+# WF6 Specific Configuration
+workflow_config:
+  dependencies:
+    upstream:
+      - workflow: "WF5"
+        name: "The Flight Planner"
+        status: "broken"
+        simulation_required: true
+    downstream:
+      - workflow: "WF7"
+        name: "The Extractor"
+        status: "unknown"
+  
+  database_schema:
+    input_tables:
+      - name: "sitemap_files"
+        purpose: "Input queue for WF6 processing"
+        key_fields: ["id", "domain_id", "url", "sitemap_import_status"]
+        layer: "L1"
+        guardian: "Layer 1 Data Sentinel"
+        validation_points:
+          - "UUID generation and uniqueness"
+          - "Foreign key constraints to domains table"
+          - "Enum value validation for sitemap_import_status"
+          - "Default value assignment (priority=5, is_active=true)"
+          - "Timestamp field behavior (created_at, updated_at)"
+          - "JSONB field handling (tags)"
+        test_queries:
+          - "SELECT COUNT(*) FROM sitemap_files WHERE sitemap_import_status = 'Queued'"
+          - "SELECT * FROM sitemap_files WHERE domain_id = 'test-domain-uuid'"
+          - "SELECT url_count, sitemap_import_status FROM sitemap_files WHERE id = 'test-sitemap-uuid'"
+  
+    output_tables:
+      - name: "pages"
+        purpose: "URLs extracted from sitemap files"
+        key_fields: ["id", "sitemap_file_id", "url", "page_curation_status"]
+        layer: "L1"
+        guardian: "Layer 1 Data Sentinel"
+        validation_points:
+          - "Foreign key relationship to sitemap_files"
+          - "URL field validation and uniqueness constraints"
+          - "Array field handling (schema_types, inbound_links, outbound_links)"
+          - "JSONB field validation (additional_json)"
+          - "Status enum validation (page_curation_status)"
+          - "Cascade behavior on sitemap_file deletion"
+        test_queries:
+          - "SELECT COUNT(*) FROM pages WHERE sitemap_file_id = 'test-sitemap-uuid'"
+          - "SELECT url, page_curation_status FROM pages WHERE domain_id = 'test-domain-uuid'"
+          - "SELECT has_schema_markup, schema_types FROM pages WHERE id = 'test-page-uuid'"
+  
+    supporting_tables:
+      - name: "domains"
+        purpose: "Parent domain context"
+        key_fields: ["id", "domain", "status"]
+        layer: "L1"
+        guardian: "Layer 1 Data Sentinel"
+        validation_points:
+          - "Domain name validation and uniqueness"
+          - "Status enum validation across multiple status fields"
+          - "JSONB field validation (security_headers, dns_records)"
+          - "Array field handling (content_language)"
+          - "Default value assignment for status fields"
+        test_queries:
+          - "SELECT domain, status FROM domains WHERE id = 'test-domain-uuid'"
+          - "SELECT COUNT(*) FROM domains WHERE status = 'active'"
+          - "SELECT security_headers, dns_records FROM domains WHERE domain = 'test-example.com'"
+
+  api_endpoints:
+    consumer:
+      - path: "/api/v3/sitemap-files/"
+        methods: ["GET", "POST", "PUT"]
+        auth_required: true
+        description: "CRUD operations for sitemap files"
+    dev_tools:
+      - path: "/api/v3/dev-tools/trigger-sitemap-import/{sitemap_file_id}"
+        methods: ["POST"]
+        auth_required: true
+        description: "Manual trigger for testing"
+    health:
+      - path: "/health"
+        methods: ["GET"]
+        auth_required: false
+        description: "Application health check"
+      - path: "/health/db"
+        methods: ["GET"]
+        auth_required: false
+        description: "Database health check"
+
+# Component-by-Component Test Specifications (ScraperSky Layer Architecture)
+test_components:
+  # Layer 1 (L1): Data Sentinel - Models and Data Layer
+  layer_1_models:
+    sitemap_model:
+      layer: "L1"
+      layer_name: "Data Sentinel"
+      file: "src/models/sitemap.py"
+      class: "SitemapFile"
+      guardian_persona: "Layer 1 Data Sentinel"
+      tests:
+        - name: "model_field_validation"
+          description: "Validate all model fields and constraints"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "UUID primary key generation"
+            - "Required field constraints"
+            - "Enum value validation"
+            - "Foreign key relationships"
+        - name: "status_enum_validation"
+          description: "Validate SitemapImportProcessStatusEnum"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "All enum values present"
+            - "Default status assignment"
+            - "Status transition validation"
+    
+    page_model:
+      layer: "L1"
+      layer_name: "Data Sentinel"
+      file: "src/models/page.py"
+      class: "Page"
+      guardian_persona: "Layer 1 Data Sentinel"
+      tests:
+        - name: "page_model_validation"
+          description: "Validate Page model structure and relationships"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "Foreign key to sitemap_files"
+            - "URL field validation"
+            - "Status field defaults"
+            - "Timestamp field behavior"
+
+  # Layer 4 (L4): Service Arbiter - Business Logic and Services
+  layer_4_services:
+    sitemap_import_service:
+      layer: "L4"
+      layer_name: "Service Arbiter"
+      file: "src/services/sitemap_import_service.py"
+      class: "SitemapImportService"
+      guardian_persona: "Layer 4 Service Arbiter"
+      tests:
+        - name: "process_single_sitemap_file"
+          description: "Core processing logic validation"
+          status: "pending"
+          priority: "critical"
+          validation_points:
+            - "HTTP request handling"
+            - "XML parsing accuracy"
+            - "Page record creation"
+            - "Status transition management"
+            - "Error handling and rollback"
+            - "Transaction integrity"
+        - name: "http_client_behavior"
+          description: "HTTP client configuration and behavior"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "Timeout handling (60s)"
+            - "Redirect following"
+            - "Error status code handling"
+            - "Network failure handling"
+        - name: "xml_parsing_validation"
+          description: "Sitemap XML parsing accuracy"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "Valid XML parsing"
+            - "Malformed XML handling"
+            - "URL extraction accuracy"
+            - "Empty sitemap handling"
+
+    sitemap_import_scheduler:
+      layer: "L4"
+      layer_name: "Service Arbiter"
+      file: "src/services/sitemap_import_scheduler.py"
+      function: "process_pending_sitemap_imports"
+      guardian_persona: "Layer 4 Service Arbiter"
+      tests:
+        - name: "scheduler_job_execution"
+          description: "Background job processing validation"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "Queued record detection"
+            - "Batch size compliance"
+            - "Status update accuracy"
+            - "Error isolation"
+            - "Job completion logging"
+
+  # Layer 3 (L3): Router Guardian - API Endpoints and Request Handling
+  layer_3_routers:
+    sitemap_files_router:
+      layer: "L3"
+      layer_name: "Router Guardian"
+      file: "src/routers/sitemap_files.py"
+      guardian_persona: "Layer 3 Router Guardian"
+      tests:
+        - name: "crud_operations"
+          description: "CRUD endpoint validation"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "POST /api/v3/sitemap-files/ creation"
+            - "GET /api/v3/sitemap-files/ listing with pagination"
+            - "PUT /api/v3/sitemap-files/{id} updates"
+            - "DELETE /api/v3/sitemap-files/{id} deletion"
+            - "Authentication enforcement"
+            - "Input validation"
+            - "Error response formatting"
+        - name: "batch_status_update"
+          description: "Batch status update endpoint validation"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "Multiple record updates"
+            - "Status transition validation"
+            - "User tracking"
+            - "Response accuracy"
+
+    dev_tools_router:
+      layer: "L3"
+      layer_name: "Router Guardian"
+      file: "src/routers/dev_tools.py"
+      guardian_persona: "Layer 3 Router Guardian"
+      tests:
+        - name: "manual_trigger_endpoint"
+          description: "Manual sitemap import trigger validation"
+          status: "pending"
+          priority: "high"
+          validation_points:
+            - "UUID parameter validation"
+            - "Service invocation"
+            - "Response formatting"
+            - "Error handling"
+
+# Test Execution Specifications
+test_execution:
+  environment:
+    docker_compose: true
+    isolated_database: true
+    test_data_cleanup: true
+    health_check_required: true
+  
+  authentication:
+    jwt_required: true
+    test_user_setup: true
+    token_generation: "automated"
+  
+  data_setup:
+    test_domains: 
+      - domain: "test-example.com"
+        status: "active"
+    test_sitemap_urls:
+      - "https://test-example.com/sitemap.xml"
+      - "https://invalid-domain.com/sitemap.xml"  # For error testing
+    cleanup_procedures:
+      - "DELETE FROM pages WHERE sitemap_file_id IN (SELECT id FROM sitemap_files WHERE discovery_method = 'test')"
+      - "DELETE FROM sitemap_files WHERE discovery_method = 'test'"
+      - "DELETE FROM domains WHERE domain LIKE 'test-%'"
+
+# Test Scenarios
+test_scenarios:
+  happy_path:
+    - name: "successful_sitemap_processing"
+      description: "Complete successful sitemap import flow"
+      steps:
+        - "Create test domain"
+        - "Create sitemap file record via API"
+        - "Trigger manual processing"
+        - "Validate status transitions"
+        - "Verify page records created"
+        - "Validate foreign key relationships"
+      expected_outcome: "Pages created with Complete status"
+      status: "pending"
+
+  error_scenarios:
+    - name: "invalid_sitemap_url"
+      description: "Handle non-existent sitemap URLs"
+      steps:
+        - "Create sitemap file with invalid URL"
+        - "Trigger processing"
+        - "Validate Error status"
+        - "Verify error message storage"
+      expected_outcome: "Status = Error with descriptive message"
+      status: "pending"
+    
+    - name: "malformed_xml"
+      description: "Handle malformed XML content"
+      steps:
+        - "Create sitemap file pointing to invalid XML"
+        - "Trigger processing"
+        - "Validate Error status"
+        - "Verify transaction rollback"
+      expected_outcome: "Status = Error, no partial data"
+      status: "pending"
+    
+    - name: "network_timeout"
+      description: "Handle network timeouts"
+      steps:
+        - "Create sitemap file with slow-responding URL"
+        - "Trigger processing"
+        - "Wait for timeout (60s)"
+        - "Validate Error status"
+      expected_outcome: "Status = Error after timeout"
+      status: "pending"
+
+  performance_scenarios:
+    - name: "large_sitemap_processing"
+      description: "Handle large sitemap files"
+      steps:
+        - "Create sitemap file with 10,000+ URLs"
+        - "Trigger processing"
+        - "Monitor memory usage"
+        - "Validate completion time"
+      expected_outcome: "Successful processing within resource limits"
+      status: "pending"
+
+# Validation Queries
+validation_queries:
+  status_verification:
+    - name: "check_sitemap_status"
+      query: "SELECT id, sitemap_import_status, sitemap_import_error FROM sitemap_files WHERE id = ?"
+      description: "Verify sitemap file status and error messages"
+    
+    - name: "check_pages_created"
+      query: "SELECT COUNT(*), sitemap_file_id FROM pages WHERE sitemap_file_id = ? GROUP BY sitemap_file_id"
+      description: "Verify page records created for sitemap file"
+    
+    - name: "check_foreign_key_integrity"
+      query: "SELECT p.id, p.sitemap_file_id, sf.id FROM pages p LEFT JOIN sitemap_files sf ON p.sitemap_file_id = sf.id WHERE p.sitemap_file_id = ?"
+      description: "Verify foreign key relationships"
+
+# Success Criteria
+success_criteria:
+  functional:
+    - "All status transitions work correctly"
+    - "Page records created with proper relationships"
+    - "Error scenarios handled gracefully"
+    - "API endpoints respond correctly"
+    - "Authentication enforced properly"
+  
+  performance:
+    - "HTTP requests complete within 60s timeout"
+    - "Database transactions commit/rollback properly"
+    - "Memory usage remains stable"
+    - "No resource leaks detected"
+  
+  security:
+    - "JWT authentication required"
+    - "Tenant isolation maintained"
+    - "SQL injection prevention verified"
+    - "Input validation enforced"
+
+# Reporting
+reporting:
+  test_results_file: "wf6_test_results.json"
+  coverage_report: "wf6_coverage_report.html"
+  performance_metrics: "wf6_performance.json"
+  error_log: "wf6_test_errors.log"
+
+# Extension Points for Other Workflows
+extension_framework:
+  workflow_template:
+    metadata_required:
+      - "workflow_id"
+      - "workflow_name"
+      - "version"
+      - "dependencies"
+    
+    component_categories:
+      - "models"
+      - "services"
+      - "routers"
+      - "schedulers"
+      - "utilities"
+    
+    test_phases:
+      - "environment_setup"
+      - "component_testing"
+      - "integration_testing"
+      - "error_handling"
+      - "end_to_end"
+      - "performance_validation"
+    
+    required_validations:
+      - "database_integrity"
+      - "api_functionality"
+      - "error_handling"
+      - "authentication"
+      - "performance"

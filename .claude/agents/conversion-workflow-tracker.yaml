@@ -1,0 +1,91 @@
+# Claude Code Subagent Conversion Workflow Tracker
+
+metadata:
+  work_order: "/personas_layers/Work_Order_agent-comparison-analysis.md"
+  
+locations:
+  legacy_personas: "/personas_layers/"
+  frontier_subagents: "/.claude/agents/"
+
+files:
+  L1:
+    legacy: "/personas_layers/L1_Model_Guardian_Pattern_AntiPattern_Companion_v2.0.md"
+    frontier: "/.claude/agents/layer-1-data-sentinel-subagent.md"
+  L2:
+    legacy: "/personas_layers/L2_Schema_Guardian_Pattern_AntiPattern_Companion_v2.0.md"
+    frontier: "/.claude/agents/layer-2-schema-guardian-subagent.md"
+  L3:
+    legacy: "/personas_layers/L3_Router_Guardian_Pattern_AntiPattern_Companion_v2.0.md"
+    frontier: "/.claude/agents/layer-3-router-guardian-subagent.md"
+  L4:
+    legacy: "/personas_layers/L4_Service_Guardian_Pattern_AntiPattern_Companion.md"
+    frontier: "/.claude/agents/layer-4-arbiter-subagent.md"
+  L5:
+    legacy: "/personas_layers/L5_Config_Guardian_Pattern_AntiPattern_Companion.md"
+    frontier: "/.claude/agents/layer-5-config-conductor-subagent.md"
+  L6:
+    legacy: "/personas_layers/L6_UI_Guardian_Pattern_AntiPattern_Companion.md"
+    frontier: "/.claude/agents/layer-6-ui-virtuoso-subagent.md"
+  L7:
+    legacy: "/personas_layers/L7_Test_Guardian_Pattern_AntiPattern_Companion.md"
+    frontier: "/.claude/agents/layer-7-test-sentinel-subagent.md"
+  L8:
+    legacy: null
+    frontier: "/.claude/agents/layer-8-pattern-weaver-subagent.md"
+
+workflow:
+  L1:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true         # Completed - tools reduced, triggers enhanced, metrics added
+    
+  L2:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback  
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - tools standardized, triggers enhanced, metrics added
+    
+  L3:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations  
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - removed Bash, enhanced triggers, added metrics
+    
+  L4:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - removed Supabase, enhanced triggers, added metrics
+    
+  L5:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - removed Supabase, enhanced triggers, added metrics
+    
+  L6:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - enhanced triggers, added metrics, coordination matrix
+    
+  L7:
+    step_1_review_workflow: true  # Completed - reviewed current implementation (9.8/10 rating)
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - minimal changes needed due to high rating
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - added metrics and coordination matrix only
+    
+  L8:
+    step_1_review_workflow: true  # Completed - reviewed current implementation
+    step_2_review_feedback: true  # Completed - analyzed Work Order feedback
+    step_3_propose_changes: true  # Completed - proposed 4 optimizations
+    step_4_get_approval: true     # Auto-approved per Work Order directive
+    step_5_implement: true        # Completed - enhanced triggers, added metrics, coordination matrix
