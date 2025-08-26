@@ -3,12 +3,25 @@
 # -----------------------------------------
 FROM python:3.11-slim as builder
 
-# System-level dependencies
+# System-level dependencies including Playwright requirements
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     python3-dev \
     curl \
+    wget \
+    gnupg \
+    libnss3-dev \
+    libatk-bridge2.0-dev \
+    libdrm2 \
+    libxkbcommon-dev \
+    libxcomposite-dev \
+    libxdamage-dev \
+    libxrandr2 \
+    libgbm-dev \
+    libxss1 \
+    libasound2-dev \
+    libxshmfence1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
@@ -23,6 +36,9 @@ COPY requirements.txt /app/
 # Install dependencies into a local user path
 RUN pip install --user --no-cache-dir -r requirements.txt
 
+# Install Playwright browsers (as myuser)
+RUN python -m playwright install chromium
+
 # Copy entire project (excluding what's in .dockerignore)
 COPY --chown=myuser:myuser . /app
 
@@ -31,9 +47,24 @@ COPY --chown=myuser:myuser . /app
 # -----------------------------------------
 FROM python:3.11-slim
 
-# Install curl for health checks
+# Install curl for health checks and complete Playwright runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libxss1 \
+    libasound2 \
+    libxshmfence1 \
+    libcups2 \
+    libxfixes3 \
+    libcairo2 \
+    libpango-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the local user's installed packages from builder
@@ -52,10 +83,15 @@ WORKDIR /app
 # Copy project files
 COPY --from=builder --chown=myuser:myuser /app /app
 
-# Create crawl4ai directory with proper permissions
+# Fix home directory ownership and create necessary directories
 USER root
-RUN mkdir -p /home/myuser/.crawl4ai && chown myuser:myuser /home/myuser/.crawl4ai
+RUN chown -R myuser:myuser /home/myuser && \
+    mkdir -p /home/myuser/.cache /home/myuser/.crawl4ai && \
+    chown -R myuser:myuser /home/myuser/.cache /home/myuser/.crawl4ai
 USER myuser
+
+# Install Playwright browsers as myuser with proper cache permissions
+RUN python -m playwright install chromium
 
 # Expose port 8000 for FastAPI
 EXPOSE 8000
