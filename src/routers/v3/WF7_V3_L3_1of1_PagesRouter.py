@@ -9,8 +9,8 @@ File: WF7-V3-L3-1of1-PagesRouter.py
 """
 
 import uuid
-from typing import Dict, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Dict, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -33,20 +33,37 @@ async def get_pages(
     session: AsyncSession = Depends(get_db_session),
     current_user: Dict = Depends(get_current_user),
     limit: int = 100,
-    offset: int = 0
+    offset: int = 0,
+    page_curation_status: Optional[PageCurationStatus] = Query(None, description="Filter by page curation status"),
+    page_processing_status: Optional[PageProcessingStatus] = Query(None, description="Filter by page processing status"),
+    url_contains: Optional[str] = Query(None, description="Filter by URL content (case-insensitive)")
 ):
     """
-    Get pages for WF7 curation interface.
+    Get pages for WF7 curation interface with optional server-side filtering.
     
     Returns paginated list of pages with their curation and processing status.
+    Supports filtering by curation status, processing status, and URL content.
     """
-    # Get total count for pagination
+    # Build filter conditions
+    filters = []
+    if page_curation_status is not None:
+        filters.append(Page.page_curation_status == page_curation_status)
+    if page_processing_status is not None:
+        filters.append(Page.page_processing_status == page_processing_status)
+    if url_contains:
+        filters.append(Page.url.ilike(f"%{url_contains}%"))
+    
+    # Get total count for pagination with filters
     count_stmt = select(Page)
+    if filters:
+        count_stmt = count_stmt.where(*filters)
     count_result = await session.execute(count_stmt)
     total_count = len(count_result.scalars().all())
     
-    # Get paginated pages with domain relationship
+    # Get paginated pages with filters
     stmt = select(Page).offset(offset).limit(limit)
+    if filters:
+        stmt = stmt.where(*filters)
     result = await session.execute(stmt)
     pages = result.scalars().all()
     
@@ -56,7 +73,7 @@ async def get_pages(
                 "id": str(page.id),
                 "url": page.url,
                 "title": page.title,
-                "domain_id": str(page.domain_id) if page.domain_id else None,
+                "domain_id": str(page.domain_id) if page.domain_id is not None else None,
                 "curation_status": str(page.page_curation_status) if page.page_curation_status is not None else None,
                 "processing_status": str(page.page_processing_status) if page.page_processing_status is not None else None,
                 "updated_at": page.updated_at.isoformat() if page.updated_at else None,
@@ -67,7 +84,12 @@ async def get_pages(
         ],
         "total": total_count,
         "offset": offset,
-        "limit": limit
+        "limit": limit,
+        "filters_applied": {
+            "page_curation_status": str(page_curation_status) if page_curation_status else None,
+            "page_processing_status": str(page_processing_status) if page_processing_status else None,
+            "url_contains": url_contains
+        }
     }
 
 
