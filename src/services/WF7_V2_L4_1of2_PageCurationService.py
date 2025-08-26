@@ -68,7 +68,7 @@ class PageCurationService:
                 # Filter out obviously fake emails
                 real_emails = [email for email in emails if not any(fake in email.lower() for fake in ['noreply', 'donotreply', 'no-reply', 'example.com', 'test.com', 'dummy'])]
                 
-                # Use REAL extracted info or fail with meaningful error
+                # Use REAL extracted info or create unique "not found" record per page
                 if real_emails:
                     contact_email = real_emails[0]  # Use first real email found
                     contact_name = f"Contact at {domain_name}"
@@ -79,25 +79,39 @@ class PageCurationService:
                     contact_name = f"Contact at {domain_name}"
                     logging.info(f"Found system email: {contact_email}")
                 else:
-                    # Only create domain-based email if we got content but no emails
-                    if html_content and len(html_content) > 100:
-                        contact_email = f"info@{domain_name}"
-                        contact_name = f"Business Contact - {domain_name}"
-                        logging.info(f"No emails found in {len(html_content)} chars, using domain email: {contact_email}")
-                    else:
-                        raise ValueError(f"No content or emails found on {page_url} - cannot create meaningful contact")
+                    # Create a unique "not found" record using page_id to ensure uniqueness
+                    page_id_short = str(page_id).split('-')[0]  # Use first part of UUID
+                    contact_email = f"notfound_{page_id_short}@{domain_name}"
+                    contact_name = f"No Contact Found - {domain_name}"
+                    logging.info(f"No emails found, creating unique placeholder: {contact_email}")
                 
                 contact_phone = phones[0] if phones else "Phone not found"
                 
-                new_contact = Contact(
-                    domain_id=page.domain_id,
-                    page_id=page.id,
-                    name=contact_name,
-                    email=contact_email,
-                    phone_number=contact_phone[:50],  # Limit length
+                # Check if contact already exists for this domain and email
+                existing_contact_stmt = select(Contact).where(
+                    Contact.domain_id == page.domain_id,
+                    Contact.email == contact_email
                 )
-                session.add(new_contact)
-                logging.info(f"Created REAL contact for {domain_name}: {contact_email} | {contact_phone}")
+                existing_result = await session.execute(existing_contact_stmt)
+                existing_contact = existing_result.scalar_one_or_none()
+                
+                if existing_contact:
+                    logging.info(f"Contact already exists for {domain_name}: {contact_email} (ID: {existing_contact.id})")
+                    # Update phone if we found a better one
+                    if contact_phone != "Phone not found" and existing_contact.phone_number == "Phone not found":
+                        existing_contact.phone_number = contact_phone[:50]
+                        logging.info(f"Updated existing contact phone: {contact_phone}")
+                else:
+                    # Create new contact
+                    new_contact = Contact(
+                        domain_id=page.domain_id,
+                        page_id=page.id,
+                        name=contact_name,
+                        email=contact_email,
+                        phone_number=contact_phone[:50],  # Limit length
+                    )
+                    session.add(new_contact)
+                    logging.info(f"Created REAL contact for {domain_name}: {contact_email} | {contact_phone}")
 
             except Exception as e:
                 logging.error(f"Error creating contact for page {page.id}: {e}")
