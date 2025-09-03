@@ -1,5 +1,9 @@
 import uuid
 import re
+import asyncio
+import os
+import time
+from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import and_
@@ -10,7 +14,10 @@ import logging
 
 class PageCurationService:
     def __init__(self):
-        pass
+        self.concurrent_semaphore = asyncio.Semaphore(
+            int(os.getenv('WF7_SCRAPER_API_MAX_CONCURRENT', '10'))
+        )
+        self.enable_concurrent = os.getenv('WF7_ENABLE_CONCURRENT_PROCESSING', 'false').lower() == 'true'
 
     async def process_single_page_for_curation(
         self, page_id: uuid.UUID, session: AsyncSession
@@ -130,3 +137,80 @@ class PageCurationService:
             # Transaction auto-commits when exiting async with session.begin()
 
         return True
+
+    async def process_single_page_with_semaphore(
+        self, page_id: uuid.UUID, session: AsyncSession
+    ) -> Dict[str, Any]:
+        """
+        Process a single page with semaphore rate limiting for concurrent execution.
+        Returns dict with success status and details for monitoring.
+        """
+        async with self.concurrent_semaphore:
+            start_time = time.time()
+            try:
+                success = await self.process_single_page_for_curation(page_id, session)
+                processing_time = time.time() - start_time
+                return {
+                    'page_id': str(page_id),
+                    'success': success,
+                    'processing_time': processing_time,
+                    'error': None
+                }
+            except Exception as e:
+                processing_time = time.time() - start_time
+                logging.error(f"Concurrent processing failed for page {page_id}: {e}")
+                return {
+                    'page_id': str(page_id),
+                    'success': False,
+                    'processing_time': processing_time,
+                    'error': str(e)
+                }
+
+    async def process_pages_concurrently(
+        self, page_ids: List[uuid.UUID], session: AsyncSession
+    ) -> List[Dict[str, Any]]:
+        """
+        Process multiple pages concurrently with rate limiting and error isolation.
+        Returns list of processing results for monitoring and debugging.
+        """
+        if not self.enable_concurrent or len(page_ids) <= 1:
+            # Fall back to sequential processing
+            logging.info(f"Processing {len(page_ids)} pages sequentially")
+            results = []
+            for page_id in page_ids:
+                result = await self.process_single_page_with_semaphore(page_id, session)
+                results.append(result)
+            return results
+        
+        # Concurrent processing
+        start_time = time.time()
+        logging.info(f"Processing {len(page_ids)} pages CONCURRENTLY with max {self.concurrent_semaphore._value} concurrent")
+        
+        tasks = [
+            self.process_single_page_with_semaphore(page_id, session)
+            for page_id in page_ids
+        ]
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Convert exceptions to error results
+        processed_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                processed_results.append({
+                    'page_id': str(page_ids[i]),
+                    'success': False,
+                    'processing_time': 0,
+                    'error': str(result)
+                })
+            else:
+                processed_results.append(result)
+        
+        total_time = time.time() - start_time
+        success_count = sum(1 for r in processed_results if r['success'])
+        
+        logging.info(f"WF7 CONCURRENT RESULTS: Processed {len(page_ids)} pages in {total_time:.2f}s, "
+                    f"{success_count} successful, {len(page_ids) - success_count} failed, "
+                    f"Average: {total_time/len(page_ids):.2f}s per page")
+        
+        return processed_results

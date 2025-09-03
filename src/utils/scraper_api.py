@@ -40,12 +40,19 @@ class ScraperAPIClient:
         await self.close()
 
     async def _ensure_session(self) -> None:
-        """Ensure aiohttp session exists."""
+        """Ensure aiohttp session exists with connection pooling."""
         if self._session is None or self._session.closed:
+            connector = aiohttp.TCPConnector(
+                limit=int(getenv('HTTP_CONNECTION_POOL_SIZE', '50')),
+                limit_per_host=int(getenv('HTTP_CONNECTIONS_PER_HOST', '20')),
+                keepalive_timeout=60,
+                enable_cleanup_closed=True
+            )
             self._session = aiohttp.ClientSession(
+                connector=connector,
                 timeout=aiohttp.ClientTimeout(
-                    total=70
-                )  # ScraperAPI recommended timeout
+                    total=int(getenv('HTTP_CONNECTION_TIMEOUT', '70'))
+                )  # Configurable timeout
             )
 
     async def close(self) -> None:
