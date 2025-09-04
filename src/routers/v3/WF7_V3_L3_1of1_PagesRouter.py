@@ -17,7 +17,8 @@ from sqlalchemy.future import select
 # CRITICAL: Import schemas from properly named Layer 2 file
 from src.schemas.WF7_V3_L2_1of1_PageCurationSchemas import (
     PageCurationBatchStatusUpdateRequest,
-    PageCurationBatchUpdateResponse
+    PageCurationBatchUpdateResponse,
+    PageCurationFilteredUpdateRequest
 )
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
@@ -142,6 +143,77 @@ async def update_page_curation_status_batch(
                 page.page_processing_error = None  # type: ignore[assignment]
                 queued_count += 1
 
+    return PageCurationBatchUpdateResponse(
+        updated_count=updated_count,
+        queued_count=queued_count
+    )
+
+
+@router.put("/status/filtered", response_model=PageCurationBatchUpdateResponse, status_code=status.HTTP_200_OK)
+async def update_page_curation_status_filtered(
+    request: PageCurationFilteredUpdateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Update ALL pages matching filter criteria with new curation status.
+    
+    Enables 'Select All' functionality by applying updates to filtered results
+    rather than requiring explicit page ID lists.
+    
+    Implements same dual-status pattern:
+    - Updates page_curation_status to requested value
+    - If status is "Selected", triggers processing by setting page_processing_status to "Queued"
+    
+    Args:
+        request: Filtered update request with criteria and target status
+        session: Database session (injected)
+        current_user: Authenticated user context (injected)
+    
+    Returns:
+        PageCurationBatchUpdateResponse with update and queue counts
+    
+    Raises:
+        HTTPException: If no pages found matching the provided filter criteria
+    """
+    # Build filter conditions (same logic as GET endpoint)
+    filters = []
+    if request.page_curation_status is not None:
+        filters.append(Page.page_curation_status == request.page_curation_status)
+    if request.page_processing_status is not None:
+        filters.append(Page.page_processing_status == request.page_processing_status)
+    if request.url_contains:
+        filters.append(Page.url.ilike(f"%{request.url_contains}%"))
+    
+    updated_count = 0
+    queued_count = 0
+    
+    async with session.begin():
+        # Get all pages matching filter criteria
+        stmt = select(Page)
+        if filters:
+            stmt = stmt.where(*filters)
+        
+        result = await session.execute(stmt)
+        pages_to_update = result.scalars().all()
+        
+        if not pages_to_update:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No pages found matching the provided filter criteria."
+            )
+        
+        # Apply updates to all matching pages
+        for page in pages_to_update:
+            page.page_curation_status = request.status  # type: ignore[assignment]
+            updated_count += 1
+            
+            # Dual-Status Update Pattern - trigger when Selected
+            if request.status == PageCurationStatus.Selected:
+                page.page_processing_status = PageProcessingStatus.Queued  # type: ignore[assignment]
+                page.page_processing_error = None  # type: ignore[assignment]
+                queued_count += 1
+    
     return PageCurationBatchUpdateResponse(
         updated_count=updated_count,
         queued_count=queued_count

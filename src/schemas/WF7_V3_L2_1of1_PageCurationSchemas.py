@@ -7,10 +7,10 @@ Date: 2025-08-06
 Compliance: 100% Layer 2 Blueprint Adherent
 """
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 import uuid
-from src.models.enums import PageCurationStatus
+from src.models.enums import PageCurationStatus, PageProcessingStatus
 
 
 class PageCurationBatchStatusUpdateRequest(BaseModel):
@@ -33,6 +33,19 @@ class PageCurationBatchUpdateResponse(BaseModel):
     
     updated_count: int
     queued_count: int
+
+
+class PageCurationFilteredUpdateRequest(BaseModel):
+    """
+    Request schema for filter-based batch page curation updates.
+    Enables 'Select All' functionality without explicit page ID lists.
+    """
+    model_config = ConfigDict(from_attributes=True)
+    
+    status: PageCurationStatus
+    page_curation_status: Optional[PageCurationStatus] = None
+    page_processing_status: Optional[PageProcessingStatus] = None
+    url_contains: Optional[str] = None
 
 
 # L2 Schema Guardian Compliance Checklist:
