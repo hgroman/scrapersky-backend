@@ -382,6 +382,28 @@ class DomainBatchCurationStatusUpdateRequest(BaseModel):
     )
 
 
+class DomainFilteredUpdateRequest(BaseModel):
+    """
+    Request schema for filter-based batch domain curation updates.
+    Enables 'Select All' functionality without explicit domain ID lists.
+    """
+    sitemap_curation_status: SitemapCurationStatusApiEnum = Field(
+        ..., description="The new sitemap curation status to set for all matching domains."
+    )
+    sitemap_curation_status_filter: Optional[SitemapCurationStatusApiEnum] = Field(
+        None, description="Filter by current sitemap curation status (e.g., New, Selected, Maybe)"
+    )
+    domain_filter: Optional[str] = Field(
+        None, description="Filter by domain name (case-insensitive partial match)"
+    )
+
+
+class DomainBatchUpdateResponse(BaseModel):
+    """Response schema for domain batch update operations."""
+    updated_count: int = Field(..., description="Number of domains updated")
+    queued_count: int = Field(..., description="Number of domains queued for sitemap analysis")
+
+
 # Pydantic model mirroring Domain for API responses (adjust fields as needed for UI)
 class DomainRecord(BaseModel):
     id: UUID4

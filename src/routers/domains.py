@@ -24,6 +24,8 @@ from src.db.session import (
 )
 from src.models.api_models import (
     DomainBatchCurationStatusUpdateRequest,
+    DomainFilteredUpdateRequest,
+    DomainBatchUpdateResponse,
     DomainRecord,
     PaginatedDomainResponse,
 )
@@ -251,3 +253,135 @@ async def update_domain_sitemap_curation_status_batch(
     )
 
     return {"updated_count": updated_count, "queued_count": queued_count}
+
+
+@router.put("/sitemap-curation/status/filtered", response_model=DomainBatchUpdateResponse)
+async def update_domain_sitemap_curation_status_filtered(
+    request: DomainFilteredUpdateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Update ALL domains matching filter criteria with new sitemap curation status.
+    
+    Enables 'Select All' functionality by applying updates to filtered results
+    rather than requiring explicit domain ID lists.
+    
+    Implements same dual-status pattern:
+    - Updates sitemap_curation_status to requested value
+    - If status is 'Selected', triggers sitemap analysis by setting sitemap_analysis_status to 'queued'
+    
+    Args:
+        request: Filtered update request with criteria and target status
+        session: Database session (injected)
+        current_user: Authenticated user context (injected)
+    
+    Returns:
+        DomainBatchUpdateResponse with update and queue counts
+    
+    Raises:
+        HTTPException: If no domains found matching the provided filter criteria
+    """
+    user_sub = current_user.get("sub", "unknown_user")
+    logger.info(
+        f"User {user_sub} requesting filtered domain curation update to status "
+        f"'{request.sitemap_curation_status.value}' with filters: "
+        f"status_filter={request.sitemap_curation_status_filter}, domain_filter='{request.domain_filter}'"
+    )
+    
+    # Build filter conditions (same logic as GET endpoint)
+    filters = []
+    
+    if request.sitemap_curation_status_filter is not None:
+        # Map API enum to DB enum (same logic as existing batch endpoint)
+        db_filter_status = next(
+            (member for member in SitemapCurationStatusEnum if member.name == request.sitemap_curation_status_filter.name),
+            None,
+        )
+        if db_filter_status is None:
+            logger.error(
+                f"API filter status '{request.sitemap_curation_status_filter.name}' has no matching member in DB SitemapCurationStatusEnum"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid sitemap curation status filter: {request.sitemap_curation_status_filter.value}",
+            )
+        filters.append(Domain.sitemap_curation_status == db_filter_status)
+    
+    if request.domain_filter:
+        filters.append(Domain.domain.ilike(f"%{request.domain_filter}%"))
+    
+    # Map target status from API enum to DB enum (same logic as existing batch endpoint)
+    db_curation_status = next(
+        (member for member in SitemapCurationStatusEnum if member.name == request.sitemap_curation_status.name),
+        None,
+    )
+    if db_curation_status is None:
+        logger.error(
+            f"API status '{request.sitemap_curation_status.name}' has no matching member in DB SitemapCurationStatusEnum"
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid sitemap curation status: {request.sitemap_curation_status.value}",
+        )
+    
+    # Determine if sitemap analysis should be triggered
+    trigger_sitemap_analysis = db_curation_status == SitemapCurationStatusEnum.Selected
+    
+    updated_count = 0
+    queued_count = 0
+    
+    try:
+        async with session.begin():
+            # Get all domains matching filter criteria
+            stmt = select(Domain)
+            if filters:
+                stmt = stmt.where(*filters)
+            
+            result = await session.execute(stmt)
+            domains_to_update = result.scalars().all()
+            
+            if not domains_to_update:
+                logger.warning("No domains found matching the provided filter criteria")
+                raise HTTPException(
+                    status_code=404,
+                    detail="No domains found matching the provided filter criteria"
+                )
+            
+            # Apply updates to all matching domains
+            for domain in domains_to_update:
+                # Update the curation status
+                domain.sitemap_curation_status = db_curation_status  # type: ignore
+                updated_count += 1
+                logger.debug(
+                    f"Updating domain {domain.id} sitemap_curation_status to "
+                    f"{db_curation_status.value}"
+                )
+                
+                # Dual-Status Update Pattern - trigger sitemap analysis when Selected
+                if trigger_sitemap_analysis:
+                    domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.queued  # type: ignore
+                    domain.sitemap_analysis_error = None  # type: ignore
+                    queued_count += 1
+                    logger.debug(f"Queuing domain {domain.id} for sitemap analysis")
+            
+            logger.info(f"Filtered domain update completed: {updated_count} domains updated, {queued_count} queued for analysis")
+    
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Error in filtered domain update: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during filtered domain update"
+        ) from e
+    
+    logger.info(
+        f"Batch sitemap curation filtered update completed by {user_sub}. "
+        f"Updated: {updated_count}, Queued for analysis: {queued_count}"
+    )
+    
+    return DomainBatchUpdateResponse(
+        updated_count=updated_count,
+        queued_count=queued_count
+    )
