@@ -615,8 +615,13 @@ async def update_places_staging_status_filtered(
             detail=f"Invalid status mapping for '{request.status.value}'",
         )
     
+    # Determine if deep scan should be triggered (CRITICAL - matches working endpoint logic)
+    trigger_deep_scan = target_db_status_member == PlaceStatusEnum.Selected
+    logger.info(f"Target status '{target_db_status_member.name}' will trigger deep scan: {trigger_deep_scan}")
+    
+    eligible_deep_scan_statuses = [None, GcpApiDeepScanStatusEnum.Error]
     updated_count = 0
-    queued_count = 0  # For future deep scan queueing if implemented
+    queued_count = 0
     
     try:
         async with session.begin():
@@ -640,10 +645,15 @@ async def update_places_staging_status_filtered(
                 place.updated_at = datetime.utcnow()  # type: ignore
                 updated_count += 1
                 
-                # Future: Add dual-status pattern for deep scan queueing if needed
-                # if target_db_status_member == PlaceStatusEnum.Selected:
-                #     place.deep_scan_status = GcpApiDeepScanStatusEnum.queued  # type: ignore
-                #     queued_count += 1
+                # CRITICAL: Deep scan queueing logic (matches working endpoint exactly)
+                if (
+                    trigger_deep_scan
+                    and place.deep_scan_status in eligible_deep_scan_statuses
+                ):
+                    place.deep_scan_status = GcpApiDeepScanStatusEnum.Queued  # type: ignore
+                    place.deep_scan_error = None  # type: ignore
+                    queued_count += 1
+                    logger.debug(f"Queued place {place.place_id} for deep scan")
             
             logger.info(f"Filtered place staging update completed: {updated_count} places updated")
     
