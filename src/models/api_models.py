@@ -321,6 +321,29 @@ class LocalBusinessBatchStatusUpdateRequest(BaseModel):
     )
 
 
+
+class LocalBusinessFilteredUpdateRequest(BaseModel):
+    """
+    Request schema for filter-based batch local business updates.
+    Enables 'Select All' functionality without explicit ID lists.
+    """
+    status: LocalBusinessApiStatusEnum = Field(
+        ..., description="The new status to set for all matching businesses."
+    )
+    status_filter: Optional[LocalBusinessApiStatusEnum] = Field(
+        None, description="Filter by current status (e.g., New, Selected, Maybe)"
+    )
+    business_name: Optional[str] = Field(
+        None, description="Filter by business name (case-insensitive partial match)"
+    )
+
+
+class LocalBusinessBatchUpdateResponse(BaseModel):
+    """Response schema for batch update operations."""
+    updated_count: int = Field(..., description="Number of businesses updated")
+    queued_count: int = Field(..., description="Number of businesses queued for processing")
+
+
 # --- End Models for Local Businesses Selection --- #
 
 

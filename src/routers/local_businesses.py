@@ -20,7 +20,11 @@ from src.auth.jwt_auth import (
 
 # Assuming DB Session, Auth dependencies are similar to other routers
 from src.db.session import get_db_session  # Adjust path if necessary
-from src.models.api_models import LocalBusinessBatchStatusUpdateRequest
+from src.models.api_models import (
+    LocalBusinessBatchStatusUpdateRequest,
+    LocalBusinessFilteredUpdateRequest,
+    LocalBusinessBatchUpdateResponse,
+)
 from src.models.local_business import DomainExtractionStatusEnum, LocalBusiness
 from src.models.place import PlaceStatusEnum  # For DB mapping
 
@@ -307,6 +311,130 @@ async def update_local_businesses_status_batch(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An internal error occurred while updating statuses.",
         )
+
+
+@router.put("/status/filtered", response_model=LocalBusinessBatchUpdateResponse, status_code=status.HTTP_200_OK)
+async def update_local_businesses_status_filtered(
+    request: LocalBusinessFilteredUpdateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Update ALL local businesses matching filter criteria with new status.
+    
+    Enables 'Select All' functionality by applying updates to filtered results
+    rather than requiring explicit local business ID lists.
+    
+    Implements same dual-status pattern:
+    - Updates status to requested value  
+    - If status is 'Selected', triggers domain extraction by setting domain_extraction_status to 'Queued'
+    
+    Args:
+        request: Filtered update request with criteria and target status
+        session: Database session (injected)
+        current_user: Authenticated user context (injected)
+    
+    Returns:
+        LocalBusinessBatchUpdateResponse with update and queue counts
+    
+    Raises:
+        HTTPException: If no local businesses found matching the provided filter criteria
+    """
+    # Get tenant ID from user context
+    tenant_id_str = current_user.get(
+        "tenant_id", "550e8400-e29b-41d4-a716-446655440000"
+    )
+    try:
+        tenant_uuid = UUID(tenant_id_str)
+    except ValueError:
+        logger.error(f"Invalid tenant ID format in token: {tenant_id_str}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid tenant ID format"
+        )
+    
+    # Build filter conditions (same logic as GET endpoint)
+    filters = [LocalBusiness.tenant_id == tenant_uuid]  # Always include tenant filter
+    
+    if request.status_filter is not None:
+        # Map API enum to DB enum (same logic as batch endpoint)
+        target_filter_db_status = next(
+            (member for member in PlaceStatusEnum if member.name == request.status_filter.name),
+            None,
+        )
+        if target_filter_db_status is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status filter mapping for '{request.status_filter.value}'"
+            )
+        filters.append(LocalBusiness.status == target_filter_db_status)
+    
+    if request.business_name:
+        filters.append(LocalBusiness.business_name.ilike(f"%{request.business_name}%"))
+    
+    # Map target status from API enum to DB enum (same logic as batch endpoint)
+    target_db_status_member = next(
+        (member for member in PlaceStatusEnum if member.name == request.status.name),
+        None,
+    )
+    if target_db_status_member is None:
+        logger.error(
+            f"API status '{request.status.name}' ({request.status.value}) has no matching member name in DB PlaceStatusEnum."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status mapping for '{request.status.value}'",
+        )
+    
+    # Determine if domain extraction should be triggered
+    trigger_domain_extraction = target_db_status_member == PlaceStatusEnum.Selected
+    
+    updated_count = 0
+    queued_count = 0
+    now = datetime.utcnow()
+    
+    try:
+        async with session.begin():
+            # Get all local businesses matching filter criteria
+            stmt = select(LocalBusiness)
+            if filters:
+                stmt = stmt.where(*filters)
+            
+            result = await session.execute(stmt)
+            businesses_to_update = result.scalars().all()
+            
+            if not businesses_to_update:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No local businesses found matching the provided filter criteria"
+                )
+            
+            # Apply updates to all matching businesses
+            for business in businesses_to_update:
+                business.status = target_db_status_member  # type: ignore
+                business.updated_at = now  # type: ignore
+                updated_count += 1
+                
+                # Dual-Status Update Pattern - trigger domain extraction when Selected
+                if trigger_domain_extraction:
+                    business.domain_extraction_status = DomainExtractionStatusEnum.Queued  # type: ignore
+                    business.domain_extraction_error = None  # type: ignore
+                    queued_count += 1
+            
+            logger.info(f"Filtered update completed: {updated_count} businesses updated, {queued_count} queued for domain extraction")
+    
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Error in filtered local business update: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal error occurred while updating local businesses"
+        )
+    
+    return LocalBusinessBatchUpdateResponse(
+        updated_count=updated_count,
+        queued_count=queued_count
+    )
 
 
 # The GET endpoint implementation is above, so this TODO is no longer needed.
