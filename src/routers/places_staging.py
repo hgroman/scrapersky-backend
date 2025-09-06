@@ -84,6 +84,28 @@ class PlaceBatchStatusUpdateRequest(BaseModel):
     )
 
 
+class PlaceStagingFilteredUpdateRequest(BaseModel):
+    """
+    Request schema for filter-based batch place staging updates.
+    Enables 'Select All' functionality without explicit place ID lists.
+    """
+    status: PlaceStagingStatusEnum = Field(
+        ..., description="The new status to set for all matching places."
+    )
+    status_filter: Optional[PlaceStagingStatusEnum] = Field(
+        None, description="Filter by current status (e.g., NEW, Selected, Maybe)"
+    )
+    discovery_job_id: Optional[UUID] = Field(
+        None, description="Filter by specific discovery job ID"
+    )
+
+
+class PlaceStagingBatchUpdateResponse(BaseModel):
+    """Response schema for place staging batch update operations."""
+    updated_count: int = Field(..., description="Number of places updated")
+    queued_count: int = Field(..., description="Number of places queued for deep scan")
+
+
 # --- API Endpoints --- #
 
 
@@ -510,6 +532,134 @@ async def list_staged_places(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list staged places",
         )
+
+
+@router.put("/places/staging/status/filtered", response_model=PlaceStagingBatchUpdateResponse, status_code=status.HTTP_200_OK)
+async def update_places_staging_status_filtered(
+    request: PlaceStagingFilteredUpdateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Update ALL places in staging matching filter criteria with new status.
+    
+    Enables 'Select All' functionality by applying updates to filtered results
+    rather than requiring explicit place ID lists.
+    
+    Implements dual-status pattern:
+    - Updates status to requested value
+    - If status is 'Selected', can trigger deep scan queueing (if implemented)
+    
+    Args:
+        request: Filtered update request with criteria and target status
+        session: Database session (injected)
+        current_user: Authenticated user context (injected)
+    
+    Returns:
+        PlaceStagingBatchUpdateResponse with update and queue counts
+    
+    Raises:
+        HTTPException: If no places found matching the provided filter criteria
+    """
+    # Get tenant ID from user context (following WF2 pattern)
+    tenant_id_str = current_user.get(
+        "tenant_id", "550e8400-e29b-41d4-a716-446655440000"
+    )
+    try:
+        tenant_uuid = UUID(tenant_id_str)
+    except ValueError:
+        logger.error(f"Invalid tenant ID format in token: {tenant_id_str}")
+        tenant_uuid = UUID("550e8400-e29b-41d4-a716-446655440000")
+    
+    logger.info(
+        f"User requesting filtered place staging update to status '{request.status.value}' "
+        f"with filters: status_filter={request.status_filter}, discovery_job_id={request.discovery_job_id}"
+    )
+    
+    # Build filter conditions (same logic as GET endpoints)
+    filters = [Place.tenant_id == tenant_uuid]  # Always include tenant filter
+    
+    if request.status_filter is not None:
+        # Map API enum to DB enum (same logic as existing batch endpoint)
+        # Handle the slight name differences between API and DB enums
+        target_filter_db_status = None
+        for db_member in PlaceStatusEnum:
+            # Match by name, handling case differences (NEW->New, ARCHIVED->Archived)
+            if db_member.name.lower() == request.status_filter.name.lower():
+                target_filter_db_status = db_member
+                break
+        
+        if target_filter_db_status is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status filter mapping for '{request.status_filter.value}'"
+            )
+        filters.append(Place.status == target_filter_db_status)
+    
+    if request.discovery_job_id:
+        filters.append(Place.search_job_id == request.discovery_job_id)
+    
+    # Map target status from API enum to DB enum (same logic as existing batch endpoint)
+    target_db_status_member = None
+    for db_member in PlaceStatusEnum:
+        if db_member.name.lower() == request.status.name.lower():
+            target_db_status_member = db_member
+            break
+    
+    if target_db_status_member is None:
+        logger.error(
+            f"API status '{request.status.name}' ({request.status.value}) has no matching member name in DB PlaceStatusEnum."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status mapping for '{request.status.value}'",
+        )
+    
+    updated_count = 0
+    queued_count = 0  # For future deep scan queueing if implemented
+    
+    try:
+        async with session.begin():
+            # Get all places matching filter criteria
+            stmt = select(Place)
+            if filters:
+                stmt = stmt.where(*filters)
+            
+            result = await session.execute(stmt)
+            places_to_update = result.scalars().all()
+            
+            if not places_to_update:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No places found matching the provided filter criteria"
+                )
+            
+            # Apply updates to all matching places
+            for place in places_to_update:
+                place.status = target_db_status_member  # type: ignore
+                place.updated_at = datetime.utcnow()  # type: ignore
+                updated_count += 1
+                
+                # Future: Add dual-status pattern for deep scan queueing if needed
+                # if target_db_status_member == PlaceStatusEnum.Selected:
+                #     place.deep_scan_status = GcpApiDeepScanStatusEnum.queued  # type: ignore
+                #     queued_count += 1
+            
+            logger.info(f"Filtered place staging update completed: {updated_count} places updated")
+    
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Error in filtered place staging update: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal error occurred while updating places staging"
+        ) from e
+    
+    return PlaceStagingBatchUpdateResponse(
+        updated_count=updated_count,
+        queued_count=queued_count
+    )
 
 
 # --- Debug HANK Endpoint Removed --- #
