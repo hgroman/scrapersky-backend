@@ -9,7 +9,7 @@ import logging
 import math
 from typing import Any, Dict, List, Optional, cast
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import asc, desc, func  # Import asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -290,6 +290,7 @@ async def update_domain_sitemap_curation_status_filtered(
     )
     
     # Build filter conditions (same logic as GET endpoint)
+    # NOTE: Domain router does not use tenant filtering (per existing pattern)
     filters = []
     
     if request.sitemap_curation_status_filter is not None:
@@ -303,7 +304,7 @@ async def update_domain_sitemap_curation_status_filtered(
                 f"API filter status '{request.sitemap_curation_status_filter.name}' has no matching member in DB SitemapCurationStatusEnum"
             )
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid sitemap curation status filter: {request.sitemap_curation_status_filter.value}",
             )
         filters.append(Domain.sitemap_curation_status == db_filter_status)
@@ -321,7 +322,7 @@ async def update_domain_sitemap_curation_status_filtered(
             f"API status '{request.sitemap_curation_status.name}' has no matching member in DB SitemapCurationStatusEnum"
         )
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid sitemap curation status: {request.sitemap_curation_status.value}",
         )
     
@@ -344,7 +345,7 @@ async def update_domain_sitemap_curation_status_filtered(
             if not domains_to_update:
                 logger.warning("No domains found matching the provided filter criteria")
                 raise HTTPException(
-                    status_code=404,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail="No domains found matching the provided filter criteria"
                 )
             
@@ -372,7 +373,7 @@ async def update_domain_sitemap_curation_status_filtered(
     except Exception as e:
         logger.error(f"Error in filtered domain update: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error during filtered domain update"
         ) from e
     
