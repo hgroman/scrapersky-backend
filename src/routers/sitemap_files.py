@@ -4,22 +4,28 @@ API Router for Sitemap Files CRUD operations.
 
 import logging
 import uuid
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from src.auth.jwt_auth import get_current_user
 
 # Core Dependencies
 from ..db.session import get_db_session
 from ..models.sitemap import (
+    SitemapFile,
     SitemapImportCurationStatusEnum,
+    SitemapImportProcessStatusEnum,
 )
 from ..schemas.sitemap_file import (
     PaginatedSitemapFileResponse,
     SitemapFileBatchUpdate,  # Assuming batch status update needed
+    SitemapFileBatchUpdateResponse,
     SitemapFileCreate,
+    SitemapFileFilteredUpdateRequest,
     SitemapFileRead,
     SitemapFileUpdate,
 )
@@ -161,6 +167,121 @@ async def update_sitemap_import_curation_status_batch(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error performing batch status update.",
         )
+
+
+@router.put(
+    "/sitemap_import_curation/status/filtered",
+    response_model=SitemapFileBatchUpdateResponse,
+    summary="Filtered Update Sitemap Import Curation Status",
+    description="Updates the `deep_scrape_curation_status` for ALL sitemap files matching filter criteria and potentially queues them for processing. Enables 'Select All' functionality.",
+)
+async def update_sitemap_import_curation_status_filtered(
+    request: SitemapFileFilteredUpdateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> SitemapFileBatchUpdateResponse:
+    """
+    Update ALL sitemap files matching filter criteria with new curation status.
+    
+    Enables 'Select All' functionality by applying updates to filtered results
+    rather than requiring explicit sitemap file ID lists.
+    
+    Implements same dual-status pattern:
+    - Updates deep_scrape_curation_status to requested value
+    - If status is 'Selected', triggers sitemap import by setting sitemap_import_status to 'Queued'
+    
+    Args:
+        request: Filtered update request with criteria and target status
+        session: Database session (injected)
+        current_user: Authenticated user context (injected)
+    
+    Returns:
+        SitemapFileBatchUpdateResponse with update and queue counts
+    
+    Raises:
+        HTTPException: If no sitemap files found matching the provided filter criteria
+    """
+    user_id = current_user.get("user_id", "unknown_user")
+    logger.info(
+        f"User {user_id} requesting filtered sitemap curation update to status "
+        f"'{request.deep_scrape_curation_status.value}' with filters: "
+        f"status_filter={request.deep_scrape_curation_status_filter}, domain_id={request.domain_id}, url_contains='{request.url_contains}'"
+    )
+    
+    # Build filter conditions (same logic as GET endpoint)
+    filters = []
+    
+    if request.deep_scrape_curation_status_filter is not None:
+        filters.append(SitemapFile.deep_scrape_curation_status == request.deep_scrape_curation_status_filter)
+    
+    if request.domain_id is not None:
+        filters.append(SitemapFile.domain_id == request.domain_id)
+    
+    if request.url_contains:
+        filters.append(SitemapFile.url.ilike(f"%{request.url_contains}%"))
+    
+    # Determine if sitemap import should be triggered
+    trigger_sitemap_import = request.deep_scrape_curation_status == SitemapImportCurationStatusEnum.Selected
+    
+    updated_count = 0
+    queued_count = 0
+    now = datetime.utcnow()
+    
+    try:
+        async with session.begin():
+            # Get all sitemap files matching filter criteria
+            stmt = select(SitemapFile)
+            if filters:
+                stmt = stmt.where(*filters)
+            
+            result = await session.execute(stmt)
+            sitemap_files_to_update = result.scalars().all()
+            
+            if not sitemap_files_to_update:
+                logger.warning("No sitemap files found matching the provided filter criteria")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No sitemap files found matching the provided filter criteria"
+                )
+            
+            # Apply updates to all matching sitemap files
+            for sitemap_file in sitemap_files_to_update:
+                # Update the curation status
+                sitemap_file.deep_scrape_curation_status = request.deep_scrape_curation_status  # type: ignore
+                sitemap_file.updated_at = now  # type: ignore
+                updated_count += 1
+                logger.debug(
+                    f"Updating sitemap file {sitemap_file.id} deep_scrape_curation_status to "
+                    f"{request.deep_scrape_curation_status.value}"
+                )
+                
+                # Dual-Status Update Pattern - trigger sitemap import when Selected
+                if trigger_sitemap_import:
+                    sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Queued  # type: ignore
+                    sitemap_file.sitemap_import_error = None  # type: ignore
+                    queued_count += 1
+                    logger.debug(f"Queuing sitemap file {sitemap_file.id} for import processing")
+            
+            logger.info(f"Filtered sitemap update completed: {updated_count} files updated, {queued_count} queued for import processing")
+    
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Error in filtered sitemap file update: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during filtered sitemap file update"
+        ) from e
+    
+    logger.info(
+        f"Batch sitemap curation filtered update completed by {user_id}. "
+        f"Updated: {updated_count}, Queued for import processing: {queued_count}"
+    )
+    
+    return SitemapFileBatchUpdateResponse(
+        updated_count=updated_count,
+        queued_count=queued_count
+    )
 
 
 @router.post(

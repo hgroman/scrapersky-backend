@@ -91,3 +91,25 @@ class SitemapFileBatchUpdate(BaseModel):
     class Config:
         # REMOVED use_enum_values = True
         pass
+
+
+# Schema for Filtered Update operations (Select All functionality)
+class SitemapFileFilteredUpdateRequest(BaseModel):
+    """
+    Request schema for filter-based batch sitemap file curation updates.
+    Enables 'Select All' functionality without explicit sitemap file ID lists.
+    """
+    deep_scrape_curation_status: SitemapImportCurationStatusEnum
+    deep_scrape_curation_status_filter: Optional[SitemapImportCurationStatusEnum] = None
+    domain_id: Optional[uuid.UUID] = None
+    url_contains: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# Schema for Batch Update Response
+class SitemapFileBatchUpdateResponse(BaseModel):
+    """Response schema for sitemap file batch update operations."""
+    updated_count: int = Field(..., description="Number of sitemap files updated")
+    queued_count: int = Field(..., description="Number of sitemap files queued for import processing")
