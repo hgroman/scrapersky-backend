@@ -226,6 +226,218 @@ async def update_batch_status(
 
 ---
 
+### Pattern: Select All Filtered Endpoint (Filter-Based Batch Updates)
+
+**Origin:** WF7 Select All Crisis Resolution (2025-09-03) → Multi-Workflow Rollout (2025-09-06)  
+**Business Problem:** Pagination bottlenecks limiting users to 15-record manual selections  
+**Solution Impact:** Single API call processes thousands of records, eliminating 95% of manual work
+
+**Production Implementation Evidence:**
+- **WF7**: `src/routers/v3/WF7_V3_L3_1of1_PagesRouter.py` (commit 33d3f3d)
+- **WF3**: `src/routers/local_businesses.py` (commit 300aede)
+- **WF4**: `src/routers/domains.py` (commit fbec4bf + 81ba026 fix)
+- **WF2**: `src/routers/places_staging.py` (commit 2704e69 + d7f3b52 critical fix)  
+- **WF5**: `src/routers/sitemap_files.py` + `src/schemas/sitemap_file.py` (commit b79f634)
+
+**The Complete Pattern:**
+
+#### **Schema Pattern (Layer 2)**
+```python
+# Filtered Update Request Schema
+class WorkflowFilteredUpdateRequest(BaseModel):
+    """
+    Request schema for filter-based batch updates.
+    Enables 'Select All' functionality without explicit ID lists.
+    """
+    primary_status: PrimaryStatusEnum
+    primary_status_filter: Optional[PrimaryStatusEnum] = None
+    foreign_key_filter: Optional[uuid.UUID] = None
+    text_contains: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+# Batch Update Response Schema  
+class WorkflowBatchUpdateResponse(BaseModel):
+    """Response schema for batch update operations."""
+    updated_count: int = Field(..., description="Number of records updated")
+    queued_count: int = Field(..., description="Number of records queued for background processing")
+```
+
+#### **Router Pattern (Layer 3)**
+```python
+@router.put("/status/filtered", response_model=WorkflowBatchUpdateResponse)
+async def update_workflow_status_filtered(
+    request: WorkflowFilteredUpdateRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Update ALL records matching filter criteria with new status.
+    
+    Enables 'Select All' functionality by applying updates to filtered results
+    rather than requiring explicit ID lists.
+    
+    Implements dual-status pattern:
+    - Updates primary_status to requested value
+    - If status is 'Selected', triggers background processing by setting processing_status to 'Queued'
+    """
+    user_id = current_user.get("user_id", "unknown_user")
+    logger.info(
+        f"User {user_id} requesting filtered update to status "
+        f"'{request.primary_status.value}' with filters: {request.__dict__}"
+    )
+    
+    # Build filter conditions (reuse logic from existing GET endpoint)
+    filters = []
+    
+    if request.primary_status_filter is not None:
+        filters.append(WorkflowModel.primary_status == request.primary_status_filter)
+    
+    if request.foreign_key_filter is not None:
+        filters.append(WorkflowModel.foreign_key_id == request.foreign_key_filter)
+    
+    if request.text_contains:
+        filters.append(WorkflowModel.text_field.ilike(f"%{request.text_contains}%"))
+    
+    # Determine if background processing should be triggered
+    trigger_background_processing = request.primary_status == PrimaryStatusEnum.Selected
+    
+    updated_count = 0
+    queued_count = 0
+    now = datetime.utcnow()
+    
+    try:
+        async with session.begin():
+            # Get all records matching filter criteria
+            stmt = select(WorkflowModel)
+            if filters:
+                stmt = stmt.where(*filters)
+            
+            result = await session.execute(stmt)
+            records_to_update = result.scalars().all()
+            
+            if not records_to_update:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No records found matching the provided filter criteria"
+                )
+            
+            # Apply updates to all matching records
+            for record in records_to_update:
+                # Update the primary status
+                record.primary_status = request.primary_status  # type: ignore
+                record.updated_at = now  # type: ignore
+                updated_count += 1
+                
+                # CRITICAL: Dual-Status Update Pattern - trigger background processing when Selected
+                if trigger_background_processing:
+                    record.processing_status = ProcessingStatusEnum.Queued  # type: ignore
+                    record.processing_error = None  # type: ignore
+                    queued_count += 1
+                    logger.debug(f"Queuing record {record.id} for background processing")
+            
+            logger.info(f"Filtered update completed: {updated_count} records updated, {queued_count} queued for processing")
+    
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Error in filtered update: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during filtered update"
+        ) from e
+    
+    return WorkflowBatchUpdateResponse(
+        updated_count=updated_count,
+        queued_count=queued_count
+    )
+```
+
+#### **Filter Pattern Variations by Workflow**
+```python
+# WF2 (Places Staging): Geographic and business filters
+filters.append(Place.business_name.ilike(f"%{request.business_name}%"))
+filters.append(Place.search_location.ilike(f"%{request.location_contains}%"))
+
+# WF3 (Local Business): Business-centric filters  
+filters.append(LocalBusiness.business_name.ilike(f"%{request.business_name}%"))
+filters.append(LocalBusiness.tenant_id == tenant_uuid)
+
+# WF4 (Domain Curation): Domain-specific filters
+filters.append(Domain.domain.ilike(f"%{request.domain_filter}%"))
+
+# WF5 (Sitemap Files): Sitemap-specific filters
+filters.append(SitemapFile.url.ilike(f"%{request.url_contains}%"))
+filters.append(SitemapFile.domain_id == request.domain_id)
+
+# WF7 (Page Curation): Page-content filters
+filters.append(Page.url.ilike(f"%{request.url_contains}%"))
+filters.append(Page.page_processing_status == request.page_processing_status)
+```
+
+#### **Dual-Status Patterns by Workflow**
+```python
+# WF2: Places Staging → Deep Scan Processing
+if status == PlaceStatusEnum.Selected:
+    place.deep_scan_status = GcpApiDeepScanStatusEnum.Queued
+    place.deep_scan_error = None
+
+# WF3: Local Business → Domain Extraction  
+if status == PlaceStatusEnum.Selected:
+    business.domain_extraction_status = DomainExtractionStatusEnum.Queued
+    business.domain_extraction_error = None
+
+# WF4: Domain Curation → Sitemap Analysis
+if status == SitemapCurationStatusEnum.Selected:
+    domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.queued
+    domain.sitemap_analysis_error = None
+
+# WF5: Sitemap Curation → Import Processing
+if status == SitemapImportCurationStatusEnum.Selected:
+    sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Queued
+    sitemap_file.sitemap_import_error = None
+
+# WF7: Page Curation → Page Processing
+if status == PageCurationStatus.Selected:
+    page.page_processing_status = PageProcessingStatus.Queued
+    page.page_processing_error = None
+```
+
+**Business Impact Metrics (Production Verified):**
+- **WF7**: 3,254 pages processed in single operation (vs 217 manual cycles)
+- **WF5**: 1,117 sitemap files queued simultaneously for processing
+- **Time Savings**: 95%+ reduction in manual curation time across all workflows
+- **User Experience**: Eliminated pagination bottlenecks completely
+
+**Implementation Checklist:**
+- [ ] Schema includes FilteredUpdateRequest with optional filters
+- [ ] Router endpoint follows `/status/filtered` naming convention  
+- [ ] All filters are optional with `Optional[Type] = None` pattern
+- [ ] Dual-status pattern implemented when status = "Selected"
+- [ ] Transaction safety with `async with session.begin()`
+- [ ] Comprehensive error handling with meaningful messages
+- [ ] Logging includes user context and operation details
+- [ ] Response includes both updated_count and queued_count
+
+**Critical Implementation Notes:**
+1. **Filter Reuse**: Always mirror existing GET endpoint filter logic
+2. **Dual-Status Mandatory**: Every workflow has a secondary processing trigger
+3. **Transaction Atomicity**: All-or-nothing updates with proper rollback
+4. **Error Field Clearing**: Always clear error fields when queueing for retry
+5. **Logging Completeness**: Log user, action, filter criteria, and counts
+6. **HTTP Status Codes**: 404 for no matches, 500 for server errors
+
+**Never Again Prevention:**
+- **Import Validation**: Always test with Docker Compose before git push
+- **Enum Alignment**: Verify API enums match database enum values exactly
+- **Dual-Status Testing**: Verify background processing triggers activate
+- **Filter Logic**: Reuse exact patterns from GET endpoints, never improvise
+
+---
+
+---
+
 ## Model Patterns
 
 ### Pattern: PostgreSQL ENUM Integration

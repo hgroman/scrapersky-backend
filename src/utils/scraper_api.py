@@ -14,6 +14,63 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
+class CreditUsageMonitor:
+    """Monitor and alert on ScraperAPI credit usage to prevent cost overruns."""
+    
+    def __init__(self):
+        self.request_count = 0
+        self.estimated_credits = 0
+        self.cost_control_enabled = getenv('SCRAPER_API_COST_CONTROL_MODE', 'true').lower() == 'true'
+    
+    def log_request(self, url: str, premium: bool, render_js: bool, geotargeting: bool) -> int:
+        """Log a request and return estimated credit cost."""
+        base_cost = 1
+        multiplier = 1
+        cost_factors = []
+        
+        if premium:
+            multiplier *= 5
+            cost_factors.append("Premium(5x)")
+        if render_js:
+            multiplier *= 10 
+            cost_factors.append("JS_Render(10x)")
+        if geotargeting:
+            multiplier *= 2
+            cost_factors.append("Geotarget(2x)")
+            
+        estimated = base_cost * multiplier
+        self.request_count += 1
+        self.estimated_credits += estimated
+        
+        if self.cost_control_enabled:
+            factors_str = ", ".join(cost_factors) if cost_factors else "Basic"
+            logger.warning(
+                f"SCRAPER_COST_MONITOR: URL={url[:50]}{'...' if len(url) > 50 else ''}, "
+                f"Factors=[{factors_str}], Est_Credits={estimated}, "
+                f"Total_Requests={self.request_count}, Total_Credits={self.estimated_credits}"
+            )
+            
+            # Alert on high individual request cost
+            if estimated >= 10:
+                logger.error(
+                    f"SCRAPER_COST_ALERT: HIGH_COST_REQUEST - {estimated} credits for single request! "
+                    f"Consider disabling premium features for URL: {url}"
+                )
+            
+            # Alert on high cumulative cost
+            if self.estimated_credits >= 1000:
+                logger.error(
+                    f"SCRAPER_COST_ALERT: HIGH_CUMULATIVE_COST - {self.estimated_credits} total credits used! "
+                    f"Consider reviewing usage patterns."
+                )
+        
+        return estimated
+
+
+# Global credit monitor instance
+credit_monitor = CreditUsageMonitor()
+
+
 class ScraperAPIClient:
     """Async ScraperAPI client using aiohttp with SDK fallback."""
 
@@ -61,7 +118,7 @@ class ScraperAPIClient:
             await self._session.close()
             self._session = None
 
-    async def fetch(self, url: str, render_js: bool = False, retries: int = 3) -> str:
+    async def fetch(self, url: str, render_js: bool = False, retries: int = 1) -> str:
         """Fetch a URL through ScraperAPI with retries and enhanced parameters.
 
         Args:
@@ -92,18 +149,36 @@ class ScraperAPIClient:
         self, url: str, render_js: bool = False, retries: int = 3
     ) -> str:
         """Fetch using aiohttp."""
-        # Construct ScraperAPI URL with parameters
+        # Construct ScraperAPI URL with parameters - COST CONTROLLED
         params = {
             "api_key": self.api_key,
             "url": url,
-            "render": "true" if render_js else "false",
-            "country_code": "us",  # Add geotargeting for better success
-            "device_type": "desktop",  # Specify device type
-            "premium": "true",  # Enable premium for protected domains
         }
+        
+        # Only add expensive options if explicitly enabled via environment
+        if render_js and getenv('SCRAPER_API_ENABLE_JS_RENDERING', 'false').lower() == 'true':
+            params["render"] = "true"
+        else:
+            params["render"] = "false"
+            
+        # Premium mode - only if explicitly enabled
+        if getenv('SCRAPER_API_ENABLE_PREMIUM', 'false').lower() == 'true':
+            params["premium"] = "true"
+            
+        # Geotargeting - only if explicitly enabled
+        geotargeting_enabled = getenv('SCRAPER_API_ENABLE_GEOTARGETING', 'false').lower() == 'true'
+        if geotargeting_enabled:
+            params["country_code"] = "us"
+            params["device_type"] = "desktop"
+            
         api_url = f"{self.base_url}?{urlencode(params)}"
+        
+        # Monitor credit usage before making request
+        premium_enabled = "premium" in params and params["premium"] == "true"
+        js_enabled = params.get("render") == "true"
+        estimated_cost = credit_monitor.log_request(url, premium_enabled, js_enabled, geotargeting_enabled)
 
-        logger.debug(f"ScraperAPI request URL params: url={url}, render_js={render_js}")
+        logger.debug(f"ScraperAPI request URL params: url={url}, render_js={render_js}, estimated_credits={estimated_cost}")
 
         await self._ensure_session()
         if not self._session:

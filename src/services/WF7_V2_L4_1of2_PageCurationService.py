@@ -48,8 +48,11 @@ class PageCurationService:
             
             try:
                 logging.info(f"Fetching content from {page_url} using ScraperAPI")
+                # Only enable JS rendering if explicitly configured
+                enable_js = os.getenv('WF7_ENABLE_JS_RENDERING', 'false').lower() == 'true'
+                max_retries = int(os.getenv('SCRAPER_API_MAX_RETRIES', '1'))
                 async with ScraperAPIClient() as scraper_client:
-                    html_content = await scraper_client.fetch(page_url, render_js=True, retries=3)
+                    html_content = await scraper_client.fetch(page_url, render_js=enable_js, retries=max_retries)
                 
                 if not html_content or len(html_content) < 10:
                     logging.warning(f"No meaningful content extracted from URL: {page_url}")

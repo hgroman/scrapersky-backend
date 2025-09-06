@@ -106,8 +106,11 @@ async def detect_site_metadata(
                 url = f"https://{domain}"
 
             logger.info(f"Fetching URL: {url}")
+            # Only enable JS rendering if explicitly configured  
+            enable_js = os.getenv('SCRAPER_API_ENABLE_JS_RENDERING', 'false').lower() == 'true'
+            max_retries = int(os.getenv('SCRAPER_API_MAX_RETRIES', '1'))
             html_content = await scraper_api.fetch(
-                url, render_js=True, retries=max_retries
+                url, render_js=enable_js, retries=max_retries
             )
             logger.info(f"Successfully fetched content for {domain} using ScraperAPI")
             await scraper_api.close()
