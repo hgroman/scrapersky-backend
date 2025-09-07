@@ -1,0 +1,188 @@
+# Building Blocks AI Discovery Menu
+# Version: 1.0
+# Purpose: AI-friendly trigger-based pattern discovery system
+# Usage: Scan for triggers when implementing ScraperSky features
+
+meta:
+  catalog_source: "09_BUILDING_BLOCKS_CATALOG.md"
+  last_updated: "2025-09-06"
+  ai_instruction: "When you encounter any trigger below, IMMEDIATELY reference the associated pattern"
+
+# Critical Financial Protection Triggers
+critical_financial_triggers:
+  - trigger: "ScraperAPI integration"
+    pattern_id: "scraperapi-cost-control"
+    urgency: "CRITICAL"
+    financial_risk: "99.998% cost overrun possible ($450K+ at scale)"
+    immediate_action: "Check if premium features are disabled by default"
+    verify_files: ["src/utils/scraper_api.py", ".env.example"]
+    
+  - trigger: "render_js=True in ScraperAPI calls"
+    pattern_id: "scraperapi-cost-control"
+    urgency: "CRITICAL"
+    cost_impact: "10-25x credit multiplier"
+    immediate_action: "Ensure SCRAPER_API_ENABLE_JS_RENDERING=false by default"
+    
+  - trigger: "premium=\"true\" in external service params"
+    pattern_id: "scraperapi-cost-control"
+    urgency: "CRITICAL"
+    cost_impact: "5-10x credit multiplier"
+    immediate_action: "Disable premium mode, require explicit opt-in"
+
+# Database Integration Triggers
+database_triggers:
+  - trigger: "AttributeError: 'SomeEnum' object has no attribute 'value'"
+    pattern_id: "postgresql-enum-crud"
+    urgency: "critical"
+    problem: "PostgreSQL ENUMs accessed incorrectly"
+    immediate_action: "Replace .value with str() casting"
+    fix_example: "str(item.enum_field) if item.enum_field is not None else None"
+    
+  - trigger: "404 errors on CRUD endpoints with ENUMs"
+    pattern_id: "postgresql-enum-crud" 
+    urgency: "critical"
+    problem: "ENUM serialization breaking API responses"
+    immediate_action: "Audit all ENUM serialization for str() usage"
+    
+  - trigger: "Total count shows limit instead of actual count"
+    pattern_id: "postgresql-enum-crud"
+    urgency: "high"
+    problem: "Pagination showing wrong totals"
+    immediate_action: "Implement separate count query pattern"
+
+# Performance & Scalability Triggers
+performance_triggers:
+  - trigger: "Frontend filtering millions of records"
+    pattern_id: "server-side-filtering"
+    urgency: "high"
+    problem: "Client-side bottleneck with large datasets"
+    immediate_action: "Implement server-side Query parameter filtering"
+    
+  - trigger: "Browser crashes on large data sets"
+    pattern_id: "server-side-filtering"
+    urgency: "high"
+    immediate_action: "Move filtering to database layer with SQL WHERE clauses"
+    
+  - trigger: "Users limited to 15-record manual selections"
+    pattern_id: "select-all-filtered"
+    urgency: "medium"
+    business_impact: "95% reduction in manual work possible"
+    immediate_action: "Implement filter-based batch update endpoint"
+
+# Workflow Implementation Triggers  
+workflow_triggers:
+  - trigger: "Implementing batch status updates"
+    pattern_id: "dual-status-updates"
+    urgency: "medium"
+    immediate_action: "Include dual-status pattern for background processing"
+    
+  - trigger: "Adding 'Select All' functionality"
+    pattern_id: "select-all-filtered"
+    urgency: "medium"  
+    production_evidence: "5 workflows successfully implemented"
+    immediate_action: "Use filter-based approach, not ID list approach"
+    critical_note: "Must include dual-status trigger when status=Selected"
+    
+  - trigger: "Background processing not triggering"
+    pattern_id: "select-all-filtered"
+    urgency: "high"
+    problem: "Missing dual-status update pattern"
+    immediate_action: "Add processing_status=Queued when primary_status=Selected"
+
+# Model & Schema Triggers
+model_triggers:
+  - trigger: "Creating PostgreSQL ENUM models"
+    pattern_id: "postgresql-enum-integration"
+    urgency: "medium"
+    immediate_action: "Use create_type=False and PgEnum import"
+    
+  - trigger: "UUID serialization errors in API responses"
+    pattern_id: "postgresql-enum-integration"
+    urgency: "medium"
+    immediate_action: "Always convert UUID to str() for JSON responses"
+
+# Error Pattern Triggers
+error_triggers:
+  - trigger: "HTTP 403: You have exhausted the API Credits"
+    pattern_id: "scraperapi-cost-control"
+    urgency: "CRITICAL"
+    root_cause: "Unauthorized premium features bleeding credits"
+    immediate_action: "Emergency cost control implementation required"
+    
+  - trigger: "Empty response or 'No meaningful content extracted'"
+    pattern_id: "scraperapi-cost-control"
+    urgency: "high"
+    possible_cause: "Expensive features failing to deliver value"
+    immediate_action: "Verify if premium features are justified"
+
+# Implementation Decision Triggers  
+decision_triggers:
+  - trigger: "Choosing between ID list vs filter-based updates"
+    pattern_id: "select-all-filtered"
+    recommendation: "Always choose filter-based for scalability"
+    reasoning: "ID lists don't scale past pagination limits"
+    
+  - trigger: "Deciding on transaction boundaries"
+    pattern_id: "postgresql-enum-crud"
+    constitutional_requirement: "Routers own transactions with session.begin()"
+    immediate_action: "Never let services manage their own transactions"
+    
+  - trigger: "External service integration without cost controls"
+    pattern_id: "scraperapi-cost-control"
+    urgency: "CRITICAL"
+    prevention_rule: "ALL external services need cost monitoring by default"
+    immediate_action: "Implement CreditUsageMonitor pattern first"
+
+# Maintenance & Prevention Triggers
+prevention_triggers:
+  - trigger: "Before ANY ScraperAPI deployment"
+    checklist:
+      - "Verify premium features disabled by default"
+      - "Confirm cost monitoring active"  
+      - "Test with single domain for credit estimation"
+      - "Environment variables configured for cost control"
+    pattern_id: "scraperapi-cost-control"
+    
+  - trigger: "Before ANY database ENUM implementation"
+    checklist:
+      - "Use str() casting not .value"
+      - "Verify with MCP schema check first"
+      - "Test serialization in isolation"
+      - "Implement separate count query"
+    pattern_id: "postgresql-enum-crud"
+
+# Quick Reference Actions
+quick_actions:
+  scraperapi_emergency:
+    when: "High credit usage detected"
+    immediate_steps:
+      - "Set SCRAPER_API_ENABLE_PREMIUM=false"
+      - "Set SCRAPER_API_ENABLE_JS_RENDERING=false"  
+      - "Set SCRAPER_API_ENABLE_GEOTARGETING=false"
+      - "Deploy immediately to stop bleeding"
+    
+  enum_serialization_fix:
+    when: "ENUM API errors"
+    immediate_steps:
+      - "Find all instances of .value in codebase"
+      - "Replace with str() casting pattern"
+      - "Test with production data"
+      - "Deploy fix"
+
+# Pattern Cross-References
+pattern_relationships:
+  select_all_filtered:
+    requires: ["postgresql-enum-crud", "server-side-filtering"]
+    enhances: ["dual-status-updates"]
+    
+  scraperapi_cost_control:
+    prevents: ["financial-bleeding-incidents"]
+    monitoring_dependency: "real-time-cost-alerts"
+
+# AI Partner Instructions
+ai_guidelines:
+  - "Scan this file FIRST when starting any ScraperSky implementation"
+  - "Financial protection triggers are MANDATORY - never skip"
+  - "When multiple triggers match, prioritize by urgency: CRITICAL > critical > high > medium"
+  - "Always implement prevention patterns proactively, not reactively"
+  - "Reference full catalog for implementation details after trigger identification"

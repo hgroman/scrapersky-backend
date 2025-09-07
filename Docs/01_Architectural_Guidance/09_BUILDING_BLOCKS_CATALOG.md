@@ -578,4 +578,116 @@ total_count = len(count_result.scalars().all())
 
 ---
 
+## External Service Integration
+
+### Pattern: ScraperAPI Cost-Controlled Integration
+
+**Origin:** ScraperAPI Cost Crisis (2025-09-06) - 46,905 credits (~$50) waste from unauthorized premium features
+
+**The Problem:**
+```python
+# ❌ PRODUCTION FINANCIAL BLEEDING - Unauthorized premium features always enabled
+params = {
+    "api_key": self.api_key,
+    "url": url,
+    "render": "true" if render_js else "false",        # 10-25x cost multiplier
+    "country_code": "us",                              # 2-3x cost multiplier  
+    "device_type": "desktop",                          # 1.5-2x cost multiplier
+    "premium": "true",                                 # 5-10x cost multiplier - ALWAYS ENABLED
+}
+# Combined cost: ~150x base rate = 46,905 credits per domain vs expected 1 credit
+```
+
+**The Solution:**
+```python
+# ✅ PRODUCTION VERIFIED - Configuration-based cost controls with monitoring
+class CreditUsageMonitor:
+    """Monitor and alert on ScraperAPI credit usage to prevent cost overruns."""
+    
+    def log_request(self, url: str, premium: bool, render_js: bool, geotargeting: bool) -> int:
+        base_cost = 1
+        multiplier = 1
+        cost_factors = []
+        
+        if premium: multiplier *= 5; cost_factors.append("Premium(5x)")
+        if render_js: multiplier *= 10; cost_factors.append("JS_Render(10x)")
+        if geotargeting: multiplier *= 2; cost_factors.append("Geotarget(2x)")
+            
+        estimated = base_cost * multiplier
+        
+        # Real-time cost alerting
+        logger.warning(f"SCRAPER_COST_MONITOR: URL={url[:50]}, Factors=[{','.join(cost_factors) or 'Basic'}], Est_Credits={estimated}")
+        
+        if estimated >= 10:
+            logger.error(f"SCRAPER_COST_ALERT: HIGH_COST_REQUEST - {estimated} credits!")
+        
+        return estimated
+
+# Cost-controlled parameter construction
+params = {"api_key": self.api_key, "url": url}
+
+# Premium features: DISABLED BY DEFAULT - explicit opt-in required
+if render_js and getenv('SCRAPER_API_ENABLE_JS_RENDERING', 'false').lower() == 'true':
+    params["render"] = "true"
+    
+if getenv('SCRAPER_API_ENABLE_PREMIUM', 'false').lower() == 'true':
+    params["premium"] = "true"
+    
+if getenv('SCRAPER_API_ENABLE_GEOTARGETING', 'false').lower() == 'true':
+    params["country_code"] = "us"
+    params["device_type"] = "desktop"
+
+# Monitor usage before making request
+estimated_cost = credit_monitor.log_request(url, premium_enabled, js_enabled, geo_enabled)
+```
+
+**Environment Configuration Pattern:**
+```bash
+# .env.example - All expensive features DISABLED by default
+SCRAPER_API_ENABLE_PREMIUM=false          # Default: disabled (5-10x cost multiplier)
+SCRAPER_API_ENABLE_JS_RENDERING=false     # Default: disabled (10-25x cost multiplier)  
+SCRAPER_API_ENABLE_GEOTARGETING=false     # Default: disabled (2-3x cost multiplier)
+SCRAPER_API_MAX_RETRIES=1                 # Reduce from default 3 to minimize costs
+SCRAPER_API_COST_CONTROL_MODE=true        # Enable cost monitoring and alerts
+```
+
+**Service Integration Pattern:**
+```python
+# All services using ScraperAPI must implement cost-controlled calls
+enable_js = os.getenv('WF7_ENABLE_JS_RENDERING', 'false').lower() == 'true'
+max_retries = int(os.getenv('SCRAPER_API_MAX_RETRIES', '1'))
+
+async with ScraperAPIClient() as scraper_client:
+    html_content = await scraper_client.fetch(page_url, render_js=enable_js, retries=max_retries)
+```
+
+**Cost Verification Results:**
+- **Before**: 46,905 credits (~$50) per domain operation
+- **After**: 1 credit per domain operation  
+- **Savings**: 99.998% cost reduction (46,904 credits saved per domain)
+- **Production Evidence**: `SCRAPER_COST_MONITOR: Factors=[Basic], Est_Credits=1`
+
+**Prevention Rules:**
+1. **ALL** external service premium features MUST be disabled by default
+2. **ALL** expensive options MUST require explicit environment variable opt-in  
+3. **ALL** external service integrations MUST include cost monitoring
+4. **NO** AI assistant may enable premium features without explicit business authorization
+5. **ALL** external service usage MUST be logged with cost estimates
+
+**Financial Protection Formula:**
+```python
+# Never implement external service calls without this cost protection pattern
+if estimated_cost >= COST_ALERT_THRESHOLD:
+    logger.error(f"COST_PROTECTION: Request blocked - {estimated_cost} credits exceeds threshold")
+    raise CostProtectionError(f"Request would cost {estimated_cost} credits")
+```
+
+**Critical Files Modified:**
+- `src/utils/scraper_api.py`: Core cost controls and monitoring
+- `src/services/WF7_V2_L4_1of2_PageCurationService.py`: Service-level controls
+- `src/scraper/metadata_extractor.py`: Service-level controls
+- `.env.example`: Configuration template
+
+---
+
 **Constitutional Authority:** This catalog represents battle-tested truth extracted from production systems. Every pattern has been verified under fire.

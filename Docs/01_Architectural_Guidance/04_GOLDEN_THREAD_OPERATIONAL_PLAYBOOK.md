@@ -76,6 +76,7 @@
 - [ ] Dependencies up to date
 
 ### Before Code Changes
+- [ ] Building blocks triggers scanned in `09_BUILDING_BLOCKS_MENU.yaml`
 - [ ] Pattern verified in `03_ARCHITECTURAL_PATTERNS_LIBRARY.md`
 - [ ] No STOP conditions triggered (check `01_STOP_SIGNS_CRITICAL_OPERATIONS.md`)
 - [ ] Layer Guardian consulted if needed

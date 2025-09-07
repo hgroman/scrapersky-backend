@@ -31,12 +31,14 @@
 ### 🔨 BUILDING FEATURES
 **Creating or modifying code**
 
-1. **PATTERNS:** Review → `03_ARCHITECTURAL_PATTERNS_LIBRARY.md`
+1. **TRIGGER DISCOVERY:** Scan first → `09_BUILDING_BLOCKS_MENU.yaml` (AI-optimized pattern discovery)
+2. **PATTERNS:** Review → `03_ARCHITECTURAL_PATTERNS_LIBRARY.md`
    - **Deep Dive:** `07_PATTERN_CATALOG_WF7_SYNTHESIS.md` (47 patterns)
    - **Avoid:** `08_ANTIPATTERN_CATALOG_WF7_SYNTHESIS.md` (47 anti-patterns)
-2. **CONSTRUCTION:** Follow → `02_CONSTRUCTION_PROTOCOL.md` 
-3. **OPERATIONS:** Execute → `04_GOLDEN_THREAD_OPERATIONAL_PLAYBOOK.md`
-4. **TESTING:** Validate → `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md`
+   - **Implementations:** `09_BUILDING_BLOCKS_CATALOG.md` (battle-tested code patterns)
+3. **CONSTRUCTION:** Follow → `02_CONSTRUCTION_PROTOCOL.md` 
+4. **OPERATIONS:** Execute → `04_GOLDEN_THREAD_OPERATIONAL_PLAYBOOK.md`
+5. **TESTING:** Validate → `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md`
 
 ### 🛑 VERIFICATION GATES
 **Before critical operations**

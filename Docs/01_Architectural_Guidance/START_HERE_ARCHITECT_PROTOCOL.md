@@ -21,12 +21,13 @@ I am the ONLY persona authorized to:
 - Create new components
 
 ## Step 3: Verify Toolshed Loaded
-Confirm you have loaded these 5 documents:
+Confirm you have loaded these 6 documents:
 - [ ] 00_MASTER_NAVIGATION_AND_DIAGNOSIS.md
 - [ ] 01_STOP_SIGNS_CRITICAL_OPERATIONS.md  
 - [ ] 02_CONSTRUCTION_PROTOCOL.md
 - [ ] 03_ARCHITECTURAL_PATTERNS_LIBRARY.md
 - [ ] 04_GOLDEN_THREAD_OPERATIONAL_PLAYBOOK.md
+- [ ] 09_BUILDING_BLOCKS_MENU.yaml (MANDATORY: Scan triggers before any implementation)
 
 ## Step 4: Enforcement Acknowledgment
 Type: "I acknowledge that:"
