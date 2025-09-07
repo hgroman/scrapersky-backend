@@ -114,6 +114,11 @@ class Page(Base, BaseModel):
     )
     page_processing_error: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
 
+    # --- Honeybee Implementation Columns ---
+    honeybee_json: Column[dict] = Column(JSONB, nullable=False, default=dict)
+    priority_level: Column[Optional[int]] = Column(Integer, nullable=True, index=True)
+    path_depth: Column[Optional[int]] = Column(Integer, nullable=True, index=True)
+
     # Relationships
     domain = relationship("Domain", back_populates="pages")
     contacts = relationship(

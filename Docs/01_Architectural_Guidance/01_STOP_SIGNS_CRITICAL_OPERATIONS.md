@@ -94,6 +94,14 @@ If your task requires an action on this list, you must:
 - **Threshold:** >80 files = STOP and commit
 - **Relevant Document:** `Docs/02_State_of_the_Nation/Report_WO_006_Git_Status_Pattern_Analysis.md`
 
+### 9. Critical Configuration File Creation
+
+- **Operation:** Creating a critical configuration file (e.g., `.env`, `docker-compose.yml`) because a system tool reports it as missing.
+- **Reason:** A verified discrepancy exists where system tools cannot see a file that is present in the IDE. This creates a high risk of data loss by overwriting existing configurations. This is a critical Windsurf platform limitation.
+- **Required Check:** If any tool reports a critical file like `.env` as missing, I must **STOP** all actions. I must report the tool output and explicitly state the file system discrepancy. I must then request visual confirmation from the user before taking any corrective action.
+- **Completion Criteria:** Explicit user permission to proceed after visual confirmation.
+- **Relevant Document:** This document.
+
 <!-- WF7 POSTMORTEM INTEGRATION END -->
 
 ---
