@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.common.sitemap_parser import SitemapParser, SitemapURL
 from src.models.page import Page
 from src.models.sitemap import SitemapFile, SitemapImportProcessStatusEnum
+from src.models.enums import PageCurationStatus
+from src.utils.honeybee_categorizer import HoneybeeCategorizer
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,7 @@ class SitemapImportService:
 
     def __init__(self):
         self.sitemap_parser = SitemapParser()
+        self.honeybee = HoneybeeCategorizer()
 
     async def process_single_sitemap_file(
         self, sitemap_file_id: uuid.UUID, session: AsyncSession
@@ -122,6 +125,12 @@ class SitemapImportService:
                 if page_url in processed_urls:
                     continue
 
+                # Honeybee categorization - filter low-value pages
+                hb = self.honeybee.categorize(page_url)
+                if hb["decision"] == "skip" or hb["confidence"] < 0.2:
+                    logger.info(f"[Honeybee] skip {page_url} cat={hb['category']}")
+                    continue
+
                 # Create a new Page record
                 page_data = {
                     "domain_id": domain_id,
@@ -130,9 +139,24 @@ class SitemapImportService:
                     "tenant_id": tenant_id,
                     "sitemap_file_id": sitemap_file.id,  # ADDED: Link page to its source sitemap
                     "lead_source": "sitemap_import",  # Add lead source
-                    # Potentially map other fields if available in SitemapURL?
-                    # "title": sitemap_url_record.title, # Example if available
+                    # Honeybee fields
+                    "page_type": hb["category"],
+                    "path_depth": hb["depth"],
+                    "priority_level": 1 if hb["confidence"] >= 0.6 else 3,
+                    "honeybee_json": {
+                        "v": 1,
+                        "decision": {
+                            "category": hb["category"],
+                            "confidence": hb["confidence"],
+                            "matched_regex": hb["matched"]
+                        },
+                        "exclusions": hb["exclusions"]
+                    }
                 }
+
+                # Auto-select high-value pages
+                if hb["category"] in {"contact_root", "career_contact", "legal_root"} and hb["confidence"] >= 0.6 and hb["depth"] <= 2:
+                    page_data["page_curation_status"] = PageCurationStatus.Selected
 
                 # Remove None values before creating Page to avoid DB constraint errors
                 page_data_cleaned = {
