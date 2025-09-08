@@ -55,9 +55,6 @@ class Page(Base, BaseModel):
     # created_at timestamp with time zone YES now() -- Handled by BaseModel
     # updated_at timestamp with time zone YES now() -- Handled by BaseModel
 
-    id: Column[uuid.UUID] = Column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     tenant_id: Column[uuid.UUID] = Column(PGUUID(as_uuid=True), nullable=False)
     domain_id: Column[uuid.UUID] = Column(
         PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False
