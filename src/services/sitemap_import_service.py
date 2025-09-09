@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.common.sitemap_parser import SitemapParser, SitemapURL
 from src.models.page import Page
 from src.models.sitemap import SitemapFile, SitemapImportProcessStatusEnum
-from src.models.enums import PageCurationStatus
+from src.models.enums import PageCurationStatus, PageProcessingStatus
 from src.utils.honeybee_categorizer import HoneybeeCategorizer
 
 logger = logging.getLogger(__name__)
