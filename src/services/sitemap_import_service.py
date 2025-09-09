@@ -1,6 +1,7 @@
 # src/services/sitemap_import_service.py
 
 import logging
+import uuid
 from typing import List, Optional
 
 import httpx
@@ -26,7 +27,7 @@ class SitemapImportService:
         self.honeybee = HoneybeeCategorizer()
 
     async def process_single_sitemap_file(
-        self, sitemap_file_id, session: AsyncSession
+        self, sitemap_file_id: uuid.UUID, session: AsyncSession
     ) -> None:
         """
         Processes a single sitemap file: fetches it, parses URLs, and saves them to the database.
