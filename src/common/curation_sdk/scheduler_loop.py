@@ -110,7 +110,8 @@ async def run_job_loop(
                     )  # Important for bulk update
                 )
                 await fetch_session.execute(update_stmt)
-                # Commit happens automatically on exiting fetch_session.begin()
+                # Explicitly commit the transaction to prevent race conditions
+                await fetch_session.commit()
 
     except Exception as fetch_err:
         logger.exception(

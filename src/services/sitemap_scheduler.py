@@ -128,88 +128,90 @@ async def process_pending_jobs(limit: int = 10):
     domain_extractions_successful = 0
 
     # --- Process Pending Sitemap Jobs (Legacy Method) ---
-    pending_sitemap_jobs = []
-    try:
-        # Fetch jobs within its own session scope
-        async with get_background_session() as fetch_session:
-            pending_sitemap_jobs = await job_service.get_pending_jobs(
-                fetch_session, job_type="sitemap", limit=limit
-            )
-            logger.info(
-                f"Found {len(pending_sitemap_jobs)} pending sitemap jobs to process."
-            )
-
-    except Exception as e:
-        logger.error(f"Error fetching pending sitemap jobs: {str(e)}", exc_info=True)
-        # If fetching fails, we can still proceed to other job types
-
-    # Process fetched jobs individually with error handling and timeout
-    for job in pending_sitemap_jobs:
-        sitemaps_processed += 1
-        # Use getattr to get the actual ID value
-        job_id_val = getattr(job, "job_id", None)
-        domain = None  # Initialize domain variable
-        try:
-            # Check if job_id_val is valid before proceeding
-            if job_id_val is None:
-                logger.error(
-                    f"Job object {job} appears to have no 'id' attribute. Skipping."
-                )
-                continue
-
-            result_data = {} if job.result_data is None else job.result_data
-            domain = result_data.get("domain")  # Extract domain for logging
-
-            if not domain:
-                error_msg = f"Sitemap Job {job_id_val} has no domain specified. Marking as error."
-                logger.error(error_msg)
-                await handle_job_error(
-                    int(job_id_val), error_msg
-                )  # job_id_val is now int or None
-                continue  # Move to the next job
-
-            logger.info(
-                f"Processing sitemap for domain {domain} (job_id: {job_id_val}) with timeout {SITEMAP_JOB_TIMEOUT_SECONDS}s"
-            )
-
-            # Run the processing with a timeout
-            await asyncio.wait_for(
-                process_domain_with_own_session(
-                    job_id=str(job_id_val),  # Pass as string
-                    domain=domain,
-                    user_id="5905e9fe-6c61-4694-b09a-6602017b000a",  # System/Scheduler User
-                    max_urls=1000,  # Consider making this configurable
-                ),
-                timeout=SITEMAP_JOB_TIMEOUT_SECONDS,
-            )
-
-            sitemaps_successful += 1
-            logger.info(
-                f"Successfully processed sitemap for {domain} (job_id: {job_id_val})"
-            )
-
-        except asyncio.TimeoutError:
-            if job_id_val is not None:
-                error_msg = f"Timeout processing sitemap job {job_id_val} for domain {domain} after {SITEMAP_JOB_TIMEOUT_SECONDS} seconds."
-                logger.error(error_msg)
-                await handle_job_error(int(job_id_val), error_msg)
-            else:
-                logger.error(
-                    f"Timeout occurred but job_id was None for job object {job}"
-                )
-            continue  # Move to the next job
-
-        except Exception as e:
-            if job_id_val is not None:
-                error_msg = f"Error processing sitemap job {job_id_val} for domain {domain}: {str(e)}"
-                logger.error(error_msg, exc_info=True)
-                await handle_job_error(int(job_id_val), error_msg)
-            else:
-                logger.error(
-                    f"Error occurred but job_id was None for job object {job}: {str(e)}",
-                    exc_info=True,
-                )
-            continue  # Move to the next job
+    # DISABLED as per new PRD v1.2 and holistic analysis.
+    # This entire workflow is being replaced by the modern, SDK-based sitemap_import_scheduler.
+    # pending_sitemap_jobs = []
+    # try:
+    #     # Fetch jobs within its own session scope
+    #     async with get_background_session() as fetch_session:
+    #         pending_sitemap_jobs = await job_service.get_pending_jobs(
+    #             fetch_session, job_type="sitemap", limit=limit
+    #         )
+    #         logger.info(
+    #             f"Found {len(pending_sitemap_jobs)} pending sitemap jobs to process."
+    #         )
+    #
+    # except Exception as e:
+    #     logger.error(f"Error fetching pending sitemap jobs: {str(e)}", exc_info=True)
+    #     # If fetching fails, we can still proceed to other job types
+    #
+    # # Process fetched jobs individually with error handling and timeout
+    # for job in pending_sitemap_jobs:
+    #     sitemaps_processed += 1
+    #     # Use getattr to get the actual ID value
+    #     job_id_val = getattr(job, "job_id", None)
+    #     domain = None  # Initialize domain variable
+    #     try:
+    #         # Check if job_id_val is valid before proceeding
+    #         if job_id_val is None:
+    #             logger.error(
+    #                 f"Job object {job} appears to have no 'id' attribute. Skipping."
+    #             )
+    #             continue
+    #
+    #         result_data = {} if job.result_data is None else job.result_data
+    #         domain = result_data.get("domain")  # Extract domain for logging
+    #
+    #         if not domain:
+    #             error_msg = f"Sitemap Job {job_id_val} has no domain specified. Marking as error."
+    #             logger.error(error_msg)
+    #             await handle_job_error(
+    #                 int(job_id_val), error_msg
+    #             )  # job_id_val is now int or None
+    #             continue  # Move to the next job
+    #
+    #         logger.info(
+    #             f"Processing sitemap for domain {domain} (job_id: {job_id_val}) with timeout {SITEMAP_JOB_TIMEOUT_SECONDS}s"
+    #         )
+    #
+    #         # Run the processing with a timeout
+    #         await asyncio.wait_for(
+    #             process_domain_with_own_session(
+    #                 job_id=str(job_id_val),  # Pass as string
+    #                 domain=domain,
+    #                 user_id="5905e9fe-6c61-4694-b09a-6602017b000a",  # System/Scheduler User
+    #                 max_urls=1000,  # Consider making this configurable
+    #             ),
+    #             timeout=SITEMAP_JOB_TIMEOUT_SECONDS,
+    #         )
+    #
+    #         sitemaps_successful += 1
+    #         logger.info(
+    #             f"Successfully processed sitemap for {domain} (job_id: {job_id_val})"
+    #         )
+    #
+    #     except asyncio.TimeoutError:
+    #         if job_id_val is not None:
+    #             error_msg = f"Timeout processing sitemap job {job_id_val} for domain {domain} after {SITEMAP_JOB_TIMEOUT_SECONDS} seconds."
+    #             logger.error(error_msg)
+    #             await handle_job_error(int(job_id_val), error_msg)
+    #         else:
+    #             logger.error(
+    #                 f"Timeout occurred but job_id was None for job object {job}"
+    #             )
+    #         continue  # Move to the next job
+    #
+    #     except Exception as e:
+    #         if job_id_val is not None:
+    #             error_msg = f"Error processing sitemap job {job_id_val} for domain {domain}: {str(e)}"
+    #             logger.error(error_msg, exc_info=True)
+    #             await handle_job_error(int(job_id_val), error_msg)
+    #         else:
+    #             logger.error(
+    #                 f"Error occurred but job_id was None for job object {job}: {str(e)}",
+    #                 exc_info=True,
+    #             )
+    #         continue  # Move to the next job
 
     logger.info(
         f"Finished processing legacy sitemap jobs. Processed: {sitemaps_processed}, Successful: {sitemaps_successful}"
