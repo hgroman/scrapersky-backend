@@ -125,13 +125,10 @@ class SitemapImportService:
                 if page_url in processed_urls:
                     continue
 
-                # Honeybee categorization - filter low-value pages
+                # Honeybee categorization - categorize ALL pages, never skip
                 hb = self.honeybee.categorize(page_url)
-                if hb["decision"] == "skip" or hb["confidence"] < 0.2:
-                    logger.info(f"[Honeybee] skip {page_url} cat={hb['category']}")
-                    continue
 
-                # Create a new Page record
+                # Create a new Page record for ALL pages
                 page_data = {
                     "domain_id": domain_id,
                     "url": page_url,  # Renamed from sitemap_url_record.loc
@@ -154,9 +151,16 @@ class SitemapImportService:
                     }
                 }
 
-                # Auto-select high-value pages
+                # Disposition instead of drop - mark processing status based on quality
+                if hb["decision"] == "skip" or hb["confidence"] < 0.2:
+                    page_data["page_processing_status"] = PageProcessingStatus.Filtered
+                else:
+                    page_data["page_processing_status"] = PageProcessingStatus.Queued
+
+                # Auto-select only high-value, shallow paths
                 if hb["category"] in {"contact_root", "career_contact", "legal_root"} and hb["confidence"] >= 0.6 and hb["depth"] <= 2:
                     page_data["page_curation_status"] = PageCurationStatus.Selected
+                    page_data["priority_level"] = 1  # enforce
 
                 # Remove None values before creating Page to avoid DB constraint errors
                 page_data_cleaned = {
