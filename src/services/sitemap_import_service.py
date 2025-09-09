@@ -37,7 +37,7 @@ class SitemapImportService:
             sitemap_file_id: The ID of the SitemapFile record to process.
             session: The database session.
         """
-                sitemap_file: Optional[SitemapFile] = await session.get(
+        sitemap_file: Optional[SitemapFile] = await session.get(
             SitemapFile, sitemap_file_id
         )
         if not sitemap_file:
