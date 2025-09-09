@@ -158,11 +158,11 @@ class SitemapImportService:
 
                 # Create a new Page record for ALL pages
                 page_data = {
-                    "domain_id": domain_id,
+                    "domain_id": uuid.UUID(str(domain_id)) if domain_id else None,
                     "url": page_url,  # Renamed from sitemap_url_record.loc
                     "last_modified": sitemap_url_record.lastmod,  # Map from sitemap lastmod
-                    "tenant_id": tenant_id,
-                    "sitemap_file_id": sitemap_file.id,  # ADDED: Link page to its source sitemap
+                    "tenant_id": uuid.UUID(str(tenant_id)) if tenant_id else None,
+                    "sitemap_file_id": uuid.UUID(str(sitemap_file.id)) if sitemap_file.id else None,  # ADDED: Link page to its source sitemap
                     "lead_source": "sitemap_import",  # Add lead source
                     # Honeybee fields
                     "page_type": hb["category"],
