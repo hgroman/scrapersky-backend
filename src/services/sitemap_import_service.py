@@ -198,7 +198,11 @@ class SitemapImportService:
                 # Only create Page if url is present (basic validation)
                 if page_data_cleaned.get("url"):
                     try:
+                        # Remove 'id' if present to let SQLAlchemy auto-generate
+                        page_data_cleaned.pop('id', None)
                         page = Page(**page_data_cleaned)
+                        # Override BaseModel's broken string UUID with proper UUID object
+                        page.id = uuid.uuid4()
                         pages_to_insert.append(page)
                         processed_urls.add(page_url)
                     except Exception as e:
