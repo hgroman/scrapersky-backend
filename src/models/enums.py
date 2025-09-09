@@ -85,6 +85,7 @@ class PageProcessingStatus(str, Enum):
     Processing = "Processing"
     Complete = "Complete"
     Error = "Error"
+    Filtered = "Filtered"
 
 
 class PlaceStatusEnum(str, Enum):
