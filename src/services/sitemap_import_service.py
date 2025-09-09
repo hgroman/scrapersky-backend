@@ -228,17 +228,42 @@ class SitemapImportService:
             if pages_to_insert:
                 try:
                     session.add_all(pages_to_insert)
-                    await session.commit()
+                    await (
+                        session.flush()
+                    )  # Flush to catch potential IntegrityErrors early
                     logger.info(
-                        f"Successfully committed {len(pages_to_insert)} Page records "
+                        f"Successfully added {len(pages_to_insert)} Page records "
                         f"for SitemapFile {sitemap_file_id}."
                     )
-                except Exception as e:
+                except IntegrityError as ie:
+                    await session.rollback()  # Rollback the failed batch
                     logger.error(
-                        f"Error during bulk insert for SitemapFile {sitemap_file_id}. Rolling back. Error: {e}"
+                        f"IntegrityError adding pages for SitemapFile "
+                        f"{sitemap_file_id}. Error: {ie}. Attempting individual inserts."
                     )
+                    # Attempt individual inserts to salvage what we can
+                    pages_added_count = 0
+                    for page_rec in pages_to_insert:
+                        try:
+                            session.add(page_rec)
+                            await session.flush()
+                            pages_added_count += 1
+                        except IntegrityError:
+                            await session.rollback()
+                            logger.warning(
+                                f"Skipping duplicate/error page URL: {page_rec.url}"
+                            )
+                    logger.info(
+                        f"Added {pages_added_count} pages individually after bulk "
+                        f"insert failure for {sitemap_file_id}."
+                    )
+                except Exception as bulk_e:
                     await session.rollback()
-                    raise  # Re-raise the exception to be caught by the run_job_loop
+                    logger.error(
+                        f"Unexpected error during bulk insert for SitemapFile "
+                        f"{sitemap_file_id}: {bulk_e}"
+                    )
+                    raise  # Re-raise to trigger outer error handling
 
             # --- Update SitemapFile status ---
             if (
