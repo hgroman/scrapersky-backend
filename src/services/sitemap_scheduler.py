@@ -147,7 +147,7 @@ async def process_pending_jobs(limit: int = 10):
     for job in pending_sitemap_jobs:
         sitemaps_processed += 1
         # Use getattr to get the actual ID value
-                job_id_val = getattr(job, "job_id", None)
+        job_id_val = getattr(job, "job_id", None)
         domain = None  # Initialize domain variable
         try:
             # Check if job_id_val is valid before proceeding
