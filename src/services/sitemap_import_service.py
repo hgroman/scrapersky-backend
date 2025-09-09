@@ -46,21 +46,6 @@ class SitemapImportService:
             )
             return
 
-        # Refresh the object to get the latest status from the database
-        await session.refresh(sitemap_file)
-
-        # --- REINSTATED STATUS CHECK --- #
-        # Double-check status before processing ( belt-and-suspenders )
-        # Use getattr to safely get the current status value
-        current_status = getattr(sitemap_file, "sitemap_import_status", None)
-        if current_status != SitemapImportProcessStatusEnum.Processing:
-            logger.warning(
-                f"SitemapFile {sitemap_file_id} is not in Processing state "
-                f"({current_status}). Skipping."
-            )
-            return
-        # --- END REINSTATED STATUS CHECK --- #
-
         # Get the actual URL string value from the model instance
         sitemap_url_str = str(sitemap_file.url)
 
