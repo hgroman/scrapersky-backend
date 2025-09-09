@@ -688,7 +688,8 @@ async def process_domain_with_own_session(
                                                     lastmod = None
                                             
                                             changefreq = url_data.get("changefreq")
-                                            priority = url_data.get("priority")
+                                            priority_str = url_data.get("priority")
+                                            priority_value = float(priority_str) if priority_str else None
 
                                             # Create URL record
                                             url_obj = SitemapUrl(
@@ -698,7 +699,7 @@ async def process_domain_with_own_session(
                                                 loc_text=url_value,
                                                 lastmod=lastmod,
                                                 changefreq=changefreq,
-                                                priority_value=priority,
+                                                priority_value=priority_value,
                                                 status=SitemapUrlStatusEnum.Pending,
                                                 tenant_id=uuid.UUID(DEFAULT_TENANT_ID),
                                                 created_by=user_uuid,
@@ -725,6 +726,7 @@ async def process_domain_with_own_session(
                                     logger.error(
                                         f"Error processing URL batch: {str(batch_error)}"
                                     )
+                                    await session.rollback()
                                     # Continue with next batch
                                     continue
                         else:
