@@ -74,7 +74,10 @@ class SitemapAnalyzer:
         """Ensure aiohttp session exists and return it."""
         if self.session is None or self.session.closed:
             timeout = aiohttp.ClientTimeout(total=30, connect=10)
-            self.session = aiohttp.ClientSession(timeout=timeout)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            self.session = aiohttp.ClientSession(timeout=timeout, headers=headers)
         return self.session
 
     async def close_session(self):
