@@ -7,10 +7,12 @@ from typing import List, Optional
 import httpx
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from src.common.sitemap_parser import SitemapParser, SitemapURL
 from src.models.page import Page
-from src.models.sitemap import SitemapFile, SitemapImportProcessStatusEnum
+from src.models.sitemap import SitemapFile
+from src.models.enums import SitemapImportProcessStatusEnum
 from src.models.enums import PageCurationStatus, PageProcessingStatus
 from src.utils.honeybee_categorizer import HoneybeeCategorizer
 
@@ -94,9 +96,47 @@ class SitemapImportService:
                 await session.commit()
                 return
 
+            # Check if this is a sitemap index by examining the content
+            is_sitemap_index = "<sitemapindex" in sitemap_content
+            
+            if is_sitemap_index:
+                logger.info(
+                    f"Detected sitemap index with {len(extracted_urls)} child sitemaps. "
+                    f"Fetching and processing child sitemaps for SitemapFile {sitemap_file_id}"
+                )
+                
+                # For sitemap indexes, fetch each child sitemap and extract page URLs
+                all_page_urls = []
+                
+                for child_sitemap_url in extracted_urls:
+                    child_url_str = str(child_sitemap_url.loc)
+                    logger.info(f"Fetching child sitemap: {child_url_str}")
+                    
+                    try:
+                        # Fetch child sitemap content
+                        async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
+                            child_response = await client.get(child_url_str)
+                            child_response.raise_for_status()
+                            child_content = child_response.text
+                        
+                        # Parse child sitemap for page URLs
+                        child_urls = self.sitemap_parser.parse(child_content, child_url_str)
+                        logger.info(f"Extracted {len(child_urls)} URLs from child sitemap: {child_url_str}")
+                        all_page_urls.extend(child_urls)
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to fetch/parse child sitemap {child_url_str}: {e}")
+                        continue
+                
+                # Replace extracted_urls with all page URLs from child sitemaps
+                extracted_urls = all_page_urls
+                logger.info(
+                    f"Total page URLs extracted from sitemap index: {len(extracted_urls)}"
+                )
+
             logger.info(
                 f"Extracted {len(extracted_urls)} URLs from SitemapFile "
-                f"{sitemap_file_id}. Storing..."
+                f"{sitemap_file_id} (URL: {sitemap_url_str})"
             )
 
             # --- Store extracted URLs in sitemap_urls table ---
@@ -169,8 +209,13 @@ class SitemapImportService:
 
                 # Only create Page if url is present (basic validation)
                 if page_data_cleaned.get("url"):
-                    pages_to_insert.append(Page(**page_data_cleaned))
-                    processed_urls.add(page_url)  # Renamed from sitemap_url_record.loc
+                    try:
+                        page = Page(**page_data_cleaned)
+                        pages_to_insert.append(page)
+                        processed_urls.add(page_url)
+                    except Exception as e:
+                        logger.error(f"Failed to create Page object for {page_url}: {e}")
+                        continue
                 else:
                     logger.warning(
                         f"Skipping record with missing URL from sitemap "
