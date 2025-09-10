@@ -225,3 +225,124 @@ Replace `result.get("success")` with simple truthiness check: `if result:` since
 **Priority**: HIGH - Blocking WF1 deep scan functionality  
 **Complexity**: LOW - Simple return value handling fix in scheduler  
 **Risk**: MINIMAL - Single line change in error handling logic
+
+---
+
+## Implementation Results & Follow-up Fixes
+
+### **Primary Fix Deployed** 
+**Commit**: `4e96c7c` - 2025-09-10 17:30 UTC  
+**Status**: ✅ SUCCESSFUL - WF1 Deep Scan TypeError Resolved
+
+**Changes Applied**:
+- **File**: `src/services/sitemap_scheduler.py:269-280`
+- **Fix**: Replaced `result.get("success")` with `if result:` 
+- **Logic**: Handle LocalBusiness object (success) vs None (failure) return values
+- **Comment Added**: Documents expected return types for future maintenance
+
+**Validation Results**:
+```
+✅ WF1 deep scan processing restored
+✅ LocalBusiness TypeError eliminated  
+✅ Multiple optometry businesses processed successfully
+✅ Deep scan workflow executing end-to-end
+```
+
+### **Secondary Issue Discovered & Fixed**
+**Issue**: PlacesService Method Signature Mismatch  
+**Commit**: `c966b10` - 2025-09-10 17:45 UTC  
+**Status**: ✅ RESOLVED
+
+**Error Pattern**:
+```
+ERROR - Error storing place ChIJyX1hDUpI0IkR_Prz-yEVG84: 
+PlacesService.get_by_id() takes 2 positional arguments but 3 were given
+```
+
+**Root Cause Analysis**:
+- **Location**: `src/services/places/places_storage_service.py:157-159`
+- **Issue**: Method call passing unnecessary `tenant_uuid` argument
+- **Impact**: Upsert operations failing for existing places during deep scan
+- **Affected**: Place ID `ChIJyX1hDUpI0IkR_Prz-yEVG84` (Guthrie Walk-In Care)
+
+**Fix Applied**:
+```python
+# BEFORE (Broken):
+existing_place = await PlacesService.get_by_id(
+    session, place_id, str(tenant_uuid) if tenant_uuid else None  # ❌ Extra arg
+)
+
+# AFTER (Fixed):
+existing_place = await PlacesService.get_by_id(
+    session, place_id  # ✅ Correct signature
+)
+```
+
+**Method Signature Reference**:
+```python
+# src/services/places/places_service.py:30
+@staticmethod
+async def get_by_id(session: AsyncSession, place_id: str) -> Optional[Place]:
+    # Only accepts 2 arguments: session and place_id
+```
+
+### **Production Validation Results**
+
+**Database Analysis** (via Supabase MCP):
+```sql
+-- 10+ new optometry businesses successfully created:
+SELECT business_name, place_id, created_at 
+FROM local_businesses 
+WHERE created_at > '2025-09-10 17:00:00'
+AND (business_name ILIKE '%optometry%' OR business_name ILIKE '%eye%' OR business_name ILIKE '%vision%');
+
+Results: 
+- Guthrie Elmira Specialty Eye Care
+- Haley Sorber, OD  
+- The Vision Center (2 locations)
+- Guthrie Optometry: Edward Cordes, OD FAAO
+- Monica F Giganti, MD
+- Tracy Fish, OD
+- Gerald J Shovlin Jr., DO
+- Michael A Bratti, OD
+- Corning Eye Care
+```
+
+**Failed Place Recovery**:
+- **Place ID**: `ChIJyX1hDUpI0IkR_Prz-yEVG84`
+- **Business**: Guthrie Walk-In Care - Corning Centerway
+- **Status**: Already existed (created 2025-08-24), upsert operation failed
+- **Resolution**: Method signature fix allows successful updates
+
+### **Architecture Impact Assessment**
+
+**UUID Fix Cascade Effects**:
+1. **BaseModel UUID Fix** → **WF4 Sitemap Processing Restored**
+2. **WF4 Success** → **WF1 Deep Scan Workflow Enabled** 
+3. **WF1 Execution** → **Exposed 2 Latent Bugs**:
+   - LocalBusiness TypeError (return value handling)
+   - PlacesService Method Signature Mismatch
+
+**Pattern Recognition**:
+- ✅ **Primary Issues**: UUID type handling bugs (resolved)
+- ✅ **Secondary Issues**: Data flow and method signature bugs (resolved)
+- 🔍 **Remaining Risk**: Other workflows may have similar latent bugs activated by UUID fix
+
+### **Systematic Investigation Status**
+
+**Workflows Tested Post-UUID Fix**:
+- ✅ **WF4** (Domain Curation): Sitemap processing restored
+- ✅ **WF1** (Single Search Discovery): Deep scan processing restored  
+- 🔍 **WF2, WF3, WF5, WF6, WF7**: Pending systematic testing
+
+**Recommended Next Steps**:
+1. **Test remaining workflows** for similar UUID-related latent bugs
+2. **Monitor logs** for method signature mismatches in other services
+3. **Review return value handling** patterns across service layers
+4. **Validate bulk operations** in all workflows using BaseModel inheritance
+
+---
+
+**Implementation Status**: COMPLETE  
+**Production Status**: DEPLOYED & VALIDATED  
+**Follow-up Required**: Systematic testing of remaining workflows
