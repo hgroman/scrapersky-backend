@@ -1,0 +1,227 @@
+❌ DATABASE SESSION AUDIT - ISSUES FOUND
+==================================================
+Found 33 potential issues:
+
+🚨 CRITICAL SEVERITY (25 issues)
+----------------------------------------
+📁 File: src/services/domain_sitemap_submission_scheduler_fixed.py
+📍 Line: 125
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/services/domain_sitemap_submission_scheduler_fixed.py
+📍 Line: 125
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/services/domain_sitemap_submission_scheduler_fixed.py
+📍 Line: 187
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/services/domain_sitemap_submission_scheduler_fixed.py
+📍 Line: 187
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/services/domain_sitemap_submission_scheduler_fixed.py
+📍 Line: 193
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()
+
+📁 File: src/services/domain_sitemap_submission_scheduler_fixed.py
+📍 Line: 193
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()
+
+📁 File: src/services/page_scraper/domain_processor.py
+📍 Line: 172
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Commit the insert attempt
+
+📁 File: src/services/page_scraper/domain_processor.py
+📍 Line: 172
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Commit the insert attempt
+
+📁 File: src/services/page_scraper/domain_processor.py
+📍 Line: 192
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()  # Rollback on insert error
+
+📁 File: src/services/page_scraper/domain_processor.py
+📍 Line: 192
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()  # Rollback on insert error
+
+📁 File: src/session/async_session_fixed.py
+📍 Line: 95
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Manual commit when ready
+
+📁 File: src/session/async_session_fixed.py
+📍 Line: 95
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Manual commit when ready
+
+📁 File: src/session/async_session_fixed.py
+📍 Line: 118
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Explicit commit
+
+📁 File: src/session/async_session_fixed.py
+📍 Line: 118
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside unknown() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Explicit commit
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 318
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Commit RUNNING status
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 318
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()  # Commit RUNNING status
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 388
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 388
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 411
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 411
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.commit()
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 416
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()  # Rollback if final commit fails
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 416
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()  # Rollback if final commit fails
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 442
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: session.commit()
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 448
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()
+
+📁 File: src/tasks/email_scraper.py
+📍 Line: 448
+🔍 Pattern: DOUBLE_TRANSACTION_MANAGEMENT
+📝 Description: Manual transaction management inside get_background_session() context manager. This causes 'idle in transaction' connections.
+💾 Code: await session.rollback()
+
+🚨 HIGH SEVERITY (4 issues)
+----------------------------------------
+📁 File: src/db/session.py
+📍 Line: 284
+🔍 Pattern: MISSING_CONTEXT_MANAGER
+📝 Description: Session created without context manager. May lead to connection leaks.
+💾 Code: session = async_session_factory()
+
+📁 File: src/db/session.py
+📍 Line: 360
+🔍 Pattern: MISSING_CONTEXT_MANAGER
+📝 Description: Session created without context manager. May lead to connection leaks.
+💾 Code: session = async_session_factory()
+
+📁 File: src/session/async_session.py
+📍 Line: 260
+🔍 Pattern: MISSING_CONTEXT_MANAGER
+📝 Description: Session created without context manager. May lead to connection leaks.
+💾 Code: session = async_session_factory()
+
+📁 File: tools/database_session_audit.py
+📍 Line: 280
+🔍 Pattern: MISSING_CONTEXT_MANAGER
+📝 Description: Session created without context manager. May lead to connection leaks.
+💾 Code: "  ❌ session = async_session_factory()",
+
+🚨 MEDIUM SEVERITY (4 issues)
+----------------------------------------
+📁 File: src/db/session.py
+📍 Line: 303
+🔍 Pattern: TRANSACTION_IN_LOOP
+📝 Description: Session operations inside loop. Consider batching for performance.
+💾 Code: Get a database session for use in background tasks.
+
+📁 File: src/session/async_session.py
+📍 Line: 201
+🔍 Pattern: POTENTIAL_SESSION_LEAK
+📝 Description: Background task session created without context manager.
+💾 Code: def get_background_task_session_factory():
+
+📁 File: src/session/async_session.py
+📍 Line: 220
+🔍 Pattern: POTENTIAL_SESSION_LEAK
+📝 Description: Background task session created without context manager.
+💾 Code: background_task_session_factory = get_background_task_session_factory()
+
+📁 File: src/session/async_session.py
+📍 Line: 235
+🔍 Pattern: POTENTIAL_SESSION_LEAK
+📝 Description: Background task session created without context manager.
+💾 Code: session = background_task_session_factory()
+
+🛠️  REMEDIATION GUIDANCE
+==============================
+
+CRITICAL - Double Transaction Management:
+  ❌ async with get_background_session() as session:
+      await session.commit()  # DON'T DO THIS
+
+  ✅ async with get_background_session() as session:
+      # Context manager handles commit automatically
+
+HIGH - Missing Context Manager:
+  ❌ session = async_session_factory()
+      # Manual session management
+
+  ✅ async with get_background_session() as session:
+      # Automatic cleanup
+
+For more details, see:
+📚 Docs/Docs_27_Anti-Patterns/20250731_WF4_Double_Transaction_Management_CRITICAL.md
