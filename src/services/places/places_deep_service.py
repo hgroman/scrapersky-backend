@@ -73,14 +73,17 @@ class PlacesDeepService(PlacesService):
             )
             self.gmaps = None  # Ensure self.gmaps exists but is None if init fails
 
-        # Initialize JobService instance if available
-        # TODO: Uncomment and ensure JobService has required methods when available/verified.
-        # self.job_service = JobService() if JobService else None
-        self.job_service = None  # Temporarily disable JobService usage
-        if not self.job_service:
-            logger.warning(
-                "JobService is not initialized. Job status/progress updates will be skipped."
-            )
+        # Initialize JobService instance
+        try:
+            from src.services.job_service import JobService  # Import locally to avoid circular imports
+            self.job_service = JobService()
+            logger.info("JobService initialized successfully for deep scan status tracking.")
+        except ImportError as e:
+            logger.error(f"Failed to import JobService: {e}")
+            self.job_service = None
+        except Exception as e:
+            logger.error(f"Failed to initialize JobService: {e}")
+            self.job_service = None
 
     # --- Orchestration Method ---
     # OBSOLETE METHOD - REMOVED
@@ -95,6 +98,11 @@ class PlacesDeepService(PlacesService):
         logger.info(
             f"Processing single deep scan for place_id: {place_id}, tenant_id: {tenant_id}"
         )
+        
+        # Initialize job tracking variables
+        job_id = None
+        session = None
+        
         # Basic input validation
         if not place_id or not tenant_id:
             logger.error("Missing place_id or tenant_id for deep scan.")
@@ -111,6 +119,47 @@ class PlacesDeepService(PlacesService):
             logger.error(
                 "Cannot perform deep scan: Google Maps client failed to initialize (check API key)."
             )
+            return None
+
+        try:
+            # Get database session first for job tracking
+            session = await get_session()
+            if not session:
+                logger.error("Failed to acquire database session.")
+                return None
+            
+            # Create job record for tracking if JobService is available
+            if self.job_service:
+                try:
+                    async with session.begin():
+                        job_data = {
+                            "job_type": "places_deep_scan",
+                            "status": "running",
+                            "progress": 0.0,
+                            "created_by": tenant_uuid,  # Use tenant_id as created_by
+                            "job_metadata": {
+                                "place_id": place_id,
+                                "tenant_id": tenant_id
+                            }
+                        }
+                        job = await self.job_service.create(session, job_data)
+                        job_id = job.job_id
+                        logger.info(f"Created deep scan job {job_id} for place_id: {place_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to create job record: {e}. Continuing without job tracking.")
+            
+            # Update job progress: Starting API call
+            if self.job_service and job_id:
+                try:
+                    async with session.begin():
+                        await self.job_service.update_status(
+                            session, job_id, status="running", progress=0.2
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to update job progress: {e}")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize session or job tracking: {e}")
             return None
 
         try:
@@ -176,12 +225,17 @@ class PlacesDeepService(PlacesService):
             # logger.warning(f"Mapping for {place_id} not yet implemented.") # Placeholder # Remove placeholder comment
             # mapped_data = {'place_id': place_id} # Remove this placeholder
 
-            # Save to DB
-            session = await get_session()
-            if not session:
-                logger.error("Failed to acquire database session.")
-                return None
+            # Update job progress: Starting database upsert
+            if self.job_service and job_id:
+                try:
+                    async with session.begin():
+                        await self.job_service.update_status(
+                            session, job_id, status="running", progress=0.8
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to update job progress: {e}")
 
+            # Save to DB (using existing session)
             try:
                 async with session.begin():  # Start transaction
                     # Example using PG Upsert (more explicit)
@@ -217,19 +271,50 @@ class PlacesDeepService(PlacesService):
                     logger.info(
                         f"Successfully saved/updated deep scan details for place_id: {place_id} (ID: {merged_business.id})"
                     )
+                    
+                    # Update job status to completed
+                    if self.job_service and job_id:
+                        try:
+                            async with session.begin():
+                                await self.job_service.update_status(
+                                    session, job_id, status="completed", progress=1.0
+                                )
+                            logger.info(f"Deep scan job {job_id} completed successfully")
+                        except Exception as e:
+                            logger.warning(f"Failed to update job completion status: {e}")
+                    
                     return merged_business
                 else:
                     # This case might indicate an issue with the RETURNING clause or the upsert logic itself
                     # if no error was raised but no row was returned.
-                    logger.error(
-                        f"DB operation completed but failed to return the saved/updated object for {place_id}."
-                    )
+                    error_msg = f"DB operation completed but failed to return the saved/updated object for {place_id}."
+                    logger.error(error_msg)
+                    
+                    # Update job status to failed
+                    if self.job_service and job_id:
+                        try:
+                            async with session.begin():
+                                await self.job_service.update_status(
+                                    session, job_id, status="failed", progress=1.0, error=error_msg
+                                )
+                        except Exception as e:
+                            logger.warning(f"Failed to update job failure status: {e}")
+                    
                     return None
             except Exception as db_error:
-                logger.error(
-                    f"Database error during upsert for place_id {place_id} under tenant {tenant_id}: {db_error}",
-                    exc_info=True,
-                )
+                error_msg = f"Database error during upsert for place_id {place_id} under tenant {tenant_id}: {db_error}"
+                logger.error(error_msg, exc_info=True)
+                
+                # Update job status to failed
+                if self.job_service and job_id:
+                    try:
+                        async with session.begin():
+                            await self.job_service.update_status(
+                                session, job_id, status="failed", progress=1.0, error=str(db_error)
+                            )
+                    except Exception as e:
+                        logger.warning(f"Failed to update job failure status: {e}")
+                
                 # The session.begin() context manager handles rollback on exception
                 return None
             finally:
@@ -241,16 +326,37 @@ class PlacesDeepService(PlacesService):
             # return None # Placeholder return - REMOVED
 
         except googlemaps.exceptions.ApiError as api_error:
-            logger.error(f"Google Maps API error for place_id {place_id}: {api_error}")
+            error_msg = f"Google Maps API error for place_id {place_id}: {api_error}"
+            logger.error(error_msg)
             # Consider specific handling for different statuses like ZERO_RESULTS, INVALID_REQUEST
             if api_error.status == "NOT_FOUND":
                 logger.warning(f"Place ID {place_id} not found on Google Maps.")
+            
+            # Update job status to failed
+            if self.job_service and job_id and session:
+                try:
+                    async with session.begin():
+                        await self.job_service.update_status(
+                            session, job_id, status="failed", progress=1.0, error=error_msg
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to update job failure status: {e}")
+            
             return None
         except Exception as e:
-            logger.error(
-                f"Unexpected error during deep scan for place_id {place_id}: {e}",
-                exc_info=True,
-            )
+            error_msg = f"Unexpected error during deep scan for place_id {place_id}: {e}"
+            logger.error(error_msg, exc_info=True)
+            
+            # Update job status to failed
+            if self.job_service and job_id and session:
+                try:
+                    async with session.begin():
+                        await self.job_service.update_status(
+                            session, job_id, status="failed", progress=1.0, error=str(e)
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to update job failure status: {e}")
+            
             return None
 
     def _map_details_to_model(self, details: Dict[str, Any]) -> Dict[str, Any]:
