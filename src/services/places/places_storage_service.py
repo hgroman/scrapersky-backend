@@ -155,7 +155,7 @@ class PlacesStorageService:
                 if place_id in existing_place_ids:
                     # Get existing place
                     existing_place = await PlacesService.get_by_id(
-                        session, place_id, str(tenant_uuid) if tenant_uuid else None
+                        session, place_id
                     )
 
                     if existing_place:
