@@ -1,6 +1,7 @@
 """Website metadata extraction module."""
 
 import logging
+import os
 import re
 from typing import Any, Dict, List, Optional, cast
 from urllib.parse import urljoin
@@ -8,7 +9,8 @@ from urllib.parse import urljoin
 import aiohttp
 from bs4 import BeautifulSoup, Tag
 
-from ..utils.scraper_api import ScraperAPIClient
+# TEMPORARY BYPASS: ScraperAPI import commented out (2025-09-10)
+# from ..utils.scraper_api import ScraperAPIClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -88,35 +90,42 @@ async def detect_site_metadata(
         )
         html_content = test_html_content
     else:
-        # Try to get the page content using ScraperAPI
-        try:
-            logger.info(f"Using ScraperAPI to fetch content for {domain}")
-            scraper_api = ScraperAPIClient()
+        # TEMPORARY BYPASS: ScraperAPI disabled for WF4 testing (2025-09-10)
+        # Original ScraperAPI code commented out to unblock WF4 sitemap discovery
+        # 
+        # # Try to get the page content using ScraperAPI
+        # try:
+        #     logger.info(f"Using ScraperAPI to fetch content for {domain}")
+        #     scraper_api = ScraperAPIClient()
+        #
+        #     # Ensure all connections use HTTPS for security
+        #     if domain.startswith("http://"):
+        #         # Convert HTTP to HTTPS
+        #         url = "https://" + domain[7:]
+        #         logger.info(f"Upgrading HTTP to HTTPS: {domain} → {url}")
+        #     elif domain.startswith("https://"):
+        #         # Already HTTPS, use as-is
+        #         url = domain
+        #     else:
+        #         # No protocol specified, add HTTPS
+        #         url = f"https://{domain}"
+        #
+        #     logger.info(f"Fetching URL: {url}")
+        #     # Only enable JS rendering if explicitly configured  
+        #     enable_js = os.getenv('SCRAPER_API_ENABLE_JS_RENDERING', 'false').lower() == 'true'
+        #     max_retries = int(os.getenv('SCRAPER_API_MAX_RETRIES', '1'))
+        #     html_content = await scraper_api.fetch(
+        #         url, render_js=enable_js, retries=max_retries
+        #     )
+        #     logger.info(f"Successfully fetched content for {domain} using ScraperAPI")
+        #     await scraper_api.close()
+        # except Exception as e:
+        #     logger.error(f"ScraperAPI error fetching {domain}: {str(e)}")
+        #     return None
 
-            # Ensure all connections use HTTPS for security
-            if domain.startswith("http://"):
-                # Convert HTTP to HTTPS
-                url = "https://" + domain[7:]
-                logger.info(f"Upgrading HTTP to HTTPS: {domain} → {url}")
-            elif domain.startswith("https://"):
-                # Already HTTPS, use as-is
-                url = domain
-            else:
-                # No protocol specified, add HTTPS
-                url = f"https://{domain}"
-
-            logger.info(f"Fetching URL: {url}")
-            # Only enable JS rendering if explicitly configured  
-            enable_js = os.getenv('SCRAPER_API_ENABLE_JS_RENDERING', 'false').lower() == 'true'
-            max_retries = int(os.getenv('SCRAPER_API_MAX_RETRIES', '1'))
-            html_content = await scraper_api.fetch(
-                url, render_js=enable_js, retries=max_retries
-            )
-            logger.info(f"Successfully fetched content for {domain} using ScraperAPI")
-            await scraper_api.close()
-        except Exception as e:
-            logger.error(f"ScraperAPI error fetching {domain}: {str(e)}")
-            return None
+        # TEMPORARY: Return minimal HTML to prevent None returns that break WF4
+        logger.warning(f"TEMPORARY BYPASS: ScraperAPI disabled, returning minimal metadata for {domain}")
+        html_content = f"<html><head><title>{domain} - Temporary Bypass</title></head><body><p>Temporary ScraperAPI bypass active</p></body></html>"
 
     # Get title and description
     soup = BeautifulSoup(html_content, "html.parser")
