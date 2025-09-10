@@ -266,7 +266,8 @@ async def process_pending_jobs(limit: int = 10):
                             place_id=place_id_str, tenant_id=tenant_id_str
                         )
 
-                        if result.get("success"):
+                        # Fix: process_single_deep_scan returns LocalBusiness object on success, None on failure
+                        if result:
                             logger.info(
                                 f"Deep Scan: Success for Place ID: {place.place_id}"
                             )
@@ -276,7 +277,7 @@ async def process_pending_jobs(limit: int = 10):
                             place.updated_at = datetime.utcnow()  # type: ignore
                             deep_scans_successful += 1
                         else:
-                            error_msg = result.get("error", "Unknown deep scan error")
+                            error_msg = "Deep scan service returned None - check service logs for details"
                             logger.error(
                                 f"Deep Scan: Failed for Place ID: {place.place_id} - Error: {error_msg}"
                             )
