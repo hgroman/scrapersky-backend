@@ -1,3 +1,16 @@
+# 🚨 **DEPRECATED** 🚨
+
+**This document (v1.1) is outdated and contains a flawed design that led to production issues.**
+
+The "filter by dropping" logic and `continue` statements described below were identified as an anti-pattern that causes data loss and destroys the audit trail.
+
+**Please refer to the current, authoritative specification:**
+**`19_Honeybee PRD v1.2 — Status-Based Categorization, No Skips.md`**
+
+*This document is preserved for historical context only. **DO NOT** use any of the code or logic from this file.*
+
+---
+
 Proceed. Your PRD is good. Here’s the exact, tuned package to hand Claude and ship.
 
 # Honeybee PRD v1.1 (final)
@@ -89,9 +102,18 @@ self.honeybee = HoneybeeCategorizer()
 
 # inside URL loop
 hb = self.honeybee.categorize(page_url)
-if hb["decision"] == "skip" or hb["confidence"] < 0.2:
-    logger.info(f"Skip {page_url} [{hb['category']}]")
-    continue
+
+# 🚨 DANGEROUS ANTI-PATTERN BELOW 🚨
+# The following 'if' block implements the flawed "filter by dropping" logic.
+# Using 'continue' here prevents the page record from being saved to the database,
+# resulting in data loss and breaking the audit trail.
+# This logic is explicitly forbidden by PRD v1.2.
+#
+# if hb["decision"] == "skip" or hb["confidence"] < 0.2:
+#     logger.info(f"Skip {page_url} [{hb['category']}]")
+#     continue
+#
+# 🚨 END OF DANGEROUS ANTI-PATTERN 🚨
 
 page_data["page_type"] = hb["category"]
 page_data["path_depth"] = hb["depth"]

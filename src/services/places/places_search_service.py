@@ -161,9 +161,16 @@ class PlacesSearchService:
             return standardized_results
 
         except Exception as e:
-            logger.error(f"Error searching Google Places: {str(e)}")
-            logger.exception(e)
-            raise ValueError(f"Error searching Google Places: {str(e)}")
+            # SECURITY: Sanitize exception to prevent API key leakage in logs
+            from ...utils.log_sanitizer import sanitize_exception_message, get_safe_exception_info
+            
+            sanitized_error = sanitize_exception_message(e)
+            exception_info = get_safe_exception_info(e)
+            
+            logger.error(f"Error searching Google Places: {sanitized_error}")
+            logger.error(f"Exception details: {exception_info}")
+            
+            raise ValueError(f"Error searching Google Places: {sanitized_error}")
 
     @staticmethod
     def standardize_place(
