@@ -170,7 +170,7 @@ class SitemapImportService:
                     "honeybee_json": {
                         "v": 1,
                         "decision": {
-                            "category": hb["category"],
+                            "category": hb["category"].value,  # Store enum value, not enum object
                             "confidence": hb["confidence"],
                             "matched_regex": hb["matched"]
                         },

@@ -42,7 +42,7 @@ async def run():
                         pg.honeybee_json = {
                             "v": 1,
                             "decision": {
-                                "category": "unknown",
+                                "category": "unknown",  # String literal for skipped pages
                                 "confidence": 0.0,
                                 "matched_regex": None
                             },
@@ -61,7 +61,7 @@ async def run():
                     pg.honeybee_json = {
                         "v": 1,
                         "decision": {
-                            "category": r["category"],
+                            "category": r["category"].value,  # Store enum value, not enum object
                             "confidence": r["confidence"],
                             "matched_regex": r["matched"]
                         },
