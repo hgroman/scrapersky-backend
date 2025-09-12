@@ -11,6 +11,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum as SQLAlchemyEnum,
     ForeignKey,
     Integer,
     String,
@@ -21,7 +22,6 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
-from .custom_types import PostgreSQLEnum
 from .enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
 
 
@@ -88,7 +88,13 @@ class Page(Base, BaseModel):
         DateTime(timezone=True), nullable=True
     )
     page_type: Column[Optional[PageTypeEnum]] = Column(
-        PostgreSQLEnum(PageTypeEnum, name="page_type_enum", create_type=False),
+        SQLAlchemyEnum(
+            PageTypeEnum,
+            name="page_type_enum",
+            create_type=False,
+            native_enum=True,
+            values_callable=lambda obj: [e.value for e in obj]
+        ),
         nullable=True,
         index=True,
     )
@@ -102,16 +108,24 @@ class Page(Base, BaseModel):
 
     # --- Page Curation Workflow Columns ---
     page_curation_status: Column[PageCurationStatus] = Column(  # type: ignore
-        PostgreSQLEnum(
-            PageCurationStatus, name="page_curation_status", create_type=False
+        SQLAlchemyEnum(
+            PageCurationStatus,
+            name="page_curation_status",
+            create_type=False,
+            native_enum=True,
+            values_callable=lambda obj: [e.value for e in obj]
         ),
         nullable=False,
         default=PageCurationStatus.New,
         index=True,
     )
     page_processing_status: Column[Optional[PageProcessingStatus]] = Column(  # type: ignore
-        PostgreSQLEnum(
-            PageProcessingStatus, name="page_processing_status", create_type=False
+        SQLAlchemyEnum(
+            PageProcessingStatus,
+            name="page_processing_status",
+            create_type=False,
+            native_enum=True,
+            values_callable=lambda obj: [e.value for e in obj]
         ),
         nullable=True,
         index=True,
