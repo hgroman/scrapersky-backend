@@ -79,6 +79,7 @@ async def get_pages(
                 "domain_id": str(page.domain_id) if page.domain_id is not None else None,
                 "curation_status": str(page.page_curation_status) if page.page_curation_status is not None else None,
                 "processing_status": str(page.page_processing_status) if page.page_processing_status is not None else None,
+                "page_type": str(page.page_type) if page.page_type is not None else None,
                 "updated_at": page.updated_at.isoformat() if page.updated_at else None,
                 "created_at": page.created_at.isoformat() if page.created_at else None,
                 "error": page.page_processing_error
@@ -91,6 +92,7 @@ async def get_pages(
         "filters_applied": {
             "page_curation_status": str(page_curation_status) if page_curation_status else None,
             "page_processing_status": str(page_processing_status) if page_processing_status else None,
+            "page_type": str(page_type) if page_type else None,
             "url_contains": url_contains
         }
     }
@@ -184,6 +186,8 @@ async def update_page_curation_status_filtered(
         filters.append(Page.page_curation_status == request.page_curation_status)
     if request.page_processing_status is not None:
         filters.append(Page.page_processing_status == request.page_processing_status)
+    if request.page_type is not None:
+        filters.append(Page.page_type == request.page_type)
     if request.url_contains:
         filters.append(Page.url.ilike(f"%{request.url_contains}%"))
     
