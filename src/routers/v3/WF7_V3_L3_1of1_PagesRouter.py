@@ -8,8 +8,7 @@ Compliance: 100% Layer 3 Blueprint Adherent
 File: WF7-V3-L3-1of1-PagesRouter.py
 """
 
-import uuid
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -23,7 +22,7 @@ from src.schemas.WF7_V3_L2_1of1_PageCurationSchemas import (
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
 from src.models.page import Page
-from src.models.enums import PageCurationStatus, PageProcessingStatus
+from src.models.enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
 
 # V3 API prefix per Constitutional mandate
 router = APIRouter(prefix="/api/v3/pages", tags=["V3 - Page Curation"])
@@ -37,13 +36,14 @@ async def get_pages(
     offset: int = 0,
     page_curation_status: Optional[PageCurationStatus] = Query(None, description="Filter by page curation status"),
     page_processing_status: Optional[PageProcessingStatus] = Query(None, description="Filter by page processing status"),
+    page_type: Optional[PageTypeEnum] = Query(None, description="Filter by page type (contact_root, unknown, etc.)"),
     url_contains: Optional[str] = Query(None, description="Filter by URL content (case-insensitive)")
 ):
     """
     Get pages for WF7 curation interface with optional server-side filtering.
     
     Returns paginated list of pages with their curation and processing status.
-    Supports filtering by curation status, processing status, and URL content.
+    Supports filtering by curation status, processing status, page type, and URL content.
     """
     # Build filter conditions
     filters = []
@@ -51,6 +51,8 @@ async def get_pages(
         filters.append(Page.page_curation_status == page_curation_status)
     if page_processing_status is not None:
         filters.append(Page.page_processing_status == page_processing_status)
+    if page_type is not None:
+        filters.append(Page.page_type == page_type)
     if url_contains:
         filters.append(Page.url.ilike(f"%{url_contains}%"))
     

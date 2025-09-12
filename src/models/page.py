@@ -4,7 +4,6 @@ SQLAlchemy Model for the 'pages' table.
 
 import uuid
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional
 
 from sqlalchemy import (
@@ -23,7 +22,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
-from .enums import PageCurationStatus, PageProcessingStatus
+from .enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
 
 
 class Page(Base, BaseModel):
@@ -88,7 +87,11 @@ class Page(Base, BaseModel):
     last_scan: Column[Optional[datetime]] = Column(  # type: ignore
         DateTime(timezone=True), nullable=True
     )
-    page_type: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
+    page_type: Column[Optional[PageTypeEnum]] = Column(
+        PgEnum(PageTypeEnum, name="page_type_enum", create_type=False),
+        nullable=True,
+        index=True,
+    )
     lead_source: Column[Optional[str]] = Column(Text, nullable=True)  # type: ignore
     additional_json: Column[Optional[dict]] = Column(JSONB, default=dict, nullable=True)  # type: ignore
 

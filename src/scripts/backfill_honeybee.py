@@ -2,7 +2,7 @@ import asyncio
 from sqlalchemy import select
 from src.session.async_session import get_session
 from src.models.page import Page
-from src.models.enums import PageCurationStatus
+from src.models.enums import PageCurationStatus, PageTypeEnum
 from src.utils.honeybee_categorizer import HoneybeeCategorizer
 
 
@@ -48,7 +48,7 @@ async def run():
                             },
                             "exclusions": r["exclusions"]
                         }
-                        pg.page_type = "unknown"
+                        pg.page_type = PageTypeEnum.UNKNOWN
                         pg.path_depth = r["depth"]
                         pg.priority_level = 3
                         total_skipped += 1
@@ -69,7 +69,7 @@ async def run():
                     }
                     
                     # Apply auto-selection rules
-                    if r["category"] in {"contact_root", "career_contact", "legal_root"} and r["confidence"] >= 0.6 and r["depth"] <= 2:
+                    if r["category"] in {PageTypeEnum.CONTACT_ROOT, PageTypeEnum.CAREER_CONTACT, PageTypeEnum.LEGAL_ROOT} and r["confidence"] >= 0.6 and r["depth"] <= 2:
                         pg.page_curation_status = PageCurationStatus.Selected
                         total_selected += 1
                         

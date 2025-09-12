@@ -7,13 +7,12 @@ from typing import List, Optional
 import httpx
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from src.common.sitemap_parser import SitemapParser, SitemapURL
 from src.models.page import Page
 from src.models.sitemap import SitemapFile
 from src.models.enums import SitemapImportProcessStatusEnum
-from src.models.enums import PageCurationStatus, PageProcessingStatus
+from src.models.enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
 from src.utils.honeybee_categorizer import HoneybeeCategorizer
 
 logger = logging.getLogger(__name__)
@@ -186,7 +185,7 @@ class SitemapImportService:
                     page_data["page_processing_status"] = PageProcessingStatus.Queued
 
                 # Auto-select only high-value, shallow paths
-                if hb["category"] in {"contact_root", "career_contact", "legal_root"} and hb["confidence"] >= 0.6 and hb["depth"] <= 2:
+                if hb["category"] in {PageTypeEnum.CONTACT_ROOT, PageTypeEnum.CAREER_CONTACT, PageTypeEnum.LEGAL_ROOT} and hb["confidence"] >= 0.6 and hb["depth"] <= 2:
                     page_data["page_curation_status"] = PageCurationStatus.Selected
                     page_data["priority_level"] = 1  # enforce
 

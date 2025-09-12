@@ -690,4 +690,129 @@ if estimated_cost >= COST_ALERT_THRESHOLD:
 
 ---
 
+## SECURITY PATTERNS
+
+### Pattern: API Key Sanitization for Exception Logging
+
+**Origin:** API Key Security Fix (2025-09-11) - Google Maps API keys exposed in production logs during exception handling  
+**Business Problem:** HTTP client libraries (aiohttp, requests) include full URLs with API keys in exception messages, exposing credentials to anyone with log access  
+**Security Impact:** Prevents credential theft and unauthorized billing on external APIs
+
+**The Problem:**
+```python
+# ❌ VULNERABLE - Exposes API keys in production logs
+try:
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+    params = {"query": "restaurant", "key": "AIzaSyBx1234567890abcdef"}
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as response:
+            data = await response.json()
+except Exception as e:
+    logger.exception(e)  # ❌ Logs: "Connection timeout for ...?key=AIzaSyBx1234567890abcdef"
+    raise ValueError(f"API error: {str(e)}")  # ❌ Also exposes key in error message
+```
+
+**The Solution:**
+```python
+# ✅ PRODUCTION VERIFIED - Sanitized logging with debugging value preserved
+from src.utils.log_sanitizer import sanitize_exception_message, get_safe_exception_info
+
+try:
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+    params = {"query": "restaurant", "key": "AIzaSyBx1234567890abcdef"}
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as response:
+            data = await response.json()
+except Exception as e:
+    # SECURITY: Sanitize before logging
+    sanitized_error = sanitize_exception_message(e)
+    exception_info = get_safe_exception_info(e)
+    
+    logger.error(f"API error: {sanitized_error}")  # ✅ Logs: "...?key=***REDACTED***"
+    logger.error(f"Exception details: {exception_info}")
+    
+    raise ValueError(f"API error: {sanitized_error}")  # ✅ Safe error propagation
+```
+
+**Required Utility (src/utils/log_sanitizer.py):**
+```python
+import re
+from typing import Any
+
+def sanitize_api_keys(text: str) -> str:
+    """Remove API keys from text using comprehensive regex patterns."""
+    if not text:
+        return text
+    
+    patterns = [
+        r'key=[^&\s]+',              # Google Maps: key=abc123
+        r'api_key=[^&\s]+',          # Generic: api_key=abc123
+        r'apikey=[^&\s]+',           # Alternative: apikey=abc123
+        r'token=[^&\s]+',            # Auth tokens: token=abc123
+        r'access_token=[^&\s]+',     # OAuth: access_token=abc123
+    ]
+    
+    sanitized = text
+    for pattern in patterns:
+        sanitized = re.sub(
+            pattern, 
+            lambda m: m.group().split('=')[0] + '=***REDACTED***', 
+            sanitized, 
+            flags=re.IGNORECASE
+        )
+    
+    return sanitized
+
+def sanitize_exception_message(exception: Exception) -> str:
+    """Create sanitized string representation of exception."""
+    return sanitize_api_keys(str(exception))
+
+def get_safe_exception_info(exception: Exception) -> dict:
+    """Get debugging info without sensitive data."""
+    return {
+        "exception_type": type(exception).__name__,
+        "exception_module": type(exception).__module__,
+        "sanitized_message": sanitize_exception_message(exception),
+        "has_args": len(exception.args) > 0,
+        "args_count": len(exception.args)
+    }
+```
+
+**Test Validation (100% Pass Rate):**
+```python
+# Comprehensive test coverage demonstrating pattern effectiveness
+test_cases = [
+    ("https://api.com?key=secret123", "https://api.com?key=***REDACTED***"),
+    ("Error: api_key=xyz789", "Error: api_key=***REDACTED***"),
+    ("timeout: TOKEN=abc&other=param", "timeout: TOKEN=***REDACTED***&other=param"),
+    ("No secrets here", "No secrets here"),  # Unchanged
+]
+
+for input_text, expected in test_cases:
+    result = sanitize_api_keys(input_text)
+    assert result == expected  # ✅ All tests pass
+```
+
+**Production Implementation Evidence:**
+- **Files Modified**: `src/services/places/places_search_service.py` (lines 163-173)
+- **Utility Created**: `src/utils/log_sanitizer.py` (54 lines, zero external dependencies)
+- **Validation**: `test_api_key_sanitization.py` (9 test cases, 100% pass rate)
+- **Documentation**: `Docs/Docs_47_API_Key_Security_Fix_2025-09-11/` (Executive briefing and patterns)
+
+**When to Use This Pattern:**
+- Any external API integration (Google, Stripe, AWS, OAuth providers)
+- HTTP client exception handling (aiohttp, requests, urllib)
+- Error logging and exception propagation
+- Security-sensitive debugging scenarios
+
+**Security Benefits:**
+- Prevents credential exposure in application logs
+- Maintains debugging value through structured exception info
+- Protects against unauthorized API usage and billing
+- Aligns with OWASP, PCI DSS, and SOC 2 compliance requirements
+
+---
+
 **Constitutional Authority:** This catalog represents battle-tested truth extracted from production systems. Every pattern has been verified under fire.

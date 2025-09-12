@@ -1,6 +1,8 @@
 import re
 from urllib.parse import urlparse
 
+from src.models.enums import PageTypeEnum
+
 
 class HoneybeeCategorizer:
     """
@@ -66,7 +68,7 @@ class HoneybeeCategorizer:
             if ex.search(path):
                 return {
                     "decision": "skip",
-                    "category": "unknown",
+                    "category": PageTypeEnum.UNKNOWN,
                     "confidence": 0.0,
                     "matched": None,
                     "exclusions": ["rule_hit"],
@@ -76,9 +78,10 @@ class HoneybeeCategorizer:
         # Check high-value patterns
         for name, rgx in self.R_POS.items():
             if rgx.match(path):
+                enum_value = getattr(PageTypeEnum, name.upper())
                 return {
                     "decision": "include",
-                    "category": name,
+                    "category": enum_value,
                     "confidence": self.CONF.get(name, 0.5),
                     "matched": name,
                     "exclusions": [],
@@ -89,7 +92,7 @@ class HoneybeeCategorizer:
         if self.R_WP.search(path + q):
             return {
                 "decision": "include",
-                "category": "wp_prospect",
+                "category": PageTypeEnum.WP_PROSPECT,
                 "confidence": self.CONF["wp_prospect"],
                 "matched": "wp_signal",
                 "exclusions": [],
@@ -99,7 +102,7 @@ class HoneybeeCategorizer:
         # Default case - low confidence unknown page
         return {
             "decision": "include",
-            "category": "unknown",
+            "category": PageTypeEnum.UNKNOWN,
             "confidence": 0.2,
             "matched": None,
             "exclusions": [],

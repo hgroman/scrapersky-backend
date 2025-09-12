@@ -35,7 +35,7 @@
 2. **PATTERNS:** Review → `03_ARCHITECTURAL_PATTERNS_LIBRARY.md`
    - **Deep Dive:** `07_PATTERN_CATALOG_WF7_SYNTHESIS.md` (47 patterns)
    - **Avoid:** `08_ANTIPATTERN_CATALOG_WF7_SYNTHESIS.md` (47 anti-patterns)
-   - **Implementations:** `09_BUILDING_BLOCKS_CATALOG.md` (battle-tested code patterns)
+   - **Implementations:** `09_BUILDING_BLOCKS_CATALOG.md` (battle-tested code patterns + security patterns)
 3. **CONSTRUCTION:** Follow → `02_CONSTRUCTION_PROTOCOL.md` 
 4. **OPERATIONS:** Execute → `04_GOLDEN_THREAD_OPERATIONAL_PLAYBOOK.md`
 5. **TESTING:** Validate → `Docs/Docs_10_Final_Audit/v_Layer-7.1-Testing_Blueprint.md`
@@ -66,6 +66,7 @@
 | **Server starts but endpoints 404** | Router inclusion pattern violation | `02_CONSTRUCTION_PROTOCOL.md` | `personas_layers/L3_Router_Guardian_Pattern_AntiPattern_Companion_v2.0.md` |
 | **Async session errors** | Transaction ownership violation | `03_ARCHITECTURAL_PATTERNS_LIBRARY.md` | `personas_layers/L4_Service_Guardian_Pattern_AntiPattern_Companion.md` |
 | **Scheduler won't start** | Missing scheduler instance or config | `personas_layers/L5_Config_Conductor_Pattern_AntiPattern_Companion.md` | `CLAUDE.md` |
+| **API keys exposed in logs** | Exception handling without credential sanitization. **SECURITY VULNERABILITY** | `09_BUILDING_BLOCKS_CATALOG.md` (Security Patterns) | `Docs/Docs_47_API_Key_Security_Fix_2025-09-11/` |
 <!-- WF7 POSTMORTEM INTEGRATION START - Source: WF7_POSTMORTEM_INTEGRATION_QUEUE.md -->
 | **"Perfect docs but ignored"** | 96% pattern coverage with 15% effectiveness. **ENFORCEMENT GAP** | `START_HERE_ARCHITECT_PROTOCOL.md` | `02_CONSTRUCTION_PROTOCOL.md` |
 | **88+ uncommitted files** | Analysis paralysis from over-documentation | Commit immediately | `04_GOLDEN_THREAD_OPERATIONAL_PLAYBOOK.md` |

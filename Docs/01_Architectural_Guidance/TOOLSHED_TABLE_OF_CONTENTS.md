@@ -64,5 +64,6 @@
    - **Battle-tested implementation patterns**
    - CRUD operations with PostgreSQL ENUM handling
    - Batch operations and dual-status patterns
+   - **Security patterns (API key sanitization)**
    - MCP verification protocols
    - Production incident learnings and fixes

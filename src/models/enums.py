@@ -165,3 +165,27 @@ class DomainExtractionStatusEnum(str, Enum):
     Processing = "processing"
     Submitted = "submitted"
     Failed = "failed"
+
+
+class PageTypeEnum(str, Enum):
+    """Page types identified by Honeybee categorization system"""
+    
+    # Contact categories (current)
+    CONTACT_ROOT = "contact_root"
+    CAREER_CONTACT = "career_contact"
+    
+    # Business categories (extensible)
+    ABOUT_ROOT = "about_root"
+    SERVICES_ROOT = "services_root"
+    MENU_ROOT = "menu_root"  # For restaurants/hospitality
+    PRICING_ROOT = "pricing_root"
+    TEAM_ROOT = "team_root"
+    
+    # Legal/compliance
+    LEGAL_ROOT = "legal_root"
+    
+    # Technical indicators  
+    WP_PROSPECT = "wp_prospect"
+    
+    # Default
+    UNKNOWN = "unknown"
