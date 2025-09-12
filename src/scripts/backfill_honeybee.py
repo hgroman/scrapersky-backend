@@ -48,14 +48,14 @@ async def run():
                             },
                             "exclusions": r["exclusions"]
                         }
-                        pg.page_type = PageTypeEnum.UNKNOWN.value  # Store as string value
+                        pg.page_type = PageTypeEnum.UNKNOWN  # Store as enum object
                         pg.path_depth = r["depth"]
                         pg.priority_level = 3
                         total_skipped += 1
                         continue
                     
                     # Update page with categorization results
-                    pg.page_type = r["category"].value  # Store as string value
+                    pg.page_type = r["category"]  # Store as enum object
                     pg.path_depth = r["depth"]
                     pg.priority_level = 1 if r["confidence"] >= 0.6 else 3
                     pg.honeybee_json = {
