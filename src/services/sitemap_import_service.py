@@ -163,8 +163,8 @@ class SitemapImportService:
                     "tenant_id": uuid.UUID(str(tenant_id)) if tenant_id else None,
                     "sitemap_file_id": uuid.UUID(str(sitemap_file.id)) if sitemap_file.id else None,  # ADDED: Link page to its source sitemap
                     "lead_source": "sitemap_import",  # Add lead source
-                    # Honeybee fields
-                    "page_type": hb["category"],
+                    # Honeybee fields  
+                    "page_type": hb["category"].value,  # Store as string value for database
                     "path_depth": hb["depth"],
                     "priority_level": 1 if hb["confidence"] >= 0.6 else 3,
                     "honeybee_json": {
