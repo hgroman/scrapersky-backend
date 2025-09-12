@@ -48,10 +48,8 @@ class SitemapURL(BaseModel):
             # Attempt to parse various common datetime formats
             # W3C Datetime format (e.g., 2023-10-26T10:00:00+00:00 or 2005-01-01)
             if "T" in v:
-                # Handle timezone offset if present
-                if "+" in v or (
-                    v.endswith("Z") and "-" in v[v.rfind("-") - 3 :]
-                ):  # Check for Z or +/-HH:MM or +/-HHMM
+                # Handle timezone offset if present (Z, +/-HH:MM, +/-HHMM)
+                if v.endswith("Z") or "+" in v or v.count("-") > 2:  # ISO format with timezone
                     try:
                         return datetime.fromisoformat(v.replace("Z", "+00:00"))
                     except ValueError:
