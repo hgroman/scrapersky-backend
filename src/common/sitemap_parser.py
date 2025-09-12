@@ -49,7 +49,9 @@ class SitemapURL(BaseModel):
             # W3C Datetime format (e.g., 2023-10-26T10:00:00+00:00 or 2005-01-01)
             if "T" in v:
                 # Handle timezone offset if present (Z, +/-HH:MM, +/-HHMM)
-                if v.endswith("Z") or "+" in v or v.count("-") > 2:  # ISO format with timezone
+                if (
+                    v.endswith("Z") or "+" in v or v.count("-") > 2
+                ):  # ISO format with timezone
                     try:
                         return datetime.fromisoformat(v.replace("Z", "+00:00"))
                     except ValueError:
@@ -113,6 +115,29 @@ class SitemapParser:
                     )
                     # Try parsing as plain text as a last resort
                     pass
+
+            # Check if content is HTML instead of XML
+            content_lower = content.strip().lower()
+            if (
+                content_lower.startswith("<!doctype html")
+                or content_lower.startswith("<html")
+                or "<html" in content_lower[:200]
+            ):
+                logger.error(
+                    f"Received HTML content instead of XML sitemap. "
+                    f"Content preview: {content[:200]}"
+                )
+                return urls  # Return empty list
+
+            # Check if content contains basic XML structure
+            if not content.strip().startswith(
+                "<?xml"
+            ) and not content.strip().startswith("<"):
+                logger.error(
+                    f"Content does not appear to be XML. "
+                    f"Content preview: {content[:200]}"
+                )
+                return urls  # Return empty list
 
             # Attempt to parse XML
             root = ET.fromstring(content)

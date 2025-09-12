@@ -2,10 +2,11 @@
 
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
 
 import httpx
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.sitemap_parser import SitemapParser, SitemapURL
@@ -85,36 +86,59 @@ class SitemapImportService:
 
             # Check if this is a sitemap index by examining the content
             is_sitemap_index = "<sitemapindex" in sitemap_content
-            
+
             if is_sitemap_index:
                 logger.info(
                     f"Detected sitemap index with {len(extracted_urls)} child sitemaps. "
                     f"Fetching and processing child sitemaps for SitemapFile {sitemap_file_id}"
                 )
-                
+
                 # For sitemap indexes, fetch each child sitemap and extract page URLs
                 all_page_urls = []
-                
+
                 for child_sitemap_url in extracted_urls:
                     child_url_str = str(child_sitemap_url.loc)
                     logger.info(f"Fetching child sitemap: {child_url_str}")
-                    
+
                     try:
                         # Fetch child sitemap content
-                        async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
+                        async with httpx.AsyncClient(
+                            follow_redirects=True, timeout=60
+                        ) as client:
                             child_response = await client.get(child_url_str)
                             child_response.raise_for_status()
+
+                            # Validate content-type for XML
+                            content_type = child_response.headers.get(
+                                "content-type", ""
+                            ).lower()
+                            if (
+                                "text/html" in content_type
+                                or "text/plain" in content_type
+                            ):
+                                logger.warning(
+                                    f"Child sitemap {child_url_str} returned {content_type} "
+                                    f"instead of XML. Skipping."
+                                )
+                                continue
+
                             child_content = child_response.text
-                        
+
                         # Parse child sitemap for page URLs
-                        child_urls = self.sitemap_parser.parse(child_content, child_url_str)
-                        logger.info(f"Extracted {len(child_urls)} URLs from child sitemap: {child_url_str}")
+                        child_urls = self.sitemap_parser.parse(
+                            child_content, child_url_str
+                        )
+                        logger.info(
+                            f"Extracted {len(child_urls)} URLs from child sitemap: {child_url_str}"
+                        )
                         all_page_urls.extend(child_urls)
-                        
+
                     except Exception as e:
-                        logger.error(f"Failed to fetch/parse child sitemap {child_url_str}: {e}")
+                        logger.error(
+                            f"Failed to fetch/parse child sitemap {child_url_str}: {e}"
+                        )
                         continue
-                
+
                 # Replace extracted_urls with all page URLs from child sitemaps
                 extracted_urls = all_page_urls
                 logger.info(
@@ -161,21 +185,27 @@ class SitemapImportService:
                     "url": page_url,  # Renamed from sitemap_url_record.loc
                     "last_modified": sitemap_url_record.lastmod,  # Map from sitemap lastmod
                     "tenant_id": uuid.UUID(str(tenant_id)) if tenant_id else None,
-                    "sitemap_file_id": uuid.UUID(str(sitemap_file.id)) if sitemap_file.id else None,  # ADDED: Link page to its source sitemap
+                    "sitemap_file_id": uuid.UUID(str(sitemap_file.id))
+                    if sitemap_file.id
+                    else None,  # ADDED: Link page to its source sitemap
                     "lead_source": "sitemap_import",  # Add lead source
-                    # Honeybee fields  
-                    "page_type": hb["category"],  # Keep as enum object - SQLAlchemy should handle correctly
+                    # Honeybee fields
+                    "page_type": hb[
+                        "category"
+                    ],  # Keep as enum object - SQLAlchemy should handle correctly
                     "path_depth": hb["depth"],
                     "priority_level": 1 if hb["confidence"] >= 0.6 else 3,
                     "honeybee_json": {
                         "v": 1,
                         "decision": {
-                            "category": hb["category"].value,  # Store enum value, not enum object
+                            "category": hb[
+                                "category"
+                            ].value,  # Store enum value, not enum object
                             "confidence": hb["confidence"],
-                            "matched_regex": hb["matched"]
+                            "matched_regex": hb["matched"],
                         },
-                        "exclusions": hb["exclusions"]
-                    }
+                        "exclusions": hb["exclusions"],
+                    },
                 }
 
                 # Disposition instead of drop - mark processing status based on quality
@@ -185,7 +215,16 @@ class SitemapImportService:
                     page_data["page_processing_status"] = PageProcessingStatus.Queued
 
                 # Auto-select only high-value, shallow paths
-                if hb["category"] in {PageTypeEnum.CONTACT_ROOT, PageTypeEnum.CAREER_CONTACT, PageTypeEnum.LEGAL_ROOT} and hb["confidence"] >= 0.6 and hb["depth"] <= 2:
+                if (
+                    hb["category"]
+                    in {
+                        PageTypeEnum.CONTACT_ROOT,
+                        PageTypeEnum.CAREER_CONTACT,
+                        PageTypeEnum.LEGAL_ROOT,
+                    }
+                    and hb["confidence"] >= 0.6
+                    and hb["depth"] <= 2
+                ):
                     page_data["page_curation_status"] = PageCurationStatus.Selected
                     page_data["priority_level"] = 1  # enforce
 
@@ -198,14 +237,16 @@ class SitemapImportService:
                 if page_data_cleaned.get("url"):
                     try:
                         # Remove 'id' if present to let SQLAlchemy auto-generate
-                        page_data_cleaned.pop('id', None)
+                        page_data_cleaned.pop("id", None)
                         page = Page(**page_data_cleaned)
                         # Override BaseModel's broken string UUID with proper UUID object
                         page.id = uuid.uuid4()
                         pages_to_insert.append(page)
                         processed_urls.add(page_url)
                     except Exception as e:
-                        logger.error(f"Failed to create Page object for {page_url}: {e}")
+                        logger.error(
+                            f"Failed to create Page object for {page_url}: {e}"
+                        )
                         continue
                 else:
                     logger.warning(
@@ -230,40 +271,55 @@ class SitemapImportService:
 
             if pages_to_insert:
                 try:
-                    session.add_all(pages_to_insert)
-                    await (
-                        session.flush()
-                    )  # Flush to catch potential IntegrityErrors early
+                    # Convert Page objects to dictionaries for bulk insert
+                    page_dicts = []
+                    for page in pages_to_insert:
+                        page_dict = {
+                            "id": page.id,
+                            "tenant_id": page.tenant_id,
+                            "domain_id": page.domain_id,
+                            "url": page.url,
+                            "last_modified": page.last_modified,
+                            "sitemap_file_id": page.sitemap_file_id,
+                            "lead_source": page.lead_source,
+                            "page_type": page.page_type,
+                            "path_depth": page.path_depth,
+                            "priority_level": page.priority_level,
+                            "honeybee_json": page.honeybee_json,
+                            "page_processing_status": page.page_processing_status,
+                            "page_curation_status": page.page_curation_status,
+                            "created_at": datetime.now(timezone.utc),
+                            "updated_at": datetime.now(timezone.utc),
+                        }
+                        # Remove None values to avoid DB constraints
+                        page_dict = {
+                            k: v for k, v in page_dict.items() if v is not None
+                        }
+                        page_dicts.append(page_dict)
+
+                    # Use PostgreSQL INSERT with ON CONFLICT DO NOTHING
+                    insert_stmt = (
+                        pg_insert(Page)
+                        .values(page_dicts)
+                        .on_conflict_do_nothing(index_elements=["domain_id", "url"])
+                    )
+
+                    result = await session.execute(insert_stmt)
+                    await session.commit()
+
+                    # Get the number of rows actually inserted (PostgreSQL specific)
+                    rows_inserted = result.rowcount if result.rowcount else 0
+                    rows_skipped = len(pages_to_insert) - rows_inserted
+
                     logger.info(
-                        f"Successfully added {len(pages_to_insert)} Page records "
-                        f"for SitemapFile {sitemap_file_id}."
+                        f"Bulk insert completed for SitemapFile {sitemap_file_id}: "
+                        f"{rows_inserted} rows inserted, {rows_skipped} duplicates skipped."
                     )
-                except IntegrityError as ie:
-                    await session.rollback()  # Rollback the failed batch
-                    logger.error(
-                        f"IntegrityError adding pages for SitemapFile "
-                        f"{sitemap_file_id}. Error: {ie}. Attempting individual inserts."
-                    )
-                    # Attempt individual inserts to salvage what we can
-                    pages_added_count = 0
-                    for page_rec in pages_to_insert:
-                        try:
-                            session.add(page_rec)
-                            await session.flush()
-                            pages_added_count += 1
-                        except IntegrityError:
-                            await session.rollback()
-                            logger.warning(
-                                f"Skipping duplicate/error page URL: {page_rec.url}"
-                            )
-                    logger.info(
-                        f"Added {pages_added_count} pages individually after bulk "
-                        f"insert failure for {sitemap_file_id}."
-                    )
+
                 except Exception as bulk_e:
                     await session.rollback()
                     logger.error(
-                        f"Unexpected error during bulk insert for SitemapFile "
+                        f"Error during bulk insert for SitemapFile "
                         f"{sitemap_file_id}: {bulk_e}"
                     )
                     raise  # Re-raise to trigger outer error handling
