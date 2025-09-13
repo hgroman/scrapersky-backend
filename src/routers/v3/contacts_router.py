@@ -119,13 +119,13 @@ async def list_contacts(
     """Retrieve a list of contacts with filtering and pagination."""
     filters = []
     if contact_curation_status:
-        filters.append(Contact.contact_curation_status == contact_curation_status)
+        filters.append(Contact.contact_curation_status == contact_curation_status.value)
     if contact_processing_status:
-        filters.append(Contact.contact_processing_status == contact_processing_status)
+        filters.append(Contact.contact_processing_status == contact_processing_status.value)
     if hubspot_sync_status:
-        filters.append(Contact.hubspot_sync_status == hubspot_sync_status)
+        filters.append(Contact.hubspot_sync_status == hubspot_sync_status.value)
     if email_type:
-        filters.append(Contact.email_type == email_type)
+        filters.append(Contact.email_type == email_type.value)
     if domain_id:
         filters.append(Contact.domain_id == domain_id)
     if page_id:
@@ -164,10 +164,10 @@ async def batch_update_status(
     updated_count = 0
     queued_count = 0
     for contact in contacts_to_update:
-        contact.contact_curation_status = update_request.status
+        contact.contact_curation_status = update_request.status.value
         updated_count += 1
-        if update_request.status == ContactCurationStatus.Queued:
-            contact.contact_processing_status = ContactProcessingStatus.Queued
+        if update_request.status == ContactCurationStatus.Queued:  # noqa: SCRAPERSKY-E102 - Python enum comparison
+            contact.contact_processing_status = ContactProcessingStatus.Queued.value
             contact.contact_processing_error = None
             queued_count += 1
 
@@ -186,13 +186,13 @@ async def filtered_batch_update_status(
     """Batch update status for all contacts matching filter criteria."""
     filters = []
     if update_request.contact_curation_status:
-        filters.append(Contact.contact_curation_status == update_request.contact_curation_status)
+        filters.append(Contact.contact_curation_status == update_request.contact_curation_status.value)
     if update_request.contact_processing_status:
-        filters.append(Contact.contact_processing_status == update_request.contact_processing_status)
+        filters.append(Contact.contact_processing_status == update_request.contact_processing_status.value)
     if update_request.hubspot_sync_status:
-        filters.append(Contact.hubspot_sync_status == update_request.hubspot_sync_status)
+        filters.append(Contact.hubspot_sync_status == update_request.hubspot_sync_status.value)
     if update_request.email_type:
-        filters.append(Contact.email_type == update_request.email_type)
+        filters.append(Contact.email_type == update_request.email_type.value)
     if update_request.domain_id:
         filters.append(Contact.domain_id == update_request.domain_id)
     if update_request.page_id:
@@ -214,10 +214,10 @@ async def filtered_batch_update_status(
     updated_count = 0
     queued_count = 0
     for contact in contacts_to_update:
-        contact.contact_curation_status = update_request.status
+        contact.contact_curation_status = update_request.status.value
         updated_count += 1
-        if update_request.status == ContactCurationStatus.Queued:
-            contact.contact_processing_status = ContactProcessingStatus.Queued
+        if update_request.status == ContactCurationStatus.Queued:  # noqa: SCRAPERSKY-E102 - Python enum comparison
+            contact.contact_processing_status = ContactProcessingStatus.Queued.value
             contact.contact_processing_error = None
             queued_count += 1
 
