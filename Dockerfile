@@ -20,6 +20,7 @@ WORKDIR /app
 
 # Copy only requirements to leverage Docker layer caching
 COPY requirements.txt /app/
+COPY requirements/ /app/requirements/
 
 # Install dependencies into a local user path
 RUN pip install --user --no-cache-dir -r requirements.txt

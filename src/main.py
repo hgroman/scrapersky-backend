@@ -46,6 +46,7 @@ from .routers.modernized_sitemap import router as modernized_sitemap_api_router
 from .routers.places_staging import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
 from .routers.sitemap_files import router as sitemap_files_router
+from .routers.v3.contacts_router import router as contacts_router
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
@@ -283,6 +284,7 @@ app.include_router(places_staging_api_router, prefix="/api/v3")
 app.include_router(local_businesses_api_router)
 app.include_router(domains_api_router, tags=["Domains"])
 app.include_router(sitemap_files_router)
+app.include_router(contacts_router)
 app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"])
 
 logger.info("API routers included.")
