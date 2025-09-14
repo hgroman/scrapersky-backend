@@ -288,8 +288,7 @@ class SitemapImportService:
                             "honeybee_json": page.honeybee_json,
                             "page_processing_status": page.page_processing_status,
                             "page_curation_status": page.page_curation_status,
-                            "created_at": datetime.now(timezone.utc),
-                            "updated_at": datetime.now(timezone.utc),
+                            # created_at & updated_at will use BaseModel's server_default=func.now()
                         }
                         # Remove None values to avoid DB constraints
                         page_dict = {
