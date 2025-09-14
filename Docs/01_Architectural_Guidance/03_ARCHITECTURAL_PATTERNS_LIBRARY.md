@@ -379,6 +379,28 @@ async def endpoint(
 **Prevention:** Commit threshold of 80 files
 **Verification:** `git status | wc -l`
 
+### ❌ ANTI-PATTERN 17: SQLAlchemy Enum Comparison Bug ⚠️ **CRITICAL**
+**Source:** Contacts CRUD Crisis (2025-09-13), War Story: Enum_Implementation_Train_Wreck__2025-09-12.md
+**Pattern:** Using enum objects directly in SQLAlchemy comparisons/assignments
+**PostgreSQL Error:** `operator does not exist: enum_type = customenumtype`
+**Example:**
+```python
+# ❌ WRONG: Direct enum comparison (BREAKS DATABASE QUERIES)
+filters.append(Contact.status == ContactStatus.New)  # FAILS!
+contact.status = ContactStatus.Active  # FAILS!
+
+# ✅ CORRECT: Always use .value for SQLAlchemy operations
+filters.append(Contact.status == ContactStatus.New.value)  # WORKS!
+contact.status = ContactStatus.Active.value  # WORKS!
+```
+**🤖 AI PARTNER WARNING:** This is a recurring bug that breaks production. ALWAYS use `.value` when:
+- Comparing enum fields in SQLAlchemy queries (`Model.enum_field == MyEnum.VALUE.value`)
+- Assigning enum values to model fields (`model.enum_field = MyEnum.VALUE.value`)
+- Python enum-to-enum comparisons are fine: `request.status == MyEnum.VALUE` ✅
+
+**Prevention:** Check every enum operation in SQLAlchemy contexts
+**Verification:** Test all enum filtering before deployment
+
 <!-- WF7 POSTMORTEM INTEGRATION END -->
 
 ---

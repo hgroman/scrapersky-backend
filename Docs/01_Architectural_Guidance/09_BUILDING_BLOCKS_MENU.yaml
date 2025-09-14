@@ -28,6 +28,30 @@ building_blocks:
     # ... (fastapi_health_check content as before)
 
   architecture:
+    sqlalchemy_enum_safety:
+      name: "SQLAlchemy Enum Value Pattern"
+      description: "CRITICAL: Prevents the recurring enum comparison bug that breaks database queries with 'operator does not exist' errors."
+      template: |
+        # === BATTLE-TESTED SQLALCHEMY ENUM PATTERN ===
+        # MANDATORY: Always use .value for enum database operations
+        # WHY: See Anti-Pattern 17 in 03_ARCHITECTURAL_PATTERNS_LIBRARY.md
+
+        # ✅ CORRECT: Enum filtering
+        filters = []
+        if status_filter:
+            filters.append(Model.status == status_filter.value)  # ALWAYS .value
+
+        # ✅ CORRECT: Enum assignment
+        model.status = MyEnum.Active.value  # ALWAYS .value
+
+        # ✅ CORRECT: Enum in batch updates
+        for record in records:
+            record.status = new_status.value  # ALWAYS .value
+
+        # 🤖 AI PARTNER REMINDER:
+        # - Model.enum_field == MyEnum.VALUE.value  ✅ (SQLAlchemy - use .value)
+        # - request.status == MyEnum.VALUE         ✅ (Python enum comparison - no .value)
+
     clean_deprecation:
       name: "Clean Legacy System Deprecation Pattern"
       description: "The mandatory process for replacing a legacy system with a new one to avoid parallel conflicting workflows."
