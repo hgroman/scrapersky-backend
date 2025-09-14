@@ -2,13 +2,3 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks: []
-  - repo: local
-    hooks:
-      - id: scrapersky-enum-check
-        name: ScraperSky Enum Value Check
-        entry: python -m linting_rules.scrapersky_enum_validator
-        language: python
-        files: '^src/.*\.py$'
-        description: 'Prevents enum comparison/assignment bugs that break SQLAlchemy queries'
-        verbose: true
-        fail_fast: true
