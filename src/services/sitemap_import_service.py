@@ -208,14 +208,11 @@ class SitemapImportService:
                     },
                 }
 
-                # Disposition instead of drop - mark processing status based on quality
+                # Disposition and dual adapter logic - only queue Selected pages
                 if hb["decision"] == "skip" or hb["confidence"] < 0.2:
                     page_data["page_processing_status"] = PageProcessingStatus.Filtered
-                else:
-                    page_data["page_processing_status"] = PageProcessingStatus.Queued
-
-                # Auto-select only high-value, shallow paths
-                if (
+                    page_data["page_curation_status"] = PageCurationStatus.New
+                elif (
                     hb["category"]
                     in {
                         PageTypeEnum.CONTACT_ROOT,
@@ -225,8 +222,14 @@ class SitemapImportService:
                     and hb["confidence"] >= 0.6
                     and hb["depth"] <= 2
                 ):
+                    # Auto-select high-value, shallow paths and queue for processing
                     page_data["page_curation_status"] = PageCurationStatus.Selected
+                    page_data["page_processing_status"] = PageProcessingStatus.Queued
                     page_data["priority_level"] = 1  # enforce
+                else:
+                    # Default: New pages wait for manual curation
+                    page_data["page_curation_status"] = PageCurationStatus.New
+                    page_data["page_processing_status"] = PageProcessingStatus.New
 
                 # Remove None values before creating Page to avoid DB constraint errors
                 page_data_cleaned = {
