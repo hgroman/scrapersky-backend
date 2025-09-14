@@ -116,7 +116,7 @@ class Place(Base):
             create_type=False,
         ),
         nullable=True,
-        default=GcpApiDeepScanStatusEnum.Queued,
+        default=None,
     )
     # ------------------------------------------------- #
 
