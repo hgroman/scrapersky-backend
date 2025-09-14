@@ -84,48 +84,57 @@ class PageCurationService:
                 if real_emails:
                     contact_email = real_emails[0]  # Use first real email found
                     contact_name = f"Contact at {domain_name}"
+                    # Mark page as having contact found
+                    from src.models.enums import ContactScrapeStatus
+                    page.contact_scrape_status = ContactScrapeStatus.ContactFound.value
                     logging.info(f"Found REAL email: {contact_email}")
                 elif emails:
                     # Even system emails are better than fake ones
                     contact_email = emails[0]
                     contact_name = f"Contact at {domain_name}"
+                    # Mark page as having contact found
+                    from src.models.enums import ContactScrapeStatus
+                    page.contact_scrape_status = ContactScrapeStatus.ContactFound.value
                     logging.info(f"Found system email: {contact_email}")
                 else:
-                    # Create a unique "not found" record using page_id to ensure uniqueness
-                    page_id_short = str(page_id).split('-')[0]  # Use first part of UUID
-                    contact_email = f"notfound_{page_id_short}@{domain_name}"
-                    contact_name = f"No Contact Found - {domain_name}"
-                    logging.info(f"No emails found, creating unique placeholder: {contact_email}")
+                    # No emails found - update page status instead of creating fake contact
+                    from src.models.enums import ContactScrapeStatus
+                    page.contact_scrape_status = ContactScrapeStatus.NoContactFound.value
+                    logging.info(f"No emails found, marked page {page_id} as NoContactFound")
+                    # Skip contact creation but continue to set page processing status
+                    contact_email = None
                 
-                contact_phone = phones[0] if phones else "Phone not found"
-                
-                # Check if contact already exists for this domain and email
-                existing_contact_stmt = select(Contact).where(
-                    and_(
-                        Contact.domain_id == page.domain_id,
-                        Contact.email == contact_email
+                # Only create contacts if we found email addresses
+                if contact_email:
+                    contact_phone = phones[0] if phones else "Phone not found"
+
+                    # Check if contact already exists for this domain and email
+                    existing_contact_stmt = select(Contact).where(
+                        and_(
+                            Contact.domain_id == page.domain_id,
+                            Contact.email == contact_email
+                        )
                     )
-                )
-                existing_result = await session.execute(existing_contact_stmt)
-                existing_contact = existing_result.scalar_one_or_none()
-                
-                if existing_contact:
-                    logging.info(f"Contact already exists for {domain_name}: {contact_email} (ID: {existing_contact.id})")
-                    # Update phone if we found a better one
-                    if contact_phone != "Phone not found" and existing_contact.phone_number == "Phone not found":
-                        existing_contact.phone_number = contact_phone[:50]
-                        logging.info(f"Updated existing contact phone: {contact_phone}")
-                else:
-                    # Create new contact
-                    new_contact = Contact(
-                        domain_id=page.domain_id,
-                        page_id=page.id,
-                        name=contact_name,
-                        email=contact_email,
-                        phone_number=contact_phone[:50],  # Limit length
-                    )
-                    session.add(new_contact)
-                    logging.info(f"Created REAL contact for {domain_name}: {contact_email} | {contact_phone}")
+                    existing_result = await session.execute(existing_contact_stmt)
+                    existing_contact = existing_result.scalar_one_or_none()
+
+                    if existing_contact:
+                        logging.info(f"Contact already exists for {domain_name}: {contact_email} (ID: {existing_contact.id})")
+                        # Update phone if we found a better one
+                        if contact_phone != "Phone not found" and existing_contact.phone_number == "Phone not found":
+                            existing_contact.phone_number = contact_phone[:50]
+                            logging.info(f"Updated existing contact phone: {contact_phone}")
+                    else:
+                        # Create new contact
+                        new_contact = Contact(
+                            domain_id=page.domain_id,
+                            page_id=page.id,
+                            name=contact_name,
+                            email=contact_email,
+                            phone_number=contact_phone[:50],  # Limit length
+                        )
+                        session.add(new_contact)
+                        logging.info(f"Created REAL contact for {domain_name}: {contact_email} | {contact_phone}")
 
             except Exception as e:
                 logging.error(f"Error creating contact for page {page.id}: {e}")

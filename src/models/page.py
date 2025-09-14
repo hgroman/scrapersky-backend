@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
-from .enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
+from .enums import ContactScrapeStatus, PageCurationStatus, PageProcessingStatus, PageTypeEnum
 
 
 class Page(Base, BaseModel):
@@ -136,6 +136,14 @@ class Page(Base, BaseModel):
     honeybee_json: Column[dict] = Column(JSONB, nullable=False, default=dict)
     priority_level: Column[Optional[int]] = Column(Integer, nullable=True, index=True)
     path_depth: Column[Optional[int]] = Column(Integer, nullable=True, index=True)
+
+    # Contact extraction status
+    contact_scrape_status = Column(
+        SQLAlchemyEnum(ContactScrapeStatus, name='contact_scrape_status', create_type=False, native_enum=True),
+        nullable=False,
+        default=ContactScrapeStatus.New,
+        index=True,
+    )
 
     # Relationships
     domain = relationship("Domain", back_populates="pages")
