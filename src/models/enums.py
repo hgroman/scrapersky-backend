@@ -66,6 +66,16 @@ class HubSpotProcessingStatus(str, Enum):
     Error = "Error"
 
 
+class ContactScrapeStatus(str, Enum):
+    """Status values for contact extraction from pages"""
+
+    New = "New"
+    ContactFound = "ContactFound"
+    NoContactFound = "NoContactFound"
+    Error = "Error"
+    NotAFit = "NotAFit"
+
+
 class PageCurationStatus(str, Enum):
     """Status values for page curation workflow"""
 

@@ -10,7 +10,7 @@ Compliance: 100% Layer 2 Blueprint Adherent
 from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 import uuid
-from src.models.enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
+from src.models.enums import ContactScrapeStatus, PageCurationStatus, PageProcessingStatus, PageTypeEnum
 
 
 class PageCurationBatchStatusUpdateRequest(BaseModel):
@@ -46,6 +46,7 @@ class PageCurationFilteredUpdateRequest(BaseModel):
     page_curation_status: Optional[PageCurationStatus] = None
     page_processing_status: Optional[PageProcessingStatus] = None
     page_type: Optional[PageTypeEnum] = None
+    contact_scrape_status: Optional[ContactScrapeStatus] = None
     url_contains: Optional[str] = None
 
 

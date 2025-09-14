@@ -132,6 +132,7 @@ class PageCurationService:
                             name=contact_name,
                             email=contact_email,
                             phone_number=contact_phone[:50],  # Limit length
+                            source_url=page.url,  # Populate from page URL
                         )
                         session.add(new_contact)
                         logging.info(f"Created REAL contact for {domain_name}: {contact_email} | {contact_phone}")
