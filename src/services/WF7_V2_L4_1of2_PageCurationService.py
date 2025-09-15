@@ -62,7 +62,31 @@ class PageCurationService:
 
             except Exception as e:
                 logging.error(f"Error during ScraperAPI content extraction for {page_url}: {e}")
-                html_content = ""
+
+                # Fallback to direct HTTP when ScraperAPI fails (e.g., credit exhausted)
+                try:
+                    logging.info(f"Attempting direct HTTP fallback for {page_url}")
+                    import aiohttp
+                    timeout = aiohttp.ClientTimeout(total=30)
+                    async with aiohttp.ClientSession(timeout=timeout) as fallback_session:
+                        headers = {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.5',
+                            'Accept-Encoding': 'gzip, deflate',
+                            'Connection': 'keep-alive',
+                            'Upgrade-Insecure-Requests': '1',
+                        }
+                        async with fallback_session.get(page_url, headers=headers) as response:
+                            if response.status == 200:
+                                html_content = await response.text()
+                                logging.info(f"Direct HTTP fallback successful for {page_url} (Length: {len(html_content)} chars)")
+                            else:
+                                logging.warning(f"Direct HTTP fallback failed: HTTP {response.status} for {page_url}")
+                                html_content = ""
+                except Exception as fallback_e:
+                    logging.error(f"Direct HTTP fallback also failed for {page_url}: {fallback_e}")
+                    html_content = ""
 
             # 3. Extract REAL contact info using proven regex patterns from metadata_extractor.py
             try:
