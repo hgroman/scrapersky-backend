@@ -229,7 +229,8 @@ class SitemapImportService:
                 else:
                     # Default: New pages wait for manual curation
                     page_data["page_curation_status"] = PageCurationStatus.New
-                    page_data["page_processing_status"] = PageProcessingStatus.New
+                    # Pages are successfully created, mark as Complete (not queued for WF7)
+                    page_data["page_processing_status"] = PageProcessingStatus.Complete
 
                 # Remove None values before creating Page to avoid DB constraint errors
                 page_data_cleaned = {
