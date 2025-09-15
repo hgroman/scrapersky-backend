@@ -125,7 +125,7 @@ class LocalBusiness(Base):
             create_type=False,
         ),
         nullable=True,
-        default=DomainExtractionStatusEnum.Queued,
+        default=None,
         index=True,
     )
     domain_extraction_error = Column(String, nullable=True)  # To store error messages
