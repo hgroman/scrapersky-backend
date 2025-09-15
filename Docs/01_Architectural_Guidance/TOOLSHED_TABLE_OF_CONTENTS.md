@@ -1,7 +1,7 @@
 # The Architect's Toolshed
 
-**Updated:** 2025-09-13
-**Documents:** 17
+**Updated:** 2025-09-14
+**Documents:** 20
 **Purpose:** Complete architectural decision-making system
 
 ## Core Toolshed (7 Documents)
@@ -32,40 +32,56 @@
 
 ## Core Architectural Guides
 
-8. **[developer_guides/SCRAPERSKY_DATABASE_DEVELOPER_GUIDE.md](./developer_guides/SCRAPERSKY_DATABASE_DEVELOPER_GUIDE.md)** 📘
+8. **[developer_guides.yaml](./developer_guides.yaml)** 🔧
+   - **Machine-readable registry of all developer guidance documents**
+   - Structured ledger with metadata for discovery and navigation
+
+9. **[developer_guides/SCRAPERSKY_DATABASE_DEVELOPER_GUIDE.md](./developer_guides/SCRAPERSKY_DATABASE_DEVELOPER_GUIDE.md)** 📘
    - **Mandatory patterns for database interactions**
    - Links to templates and war stories
 
+10. **[developer_guides/DUAL_ADAPTER_SYSTEM_TECHNICAL_GUIDE.md](./developer_guides/DUAL_ADAPTER_SYSTEM_TECHNICAL_GUIDE.md)** 🔄
+    - **Production-verified dual adapter pattern reference**
+    - Complete technical guide for WF2-WF7 workflow progression
+    - Anti-pattern detection and emergency fix procedures
+
 ## Extended Toolshed
 
-9. **[START_HERE_ARCHITECT_PROTOCOL.md](./START_HERE_ARCHITECT_PROTOCOL.md)**
-   - MANDATORY onboarding for The Architect
+11. **[START_HERE_ARCHITECT_PROTOCOL.md](./START_HERE_ARCHITECT_PROTOCOL.md)**
+    - MANDATORY onboarding for The Architect
 
-10. **[06_GIT_STATUS_DIAGNOSTICS.md](./06_GIT_STATUS_DIAGNOSTICS.md)**
+12. **[06_GIT_STATUS_DIAGNOSTICS.md](./06_GIT_STATUS_DIAGNOSTICS.md)**
     - Using Git as a system health monitor
 
-11. **[09_BUILDING_BLOCKS_CATALOG.md](./09_BUILDING_BLOCKS_CATALOG.md)** ⚠️ **[DEPRECATED]**
+13. **[09_BUILDING_BLOCKS_CATALOG.md](./09_BUILDING_BLOCKS_CATALOG.md)** ⚠️ **[DEPRECATED]**
     - Human-readable catalog of legacy patterns.
 
-12. **[09_BUILDING_BLOCKS_MENU.yaml](./09_BUILDING_BLOCKS_MENU.yaml)** 🔧
+14. **[09_BUILDING_BLOCKS_MENU.yaml](./09_BUILDING_BLOCKS_MENU.yaml)** 🔧
     - **Machine-readable database of code patterns**
 
 ## War Stories & Post-Mortems
 
-13. **[war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md](./war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md)** 📜
+15. **[war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md](./war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md)** 📜
     - The "Why" behind the strict Enum pattern
 
-14. **[war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md](./war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md)** 📜
+16. **[war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md](./war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md)** 📜
     - The "Why" behind strict external library validation
 
-15. **[war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md](./war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md)** 📜
+17. **[war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md](./war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md)** 📜
     - The "Why" behind verifying business value, not just technical success
 
-16. **[war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md)** 🎯
+18. **[war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md)** 🎯
     - A deep catalog of success patterns extracted from the WF7 crisis.
 
-17. **[war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md)** ⚠️
+19. **[war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md)** ⚠️
     - A deep catalog of failures from the WF7 crisis.
 
-18. **[war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md](./war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md)** 💥
+20. **[war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md](./war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md)** 💥
     - The "Why" behind cleanly deprecating legacy systems.
+
+## Dormant Code Intelligence
+
+21. **[dormant_code/](./dormant_code/)** 🔍
+    - **Awareness catalog of dormant but discoverable code**
+    - Prevents rabbit holes into commented/disabled services
+    - Quick reference: "This exists but is inactive - don't investigate"

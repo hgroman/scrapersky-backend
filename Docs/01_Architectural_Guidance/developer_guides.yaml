@@ -1,0 +1,29 @@
+# ScraperSky Developer Guides Ledger
+# Machine-readable registry of all developer guidance documents
+# Last Updated: 2025-09-14
+
+developer_guides:
+  database_guide:
+    presence: active
+    name: "ScraperSky Database Developer Guide"
+    description: "Mandatory patterns for database interactions, session management, and transaction handling. Links to templates and war stories."
+    full_path: "./developer_guides/SCRAPERSKY_DATABASE_DEVELOPER_GUIDE.md"
+    icon: "📘"
+    status: "mandatory"
+    last_updated: "2025-09-13"
+
+  dual_adapter_guide:
+    presence: active
+    name: "Dual Adapter System Technical Guide"
+    description: "Complete technical reference for the dual adapter pattern controlling workflow progression. Covers all 6 dual adapters (WF2-WF7), database schema truth, anti-patterns, and debugging procedures."
+    full_path: "./developer_guides/DUAL_ADAPTER_SYSTEM_TECHNICAL_GUIDE.md"
+    icon: "🔄"
+    status: "critical"
+    last_updated: "2025-09-14"
+    keywords: ["dual adapter", "workflow", "curation", "processing", "anti-pattern", "auto-queuing"]
+    covers_workflows: ["WF2", "WF3", "WF4", "WF5", "WF6", "WF7"]
+
+meta:
+  total_guides: 2
+  last_audit: "2025-09-14"
+  purpose: "Structured registry of developer guidance documents with metadata for discovery and navigation"
