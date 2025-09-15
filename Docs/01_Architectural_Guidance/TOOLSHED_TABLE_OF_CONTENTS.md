@@ -1,7 +1,7 @@
 # The Architect's Toolshed
 
 **Updated:** 2025-09-14
-**Documents:** 20
+**Documents:** 21
 **Purpose:** Complete architectural decision-making system
 
 ## Core Toolshed (7 Documents)
@@ -45,43 +45,48 @@
     - Complete technical guide for WF2-WF7 workflow progression
     - Anti-pattern detection and emergency fix procedures
 
+11. **[product_requirements/PRD_CONFIGURABLE_DUAL_ADAPTER_SYSTEM.md](./product_requirements/PRD_CONFIGURABLE_DUAL_ADAPTER_SYSTEM.md)** 📋
+    - **Product roadmap for configurable workflow automation**
+    - Business case and technical architecture for auto/manual modes
+    - Implementation phases and quality evaluation framework
+
 ## Extended Toolshed
 
-11. **[START_HERE_ARCHITECT_PROTOCOL.md](./START_HERE_ARCHITECT_PROTOCOL.md)**
+12. **[START_HERE_ARCHITECT_PROTOCOL.md](./START_HERE_ARCHITECT_PROTOCOL.md)**
     - MANDATORY onboarding for The Architect
 
-12. **[06_GIT_STATUS_DIAGNOSTICS.md](./06_GIT_STATUS_DIAGNOSTICS.md)**
+13. **[06_GIT_STATUS_DIAGNOSTICS.md](./06_GIT_STATUS_DIAGNOSTICS.md)**
     - Using Git as a system health monitor
 
-13. **[09_BUILDING_BLOCKS_CATALOG.md](./09_BUILDING_BLOCKS_CATALOG.md)** ⚠️ **[DEPRECATED]**
+14. **[09_BUILDING_BLOCKS_CATALOG.md](./09_BUILDING_BLOCKS_CATALOG.md)** ⚠️ **[DEPRECATED]**
     - Human-readable catalog of legacy patterns.
 
-14. **[09_BUILDING_BLOCKS_MENU.yaml](./09_BUILDING_BLOCKS_MENU.yaml)** 🔧
+15. **[09_BUILDING_BLOCKS_MENU.yaml](./09_BUILDING_BLOCKS_MENU.yaml)** 🔧
     - **Machine-readable database of code patterns**
 
 ## War Stories & Post-Mortems
 
-15. **[war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md](./war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md)** 📜
+16. **[war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md](./war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md)** 📜
     - The "Why" behind the strict Enum pattern
 
-16. **[war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md](./war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md)** 📜
+17. **[war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md](./war_stories/WAR_STORY__WF7_Crawl4ai_Attribute_Fix__2025-08-25.md)** 📜
     - The "Why" behind strict external library validation
 
-17. **[war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md](./war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md)** 📜
+18. **[war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md](./war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md)** 📜
     - The "Why" behind verifying business value, not just technical success
 
-18. **[war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md)** 🎯
+19. **[war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Pattern_Catalog_Synthesis.md)** 🎯
     - A deep catalog of success patterns extracted from the WF7 crisis.
 
-19. **[war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md)** ⚠️
+20. **[war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md](./war_stories/WAR_STORY__WF7_Anti-Pattern_Catalog_Synthesis.md)** ⚠️
     - A deep catalog of failures from the WF7 crisis.
 
-20. **[war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md](./war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md)** 💥
+21. **[war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md](./war_stories/WAR_STORY__Dual_Sitemap_Pipeline_Conflict_RCA__2025-09-09.md)** 💥
     - The "Why" behind cleanly deprecating legacy systems.
 
 ## Dormant Code Intelligence
 
-21. **[dormant_code/](./dormant_code/)** 🔍
+22. **[dormant_code/](./dormant_code/)** 🔍
     - **Awareness catalog of dormant but discoverable code**
     - Prevents rabbit holes into commented/disabled services
     - Quick reference: "This exists but is inactive - don't investigate"

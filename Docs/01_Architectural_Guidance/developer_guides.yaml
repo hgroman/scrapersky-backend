@@ -23,7 +23,20 @@ developer_guides:
     keywords: ["dual adapter", "workflow", "curation", "processing", "anti-pattern", "auto-queuing"]
     covers_workflows: ["WF2", "WF3", "WF4", "WF5", "WF6", "WF7"]
 
+product_requirements:
+  dual_adapter_automation_prd:
+    presence: active
+    name: "Configurable Dual Adapter System PRD"
+    description: "Product requirements document for implementing configurable manual/auto modes across all dual adapter workflows. Defines business case, technical architecture, and implementation roadmap for workflow automation."
+    full_path: "./product_requirements/PRD_CONFIGURABLE_DUAL_ADAPTER_SYSTEM.md"
+    icon: "📋"
+    status: "roadmap"
+    last_updated: "2025-09-14"
+    keywords: ["automation", "configuration", "product requirements", "roadmap", "quality thresholds"]
+    covers_workflows: ["WF2", "WF3", "WF4", "WF5", "WF6", "WF7"]
+
 meta:
   total_guides: 2
+  total_prds: 1
   last_audit: "2025-09-14"
-  purpose: "Structured registry of developer guidance documents with metadata for discovery and navigation"
+  purpose: "Structured registry of developer guidance documents and product requirements with metadata for discovery and navigation"
