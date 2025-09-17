@@ -65,6 +65,7 @@ class PageCurationService:
             except Exception as e:
                 logging.error(f"Error during ScraperAPI content extraction for {page_url}: {e}")
                 logging.error(f"Exception type: {type(e).__name__}, Starting fallback process...")
+                logging.error(f"html_content state before fallback: '{html_content}' (length: {len(html_content) if html_content else 0})")
 
                 # Fallback to direct HTTP when ScraperAPI fails (e.g., credit exhausted)
                 try:
