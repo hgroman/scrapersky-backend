@@ -63,10 +63,11 @@ class PageCurationService:
 
             except Exception as e:
                 logging.error(f"Error during ScraperAPI content extraction for {page_url}: {e}")
+                logging.error(f"Exception type: {type(e).__name__}, Starting fallback process...")
 
                 # Fallback to direct HTTP when ScraperAPI fails (e.g., credit exhausted)
                 try:
-                    logging.info(f"Attempting direct HTTP fallback for {page_url}")
+                    logging.info(f"🔄 FALLBACK TRIGGER: Attempting direct HTTP fallback for {page_url}")
                     import aiohttp
                     timeout = aiohttp.ClientTimeout(total=30)
                     async with aiohttp.ClientSession(timeout=timeout) as fallback_session:
@@ -88,6 +89,8 @@ class PageCurationService:
                 except Exception as fallback_e:
                     logging.error(f"Direct HTTP fallback also failed for {page_url}: {fallback_e}")
                     html_content = ""
+
+                logging.info(f"🔄 FALLBACK COMPLETE: Fallback finished for {page_url}, content length: {len(html_content)}")
 
             # 3. Extract REAL contact info using proven regex patterns from metadata_extractor.py
             try:
