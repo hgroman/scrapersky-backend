@@ -3,13 +3,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
-from .enums import (
-    ContactCurationStatus,
-    ContactEmailTypeEnum,
-    ContactProcessingStatus,
-    HubSpotProcessingStatus,
-    HubSpotSyncStatus,
-)
 
 
 class Contact(Base, BaseModel):
@@ -20,7 +13,7 @@ class Contact(Base, BaseModel):
     page_id = Column(UUID(as_uuid=True), ForeignKey("pages.id"), nullable=False, index=True)
 
     email = Column(String, nullable=False, index=True)
-    email_type = Column(Enum(ContactEmailTypeEnum, create_type=False, native_enum=True), nullable=True)
+    email_type = Column(Enum('SERVICE', 'CORPORATE', 'FREE', 'UNKNOWN', name='contactemailtypeenum'), nullable=True)
     has_gmail = Column(Boolean, default=False, nullable=True)
     context = Column(Text, nullable=True)
     source_url = Column(Text, nullable=True)
@@ -30,26 +23,26 @@ class Contact(Base, BaseModel):
     phone_number = Column(String, nullable=True)
 
     contact_curation_status = Column(
-        Enum(ContactCurationStatus, create_type=False, native_enum=True),
+        Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='contactcurationstatus'),
         nullable=False,
-        default=ContactCurationStatus.New,
+        default='New',
         index=True,
     )
     contact_processing_status = Column(
-        Enum(ContactProcessingStatus, create_type=False, native_enum=True),
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='contactprocessingstatus'),
         nullable=True,
         index=True,
     )
     contact_processing_error = Column(Text, nullable=True)
 
     hubspot_sync_status = Column(
-        Enum(HubSpotSyncStatus, create_type=False, native_enum=True),
+        Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='hubspot_sync_status'),
         nullable=False,
-        default=HubSpotSyncStatus.New,
+        default='New',
         index=True,
     )
     hubspot_processing_status = Column(
-        Enum(HubSpotProcessingStatus, create_type=False, native_enum=True),
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='hubspot_sync_processing_status'),
         nullable=True,
         index=True,
     )
