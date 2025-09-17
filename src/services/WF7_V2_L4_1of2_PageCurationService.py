@@ -56,7 +56,8 @@ class PageCurationService:
                 
                 if not html_content or len(html_content) < 10:
                     logging.warning(f"No meaningful content extracted from URL: {page_url}")
-                    html_content = ""
+                    # Trigger fallback when ScraperAPI returns empty/minimal content
+                    raise ValueError("ScraperAPI returned insufficient content, triggering fallback")
                 else:
                     logging.info(f"Extracted {len(html_content)} characters from {page_url}")
 
