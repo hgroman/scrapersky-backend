@@ -109,22 +109,19 @@ class PageCurationService:
                 if real_emails:
                     contact_email = real_emails[0]  # Use first real email found
                     contact_name = f"Contact at {domain_name}"
-                    # Mark page as having contact found
-                    from src.models.enums import ContactScrapeStatus
-                    page.contact_scrape_status = ContactScrapeStatus.ContactFound.value
+                    # Mark page as having contact found - use existing database enum values
+                    page.contact_scrape_status = 'ContactFound'
                     logging.info(f"Found REAL email: {contact_email}")
                 elif emails:
                     # Even system emails are better than fake ones
                     contact_email = emails[0]
                     contact_name = f"Contact at {domain_name}"
-                    # Mark page as having contact found
-                    from src.models.enums import ContactScrapeStatus
-                    page.contact_scrape_status = ContactScrapeStatus.ContactFound.value
+                    # Mark page as having contact found - use existing database enum values
+                    page.contact_scrape_status = 'ContactFound'
                     logging.info(f"Found system email: {contact_email}")
                 else:
                     # No emails found - update page status instead of creating fake contact
-                    from src.models.enums import ContactScrapeStatus
-                    page.contact_scrape_status = ContactScrapeStatus.NoContactFound.value
+                    page.contact_scrape_status = 'NoContactFound'
                     logging.info(f"No emails found, marked page {page_id} as NoContactFound")
                     # Skip contact creation but continue to set page processing status
                     contact_email = None
