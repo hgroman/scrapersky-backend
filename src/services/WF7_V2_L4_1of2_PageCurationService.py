@@ -3,6 +3,7 @@ import re
 import asyncio
 import os
 import time
+import aiohttp
 from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -68,7 +69,6 @@ class PageCurationService:
                 # Fallback to direct HTTP when ScraperAPI fails (e.g., credit exhausted)
                 try:
                     logging.info(f"🔄 FALLBACK TRIGGER: Attempting direct HTTP fallback for {page_url}")
-                    import aiohttp
                     timeout = aiohttp.ClientTimeout(total=30)
                     async with aiohttp.ClientSession(timeout=timeout) as fallback_session:
                         headers = {
