@@ -231,7 +231,7 @@ async def process_url(
                     domain_id=domain_obj.id,
                     page_id=page_id,
                     email=email_lower,
-                    email_type=email_type.value,  # Convert enum to string for new model
+                    email_type=email_type,
                     has_gmail=is_gmail_email(email_lower),
                     context=context,
                     source_url=url,
