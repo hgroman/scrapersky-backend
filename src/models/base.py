@@ -8,7 +8,7 @@ import datetime
 import uuid
 from typing import Any, Dict
 
-from sqlalchemy import UUID, Column, DateTime, func
+from sqlalchemy import UUID, Column, DateTime, func, text
 from sqlalchemy.ext.declarative import declarative_base
 
 # Create the declarative base
@@ -25,7 +25,7 @@ class BaseModel:
     - updated_at: Update timestamp that automatically updates
     """
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
