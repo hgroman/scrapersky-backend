@@ -24,6 +24,7 @@ COPY requirements/ /app/requirements/
 
 # Install dependencies into a local user path
 RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements/dev.txt
 
 # Copy entire project (excluding what's in .dockerignore)
 COPY --chown=myuser:myuser . /app

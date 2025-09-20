@@ -245,7 +245,7 @@ class ScraperAPIClient:
                 )
                 loop = asyncio.get_running_loop()
                 response = await loop.run_in_executor(
-                    None, self._sdk_client.get, url=api_url
+                    None, lambda: self._sdk_client.get(url=api_url)
                 )
                 if not response:
                     raise ValueError("Empty response from SDK")

@@ -2,11 +2,15 @@
 
 ## Instant Pattern Recognition & Violation Detection Guide
 
-**Version:** 1.0
+**Version:** 1.1 (Dual Status Adapter Update)
 **Purpose:** Enable instant service pattern recognition and violation detection
 **Cardinal Rule:** Services ACCEPT sessions, never create them!
+**Constitutional Authority:** Universal Trigger Pattern & Dual-Status Update Pattern enforcement
 **Usage:** Load ONLY this document for complete L4 service review authority
 **Verification Requirement:** Pattern claims must be verified against actual codebase
+
+**CRITICAL UPDATE (2025-09-14):** Added Dual Status Adapter Pattern enforcement following sitemap import service fix (commit 5c8c4ef)
+**CRITICAL UPDATE (2025-09-19):** Fixed contact creation failure caused by SQLAlchemy enum model changes (commit 426650f)
 
 ---
 
@@ -20,6 +24,8 @@
 - [ ] Service returns data/None, router handles HTTP responses
 - [ ] Scheduler uses `run_job_loop` pattern from Curation SDK
 - [ ] All database operations use the passed session parameter
+- [ ] **DUAL STATUS ADAPTER:** Only queue processing when curation approves (Selected → Queued)
+- [ ] **DUAL STATUS COORDINATION:** Curation and Processing status fields work in harmony
 
 ### 🔴 INSTANT REJECTION TRIGGERS
 
@@ -29,6 +35,8 @@
 4. **Service handling HTTP responses** → REJECT (Pattern #3 violation)
 5. **Direct transaction management** → REJECT (Pattern #4 violation)
 6. **Tenant ID usage after removal** → REJECT (Constitutional violation)
+7. **Broken dual adapter coordination** → REJECT (Universal Trigger Pattern violation)
+8. **Auto-queuing without curation approval** → REJECT (Dual-Status Update Pattern violation)
 
 ### ✅ APPROVAL REQUIREMENTS
 
@@ -40,6 +48,8 @@ Before approving ANY service implementation:
 4. Verify no HTTP concerns in service layer
 5. Confirm scheduler uses SDK pattern if applicable
 6. Ensure no tenant isolation code remains
+7. **VERIFY DUAL ADAPTER LOGIC:** Only queue when curation_status = "Selected"
+8. **VERIFY STATUS COORDINATION:** Processing status follows curation decisions
 
 ---
 
@@ -302,7 +312,89 @@ async def process_queue():
 
 ---
 
-## PATTERN #6: Tenant Isolation Removal
+## PATTERN #6: Dual Status Adapter Coordination (CONSTITUTIONAL REQUIREMENT)
+
+### ✅ CORRECT PATTERN:
+
+```python
+# Universal Trigger Pattern implementation
+def apply_dual_adapter_logic(curation_status: str, item_data: dict):
+    """Only queue for processing when curation approves."""
+    if curation_status == "Selected":
+        item_data["processing_status"] = "Queued"  # Queue approved items
+    elif curation_status == "New":
+        item_data["processing_status"] = "New"     # Wait for human decision
+    else:
+        item_data["processing_status"] = "New"     # Default: wait
+    
+    return item_data
+
+# Example: Page workflow coordination
+if hb["decision"] == "skip" or hb["confidence"] < 0.2:
+    page_data["page_processing_status"] = PageProcessingStatus.Filtered
+    page_data["page_curation_status"] = PageCurationStatus.New
+elif (high_value_conditions):
+    # Auto-select high-value pages and queue for processing
+    page_data["page_curation_status"] = PageCurationStatus.Selected
+    page_data["page_processing_status"] = PageProcessingStatus.Queued
+else:
+    # Default: New pages wait for manual curation
+    page_data["page_curation_status"] = PageCurationStatus.New
+    page_data["page_processing_status"] = PageProcessingStatus.New
+```
+
+**Why:** Implements Constitutional Article III.2 - Universal Trigger Pattern
+**Citation:** ScraperSky Development Constitution, Dual-Status Update Pattern
+
+### ❌ ANTI-PATTERN VIOLATIONS:
+
+**Violation A: Auto-Queuing Without Curation Approval**
+
+```python
+# VIOLATION: From sitemap import service (FIXED in commit 5c8c4ef)
+if hb["decision"] == "skip" or hb["confidence"] < 0.2:
+    page_data["page_processing_status"] = PageProcessingStatus.Filtered
+else:
+    page_data["page_processing_status"] = PageProcessingStatus.Queued  # WRONG!
+    # This queues ALL non-filtered pages regardless of curation status
+```
+
+**Detection:** Processing status set to "Queued" without checking curation status
+**From Fix:** Sitemap import service violated dual adapter pattern
+**Impact:** System processes items that haven't been human-approved
+
+**Violation B: Broken Status Coordination**
+
+```python
+# VIOLATION: Mismatched status pairs
+item.curation_status = "New"      # Human hasn't decided
+item.processing_status = "Queued"  # But system queues anyway - WRONG!
+```
+
+**Detection:** Curation="New" paired with Processing="Queued"
+**Impact:** Bypasses human approval workflow, violates Constitutional pattern
+
+### DUAL ADAPTER PAIRS IDENTIFIED:
+
+1. **Page Workflow:** `PageCurationStatus` ↔ `PageProcessingStatus`
+2. **Contact Workflow:** `ContactCurationStatus` ↔ `ContactProcessingStatus`  
+3. **HubSpot Workflow:** `HubSpotSyncStatus` ↔ `HubSpotProcessingStatus`
+4. **Sitemap Import:** `SitemapImportCurationStatusEnum` ↔ `SitemapImportProcessStatusEnum`
+
+### VERIFICATION COMMANDS:
+
+```bash
+# Check for broken dual adapter logic
+grep -n "processing_status.*Queued" src/services/*.py
+grep -n "curation_status.*New" src/services/*.py
+
+# Verify coordination patterns
+grep -A5 -B5 "curation_status.*Selected" src/services/*.py
+```
+
+---
+
+## PATTERN #7: Tenant Isolation Removal
 
 ### ✅ CORRECT PATTERN:
 
@@ -340,7 +432,7 @@ page_data = {
 
 ---
 
-## PATTERN #7: Async I/O Correctness (Await vs Async Iterator)
+## PATTERN #8: Async I/O Correctness (Await vs Async Iterator)
 
 ### ✅ CORRECT PATTERN:
 
@@ -406,6 +498,16 @@ grep -n "HTTPException\|JSONResponse" src/services/*.py
 
 # Check for tenant_id usage
 grep -n "tenant_id" src/services/*.py
+
+# DUAL ADAPTER VERIFICATION
+# Check for broken auto-queuing patterns
+grep -n "processing_status.*Queued" src/services/*.py
+
+# Verify curation approval logic
+grep -A3 -B3 "curation_status.*Selected" src/services/*.py
+
+# Find dual adapter pairs
+grep -n "CurationStatus\|ProcessingStatus" src/models/enums.py
 ```
 
 ### What WF7 Did Wrong:
@@ -415,6 +517,7 @@ grep -n "tenant_id" src/services/*.py
 # 2. Router contained all business logic
 # 3. Inline schemas instead of separate layer
 # 4. No scheduler for background processing
+# 5. Broke dual adapter pattern in sitemap import (FIXED)
 ```
 
 ### What WF7 Should Have Done:
@@ -425,6 +528,23 @@ grep -n "tenant_id" src/services/*.py
 # 3. Move business logic from router to service
 # 4. Service accepts AsyncSession parameter
 # 5. Use run_job_loop for scheduler
+# 6. Implement proper dual adapter coordination
+```
+
+### RECENT FIX EXAMPLE (Commit 5c8c4ef):
+
+```python
+# BEFORE (Broken):
+else:
+    page_data["page_processing_status"] = PageProcessingStatus.Queued  # WRONG!
+
+# AFTER (Fixed):
+elif (high_value_conditions):
+    page_data["page_curation_status"] = PageCurationStatus.Selected
+    page_data["page_processing_status"] = PageProcessingStatus.Queued
+else:
+    page_data["page_curation_status"] = PageCurationStatus.New
+    page_data["page_processing_status"] = PageProcessingStatus.New
 ```
 
 ---
@@ -439,14 +559,16 @@ L4 SERVICE GUARDIAN ANALYSIS:
 ❌ VIOLATION of Pattern #2: Service creating session at line 45
 ❌ VIOLATION of Pattern #3: Complex business logic in router
 ⚠️ WARNING on Pattern #5: Scheduler missing for workflow queue
+❌ VIOLATION of Pattern #6: Broken dual adapter coordination at line 208
 
 REQUIRED CORRECTIONS:
 
 1. Move session creation to router, pass as parameter
 2. Extract business logic from router to service
 3. Create dedicated workflow scheduler
+4. Fix dual adapter logic: Only queue when curation_status="Selected"
 
-APPROVAL: DENIED - Cardinal Rule violation must be corrected
+APPROVAL: DENIED - Cardinal Rule and Constitutional violations must be corrected
 ```
 
 ---
@@ -459,6 +581,38 @@ APPROVAL: DENIED - Cardinal Rule violation must be corrected
 - Scheduler pattern documentation
 
 **With this single 450-line companion for instant pattern recognition!**
+
+---
+
+## 🛡️ RECENT CRITICAL FIXES
+
+### SQLAlchemy Enum Model Pattern Violation (FIXED - Commit 426650f)
+
+**VIOLATION TYPE:** Model Definition Inconsistency Breaking Service Layer
+**IMPACT:** Contact creation complete failure in email_scraper service
+**ROOT CAUSE:** SQLAlchemy model change from enum class to string literals without updating service code
+
+**VIOLATION DETAILS:**
+```python
+# BEFORE (Working):
+email_type = Column(Enum(ContactEmailTypeEnum, create_type=False, native_enum=True))
+# Service code: email_type=ContactEmailTypeEnum.SERVICE ✅ (auto-converted)
+
+# AFTER (Broken):  
+email_type = Column(Enum('SERVICE', 'CORPORATE', 'FREE', 'UNKNOWN', name='contactemailtypeenum'))
+# Service code: email_type=ContactEmailTypeEnum.SERVICE ❌ (no auto-conversion)
+```
+
+**FIX APPLIED (Commit 426650f):**
+```python
+# In src/tasks/email_scraper.py:234
+# BEFORE: email_type=email_type,
+# AFTER:  email_type=email_type.value,  # Convert enum to string
+```
+
+**GUARDIAN PATTERN:** When changing SQLAlchemy model enum definitions, ALL service code using those enums must be updated to use `.value` for string extraction.
+
+**VERIFICATION:** Database schema never changed - always expected strings. Issue was Python-side enum object vs string mismatch.
 
 ---
 
