@@ -13,7 +13,7 @@ class Contact(Base, BaseModel):
     page_id = Column(UUID(as_uuid=True), ForeignKey("pages.id"), nullable=False, index=True)
 
     email = Column(String, nullable=False, index=True)
-    email_type = Column(Enum('SERVICE', 'CORPORATE', 'FREE', 'UNKNOWN', name='contactemailtypeenum'), nullable=True)
+    email_type = Column(Enum('SERVICE', 'CORPORATE', 'FREE', 'UNKNOWN', name='contact_email_type_enum'), nullable=True)
     has_gmail = Column(Boolean, default=False, nullable=True)
     context = Column(Text, nullable=True)
     source_url = Column(Text, nullable=True)
