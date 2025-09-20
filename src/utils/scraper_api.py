@@ -243,7 +243,10 @@ class ScraperAPIClient:
                 logger.info(
                     f"ScraperAPI SDK attempt {attempt + 1}/{retries} for URL: {url}"
                 )
-                response = self._sdk_client.get(url=api_url)
+                loop = asyncio.get_running_loop()
+                response = await loop.run_in_executor(
+                    None, self._sdk_client.get, url=api_url
+                )
                 if not response:
                     raise ValueError("Empty response from SDK")
                 logger.info(

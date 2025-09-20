@@ -10,6 +10,7 @@ from sqlalchemy.future import select
 from sqlalchemy import and_
 from src.models.page import Page
 from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.enums import PageProcessingStatus
 from src.utils.scraper_api import ScraperAPIClient
 import logging
 
@@ -25,6 +26,7 @@ class PageCurationService:
     ) -> bool:
         """
         Processes a single page, extracts its content, and creates a unique contact.
+        Tries a robust direct HTTP fetch first, then falls back to ScraperAPI.
         Returns True on success, False on failure.
         
         NOTE: As per run_job_loop SDK requirements, this function manages its own
@@ -43,57 +45,84 @@ class PageCurationService:
                 logging.error(f"Page with id {page_id} not found.")
                 return False
 
-            # 2. Use ScraperAPI to fetch real content (bypasses bot detection)
             page_url = str(page.url)
             html_content = ""
-            
+
+            # 2. Fetch content: Try direct 'scrappy' HTTP first, then fallback to ScraperAPI
             try:
-                logging.info(f"Fetching content from {page_url} using ScraperAPI")
-                # Only enable JS rendering if explicitly configured
-                enable_js = os.getenv('WF7_ENABLE_JS_RENDERING', 'false').lower() == 'true'
-                max_retries = int(os.getenv('SCRAPER_API_MAX_RETRIES', '1'))
-                async with ScraperAPIClient() as scraper_client:
-                    html_content = await scraper_client.fetch(page_url, render_js=enable_js, retries=max_retries)
+                max_retries = 3
+                base_delay = 1  # seconds
+
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                }
                 
-                if not html_content or len(html_content) < 10:
-                    logging.warning(f"No meaningful content extracted from URL: {page_url}")
-                    # Trigger fallback when ScraperAPI returns empty/minimal content
-                    raise ValueError("ScraperAPI returned insufficient content, triggering fallback")
-                else:
-                    logging.info(f"Extracted {len(html_content)} characters from {page_url}")
+                for attempt in range(max_retries):
+                    try:
+                        logging.info(f"Attempting direct HTTP fetch (Attempt {attempt + 1}/{max_retries}) for {page_url}")
+                        timeout = aiohttp.ClientTimeout(total=20)
+                        async with aiohttp.ClientSession(timeout=timeout) as http_session:
+                            async with http_session.get(page_url, headers=headers) as response:
+                                if response.status == 200:
+                                    html_content = await response.text()
+                                    if not html_content or len(html_content) < 100:
+                                        logging.warning(f"Direct fetch for {page_url} returned minimal content. Considering it a failure for this attempt.")
+                                        raise ValueError("Minimal content from direct fetch")
+                                    
+                                    logging.info(f"Direct HTTP fetch successful for {page_url}")
+                                    break  # Exit retry loop on success
+                                
+                                elif response.status == 404:
+                                    logging.warning(f"Page not found (404) at {page_url}. Marking as complete, no contact.")
+                                    page.contact_scrape_status = 'NoContactFound'
+                                    page.page_processing_status = PageProcessingStatus.Complete
+                                    return True
 
-            except Exception as e:
-                logging.error(f"Error during ScraperAPI content extraction for {page_url}: {e}")
-                logging.error(f"Exception type: {type(e).__name__}, Starting fallback process...")
-                logging.error(f"html_content state before fallback: '{html_content}' (length: {len(html_content) if html_content else 0})")
+                                else:
+                                    logging.warning(f"Direct HTTP fetch attempt {attempt + 1} failed with status {response.status}.")
+                                    response.raise_for_status()
 
-                # Fallback to direct HTTP when ScraperAPI fails (e.g., credit exhausted)
+                    except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as e:
+                        logging.warning(f"Direct fetch attempt {attempt + 1} failed: {type(e).__name__}. Retrying in {base_delay * (2 ** attempt)}s...")
+                        if attempt == max_retries - 1:
+                            logging.error(f"All {max_retries} direct fetch attempts failed for {page_url}.")
+                            raise  # Re-raise the last exception to trigger the ScraperAPI fallback
+                        await asyncio.sleep(base_delay * (2 ** attempt)) # Exponential backoff
+                
+                if not html_content: # Should only be reached if all retries fail
+                     raise Exception("Direct fetch failed after all retries")
+
+
+            except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as e:
+                logging.warning(f"All direct fetch attempts for {page_url} failed. Final error: {type(e).__name__}. Attempting ScraperAPI fallback.")
+
+                # Fallback Method: ScraperAPI
                 try:
-                    logging.info(f"🔄 FALLBACK TRIGGER: Attempting direct HTTP fallback for {page_url}")
-                    timeout = aiohttp.ClientTimeout(total=30)
-                    async with aiohttp.ClientSession(timeout=timeout) as fallback_session:
-                        headers = {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                            'Accept-Language': 'en-US,en;q=0.5',
-                            'Accept-Encoding': 'gzip, deflate',
-                            'Connection': 'keep-alive',
-                            'Upgrade-Insecure-Requests': '1',
-                        }
-                        async with fallback_session.get(page_url, headers=headers) as response:
-                            if response.status == 200:
-                                html_content = await response.text()
-                                logging.info(f"Direct HTTP fallback successful for {page_url} (Length: {len(html_content)} chars)")
-                            else:
-                                logging.warning(f"Direct HTTP fallback failed: HTTP {response.status} for {page_url}")
-                                html_content = ""
-                except Exception as fallback_e:
-                    logging.error(f"Direct HTTP fallback also failed for {page_url}: {fallback_e}")
+                    async with ScraperAPIClient() as scraper_client:
+                        html_content = await scraper_client.fetch(page_url, render_js=False)
+                    
+                    if not html_content or len(html_content) < 100:
+                        logging.error(f"ScraperAPI fallback also returned minimal content for {page_url}.")
+                        html_content = ""
+                    else:
+                        logging.info("ScraperAPI fallback successful.")
+
+                except Exception as scraper_e:
+                    logging.error(f"ScraperAPI fallback also failed for {page_url}: {scraper_e}")
                     html_content = ""
 
-                logging.info(f"🔄 FALLBACK COMPLETE: Fallback finished for {page_url}, content length: {len(html_content)}")
+            # 3. Final check and contact extraction
+            if not html_content:
+                logging.error(f"All attempts (direct and fallback) to fetch content for page {page_id} failed.")
+                page.page_processing_status = PageProcessingStatus.Error
+                return False
 
-            # 3. Extract REAL contact info using proven regex patterns from metadata_extractor.py
+            # 4. Extract REAL contact info using proven regex patterns from metadata_extractor.py
             try:
                 domain_name = page_url.split('//')[1].split('/')[0] if '//' in page_url else 'unknown'
                 
@@ -165,12 +194,11 @@ class PageCurationService:
 
             except Exception as e:
                 logging.error(f"Error creating contact for page {page.id}: {e}")
+                page.page_processing_status = PageProcessingStatus.Error
                 return False
             
             # 4. Set page status to Complete (required by run_job_loop SDK)
-            from src.models.enums import PageProcessingStatus
-            # Use setattr to properly update the column value
-            setattr(page, 'page_processing_status', PageProcessingStatus.Complete)
+            page.page_processing_status = PageProcessingStatus.Complete
             logging.info(f"Set page {page.id} status to Complete")
             
             # Transaction auto-commits when exiting async with session.begin()
