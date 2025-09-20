@@ -17,36 +17,45 @@
 
 ## 📋 COMPLETE ARCHITECTURE OVERVIEW
 
-### **End-to-End Flow**
+### **Complete End-to-End Flow**
 ```
-1. Page Record (status: Queued) 
+1. Pages exist in database (from sitemap import or manual creation)
    ↓
-2. WF7 Scheduler detects queued page
-   ↓  
-3. PageCurationService.process_single_page_for_curation()
+2. User accesses WF7 curation interface via GET /api/v3/pages/
    ↓
-4. Simple Async Scraper extracts HTML content
+3. User selects pages and updates status via PUT /api/v3/pages/status
    ↓
-5. Regex extraction finds emails/phones
+4. Dual-Status Pattern: Selected → page_processing_status = Queued
    ↓
-6. Contact model created with client-side UUID
+5. Background Scheduler (every N minutes) detects Queued pages
    ↓
-7. Database insertion with aligned enums
+6. PageCurationService.process_single_page_for_curation() called
    ↓
-8. Page status updated to Complete
+7. Simple Async Scraper extracts HTML content
    ↓
-9. Success logged and reported
+8. Regex extraction finds emails/phones
+   ↓
+9. Contact model created with client-side UUID
+   ↓
+10. Database insertion with aligned enums
+   ↓
+11. Page status updated to Complete
+   ↓
+12. Success logged and reported
 ```
 
-### **Component Stack**
+### **Complete Component Stack**
 ```
 Layer 1 (Models):     WF7_V2_L1_1of1_ContactModel.py
-Layer 2 (Schemas):    [Router handles schemas directly]
-Layer 3 (Routers):    WF7_V2_L3_1of1_PageCurationRouter.py  
+Layer 2 (Schemas):    WF7_V3_L2_1of1_PageCurationSchemas.py
+Layer 3 (Routers):    WF7_V2_L3_1of1_PagesRouter.py (basic)
+                     WF7_V3_L3_1of1_PagesRouter.py (full-featured)
 Layer 4 (Services):   WF7_V2_L4_1of2_PageCurationService.py
 Layer 4 (Scheduler):  WF7_V2_L4_2of2_PageCurationScheduler.py
 Utilities:            src/utils/simple_scraper.py
                      src/utils/scraper_api.py (SHELVED)
+Infrastructure:       src/scheduler_instance.py (shared APScheduler)
+                     src/main.py (scheduler registration)
 ```
 
 ---
@@ -89,6 +98,129 @@ contact_processing_status = Column(Enum(..., name='contact_processing_status')) 
 email_type = Column(Enum(..., name='contactemailtypeenum'))  # NO underscores (legacy)
 phone_type = Column(Enum(..., name='contactphonetypeenum'))  # NO underscores (legacy)
 ```
+
+---
+
+## 🌐 WF7 API ENDPOINTS & USER INTERFACE
+
+### **Page Curation CRUD Operations**
+
+#### **V3 Router (Primary - Full Featured)**
+**File**: `src/routers/v3/WF7_V3_L3_1of1_PagesRouter.py`
+
+**1. List Pages with Filtering**
+```http
+GET /api/v3/pages/
+```
+**Parameters**:
+- `limit`: Number of pages (default: 100)
+- `offset`: Pagination offset (default: 0)
+- `page_curation_status`: Filter by curation status (New, Selected, Rejected)
+- `page_processing_status`: Filter by processing status (New, Queued, Processing, Complete, Failed)
+- `page_type`: Filter by page type (contact_root, unknown, etc.)
+- `url_contains`: Filter by URL content (case-insensitive)
+
+**Response**: Paginated list with filtering metadata
+
+**2. Batch Update Page Status**
+```http
+PUT /api/v3/pages/status
+```
+**Body**:
+```json
+{
+  "page_ids": ["uuid1", "uuid2", ...],
+  "status": "Selected"
+}
+```
+**Dual-Status Pattern**: When status = "Selected" → automatically sets `page_processing_status = "Queued"`
+
+**3. Filtered Batch Update ("Select All")**
+```http
+PUT /api/v3/pages/status/filtered
+```
+**Body**:
+```json
+{
+  "status": "Selected",
+  "page_curation_status": "New",
+  "url_contains": "contact"
+}
+```
+**Purpose**: Update ALL pages matching filter criteria without explicit ID lists
+
+#### **V2 Router (Legacy - Basic)**
+**File**: `src/routers/v2/WF7_V2_L3_1of1_PagesRouter.py`
+- Basic batch update functionality
+- No authentication required
+- Limited filtering capabilities
+
+### **Authentication & Authorization**
+- **V3 Endpoints**: Require JWT authentication via `get_current_user` dependency
+- **V2 Endpoints**: No authentication (legacy)
+
+---
+
+## ⏰ BACKGROUND SCHEDULER SYSTEM
+
+### **Scheduler Architecture**
+
+#### **1. WF7 Page Curation Scheduler**
+**File**: `src/services/WF7_V2_L4_2of2_PageCurationScheduler.py`
+
+**Core Function**: `process_page_curation_queue()`
+```python
+await run_job_loop(
+    model=Page,
+    status_enum=PageProcessingStatus,
+    queued_status=PageProcessingStatus.Queued,
+    processing_status=PageProcessingStatus.Processing,
+    completed_status=PageProcessingStatus.Complete,
+    failed_status=PageProcessingStatus.Error,
+    processing_function=service.process_single_page_for_curation,
+    batch_size=settings.PAGE_CURATION_SCHEDULER_BATCH_SIZE,
+    order_by_column=asc(Page.updated_at),
+    status_field_name="page_processing_status",
+    error_field_name="page_processing_error",
+)
+```
+
+#### **2. Shared Scheduler Infrastructure**
+**File**: `src/scheduler_instance.py`
+- **Purpose**: Centralized APScheduler instance for ALL workflows
+- **Critical**: Nuclear shared service - serves WF1-WF7
+- **Engine**: AsyncIOScheduler with UTC timezone
+- **Monitoring**: Event listeners for job execution and errors
+
+#### **3. Scheduler Registration**
+**File**: `src/main.py`
+- **Function**: `setup_page_curation_scheduler()`
+- **Configuration**:
+  ```python
+  scheduler.add_job(
+      process_page_curation_queue,
+      "interval",
+      minutes=settings.PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES,
+      id="v2_page_curation_processor",
+      replace_existing=True,
+      max_instances=settings.PAGE_CURATION_SCHEDULER_MAX_INSTANCES,
+  )
+  ```
+
+### **Scheduler Configuration Settings**
+```python
+# Environment variables controlling scheduler behavior
+PAGE_CURATION_SCHEDULER_BATCH_SIZE = 10           # Pages processed per cycle
+PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES = 5      # How often scheduler runs
+PAGE_CURATION_SCHEDULER_MAX_INSTANCES = 1         # Prevent overlapping runs
+```
+
+### **Queue Detection Logic**
+1. **Trigger**: User sets `page_curation_status = "Selected"` via API
+2. **Auto-Queue**: Dual-status pattern sets `page_processing_status = "Queued"`
+3. **Detection**: Scheduler queries for `PageProcessingStatus.Queued` pages
+4. **Processing**: Calls `PageCurationService.process_single_page_for_curation()`
+5. **Status Updates**: Processing → Complete/Error based on results
 
 ---
 
@@ -213,14 +345,59 @@ async def process_page_queue():
 
 ## 🧪 TESTING FRAMEWORK
 
-### **End-to-End Testing Process**
+### **Complete Testing Framework**
 
-**1. Test Setup**:
+#### **API Endpoint Testing**
+
+**1. List Pages (V3)**:
 ```bash
-# Queue a page for testing
-curl -X POST "https://scrapersky-backend.onrender.com/api/v1/pages/queue" \
+# Get pages with filtering
+curl -X GET "https://scrapersky-backend.onrender.com/api/v3/pages/?page_curation_status=New&limit=10" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**2. Batch Update Pages**:
+```bash
+# Select specific pages for processing
+curl -X PUT "https://scrapersky-backend.onrender.com/api/v3/pages/status" \
   -H "Content-Type: application/json" \
-  -d '{"page_id": "56d4f464-faee-4940-8532-17439157020e"}'
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "page_ids": ["56d4f464-faee-4940-8532-17439157020e"],
+    "status": "Selected"
+  }'
+```
+
+**3. Filtered Batch Update ("Select All")**:
+```bash
+# Select all pages matching criteria
+curl -X PUT "https://scrapersky-backend.onrender.com/api/v3/pages/status/filtered" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "status": "Selected",
+    "page_curation_status": "New",
+    "url_contains": "contact"
+  }'
+```
+
+#### **End-to-End Testing Process**
+
+**1. Complete Workflow Test**:
+```bash
+# Step 1: List available pages
+curl -X GET "https://scrapersky-backend.onrender.com/api/v3/pages/?page_curation_status=New&limit=5"
+
+# Step 2: Select pages for processing
+curl -X PUT "https://scrapersky-backend.onrender.com/api/v3/pages/status" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "page_ids": ["PAGE_ID_HERE"],
+    "status": "Selected"
+  }'
+
+# Step 3: Verify dual-status pattern worked
+# Check that page_processing_status = "Queued"
 ```
 
 **2. Monitor Logs**:
@@ -339,6 +516,68 @@ email_type=ContactEmailTypeEnum.SERVICE
 # CORRECT
 email_type=ContactEmailTypeEnum.SERVICE.value
 ```
+
+#### **6. API Endpoint Issues**
+
+**Symptom**: Pages not getting queued after status update
+**Check**:
+1. Verify dual-status pattern: `page_curation_status = "Selected"` should trigger `page_processing_status = "Queued"`
+2. Check database after API call:
+   ```sql
+   SELECT id, page_curation_status, page_processing_status 
+   FROM pages WHERE id = '[PAGE_ID]';
+   ```
+3. Verify V3 endpoint authentication if using authenticated routes
+
+**Symptom**: Filtered updates not working
+**Debug**:
+```python
+# Test filter logic manually
+filters = []
+if page_curation_status:
+    filters.append(Page.page_curation_status == page_curation_status)
+# Check if filters match expected pages
+```
+
+#### **7. Background Scheduler Issues**
+
+**Symptom**: Scheduler not picking up queued pages
+**Check**:
+1. **Scheduler Running**: 
+   ```bash
+   # Check logs for scheduler startup
+   grep "Page curation scheduler job added" logs/app.log
+   ```
+
+2. **Job Execution**:
+   ```bash
+   # Check for scheduler job execution
+   grep "v2_page_curation_processor" logs/app.log
+   ```
+
+3. **Queue Detection**:
+   ```sql
+   -- Verify pages are actually queued
+   SELECT COUNT(*) FROM pages WHERE page_processing_status = 'Queued';
+   ```
+
+4. **Scheduler Configuration**:
+   ```python
+   # Check environment variables
+   PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES = 5  # Default
+   PAGE_CURATION_SCHEDULER_BATCH_SIZE = 10       # Default
+   ```
+
+**Symptom**: Scheduler jobs overlapping or running multiple times
+**Solution**: Check `max_instances=1` setting and ensure only one scheduler instance
+
+#### **8. Authentication Issues (V3 Endpoints)**
+
+**Symptom**: 401 Unauthorized on V3 endpoints
+**Check**:
+1. JWT token validity
+2. `get_current_user` dependency working
+3. Use V2 endpoints for testing if authentication is problematic
 
 ---
 
