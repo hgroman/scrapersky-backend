@@ -40,7 +40,3 @@ scraperapi-sdk>=1.5.0
 
 # Scheduling
 APScheduler>=3.10.0
-rapi-sdk>=1.5.0
-
-# Scheduling
-APScheduler>=3.10.0
