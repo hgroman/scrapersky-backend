@@ -66,8 +66,9 @@ class PageCurationService:
                     try:
                         logging.info(f"Attempting direct HTTP fetch (Attempt {attempt + 1}/{max_retries}) for {page_url}")
                         timeout = aiohttp.ClientTimeout(total=20)
-                        async with aiohttp.ClientSession(timeout=timeout) as http_session:
-                            async with http_session.get(page_url, headers=headers) as response:
+                        connector = aiohttp.TCPConnector(ssl=False)  # Disable SSL verification like curl -k
+                        async with aiohttp.ClientSession(timeout=timeout, connector=connector) as http_session:
+                            async with http_session.get(page_url, headers=headers, allow_redirects=True) as response:
                                 if response.status == 200:
                                     html_content = await response.text()
                                     if not html_content or len(html_content) < 100:
