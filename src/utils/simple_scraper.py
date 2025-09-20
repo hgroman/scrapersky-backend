@@ -7,7 +7,7 @@ import aiohttp
 import asyncio
 import logging
 
-def scrape_page_simple_async(url: str) -> str:
+async def scrape_page_simple_async(url: str) -> str:
     """Scrape a page using aiohttp with settings from the test script."""
     
     headers = {
