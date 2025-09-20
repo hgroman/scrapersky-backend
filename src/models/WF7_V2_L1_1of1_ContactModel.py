@@ -23,13 +23,13 @@ class Contact(Base, BaseModel):
     phone_number = Column(String, nullable=True)
 
     contact_curation_status = Column(
-        Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='contactcurationstatus'),
+        Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='contact_curation_status'),
         nullable=False,
         default='New',
         index=True,
     )
     contact_processing_status = Column(
-        Enum('Queued', 'Processing', 'Complete', 'Error', name='contactprocessingstatus'),
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='contact_processing_status'),
         nullable=True,
         index=True,
     )
