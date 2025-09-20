@@ -23,10 +23,12 @@
 - ✅ **Database Integration**: Proper enum alignment, UUID generation
 - ✅ **End-to-End Pipeline**: Page → Scrape → Extract → Save → Complete
 
-**ScraperAPI Status:**
-- **Removed** from WF7 workflow (cost savings during MVP)
-- **Preserved** in `src/utils/scraper_api.py` (ready for future re-integration)
-- **Strategy**: Re-enable when paying clients onboard
+**ScraperAPI Status - CRITICAL CLARIFICATION:**
+- **STATUS**: COMPLETELY REMOVED from current WF7 workflow (NOT integrated, NOT working)
+- **CURRENT REALITY**: WF7 uses ONLY Simple Scraper Pattern - zero external dependencies
+- **PRESERVATION**: Code preserved in `src/utils/scraper_api.py` for future use
+- **STRATEGY**: Re-integrate when ScraperSky MVP has paying clients
+- **VERIFICATION**: No ScraperAPI imports in current PageCurationService
 
 **Current Flow:**
 ```
@@ -37,6 +39,19 @@ Page Queued → Simple Scraper → Content Extracted → Contact Created → Pag
 - `svale@acuitylaservision.com` + `2459644568` - SUCCESS
 - `info@thevisioncenterny.com` + `1748983646` - SUCCESS
 - Content extraction: 149KB+ HTML per page
+
+**THE 3 MAJOR FIXES THAT MADE WF7 FUNCTIONAL:**
+1. **BaseModel UUID Fix (commit d6079e4)**: 
+   - Issue: `server_default=text("gen_random_uuid()")` broke SQLAlchemy object instantiation
+   - Fix: Reverted to `default=uuid.uuid4` for client-side generation
+   
+2. **Enum Alignment Fix (commit 17e740f)**:
+   - Issue: `DatatypeMismatchError` - enum names didn't match database schema
+   - Fix: Aligned model enum names with database expectations
+   
+3. **Simple Scraper Implementation (commit 117e858)**:
+   - Issue: 70+ lines of complex aiohttp + ScraperAPI logic failing
+   - Fix: Replaced with 37-line Simple Scraper Pattern (100% success rate)
 
 ---
 

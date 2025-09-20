@@ -209,11 +209,20 @@ await run_job_loop(
 
 ### **Scheduler Configuration Settings**
 ```python
-# Environment variables controlling scheduler behavior
+# Environment variables controlling scheduler behavior (from src/config/settings.py)
 PAGE_CURATION_SCHEDULER_BATCH_SIZE = 10           # Pages processed per cycle
-PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES = 5      # How often scheduler runs
+PAGE_CURATION_SCHEDULER_INTERVAL_MINUTES = 5      # How often scheduler runs  
 PAGE_CURATION_SCHEDULER_MAX_INSTANCES = 1         # Prevent overlapping runs
+
+# CRITICAL: Verify current settings with:
+grep -n "PAGE_CURATION_SCHEDULER" src/config/settings.py
 ```
+
+**Current Default Values (Verify in Code)**:
+- **Interval**: Check `src/config/settings.py` for actual default
+- **Batch Size**: Typically 10 pages per cycle
+- **Max Instances**: Always 1 to prevent conflicts
+- **Job ID**: `"v2_page_curation_processor"` (defined in main.py)
 
 ### **Queue Detection Logic**
 1. **Trigger**: User sets `page_curation_status = "Selected"` via API
@@ -570,6 +579,25 @@ if page_curation_status:
 
 **Symptom**: Scheduler jobs overlapping or running multiple times
 **Solution**: Check `max_instances=1` setting and ensure only one scheduler instance
+
+**Manual Scheduler Trigger Methods**:
+```python
+# Method 1: Direct function call (for testing)
+from src.services.WF7_V2_L4_2of2_PageCurationScheduler import process_page_curation_queue
+await process_page_curation_queue()
+
+# Method 2: Add manual trigger endpoint (implementation)
+@router.post("/trigger-scheduler")
+async def trigger_page_curation_manually(
+    current_user: Dict = Depends(get_current_user)
+):
+    await process_page_curation_queue()
+    return {"message": "Scheduler triggered manually"}
+
+# Method 3: APScheduler direct trigger
+from src.scheduler_instance import scheduler
+scheduler.get_job("v2_page_curation_processor").func()
+```
 
 #### **8. Authentication Issues (V3 Endpoints)**
 
