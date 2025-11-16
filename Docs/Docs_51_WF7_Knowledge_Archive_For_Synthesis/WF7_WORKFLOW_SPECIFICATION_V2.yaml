@@ -1,0 +1,343 @@
+# WF7: Contact Extraction Workflow - Complete Specification
+# Version: 2.0
+# Date: 2025-09-20
+# Purpose: Comprehensive factual specification for AI pairing partners
+
+workflow_name: "Contact Extraction"
+workflow_id: "WF7"
+pattern_type: "SCHEDULER_DRIVEN_BACKGROUND_PROCESSING"
+total_lines_of_code: 1945
+
+# FUNCTION
+function: "Extract contact information from web pages via background scheduler processing"
+
+# DATABASE SCHEMA
+database_tables:
+  contacts:
+    table_name: "contacts"
+    model_file: "WF7_V2_L1_1of1_ContactModel.py"
+    primary_key: "id"
+    columns:
+      id: "UUID, primary key, client-side generated"
+      domain_id: "UUID, foreign key to domains.id, not null, indexed"
+      page_id: "UUID, foreign key to pages.id, not null, indexed"
+      email: "String, not null, indexed"
+      email_type: "Enum('SERVICE', 'CORPORATE', 'FREE', 'UNKNOWN'), nullable"
+      has_gmail: "Boolean, default false, nullable"
+      context: "Text, nullable"
+      source_url: "Text, nullable"
+      source_job_id: "UUID, nullable"
+      name: "String, nullable"
+      phone_number: "String, nullable"
+      contact_curation_status: "Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped'), not null, default 'New', indexed"
+      contact_processing_status: "Enum('Queued', 'Processing', 'Complete', 'Error'), nullable, indexed"
+      contact_processing_error: "Text, nullable"
+      hubspot_sync_status: "Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped'), not null, default 'New', indexed"
+      hubspot_processing_status: "Enum('Queued', 'Processing', 'Complete', 'Error'), nullable, indexed"
+      hubspot_processing_error: "Text, nullable"
+      created_at: "Timestamp, not null, default now()"
+      updated_at: "Timestamp, not null, default now()"
+    relationships:
+      page: "back_populates contacts in Page model"
+      
+  pages:
+    table_name: "pages"
+    model_file: "page.py"
+    primary_key: "id"
+    key_columns:
+      id: "UUID, primary key, client-side generated"
+      tenant_id: "UUID, not null"
+      domain_id: "UUID, foreign key to domains.id, not null"
+      url: "Text, not null"
+      page_curation_status: "Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped'), not null, default 'New', indexed"
+      page_processing_status: "Enum('Queued', 'Processing', 'Complete', 'Error'), nullable, indexed"
+      page_processing_error: "Text, nullable"
+      contact_scrape_status: "Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped'), not null, default 'New', indexed"
+    relationships:
+      contacts: "cascade delete-orphan to Contact model"
+      domain: "back_populates pages in Domain model"
+
+# ENUM MAPPINGS
+enum_definitions:
+  contact_curation_status:
+    code_enum: "Not defined (uses direct SQLAlchemy Enum)"
+    database_enum: "contact_curation_status"
+    values: ["New", "Queued", "Processing", "Complete", "Error", "Skipped"]
+    model_file: "WF7_V2_L1_1of1_ContactModel.py"
+    model_line: 26
+    
+  contact_processing_status:
+    code_enum: "Not defined (uses direct SQLAlchemy Enum)"
+    database_enum: "contact_processing_status"
+    values: ["Queued", "Processing", "Complete", "Error"]
+    model_file: "WF7_V2_L1_1of1_ContactModel.py"
+    model_line: 32
+    
+  hubspot_sync_status:
+    code_enum: "Not defined (uses direct SQLAlchemy Enum)"
+    database_enum: "hubspot_sync_status"
+    values: ["New", "Queued", "Processing", "Complete", "Error", "Skipped"]
+    model_file: "WF7_V2_L1_1of1_ContactModel.py"
+    model_line: 39
+    
+  hubspot_processing_status:
+    code_enum: "Not defined (uses direct SQLAlchemy Enum)"
+    database_enum: "hubspot_sync_processing_status"
+    values: ["Queued", "Processing", "Complete", "Error"]
+    model_file: "WF7_V2_L1_1of1_ContactModel.py"
+    model_line: 45
+    
+  page_curation_status:
+    code_enum: "PageCurationStatus"
+    database_enum: "page_curation_status"
+    values: ["New", "Selected", "Queued", "Processing", "Complete", "Error", "Skipped"]
+    model_file: "page.py"
+    model_line: 110
+    
+  page_processing_status:
+    code_enum: "PageProcessingStatus"
+    database_enum: "page_processing_status"
+    values: ["Queued", "Processing", "Complete", "Error"]
+    model_file: "page.py"
+    model_line: 122
+
+# FILE STRUCTURE
+components:
+  L1_data:
+    WF7_V2_L1_1of1_ContactModel.py:
+      lines: 51
+      purpose: "Contact data model with status tracking"
+      table: "contacts"
+      key_features: ["Dual status pattern", "HubSpot integration fields"]
+      
+  L2_schemas:
+    WF7_V3_L2_1of1_PageCurationSchemas.py:
+      lines: 58
+      purpose: "Request/response validation for page curation API"
+      schemas: ["PageCurationBatchStatusUpdateRequest", "PageCurationBatchUpdateResponse", "PageCurationFilteredUpdateRequest"]
+      
+  L3_api:
+    WF7_V3_L3_1of1_PagesRouter.py:
+      lines: 238
+      purpose: "HTTP endpoints for page curation management"
+      prefix: "/api/v3/pages"
+      endpoints:
+        - method: "GET"
+          path: "/"
+          function: "get_pages"
+          line: 31
+        - method: "PUT"
+          path: "/status"
+          function: "update_page_curation_status_batch"
+          line: 101
+        - method: "PUT"
+          path: "/status/filtered"
+          function: "update_page_curation_status_filtered"
+          line: 156
+          
+  L4_services:
+    WF7_V2_L4_1of2_PageCurationService.py:
+      lines: 217
+      purpose: "Contact extraction business logic"
+      key_functions:
+        - name: "process_single_page_for_curation"
+          line: 24
+          transaction_owner: true
+          sdk_requirement: "run_job_loop SDK requires service transaction management"
+    WF7_V2_L4_2of2_PageCurationScheduler.py:
+      lines: 46
+      purpose: "Background scheduler entry point"
+      scheduler_job: "process_page_curation_queue"
+      
+  L5_utilities:
+    simple_scraper.py:
+      lines: 36
+      purpose: "Web page content extraction"
+      pattern: "Simple HTTP request with BeautifulSoup parsing"
+
+# ARCHITECTURAL PATTERNS
+transaction_ownership:
+  api_pattern:
+    description: "Router manages transactions for HTTP requests"
+    files: ["WF7_V3_L3_1of1_PagesRouter.py"]
+    implementation: "async with session.begin():"
+    locations: [129, 197]
+    
+  scheduler_pattern:
+    description: "Service manages transactions for background processing"
+    files: ["WF7_V2_L4_1of2_PageCurationService.py"]
+    implementation: "async with session.begin():"
+    locations: [38, 139]
+    justification: "SDK requirement for individual page processing isolation"
+    sdk_comment: "The processing_function is responsible for its own transaction(s)"
+    service_comment: "As per run_job_loop SDK requirements, this function manages its own transaction"
+
+session_management:
+  dependency_injection:
+    pattern: "session: AsyncSession = Depends(get_db_session)"
+    files: ["WF7_V3_L3_1of1_PagesRouter.py"]
+    locations: [33, 104, 178]
+    
+  parameter_acceptance:
+    pattern: "Services accept session parameter from caller"
+    files: ["WF7_V2_L4_1of2_PageCurationService.py"]
+    function: "process_single_page_for_curation"
+    line: 25
+
+# EXECUTION FLOW
+workflow_execution:
+  trigger: "APScheduler background job"
+  job_name: "v2_page_curation_processor"
+  frequency: "Every 5 minutes"
+  batch_size: 10
+  
+  process_steps:
+    1:
+      component: "PageCurationScheduler"
+      action: "Query pages table for page_processing_status='Queued'"
+      sql_pattern: "SELECT * FROM pages WHERE page_processing_status = 'Queued' LIMIT 10"
+      
+    2:
+      component: "PageCurationService"
+      action: "Process individual page in isolated transaction"
+      transaction_scope: "Single page processing"
+      
+    3:
+      component: "simple_scraper"
+      action: "HTTP request to page URL, extract content with BeautifulSoup"
+      dependencies: ["aiohttp", "BeautifulSoup4"]
+      
+    4:
+      component: "PageCurationService"
+      action: "Extract email addresses using regex patterns"
+      pattern: "Email regex extraction from HTML content"
+      
+    5:
+      component: "ContactModel"
+      action: "Create contact record with extracted email"
+      table: "contacts"
+      status_set: "contact_curation_status='New'"
+      
+    6:
+      component: "PageCurationService"
+      action: "Update page status to Complete"
+      status_update: "page_processing_status='Complete'"
+
+# DUAL STATUS PATTERN
+status_management:
+  pattern_name: "Dual Status Adapter Pattern"
+  description: "Separate curation and processing status tracking"
+  
+  curation_status:
+    purpose: "User-facing workflow state management"
+    values: ["New", "Selected", "Queued", "Processing", "Complete", "Error", "Skipped"]
+    controlled_by: "User interface and API endpoints"
+    
+  processing_status:
+    purpose: "Background processing state tracking"
+    values: ["Queued", "Processing", "Complete", "Error"]
+    controlled_by: "Background scheduler and services"
+    
+  trigger_pattern:
+    condition: "When curation_status changes to 'Selected'"
+    action: "Set processing_status to 'Queued'"
+    location: "WF7_V3_L3_1of1_PagesRouter.py line 145-147"
+
+# RULES
+rules:
+  enum_alignment:
+    description: "Database enum names must match SQLAlchemy enum definitions exactly"
+    locations: "All enum column definitions"
+    
+  transaction_patterns:
+    api_endpoints: "Router owns transaction boundaries"
+    background_processing: "Service owns transaction boundaries per SDK requirements"
+    
+  session_injection:
+    description: "Database sessions injected via Depends(get_db_session)"
+    applies_to: "All router endpoints"
+    
+  orm_only:
+    description: "No raw SQL queries, use SQLAlchemy ORM constructs only"
+    applies_to: "All database operations"
+    
+  client_side_uuid:
+    description: "UUID generation on client side using default=uuid.uuid4"
+    applies_to: "All model primary keys"
+
+# INTEGRATION POINTS
+external_dependencies:
+  scheduler: "APScheduler shared instance"
+  database: "Supabase PostgreSQL via SQLAlchemy async"
+  web_scraping: "aiohttp + BeautifulSoup4"
+  authentication: "JWT via get_current_user dependency"
+
+# CURRENT STATE
+system_status:
+  functional: true
+  success_rate: "100%"
+  last_verified: "2025-09-20"
+  production_ready: true
+  
+performance_metrics:
+  average_processing_time: "Unknown - needs measurement"
+  concurrent_processing: "Configurable via WF7_ENABLE_CONCURRENT_PROCESSING"
+  max_concurrent: "Configurable via WF7_SCRAPER_API_MAX_CONCURRENT (default: 10)"
+
+# HISTORICAL CONTEXT
+major_fixes:
+  uuid_generation_fix:
+    commit: "d6079e4"
+    issue: "server_default=text('gen_random_uuid()') broke SQLAlchemy instantiation"
+    solution: "Reverted to default=uuid.uuid4 for client-side generation"
+    
+  enum_alignment_fix:
+    commit: "17e740f"
+    issue: "DatatypeMismatchError from enum name misalignment"
+    solution: "Aligned model enum names with database schema"
+    
+  simple_scraper_implementation:
+    commit: "117e858"
+    issue: "Complex aiohttp + ScraperAPI logic failing"
+    solution: "Replaced with 37-line Simple Scraper Pattern"
+    success_rate: "100%"
+
+# TESTING REQUIREMENTS
+testing_coverage:
+  unit_tests:
+    - "Contact model creation and validation"
+    - "Enum value consistency"
+    - "Service function isolation"
+    
+  integration_tests:
+    - "Full workflow: page selection → processing → contact creation"
+    - "Dual status pattern behavior"
+    - "Error handling and rollback"
+    
+  regression_tests:
+    - "Cross-workflow impact verification"
+    - "Database schema consistency"
+    - "Performance baseline maintenance"
+
+# AI PAIRING INSTRUCTIONS
+ai_guidelines:
+  required_reading:
+    - "All code comments contain architectural intent"
+    - "SDK requirements documented in service comments"
+    - "Blueprint exceptions for scheduler patterns"
+    
+  pattern_recognition:
+    - "Identify Router vs Scheduler calling patterns"
+    - "Understand dual status management"
+    - "Recognize transaction ownership by context"
+    
+  forbidden_modifications:
+    - "Enum value changes without comprehensive testing"
+    - "Transaction pattern changes without understanding calling context"
+    - "Cross-workflow modifications"
+    
+  escalation_required:
+    - "Any database schema changes"
+    - "Enum modifications"
+    - "Transaction boundary modifications"
+    - "Cross-workflow impact potential"

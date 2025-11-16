@@ -2,7 +2,7 @@
 
 ## Instant Pattern Recognition & Violation Detection Guide
 
-**Version:** 1.1 (Dual Status Adapter Update)
+**Version:** 1.2 (Simple Scraper Pattern + WF7 Victory Update)
 **Purpose:** Enable instant service pattern recognition and violation detection
 **Cardinal Rule:** Services ACCEPT sessions, never create them!
 **Constitutional Authority:** Universal Trigger Pattern & Dual-Status Update Pattern enforcement
@@ -11,6 +11,7 @@
 
 **CRITICAL UPDATE (2025-09-14):** Added Dual Status Adapter Pattern enforcement following sitemap import service fix (commit 5c8c4ef)
 **CRITICAL UPDATE (2025-09-19):** Fixed contact creation failure caused by SQLAlchemy enum model changes (commit 426650f)
+**CRITICAL UPDATE (2025-09-20):** WF7 Contact Scraping complete refactor - Simple Scraper Pattern implementation (commits d6079e4, 17e740f, 117e858)
 
 ---
 
@@ -26,6 +27,7 @@
 - [ ] All database operations use the passed session parameter
 - [ ] **DUAL STATUS ADAPTER:** Only queue processing when curation approves (Selected → Queued)
 - [ ] **DUAL STATUS COORDINATION:** Curation and Processing status fields work in harmony
+- [ ] **SIMPLE SCRAPER PATTERN:** Use proven simple scraping over complex multi-layered approaches
 
 ### 🔴 INSTANT REJECTION TRIGGERS
 
@@ -37,6 +39,7 @@
 6. **Tenant ID usage after removal** → REJECT (Constitutional violation)
 7. **Broken dual adapter coordination** → REJECT (Universal Trigger Pattern violation)
 8. **Auto-queuing without curation approval** → REJECT (Dual-Status Update Pattern violation)
+9. **Over-engineered scraping with external dependencies** → REJECT (Simple Scraper Pattern violation)
 
 ### ✅ APPROVAL REQUIREMENTS
 
@@ -50,6 +53,7 @@ Before approving ANY service implementation:
 6. Ensure no tenant isolation code remains
 7. **VERIFY DUAL ADAPTER LOGIC:** Only queue when curation_status = "Selected"
 8. **VERIFY STATUS COORDINATION:** Processing status follows curation decisions
+9. **VERIFY SIMPLE SCRAPING:** Use simple, proven scraping patterns over complex external dependencies
 
 ---
 
@@ -584,6 +588,112 @@ APPROVAL: DENIED - Cardinal Rule and Constitutional violations must be corrected
 
 ---
 
+## PATTERN #9: Simple Scraper Pattern (NEW - 2025-09-20)
+
+### ✅ CORRECT PATTERN:
+
+```python
+# File: src/utils/simple_scraper.py
+async def scrape_page_simple_async(url: str) -> str:
+    """Simple, effective, non-blocking async scraper."""
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36...',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp...',
+        # Standard browser headers
+    }
+    
+    try:
+        connector = aiohttp.TCPConnector(ssl=False)  # Disable SSL verification
+        timeout = aiohttp.ClientTimeout(total=20)
+        
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            async with session.get(url, headers=headers, allow_redirects=True) as response:
+                response.raise_for_status()
+                html_content = await response.text()
+                return html_content
+                
+    except Exception as e:
+        logging.error(f"Simple async scraper failed for {url}: {e}")
+        return ""  # Return empty string on failure
+
+# Service usage - Single line replacement
+html_content = await scrape_page_simple_async(page_url)
+```
+
+**Why:** Replaces complex multi-layered scraping logic with proven simple approach
+**Citation:** WF7 Contact Scraping Victory (2025-09-20), commits d6079e4, 17e740f, 117e858
+
+### ❌ ANTI-PATTERN VIOLATIONS:
+
+**Violation A: Over-Engineered Scraping Logic**
+
+```python
+# VIOLATION: From WF7_V2_L4_1of2_PageCurationService.py (FIXED in commit 117e858)
+# 70+ lines of complex aiohttp + ScraperAPI fallback logic
+try:
+    max_retries = 3
+    base_delay = 1
+    
+    for attempt in range(max_retries):
+        try:
+            # Complex retry logic with exponential backoff
+            # SSL connector issues
+            # ClientResponseError failures
+            
+        except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as e:
+            # Complex error handling
+            
+    # ScraperAPI fallback
+    async with ScraperAPIClient() as scraper_client:
+        html_content = await scraper_client.fetch(page_url, render_js=False)
+        # HTTP 403 - credits exhausted
+```
+
+**Detection:** Multiple retry loops, complex fallback chains, external API dependencies
+**From WF7:** Complex scraping logic failed with `ClientResponseError` and API credit exhaustion
+**Impact:** Brittle, expensive, difficult to debug scraping failures
+
+**Violation B: External API Dependency for Basic Scraping**
+
+```python
+# VIOLATION: Relying on ScraperAPI for basic HTTP requests
+async with ScraperAPIClient() as scraper_client:
+    html_content = await scraper_client.fetch(page_url, render_js=False)
+    # Fails when credits exhausted - HTTP 403
+```
+
+**Detection:** External scraping service calls for basic HTML retrieval
+**From WF7:** ScraperAPI credit exhaustion caused complete scraping failure
+**Impact:** Unnecessary external dependency, cost, and single point of failure
+
+### SIMPLE SCRAPER SUCCESS METRICS:
+
+**Before Fix (Broken):**
+- 70+ lines of complex scraping logic
+- Multiple external dependencies (ScraperAPI)
+- `ClientResponseError` failures
+- HTTP 403 credit exhaustion
+- 0% success rate
+
+**After Fix (Working - commits d6079e4, 17e740f, 117e858):**
+- Single line service call: `html_content = await scrape_page_simple_async(page_url)`
+- 37 lines of simple, focused scraping logic
+- No external dependencies
+- 100% success rate (2/2 test cases)
+- Content extraction: 149KB+ HTML successfully scraped
+
+**VERIFICATION EVIDENCE:**
+```
+2025-09-20 05:00:30,909 - Simple async scraper successful for https://acuitylaservision.com/our-laser-vision-correction-surgeon/. Content length: 149088
+2025-09-20 05:27:09,667 - Simple async scraper successful for https://thevisioncenterny.com/testimonials/. Content length: 141340
+```
+
+### GUARDIAN PRINCIPLE:
+**"Simple solutions win. Replace complexity with proven simplicity."**
+
+---
+
 ## 🛡️ RECENT CRITICAL FIXES
 
 ### SQLAlchemy Enum Model Pattern Violation (FIXED - Commit 426650f)
@@ -616,5 +726,61 @@ email_type = Column(Enum('SERVICE', 'CORPORATE', 'FREE', 'UNKNOWN', name='contac
 
 ---
 
-_"Services accept, never create. This is the way."_
+### WF7 Contact Scraping Complete Refactor (FIXED - Commits d6079e4, 17e740f, 117e858)
+
+**VIOLATION TYPE:** Multiple cascading service layer failures preventing end-to-end functionality
+**IMPACT:** WF7 Contact Scraping completely non-functional - pages queued but no contacts created
+**ROOT CAUSE:** BaseModel UUID generation + Database enum mismatches + Over-engineered scraping logic
+
+**VIOLATION DETAILS:**
+
+**Issue 1: BaseModel UUID Generation Failure (FIXED in commit d6079e4)**
+```python
+# BEFORE (Broken):
+id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+# SQLAlchemy object instantiation failed - server_default incompatible with client creation
+
+# AFTER (Fixed):
+id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+# Client-side UUID generation works with SQLAlchemy objects
+```
+
+**Issue 2: Database Enum Name Mismatches (FIXED in commit 17e740f)**
+```python
+# BEFORE (Broken):
+contact_curation_status = Column(Enum(..., name='contactcurationstatus'))  # No underscores
+# Database expected: contact_curation_status (with underscores)
+
+# AFTER (Fixed):
+contact_curation_status = Column(Enum(..., name='contact_curation_status'))  # Matches DB
+# Perfect alignment with database schema
+```
+
+**Issue 3: Over-Engineered Scraping Logic (FIXED in commit 117e858)**
+```python
+# BEFORE (Broken): 70+ lines of complex aiohttp + ScraperAPI fallback
+# ClientResponseError failures, HTTP 403 credit exhaustion, 0% success rate
+
+# AFTER (Fixed): Simple Scraper Pattern
+html_content = await scrape_page_simple_async(page_url)  # Single line, 100% success
+```
+
+**FIX RESULTS:**
+- **Test 1**: `svale@acuitylaservision.com` + `2459644568` - SUCCESS
+- **Test 2**: `info@thevisioncenterny.com` + `1748983646` - SUCCESS  
+- **Success Rate**: 100% (2/2 tests)
+- **Content Extraction**: 149KB+ HTML per page
+- **End-to-End**: Page queued → Content scraped → Contact extracted → Database inserted → Page completed
+
+**GUARDIAN PATTERN:** When multiple service layer issues cascade, fix foundation first (BaseModel), then data layer (enums), then business logic (scraping). Test end-to-end after each fix.
+
+**VERIFICATION EVIDENCE:**
+```
+2025-09-20 05:00:31,271 - SCHEDULER_LOOP: Finished processing batch for Page. Success: 1, Failed: 0, Total Attempted: 1.
+2025-09-20 05:27:10,027 - SCHEDULER_LOOP: Finished processing batch for Page. Success: 1, Failed: 0, Total Attempted: 1.
+```
+
+---
+
+_"Services accept, never create. Simple solutions win. This is the way."_
 **- The L4 Service Guardian**

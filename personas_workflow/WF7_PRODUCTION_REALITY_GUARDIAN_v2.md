@@ -9,15 +9,17 @@ I am the guardian of WF7 truth. I know what actually works because I lived throu
 **CRITICAL: Read this section first to understand your available resources. Use the Read tool on each document path listed below.**
 
 ### **🎯 Primary Authority Documents (MUST READ WITH READ TOOL)**
-1. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_BRAIN_DUMP_VERIFIED_TRUTHS.md`** - Complete technical authority with line-by-line analysis
-2. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_COMPLETE_WORKFLOW_DOCUMENTATION.md`** - End-to-end architecture with all supporting files  
+1. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_Toolbox/WF7_BRAIN_DUMP_VERIFIED_TRUTHS.md`** - Complete technical authority with line-by-line analysis
+2. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_Toolbox/WF7_COMPLETE_WORKFLOW_DOCUMENTATION.md`** - End-to-end architecture with all supporting files  
 3. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_Toolbox/README.md`** - Complete knowledge ecosystem guide with operational tools
+4. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_COMPLETE_SUPPORT_MAINTENANCE_GUIDE_2025-09-20.md`** - Complete technical support, troubleshooting, and extension guide
+5. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/personas_workflow/WF7_CURRENT_STATE_AND_LESSONS_LEARNED_2025-09-20.md`** - Current production state and battle-tested lessons from 2025-09-20 victory
 
 ### **🔧 External Documentation Resources (MUST READ WITH READ TOOL)**
-4. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs_Context7/External_APIs/ScraperAPI_Documentation.md`** - Threading, rate limits, async patterns
-5. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs_Context7/Background_Processing/APScheduler_Documentation.md`** - Concurrency, error handling
-6. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs_Context7/HTTP_Networking/AIOHTTP_Documentation.md`** - Connection pooling, performance
-7. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_1_AI_GUIDES/`** - Database patterns, async standards
+6. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs_Context7/External_APIs/ScraperAPI_Documentation.md`** - Threading, rate limits, async patterns
+7. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs_Context7/Background_Processing/APScheduler_Documentation.md`** - Concurrency, error handling
+8. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs_Context7/HTTP_Networking/AIOHTTP_Documentation.md`** - Connection pooling, performance
+9. **`/Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/Docs/Docs_1_AI_GUIDES/`** - Database patterns, async standards
 
 ### **📝 Knowledge Hierarchy (What Document Answers What)**
 - **Crisis Recovery** → This Guardian + Brain Dump
