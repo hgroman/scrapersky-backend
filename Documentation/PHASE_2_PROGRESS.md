@@ -166,4 +166,71 @@ Otherwise: ARCHIVE for git history, remove from main branch.
 
 ---
 
+---
+
+## CRITICAL DISCOVERY: Docs/01_Architectural_Guidance/
+
+**Date:** Nov 16, 2025
+**Trigger:** User corrected premature Phase 2 completion - this directory was missed
+**Method:** Systematic audit against WF7 production code
+
+### Discovery Summary
+
+**23 files** containing MIX of battle-tested production lessons + aspirational governance framework
+
+**HIGH VALUE Content (REQUIRES EXTRACTION):**
+- ✅ War stories documenting real production failures and fixes
+- ✅ Anti-Pattern #17: SQLAlchemy Enum .value bug (NOT in CONTRIBUTING.md yet)
+- ✅ Placeholder Driven Development anti-pattern
+- ✅ WF7 evolution: crawl4ai ($50) → simple_scraper.py ($0, 100% success)
+
+**ASPIRATIONAL Content (ARCHIVE ONLY):**
+- ❌ Guardian/Architect persona governance (NOT enforced in working code)
+- ❌ Pattern/Anti-Pattern catalogs (47 each - theoretical framework)
+- ❌ Constitutional framework, mandatory checkpoints
+
+**See:** `Documentation/EXTRACTION_PLAN_01_ARCHITECTURAL_GUIDANCE.md` for complete audit
+
+---
+
+## CRITICAL DISCOVERY: Docs/01_Architectural_Guidance/developer_guides/
+
+**Date:** Nov 16, 2025
+**Trigger:** Processing war stories led to developer_guides directory
+**Method:** Systematic audit against WF7, router code, model code
+
+### Discovery Summary
+
+**3 developer guide files** audited against production code
+
+**FINDINGS:**
+
+1. **DUAL_ADAPTER_SYSTEM_TECHNICAL_GUIDE.md** ✅ ACCURATE
+   - Documents curation field + processing field pattern (verified in page.py)
+   - Explains workflow progression trigger pattern
+   - Anti-pattern: `default=Queued` causes auto-workflow (verified)
+   - Correct pattern: `default=None` requires manual selection
+   - **Value:** HIGH - operational knowledge about 6 workflows (WF2-WF7)
+   - **Action:** EXTRACT to Documentation/Patterns/ or Documentation/Workflows/
+
+2. **SCRAPERSKY_API_DEVELOPER_GUIDE.md** ⚠️ PARTIALLY INCORRECT
+   - Router prefix pattern: ❌ WRONG (guide says opposite of actual code)
+   - Session dependency: ✅ CORRECT (`get_session_dependency` verified)
+   - Transaction ownership: ✅ CORRECT (verified WF7 has no commits)
+   - **Critical Issue:** Router prefix pattern would cause 404 errors if followed
+   - **Actual Pattern:** Routers define full `/api/v3/resource`, main.py includes without prefix
+   - **Guide Pattern:** Router defines resource only, main.py adds /api/v3 (OPPOSITE)
+   - **Action:** EXTRACT with CORRECTION - document actual code pattern, note guide error
+
+3. **SCRAPERSKY_DATABASE_DEVELOPER_GUIDE.md** ✅ ACCURATE
+   - References 09_BUILDING_BLOCKS_MENU.yaml (verified exists)
+   - SQLAlchemy enum pattern matches production code (verified in page.py)
+   - Mandatory parameters verified in working models
+   - References Enum war story (already extracted to CONTRIBUTING.md)
+   - **Action:** UPDATE CONTRIBUTING.md with reference to YAML template
+
+**See:** `Documentation/EXTRACTION_PLAN_01_DEVELOPER_GUIDES.md` for complete audit
+
+---
+
 **Last Updated:** Nov 16, 2025
