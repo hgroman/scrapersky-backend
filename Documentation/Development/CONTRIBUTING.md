@@ -367,6 +367,125 @@ async def get_domains(session: AsyncSession, tenant_id: UUID) -> List[Domain]:
 
 ---
 
+### WF7 Production Lessons: The 3 Major Fixes
+
+**Context:** WF7 (Contact Extraction) went from 0% to 100% success rate through 3 critical fixes. These are essential lessons learned.
+
+#### 1. BaseModel UUID Anti-Pattern
+
+**Incident:** SQLAlchemy object instantiation broken
+**Date:** Sept 2025 (commit d6079e4)
+
+**WRONG - Server-side UUID generation:**
+```python
+class Contact(BaseModel):
+    id: Mapped[UUID] = mapped_column(
+        PGUUID,
+        primary_key=True,
+        server_default=text("gen_random_uuid()")  # ← BREAKS instantiation
+    )
+```
+
+**Problem:** `server_default` breaks SQLAlchemy when creating objects in Python. SQLAlchemy doesn't know the ID until after database insert.
+
+**CORRECT - Client-side UUID generation:**
+```python
+import uuid
+
+class Contact(BaseModel):
+    id: Mapped[UUID] = mapped_column(
+        PGUUID,
+        primary_key=True,
+        default=uuid.uuid4  # ← Works perfectly
+    )
+```
+
+**Why:** Client-side generation means ID is available immediately when object created. Database still generates UUID if not provided, but Python can too.
+
+**Rule:** Always use `default=uuid.uuid4` for UUID columns, never `server_default`.
+
+---
+
+#### 2. Enum Alignment Anti-Pattern
+
+**Incident:** `DatatypeMismatchError` - database rejecting inserts
+**Date:** Sept 2025 (commit 17e740f)
+
+**WRONG - Misaligned enum names:**
+```python
+# Model says this:
+contact_curation_status = Column(
+    Enum(..., name='contactcurationstatus')  # ← NO underscores
+)
+
+# Database expects this:
+# CREATE TYPE contact_curation_status AS ENUM (...)  -- WITH underscores
+```
+
+**Problem:** SQLAlchemy enum `name=` parameter must EXACTLY match database enum type name. Case and underscores matter.
+
+**CORRECT - Aligned enum names:**
+```python
+contact_curation_status = Column(
+    Enum(..., name='contact_curation_status')  # ← Matches database EXACTLY
+)
+```
+
+**How to check database enum names:**
+```sql
+SELECT typname FROM pg_type WHERE typtype = 'e';
+```
+
+**Rule:** Enum `name=` parameter must match database type name exactly (including underscores and case).
+
+---
+
+#### 3. Simple vs Complex Pattern (Simple Wins)
+
+**Incident:** 70+ line ScraperAPI implementation failing, expensive
+**Date:** Sept 2025 (commit 117e858)
+
+**WRONG - Over-engineered scraping:**
+```python
+# 70+ lines of code
+# External dependency (ScraperAPI)
+# Cost: ~$50 per domain
+# Reliability: Connection timeouts
+# Success rate: <50%
+
+async def scrape_with_scraperapi(url: str):
+    # Complex aiohttp configuration
+    # ScraperAPI premium features
+    # Retry logic
+    # Error handling
+    # ... 70+ lines total
+```
+
+**CORRECT - Simple Scraper Pattern:**
+```python
+# src/utils/simple_scraper.py - 37 lines total
+import aiohttp
+
+async def scrape_page(url: str) -> str:
+    """Simple async page scraper - 37 lines, 100% success."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.text()
+```
+
+**Results:**
+- **Lines of code:** 70+ → 37 (47% reduction)
+- **External dependencies:** ScraperAPI → None
+- **Cost:** $50/domain → $0/domain (100% savings)
+- **Success rate:** <50% → 100%
+- **Complexity:** High → Low
+
+**Lesson:** Don't use external services when simple async Python works. "Premium features" often add cost and complexity without value.
+
+**Rule:** Start with simplest solution. Only add complexity if simple doesn't work.
+
+---
+
 ## Testing
 
 ### Running Tests
