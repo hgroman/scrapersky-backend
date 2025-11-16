@@ -138,12 +138,16 @@ grep -n "session.commit()\|session.rollback()" src/services/WF7_V2_L4_1of2_PageC
 **Extraction Decision:** ⚠️ **PARTIAL EXTRACTION WITH CORRECTION**
 
 **Extraction Plan:**
-- [ ] Create CORRECTED version in Documentation/Development/API-Patterns.md:
-  - **Router Prefix Pattern (CORRECTED):** Routers define full `/api/v3/resource` path, main.py includes without prefix
+- [x] **CORRECTED EXISTING GUIDE** - Fixed `Docs/01_Architectural_Guidance/developer_guides/SCRAPERSKY_API_DEVELOPER_GUIDE.md` section 2.1 (2025-11-16)
+  - Updated with correct pattern: Routers define full `/api/v3/resource` path, main.py includes without prefix
+  - Added production code references (domains.py, WF7_V3_L3_1of1_PagesRouter.py, contacts_router.py)
+  - Marked as corrected with warning note
+- [ ] Create Documentation/Development/API-Patterns.md:
+  - **Router Prefix Pattern:** Extract corrected pattern
   - **Session Dependency Pattern:** Use `get_session_dependency` (accurate from guide)
   - **Transaction Ownership:** Routers own transactions via dependency (accurate from guide)
   - **Response Format:** Extract if verified against actual router responses
-- [ ] Add note: "Previous documentation showed incorrect router prefix pattern - corrected based on production code analysis"
+- [ ] Add reference in CONTRIBUTING.md or README pointing to corrected patterns
 
 ---
 

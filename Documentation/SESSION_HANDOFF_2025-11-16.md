@@ -15,11 +15,12 @@
   2. Placeholder Driven Development anti-pattern
 - **Status:** COMPLETE - committed and pushed
 
-### ✅ Developer Guides Audit (PLAN CREATED, NOT EXECUTED)
+### ✅ Developer Guides Audit (PLAN CREATED + WRONG DOCS FIXED)
 - **Location:** `Docs/01_Architectural_Guidance/developer_guides/`
 - **Action:** Created `Documentation/EXTRACTION_PLAN_01_DEVELOPER_GUIDES.md`
 - **Key Finding:** **Router prefix pattern in guides is WRONG** (opposite of actual code)
-- **Status:** PLAN CREATED - extraction NOT performed yet
+- **Critical Fix:** CORRECTED `SCRAPERSKY_API_DEVELOPER_GUIDE.md` section 2.1 to match production code
+- **Status:** Wrong documentation FIXED - extraction plan ready for future execution
 
 ---
 

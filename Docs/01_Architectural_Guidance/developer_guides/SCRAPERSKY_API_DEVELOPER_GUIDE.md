@@ -10,23 +10,29 @@ This guide documents the established, mandatory patterns for all API endpoint de
 
 ### 2.1. API Versioning & Prefix Convention
 
-**The Rule:** The main `FastAPI` app instance in `src/main.py` is responsible for applying the `/api/v3` prefix. Routers defined in `src/routers/` should **only** define the resource-specific part of their prefix.
+**⚠️ CORRECTED 2025-11-16:** This section was previously incorrect and has been fixed to match actual production code.
 
-*   **Source Guide:** `23-LAYER3_FASTAPI_ROUTER_PREFIX_CONVENTION.md`
+**The Rule:** Routers define the FULL prefix including `/api/v3`. The main `FastAPI` app in `src/main.py` includes routers WITHOUT adding additional prefixes.
 
 **CORRECT ROUTER DEFINITION (`src/routers/my_router.py`):**
 ```python
-# Note: No /api/v3 prefix here.
-router = APIRouter(prefix="/my-resource", tags=["My Resource"])
+# Define the FULL prefix including /api/v3
+router = APIRouter(prefix="/api/v3/my-resource", tags=["My Resource"])
 ```
 
 **CORRECT INCLUSION (`src/main.py`):**
 ```python
-# The /api/v3 prefix is added here.
-app.include_router(my_router, prefix="/api/v3")
+# Include WITHOUT additional prefix (router already has full path)
+app.include_router(my_router)
 ```
 
-**ANTI-PATTERN:** Defining the full `/api/v3/my-resource` prefix in the router itself will cause FastAPI to create a duplicate path (`/api/v3/api/v3/...`), leading to 404 errors.
+**VERIFIED IN PRODUCTION CODE:**
+- `src/routers/domains.py:40` → `router = APIRouter(prefix="/api/v3/domains", ...)`
+- `src/routers/v3/WF7_V3_L3_1of1_PagesRouter.py:28` → `router = APIRouter(prefix="/api/v3/pages", ...)`
+- `src/routers/v3/contacts_router.py:28` → `router = APIRouter(prefix="/api/v3/contacts", ...)`
+- `src/main.py:285-287` → All routers included without additional prefix
+
+**ANTI-PATTERN:** Defining only the resource name (`"/my-resource"`) in the router and adding `/api/v3` in main.py will work but is NOT the pattern used in this codebase.
 
 ---
 
