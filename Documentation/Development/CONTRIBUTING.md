@@ -365,6 +365,84 @@ async def get_domains(session: AsyncSession, tenant_id: UUID) -> List[Domain]:
 **Fix:** Always reference actual database ENUM values
 **Reference:** `Docs/Docs_27_Anti-Patterns/20250731_WF4_Invalid_Enum_Reference_CRITICAL.md`
 
+### SQLAlchemy Enum Comparison Bug ⚠️ CRITICAL
+
+**Incident:** `operator does not exist: enum_type = customenumtype` errors in production
+**Date:** Sept 2025 (Contacts CRUD Crisis)
+**Root Cause:** Using Python enum objects directly in SQLAlchemy queries/assignments
+
+**WRONG - Direct enum in queries:**
+```python
+# This breaks database queries
+filters.append(Contact.status == ContactStatus.New)  # ← FAILS!
+contact.status = ContactStatus.Active  # ← FAILS!
+```
+
+**CORRECT - Use .value for SQLAlchemy operations:**
+```python
+# This works
+filters.append(Contact.status == ContactStatus.New.value)  # ← WORKS!
+contact.status = ContactStatus.Active.value  # ← WORKS!
+```
+
+**Rule:** ALWAYS use `.value` when:
+- Comparing enum fields in SQLAlchemy queries
+- Assigning enum values to model fields
+- Any database operation involving enums
+
+**Note:** Python enum-to-enum comparisons are fine: `request.status == MyEnum.VALUE` ✅
+
+**Reference:** `Docs/01_Architectural_Guidance/war_stories/WAR_STORY__Enum_Implementation_Train_Wreck__2025-09-12.md`
+
+### Placeholder Driven Development ⚠️ CRITICAL
+
+**Incident:** 445 pages processed over months, only 4 real contacts created (all duplicates)
+**Date:** Aug 2025 (WF7 Page Curation)
+**Root Cause:** Placeholder code that created illusion of functionality while delivering zero business value
+
+**WRONG - Placeholder data:**
+```python
+# Creates fake success
+new_contact = Contact(
+    name="Placeholder Name",              # ← FAKE
+    email="placeholder@example.com",      # ← FAKE & causes duplicates
+    phone_number="123-456-7890",          # ← FAKE
+)
+session.add(new_contact)
+logging.info("Successfully created contact")  # ← LIES!
+return True  # ← LIES!
+```
+
+**Impact:**
+- Hundreds of hours of "processing" creating no value
+- False metrics showing system "working"
+- Unique constraint violations after first contact
+- Zero actual business outcomes
+
+**CORRECT - Fail fast without real data:**
+```python
+# Extract real information or fail
+extracted_email = extract_email_from_content(content)
+extracted_phone = extract_phone_from_content(content)
+
+if not extracted_email and not extracted_phone:
+    raise ValueError(f"No contact info found on {page.url}")
+
+# Only create with REAL data
+contact = Contact(
+    name=f"Contact at {domain_name}",
+    email=extracted_email or f"info@{domain_name}",
+    phone_number=extracted_phone or "Phone not found",
+)
+```
+
+**Rules:**
+1. **NO placeholders in production code** - Use `raise NotImplementedError()` instead
+2. **Verify business value, not technical success** - Check actual outcomes
+3. **Fail fast on incomplete implementations** - Exceptions are more honest than fake data
+
+**Reference:** `Docs/01_Architectural_Guidance/war_stories/WAR_STORY__Placeholder_Driven_Development__2025-08-26.md`
+
 ---
 
 ### WF7 Production Lessons: The 3 Major Fixes
