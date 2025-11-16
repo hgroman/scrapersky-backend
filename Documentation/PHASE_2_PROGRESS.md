@@ -166,4 +166,31 @@ Otherwise: ARCHIVE for git history, remove from main branch.
 
 ---
 
+---
+
+## CRITICAL DISCOVERY: Docs/01_Architectural_Guidance/
+
+**Date:** Nov 16, 2025
+**Trigger:** User corrected premature Phase 2 completion - this directory was missed
+**Method:** Systematic audit against WF7 production code
+
+### Discovery Summary
+
+**23 files** containing MIX of battle-tested production lessons + aspirational governance framework
+
+**HIGH VALUE Content (REQUIRES EXTRACTION):**
+- ✅ War stories documenting real production failures and fixes
+- ✅ Anti-Pattern #17: SQLAlchemy Enum .value bug (NOT in CONTRIBUTING.md yet)
+- ✅ Placeholder Driven Development anti-pattern
+- ✅ WF7 evolution: crawl4ai ($50) → simple_scraper.py ($0, 100% success)
+
+**ASPIRATIONAL Content (ARCHIVE ONLY):**
+- ❌ Guardian/Architect persona governance (NOT enforced in working code)
+- ❌ Pattern/Anti-Pattern catalogs (47 each - theoretical framework)
+- ❌ Constitutional framework, mandatory checkpoints
+
+**See:** `Documentation/EXTRACTION_PLAN_01_ARCHITECTURAL_GUIDANCE.md` for complete audit
+
+---
+
 **Last Updated:** Nov 16, 2025
