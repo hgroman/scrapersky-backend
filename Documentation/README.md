@@ -16,6 +16,14 @@ This directory contains the core architectural knowledge, operational procedures
 2. **Read:** `Architecture/` - Architecture Decision Records (ADRs) explaining critical decisions
 3. **Browse:** Code in `src/` - The source of truth
 
+### Continuing Documentation Cleanup?
+
+**→ Read:** `CONTINUATION_GUIDE.md` - How to continue cleanup work in new sessions
+**→ Read:** `CLEANUP_ROADMAP.md` - Full cleanup plan and current phase
+
+**Current Phase:** Phase 2 - Audit remaining Docs/ directories for valuable content
+**Status:** In Progress (see CLEANUP_ROADMAP.md for details)
+
 ### Need to Find Something?
 
 **Architecture Decisions:**
