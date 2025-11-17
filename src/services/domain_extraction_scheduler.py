@@ -62,7 +62,7 @@ async def process_domain_extraction_wrapper(item_id: UUID, session: AsyncSession
 
         logger.info(
             f"Processing domain extraction for LocalBusiness {business.id} "
-            f"(website={business.website})"
+            f"(website={business.website_url})"
         )
 
         # Call existing service (already accepts UUID and session)
