@@ -21,27 +21,18 @@ to the existing internal /api/v3/sitemap/scan endpoint.
 """
 
 import logging
+import uuid
 from typing import Optional
 from uuid import UUID
 
-import httpx  # Required for making HTTP requests
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from src.config.settings import settings  # Assuming settings holds API key/base URL
-
 # Project specifics
 from src.models.domain import Domain, SitemapAnalysisStatusEnum
-
-# from src.db.session import get_session # Not needed directly if session passed in
+from src.services.job_service import job_service
 
 logger = logging.getLogger(__name__)
-
-# Define the base URL for the internal API call
-# TODO: Consider moving this to settings or making it more robust (e.g., env var)
-INTERNAL_API_BASE_URL = (
-    "http://localhost:8000"  # Or appropriate service name in Docker network
-)
 
 
 class DomainToSitemapAdapterService:
@@ -91,63 +82,42 @@ class DomainToSitemapAdapterService:
                 )
                 return False
 
-            # 2. Prepare payload
-            scan_payload = {
-                "base_url": domain.domain,
-                # Add other parameters like max_pages if needed/configurable
-                # "max_pages": 1000
+            # 2. Create sitemap job directly using job_service (no HTTP call needed)
+            job_id = str(uuid.uuid4())
+            
+            logger.info(
+                f"Adapter Service: Creating sitemap job for domain {domain.domain} ({domain_id}), job_id: {job_id}"
+            )
+            
+            # 3. Call job_service directly (same pattern as deep_scan_scheduler)
+            job_data = {
+                "job_id": job_id,
+                "job_type": "sitemap",
+                "status": "pending",
+                "created_by": None,  # System-initiated job
+                "result_data": {
+                    "domain": domain.domain,
+                    "max_pages": 1000,  # Default max pages
+                },
             }
-
-            # 3. Make HTTP POST request
-            # Use service role key for internal service-to-service calls
-            # The dev bypass token no longer works in production (WO-001/WO-002 security fix)
-            api_key = settings.supabase_service_role_key
-
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            }
-            scan_endpoint = f"{INTERNAL_API_BASE_URL}/api/v3/sitemap/scan"
-
-            async with httpx.AsyncClient() as client:
+            
+            job = await job_service.create(session, job_data)
+            
+            # 4. Check result and update status IN MEMORY
+            if job:
                 logger.info(
-                    f"Adapter Service: Calling {scan_endpoint} for domain {domain.domain} ({domain_id})"
-                )
-                response = await client.post(
-                    scan_endpoint, json=scan_payload, headers=headers, timeout=30.0
-                )
-
-            # 4. Check response and update status IN MEMORY
-            if response.status_code == 202:
-                logger.info(
-                    f"Adapter Service: Successfully submitted domain {domain.domain} ({domain_id}). Status code: {response.status_code}"
+                    f"Adapter Service: Successfully created sitemap job for domain {domain.domain} ({domain_id}), job_id: {job_id}"
                 )
                 domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.submitted  # type: ignore
                 domain.sitemap_analysis_error = None  # type: ignore
                 return True
             else:
-                error_detail = "Unknown error"
-                try:
-                    error_detail = response.json().get("detail", response.text)
-                except Exception:
-                    error_detail = response.text
                 logger.error(
-                    f"Adapter Service: Failed to submit domain {domain.domain} ({domain_id}). Status code: {response.status_code}. Response: {error_detail}"
+                    f"Adapter Service: Failed to create sitemap job for domain {domain.domain} ({domain_id})"
                 )
                 domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
-                domain.sitemap_analysis_error = f"API Call Failed. Status: {response.status_code}. Detail: {error_detail[:500]}"  # type: ignore
+                domain.sitemap_analysis_error = "Failed to create sitemap job"  # type: ignore
                 return False
-
-        except httpx.RequestError as http_err:
-            logger.error(
-                f"Adapter Service: HTTP request error submitting domain {domain.domain if domain else domain_id}: {http_err}",
-                exc_info=True,
-            )
-            if domain:
-                domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.failed  # type: ignore
-                domain.sitemap_analysis_error = (
-                    f"HTTP Request Error: {str(http_err)[:500]}"  # type: ignore
-                )
             return False
         except Exception as e:
             logger.error(
