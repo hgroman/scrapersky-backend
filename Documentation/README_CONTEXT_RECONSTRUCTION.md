@@ -5,6 +5,16 @@
 
 ---
 
+## ⚠️ CRITICAL LESSON FIRST
+
+**Before proceeding, read our post-mortem on documentation failure.** It explains *why* our documentation is structured this way and will prevent critical, show-stopping errors.
+
+**Case Study:** [POSTMORTEM_WO-009_DOC_FAILURE.md](./Analysis/POSTMORTEM_WO-009_DOC_FAILURE.md)
+
+**Key Lesson:** Our documentation now includes **Data Model Contracts** (nullable=False constraints, ENUMs, file locations) in `SYSTEM_MAP.md`. This is the single source of truth. Read it before writing any code that touches the database.
+
+---
+
 ## What Is This?
 
 This documentation system allows **any future AI or human** to quickly reconstruct complete understanding of the ScraperSky backend system, even after complete context loss.
