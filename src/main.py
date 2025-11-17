@@ -36,6 +36,7 @@ from .routers.batch_sitemap import router as batch_sitemap_api_router
 from .routers.db_portal import router as db_portal_api_router
 from .routers.dev_tools import router as dev_tools_api_router
 from .routers.domains import router as domains_api_router
+from .routers.v3.domains_direct_submission_router import router as domains_direct_submission_router
 from .routers.email_scanner import router as email_scanner_api_router
 from .routers.google_maps_api import router as google_maps_api_router
 from .routers.local_businesses import router as local_businesses_api_router
@@ -299,6 +300,7 @@ app.include_router(batch_sitemap_api_router, prefix="/api/v3", tags=["Batch Site
 app.include_router(places_staging_api_router, prefix="/api/v3")
 app.include_router(local_businesses_api_router)
 app.include_router(domains_api_router, tags=["Domains"])
+app.include_router(domains_direct_submission_router)
 app.include_router(sitemap_files_router)
 app.include_router(contacts_router)
 app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"])
