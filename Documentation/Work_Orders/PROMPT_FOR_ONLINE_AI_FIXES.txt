@@ -1,0 +1,56 @@
+Your work orders need 3 critical fixes. Without these, direct submissions will fail 100%.
+
+GROUND TRUTH FROM CODE:
+1. Domain.tenant_id is nullable=False (src/models/domain.py:117)
+2. SitemapFile.sitemap_type is nullable=False (src/models/sitemap.py:106)
+
+FIXES REQUIRED:
+
+WO-009 (2 changes):
+-------------------
+1. Add import at top:
+   from src.models.tenant import DEFAULT_TENANT_ID
+
+2. Line 437-447 - Add tenant_id to Domain creation:
+   domain = Domain(
+       id=uuid.uuid4(),
+       domain=domain_name,
+       tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # ← ADD THIS
+       local_business_id=None,
+       sitemap_curation_status=SitemapCurationStatusEnum.New,
+       sitemap_analysis_status=None,
+       created_at=datetime.utcnow(),
+       updated_at=datetime.utcnow()
+   )
+
+WO-011 (3 changes):
+-------------------
+1. Add import at top:
+   from src.models.tenant import DEFAULT_TENANT_ID
+
+2. Line 462-470 - Add tenant_id to Domain creation:
+   domain = Domain(
+       id=uuid.uuid4(),
+       domain=domain_name,
+       tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # ← ADD THIS
+       local_business_id=None,
+       sitemap_curation_status=SitemapCurationStatusEnum.New,
+       sitemap_analysis_status=None,
+       created_at=datetime.utcnow(),
+       updated_at=datetime.utcnow()
+   )
+
+3. Line 496 - Change sitemap_type:
+   sitemap_file = SitemapFile(
+       id=uuid.uuid4(),
+       url=url_str,
+       domain_id=domain.id,
+       sitemap_type="STANDARD",  # ← CHANGE FROM None TO "STANDARD"
+       ...
+   )
+
+DEFAULT_TENANT_ID = "550e8400-e29b-41d4-a716-446655440000"
+
+DETAILS: See Documentation/Work_Orders/CRITICAL_FIXES_REQUIRED.md
+
+After fixes, work orders will be ready for implementation.
