@@ -101,7 +101,7 @@ class DomainToSitemapAdapterService:
             # 3. Make HTTP POST request
             # Use service role key for internal service-to-service calls
             # The dev bypass token no longer works in production (WO-001/WO-002 security fix)
-            api_key = settings.SUPABASE_SERVICE_ROLE_KEY
+            api_key = settings.supabase_service_role_key
 
             headers = {
                 "Authorization": f"Bearer {api_key}",
