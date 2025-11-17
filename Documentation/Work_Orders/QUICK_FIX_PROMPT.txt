@@ -1,0 +1,18 @@
+Your work orders need 3 critical fixes. Read the fix document:
+
+cat Documentation/Work_Orders/CRITICAL_FIXES_REQUIRED.md
+
+Then apply these changes:
+
+WO-009 (Documentation/Work_Orders/WO-009_DIRECT_PAGE_SUBMISSION.md):
+1. Add import: from src.models.tenant import DEFAULT_TENANT_ID
+2. Line ~440: Add tenant_id=uuid.UUID(DEFAULT_TENANT_ID) to Domain creation
+
+WO-011 (Documentation/Work_Orders/WO-011_DIRECT_SITEMAP_SUBMISSION.md):
+1. Add import: from src.models.tenant import DEFAULT_TENANT_ID
+2. Line ~465: Add tenant_id=uuid.UUID(DEFAULT_TENANT_ID) to Domain creation
+3. Line ~496: Change sitemap_type=None to sitemap_type="STANDARD"
+
+DEFAULT_TENANT_ID = "550e8400-e29b-41d4-a716-446655440000"
+
+Commit and push when done.
