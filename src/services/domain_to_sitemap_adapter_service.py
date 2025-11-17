@@ -22,6 +22,7 @@ to the existing internal /api/v3/sitemap/scan endpoint.
 
 import logging
 import uuid
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -103,10 +104,35 @@ class DomainToSitemapAdapterService:
             
             job = await job_service.create(session, job_data)
             
-            # 4. Check result and update status IN MEMORY
+            # 4. Initialize job in memory (required for background processing)
+            from src.services.sitemap.processing_service import _job_statuses
+            
+            _job_statuses[job_id] = {
+                "status": "pending",
+                "created_at": datetime.utcnow().isoformat(),
+                "domain": domain.domain,
+                "progress": 0.0,
+                "metadata": {"sitemaps": []},
+            }
+            
+            # 5. Trigger background processing (this is what the HTTP endpoint does)
+            import asyncio
+            from src.services.sitemap.processing_service import process_domain_with_own_session
+            
+            # Start background task without waiting for it
+            asyncio.create_task(
+                process_domain_with_own_session(
+                    job_id=job_id,
+                    domain=domain.domain,
+                    user_id=None,  # System-initiated
+                    max_urls=1000,
+                )
+            )
+            
+            # 6. Check result and update status IN MEMORY
             if job:
                 logger.info(
-                    f"Adapter Service: Successfully created sitemap job for domain {domain.domain} ({domain_id}), job_id: {job_id}"
+                    f"Adapter Service: Successfully created and started sitemap job for domain {domain.domain} ({domain_id}), job_id: {job_id}"
                 )
                 domain.sitemap_analysis_status = SitemapAnalysisStatusEnum.submitted  # type: ignore
                 domain.sitemap_analysis_error = None  # type: ignore
