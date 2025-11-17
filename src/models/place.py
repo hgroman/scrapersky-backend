@@ -81,6 +81,7 @@ class Place(Base):
             name="place_status",  # Fixed: Use actual DB enum name (not place_status_enum)
             create_type=False,
             native_enum=True,
+            values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values, not names
         ),
         default=PlaceStatusEnum.New,
         nullable=False,
