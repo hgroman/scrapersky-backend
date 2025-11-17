@@ -99,9 +99,9 @@ class DomainToSitemapAdapterService:
             }
 
             # 3. Make HTTP POST request
-            # Use the development bypass token for internal API calls
-            # This token is recognized by jwt_auth.py:95 for development mode bypass
-            api_key = "scraper_sky_2024"
+            # Use service role key for internal service-to-service calls
+            # The dev bypass token no longer works in production (WO-001/WO-002 security fix)
+            api_key = settings.SUPABASE_SERVICE_ROLE_KEY
 
             headers = {
                 "Authorization": f"Bearer {api_key}",
