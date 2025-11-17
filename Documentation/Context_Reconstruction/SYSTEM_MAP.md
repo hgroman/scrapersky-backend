@@ -1,6 +1,7 @@
 # ScraperSky System Map
 **Purpose:** Complete architecture overview  
-**Last Updated:** November 17, 2025
+**Last Updated:** November 17, 2025  
+**Version:** 2.0 (Added ENUM Registry & Model Constraints)
 
 ---
 
@@ -82,6 +83,201 @@ sitemap_files (1) → (N) pages
 ```
 
 **Detailed Schema:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](../Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
+
+---
+
+## Core Model File Map
+
+**Purpose:** Single source of truth for model locations (prevents "couldn't find file" errors)
+
+| Model | File Path | Primary Table |
+|-------|-----------|---------------|
+| Domain | `src/models/domain.py` | `domains` |
+| SitemapFile | `src/models/sitemap.py` | `sitemap_files` |
+| Page | `src/models/page.py` | `pages` |
+| LocalBusiness | `src/models/local_business.py` | `local_businesses` |
+| Place | `src/models/place.py` | `places` |
+| Contact | `src/models/contact.py` | `contacts` |
+| Job | `src/models/job.py` | `jobs` |
+
+---
+
+## Critical Model Constraints (Database Rules)
+
+**Purpose:** Document non-obvious, show-stopping database constraints that AIs must not violate
+
+### Page Model (`src/models/page.py`)
+
+**CRITICAL CONSTRAINT:**
+```python
+# Line 58-60
+domain_id: Column[uuid.UUID] = Column(
+    PGUUID(as_uuid=True), ForeignKey("domains.id"), nullable=False  # ← NOT NULL
+)
+```
+
+**Impact:** All Page records MUST be associated with a Domain. Direct page submissions must "get-or-create" a Domain record first.
+
+**Nullable Fields:**
+- `sitemap_file_id` - CAN be NULL (for direct submissions)
+- `page_category` - CAN be NULL (no Honeybee categorization)
+- `priority_level` - Defaults to 5 if NULL
+
+---
+
+### SitemapFile Model (`src/models/sitemap.py`)
+
+**CRITICAL CONSTRAINT:**
+```python
+# Line 104
+domain_id = Column(PGUUID, ForeignKey("domains.id"), nullable=False, index=True)  # ← NOT NULL
+```
+
+**Impact:** All SitemapFile records MUST be associated with a Domain. Direct sitemap submissions must "get-or-create" a Domain record first.
+
+**Nullable Fields:**
+- `url_count` - CAN be NULL (populated after import)
+- `last_modified` - CAN be NULL
+- `size_bytes` - CAN be NULL
+
+---
+
+### Domain Model (`src/models/domain.py`)
+
+**Nullable Foreign Keys:**
+```python
+# Line 169-174
+local_business_id = Column(
+    PGUUID,
+    ForeignKey("local_businesses.id", ondelete="SET NULL"),
+    index=True,
+    nullable=True,  # ← CAN be NULL (for direct submissions)
+)
+```
+
+**Impact:** Domains CAN exist without a LocalBusiness (e.g., from direct page/sitemap submission).
+
+---
+
+## Core ENUM Registry (Single Source of Truth)
+
+**Purpose:** Prevent "inconsistent casing" false alarms and ENUM catastrophes
+
+### Domain Model ENUMs (`src/models/domain.py`)
+
+#### SitemapCurationStatusEnum
+**Location:** `src/models/domain.py:36-46`  
+**Casing:** PascalCase values  
+**Database Type:** `SitemapCurationStatusEnum`
+
+```python
+class SitemapCurationStatusEnum(enum.Enum):
+    New = "New"
+    Selected = "Selected"
+    Maybe = "Maybe"
+    Not_a_Fit = "Not a Fit"  # Space in value is intentional
+    Archived = "Archived"
+    Completed = "Completed"
+```
+
+#### SitemapAnalysisStatusEnum
+**Location:** `src/models/domain.py:52-61`  
+**Casing:** lowercase values (INTENTIONAL - matches database)  
+**Database Type:** `SitemapAnalysisStatusEnum`
+
+```python
+class SitemapAnalysisStatusEnum(enum.Enum):
+    """Values MUST match database exactly (lowercase)"""
+    pending = "pending"
+    queued = "queued"
+    processing = "processing"
+    submitted = "submitted"
+    failed = "failed"
+```
+
+**⚠️ NOTE:** The lowercase casing is CORRECT and intentional. This is NOT an error.
+
+---
+
+### Page Model ENUMs (`src/models/page.py`)
+
+#### PageCurationStatus
+**Location:** `src/models/page.py` (imported from `src/models/enums.py`)  
+**Casing:** PascalCase values  
+**Database Type:** `page_curation_status`
+
+```python
+class PageCurationStatus(str, Enum):
+    New = "New"
+    Selected = "Selected"
+    Rejected = "Rejected"
+```
+
+#### PageProcessingStatus
+**Location:** `src/models/page.py` (imported from `src/models/enums.py`)  
+**Casing:** PascalCase values  
+**Database Type:** `page_processing_status`
+
+```python
+class PageProcessingStatus(str, Enum):
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+```
+
+---
+
+### SitemapFile Model ENUMs (`src/models/sitemap.py`)
+
+#### SitemapImportCurationStatusEnum
+**Location:** `src/models/sitemap.py:54-62`  
+**Casing:** PascalCase values  
+**Database Type:** `SitemapCurationStatusEnum` (note: different from class name)
+
+```python
+class SitemapImportCurationStatusEnum(enum.Enum):
+    New = "New"
+    Selected = "Selected"
+    Maybe = "Maybe"
+    Not_a_Fit = "Not a Fit"  # Space in value is intentional
+    Archived = "Archived"
+```
+
+#### SitemapImportProcessStatusEnum
+**Location:** `src/models/sitemap.py:65-74`  
+**Casing:** PascalCase values  
+**Database Type:** `sitemapimportprocessingstatus`
+
+```python
+class SitemapImportProcessStatusEnum(enum.Enum):
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"  # NOT "Completed"
+    Error = "Error"
+```
+
+**⚠️ NOTE:** The value is "Complete" not "Completed" - this is intentional.
+
+---
+
+## ENUM Usage Rules (ADR-005)
+
+**CRITICAL:** Never create, modify, or rename ENUMs without understanding cross-layer dependencies.
+
+### Safe Operations
+✅ Use existing ENUM values  
+✅ Query using `.value` (e.g., `PageCurationStatus.New.value`)  
+✅ Import ENUMs from Layer 1 (models) to Layer 2 (schemas)
+
+### Forbidden Operations
+❌ Create new ENUM values  
+❌ Change existing ENUM values  
+❌ Rename ENUM classes  
+❌ Change ENUM casing  
+❌ Use `use_enum_values=True` in Pydantic (deprecated)
+
+**Reference:** [ADR-005: ENUM Catastrophe Prevention](../Architecture/ADR-005_ENUM_CATASTROPHE.md)
 
 ---
 

@@ -1,0 +1,17 @@
+Your work orders have been corrected by local AI with code access.
+
+CRITICAL: domain_id cannot be NULL (nullable=False constraint). Your WO-009 and WO-011 would fail 100%.
+
+ACTIONS:
+1. git pull origin claude/read-context-docs-01E8GWdNj2rJUHkN231xBFus
+2. Read: Documentation/Work_Orders/INSTRUCTIONS_FOR_CLAUDE_ONLINE.md
+3. Review corrected WO-009 (see lines 361-383 for get-or-create domain logic)
+4. Review corrected WO-011 (Phase 0 now complete)
+5. git checkout main && cat Documentation/Work_Orders/WO-009-011_CRITICAL_VERIFICATION_REPORT.md
+
+NEW DOCS (main branch):
+- SYSTEM_MAP.md v2.0 has 3 new sections: Model File Map, Critical Constraints, ENUM Registry
+
+VERDICT: 80% of your work was correct. Only domain handling needed fixing (+2.5 hours total).
+
+WO-010 unchanged. Proceed when ready.
