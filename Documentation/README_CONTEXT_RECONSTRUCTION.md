@@ -237,13 +237,14 @@ Can rebuild understanding from scratch in 30-60 minutes.
 - **0aaaad6** - Disabled scheduler (caused 2-month outage)
 
 ### Key Workflows
-- **WF1:** Single Search (Google Maps)
-- **WF2:** Deep Scan (enrichment)
-- **WF3:** Domain Extraction
-- **WF4:** Sitemap Discovery
-- **WF5:** Sitemap Import
-- **WF6:** [Unknown - needs documentation]
-- **WF7:** Page Curation / Contact Extraction
+- **WF1:** Single Search (Google Maps) - [WF1_SINGLE_SEARCH.md](./Architecture/WF1_SINGLE_SEARCH.md)
+- **WF2:** Deep Scan (enrichment) - [WF2_WF3_ENRICHMENT_EXTRACTION.md](./Architecture/WF2_WF3_ENRICHMENT_EXTRACTION.md)
+- **WF3:** Domain Extraction - [WF2_WF3_ENRICHMENT_EXTRACTION.md](./Architecture/WF2_WF3_ENRICHMENT_EXTRACTION.md)
+- **WF4:** Sitemap Discovery - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
+- **WF5:** Sitemap Import - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
+- **WF7:** Page Curation / Contact Extraction - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
+
+**Note:** There is no WF6. References to "WF6" in code comments are outdated. The numbering skips from WF5 to WF7.
 
 ### Key Tables
 - `places` → `local_business` → `domains` → `sitemap_files` → `pages`
@@ -255,10 +256,11 @@ Can rebuild understanding from scratch in 30-60 minutes.
 - PageCurationService (WF7)
 
 ### External Dependencies
-- ScraperAPI (page scraping)
-- Supabase (database)
-- Render.com (deployment)
-- Honeybee (URL categorization)
+- **Google Maps API** (WF1-2 business discovery) - [DEPENDENCY_MAP.md](./Context_Reconstruction/DEPENDENCY_MAP.md#google-maps-api)
+- **ScraperAPI** (WF7 page scraping) - [DEPENDENCY_MAP.md](./Context_Reconstruction/DEPENDENCY_MAP.md#scraperapi)
+- **Supabase** (database) - [DEPENDENCY_MAP.md](./Context_Reconstruction/DEPENDENCY_MAP.md#supabase-database)
+- **Render.com** (deployment) - [DEPENDENCY_MAP.md](./Context_Reconstruction/DEPENDENCY_MAP.md#rendercom)
+- **Honeybee** (WF5-6 URL categorization) - [DEPENDENCY_MAP.md](./Context_Reconstruction/DEPENDENCY_MAP.md#honeybee)
 
 ---
 

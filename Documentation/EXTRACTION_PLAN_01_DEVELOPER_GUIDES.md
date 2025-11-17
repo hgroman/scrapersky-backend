@@ -30,7 +30,7 @@
 
 **Verification Against Working Code:**
 ```python
-# src/models/page.py:110-119 - WF6/WF7 Dual Adapter Pattern
+# src/models/page.py:110-119 - WF5/WF7 Dual Adapter Pattern
 page_curation_status: Column[PageCurationStatus] = Column(
     SQLAlchemyEnum(
         PageCurationStatus,

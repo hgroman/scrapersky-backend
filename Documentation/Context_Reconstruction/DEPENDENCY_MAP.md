@@ -205,23 +205,59 @@ if (
 ## Google Maps API
 
 ### Overview
-- **Type:** External API
-- **Purpose:** Search for businesses (WF1)
-- **Used By:** [Needs documentation - WF1 services]
+- **Type:** External API (Google Cloud Platform)
+- **Purpose:** Business search and place details (WF1 Single Search)
+- **Used By:** WF1 services (`src/services/places/`) and router (`src/routers/google_maps_api.py`)
+- **API Documentation:** `Docs_Context7/External_APIs/Google_Maps_API_Documentation.md`
 
-### Status
-**Needs Documentation:**
-- Configuration
-- API key location
-- Rate limits
-- Cost per request
-- Failure modes
+### Configuration
+```python
+# From .env
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
-### Investigation
-```bash
-grep -r "google.*maps" src/
-grep -r "places.*api" src/
+# Used in WF1 services
+from src.config.settings import settings
+api_key = settings.google_maps_api_key
 ```
+
+### APIs Used
+- **Places API:** Text search for businesses (`places()` method)
+- **Geocoding API:** Address-to-coordinate conversion
+- **Place Details API:** Additional place information
+
+### Rate Limits
+- **Quota Type:** Per project (Google Cloud)
+- **Limit:** Varies by API and billing plan
+- **Monitoring:** Google Cloud Console
+- **Best Practice:** Implement caching to reduce API calls
+
+### Cost Structure
+- **Pricing Model:** Pay-per-request
+- **Place Search:** $32 per 1,000 requests (Text Search)
+- **Place Details:** $17 per 1,000 requests (Basic Data)
+- **Optimization:** Cache results, batch requests where possible
+- **Free Tier:** $200/month credit (Google Cloud)
+
+### Failure Modes
+- **Invalid API Key:** HTTP 403 errors
+- **Quota Exceeded:** HTTP 429 errors
+- **Network Timeout:** Connection failures
+- **Invalid Query:** HTTP 400 errors
+- **Rate Limiting:** Temporary throttling
+
+### Mitigation
+- [x] API key in environment variables (security)
+- [ ] Implement request caching (cost reduction)
+- [ ] Add retry logic with exponential backoff
+- [ ] Monitor quota usage in Google Cloud Console
+- [ ] Alert on quota thresholds (80%, 90%)
+
+### Impact if Down
+- **Severity:** HIGH
+- **Impact:** WF1 stops, no new business discovery
+- **Workaround:** None (required for business search)
+- **Recovery:** Wait for Google service restoration
+- **Mitigation:** Cache previous results for common queries
 
 ---
 

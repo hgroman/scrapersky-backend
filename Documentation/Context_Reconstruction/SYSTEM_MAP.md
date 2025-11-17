@@ -6,8 +6,35 @@
 
 ## Complete Data Flow (All 7 Workflows)
 
+### Visual Flow Diagram
+
+```mermaid
+graph TD
+    A[WF1: Single Search] -->|Google Maps API| B[Place Records]
+    B --> C[WF2: Deep Scan]
+    C -->|Enrich details| D[Place enriched]
+    D --> E[WF3: Domain Extraction]
+    E -->|Extract website| F[LocalBusiness]
+    F -->|Create| G[Domain Records]
+    G --> H[WF4: Sitemap Discovery]
+    H -->|Find sitemap.xml| I[SitemapFile Records]
+    I --> J[WF5: Sitemap Import]
+    J -->|Parse XML + Honeybee| K[Page Records]
+    K --> L[WF7: Page Curation]
+    L -->|ScraperAPI scrape| M[Contact Data]
+
+    style A fill:#e1f5ff
+    style C fill:#e1f5ff
+    style E fill:#e1f5ff
+    style H fill:#fff3cd
+    style J fill:#fff3cd
+    style L fill:#d4edda
 ```
-WF1: Single Search
+
+### Text Flow
+
+```
+WF1: Single Search (Google Maps)
     ↓ Google Maps API
 Place (Google Maps data)
     ↓
@@ -19,20 +46,20 @@ WF3: Domain Extraction
     ↓ Extract website field
 LocalBusiness → Domain
     ↓
-WF4: Sitemap Discovery
+WF4: Sitemap Discovery/Curation
     ↓ Try common sitemap paths
 Domain → SitemapFile (1:N)
     ↓
 WF5: Sitemap Import
-    ↓ Parse XML, Honeybee categorization
+    ↓ Parse XML, extract URLs, Honeybee categorization
 SitemapFile → Page (1:N)
-    ↓
-WF6: [Status Unknown - Needs Documentation]
     ↓
 WF7: Page Curation / Contact Extraction
     ↓ ScraperAPI + regex extraction
 Page → Contacts (in scraped_content JSONB)
 ```
+
+**Note:** There is NO WF6 workflow. References to "WF6" in code comments are outdated. WF5 handles all sitemap import functionality.
 
 ---
 
@@ -88,12 +115,11 @@ sitemap_files (1) → (N) pages
 **Services:**
 - `SitemapImportService` - Extracts URLs from sitemaps
 
-**Tables:** sitemap_files → pages  
-**Scheduler:** sitemap_import_scheduler (configurable)  
+**Tables:** sitemap_files → pages
+**Scheduler:** sitemap_import_scheduler (configurable)
 **Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf5-services)
 
-### WF6: [Unknown]
-**Status:** Needs investigation
+**Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 ### WF7: Page Curation
 **Services:**
