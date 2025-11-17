@@ -241,11 +241,10 @@ Can rebuild understanding from scratch in 30-60 minutes.
 - **WF2:** Deep Scan (enrichment) - [WF2_WF3_ENRICHMENT_EXTRACTION.md](./Architecture/WF2_WF3_ENRICHMENT_EXTRACTION.md)
 - **WF3:** Domain Extraction - [WF2_WF3_ENRICHMENT_EXTRACTION.md](./Architecture/WF2_WF3_ENRICHMENT_EXTRACTION.md)
 - **WF4:** Sitemap Discovery - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
-- **WF5:** Sitemap Curation - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
-- **WF6:** Sitemap Import (URL extraction) - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
+- **WF5:** Sitemap Import - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
 - **WF7:** Page Curation / Contact Extraction - [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
 
-**Note:** WF5 (Sitemap Curation) and WF6 (Sitemap Import) are distinct workflows
+**Note:** There is no WF6. References to "WF6" in code comments are outdated. The numbering skips from WF5 to WF7.
 
 ### Key Tables
 - `places` → `local_business` → `domains` → `sitemap_files` → `pages`

@@ -26,14 +26,13 @@ graph LR
     WF1[WF1: Search] --> WF2[WF2: Enrich]
     WF2 --> WF3[WF3: Extract]
     WF3 --> WF4[WF4: Discover]
-    WF4 --> WF5[WF5: Curate]
-    WF5 --> WF6[WF6: Import]
-    WF6 --> WF7[WF7: Extract]
+    WF4 --> WF5[WF5: Import]
+    WF5 --> WF7[WF7: Extract]
 
     WF1 -.->|places| DB1[(Database)]
     WF3 -.->|domains| DB1
     WF4 -.->|sitemaps| DB1
-    WF6 -.->|pages| DB1
+    WF5 -.->|pages| DB1
     WF7 -.->|contacts| DB1
 ```
 
@@ -58,7 +57,7 @@ graph LR
 **Tables:** `local_business`, `domains`
 **Service:** Domain extraction scheduler
 
-### WF4: Sitemap Discovery/Curation
+### WF4: Sitemap Discovery
 **Purpose:** Find sitemap files for domains
 **Input:** Domain record
 **Output:** SitemapFile records
@@ -66,20 +65,15 @@ graph LR
 **Scheduler:** Every 1 minute
 **Service:** `domain_to_sitemap_adapter_service.py`
 
-### WF5: Sitemap Curation (User Selection)
-**Purpose:** User selects which sitemaps to process
+### WF5: Sitemap Import
+**Purpose:** Parse sitemaps and extract individual page URLs with Honeybee categorization
 **Input:** SitemapFile records
-**Output:** Selected sitemaps marked for import
-**Tables:** `sitemap_files` (curation status updated)
-**GUI:** Sitemap curation interface
-
-### WF6: Sitemap Import (URL Extraction)
-**Purpose:** Extract individual page URLs from selected sitemaps
-**Input:** Selected SitemapFile records
-**Output:** Page records with Honeybee categorization
+**Output:** Page records with categories
 **Tables:** `sitemap_files` → `pages`
 **Scheduler:** Configurable interval
 **Service:** `sitemap_import_service.py`
+
+**Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 ### WF7: Page Curation / Contact Extraction
 **Purpose:** Scrape pages and extract contact information

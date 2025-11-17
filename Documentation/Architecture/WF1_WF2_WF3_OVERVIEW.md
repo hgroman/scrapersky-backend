@@ -187,7 +187,7 @@ domains (WF3 creates, WF4 processes)
   ↓ 1:N
 sitemap_files (WF4)
   ↓ 1:N
-pages (WF6)
+pages (WF5)
 ```
 
 ### Schema Details
@@ -333,9 +333,10 @@ grep -r "domain_extraction_scheduler" src/
 
 After WF3 creates Domain records, the pipeline continues:
 - **WF4:** Sitemap Discovery (find sitemap.xml files)
-- **WF5:** Sitemap Curation (user selects sitemaps)
-- **WF6:** Sitemap Import (extract URLs)
+- **WF5:** Sitemap Import (parse sitemaps, extract URLs)
 - **WF7:** Page Curation (scrape contacts)
+
+**Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 **Reference:** [WF4_WF5_WF7_COMPLETE_INDEX.md](./WF4_WF5_WF7_COMPLETE_INDEX.md)
 
