@@ -1,8 +1,14 @@
 # tests/conftest.py
 
 import uuid  # Added for generating fixture IDs
+from typing import AsyncGenerator
 
 import pytest
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.pool import NullPool
+
+from src.models.base import Base
 
 # Add the project root to the Python path to allow importing tools
 # project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -56,6 +62,44 @@ def batch_id():
 def domain():
     """Provides a default domain string for tests."""
     return "example.com"
+
+
+# Database testing fixtures
+
+@pytest_asyncio.fixture(scope="function")
+async def db_engine():
+    """Create a test database engine."""
+    # Use in-memory SQLite for testing
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        poolclass=NullPool,
+        echo=False
+    )
+    
+    # Create all tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
+    yield engine
+    
+    # Cleanup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
+    """Create a test database session."""
+    async_session = async_sessionmaker(
+        db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+    
+    async with async_session() as session:
+        yield session
+        await session.rollback()
 
 
 # You can add other session-wide fixtures here if needed
