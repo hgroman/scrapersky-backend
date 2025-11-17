@@ -19,46 +19,75 @@ ScraperSky is a **business intelligence platform** that:
 
 ## The 7 Workflows (2 minutes)
 
-### WF1: Single Search
-**Purpose:** Search Google Maps for a single business  
-**Input:** Search query (e.g., "eye doctors in Honolulu")  
-**Output:** Place records with Google Maps data  
-**Table:** `places`
+### Quick Visual
 
-### WF2: Deep Scan
-**Purpose:** Enrich Place records with additional details  
-**Input:** Place record  
-**Output:** Enriched Place with photos, reviews, hours  
+```mermaid
+graph LR
+    WF1[WF1: Search] --> WF2[WF2: Enrich]
+    WF2 --> WF3[WF3: Extract]
+    WF3 --> WF4[WF4: Discover]
+    WF4 --> WF5[WF5: Curate]
+    WF5 --> WF6[WF6: Import]
+    WF6 --> WF7[WF7: Extract]
+
+    WF1 -.->|places| DB1[(Database)]
+    WF3 -.->|domains| DB1
+    WF4 -.->|sitemaps| DB1
+    WF6 -.->|pages| DB1
+    WF7 -.->|contacts| DB1
+```
+
+### WF1: Single Search (Google Maps)
+**Purpose:** Search Google Maps for businesses
+**Input:** Search query (e.g., "eye doctors in Honolulu")
+**Output:** Place records with Google Maps data
+**Table:** `places`
+**Service:** `src/services/places/places_search_service.py`
+
+### WF2: Deep Scan (Enrichment)
+**Purpose:** Enrich Place records with additional details
+**Input:** Place record
+**Output:** Enriched Place with photos, reviews, hours
 **Table:** `places` (updated)
+**Service:** `src/services/places/places_deep_service.py`
 
 ### WF3: Domain Extraction
-**Purpose:** Extract website domains from Place records  
-**Input:** Place record with website  
-**Output:** LocalBusiness → Domain records  
+**Purpose:** Extract website domains from Place records
+**Input:** Place record with website
+**Output:** LocalBusiness → Domain records
 **Tables:** `local_business`, `domains`
+**Service:** Domain extraction scheduler
 
-### WF4: Sitemap Discovery
-**Purpose:** Find sitemap files for domains  
-**Input:** Domain record  
-**Output:** SitemapFile records  
-**Tables:** `domains` → `sitemap_files`  
+### WF4: Sitemap Discovery/Curation
+**Purpose:** Find sitemap files for domains
+**Input:** Domain record
+**Output:** SitemapFile records
+**Tables:** `domains` → `sitemap_files`
 **Scheduler:** Every 1 minute
+**Service:** `domain_to_sitemap_adapter_service.py`
 
-### WF5: Sitemap Import
-**Purpose:** Extract individual page URLs from sitemaps  
-**Input:** SitemapFile record  
-**Output:** Page records with Honeybee categorization  
-**Tables:** `sitemap_files` → `pages`  
+### WF5: Sitemap Curation (User Selection)
+**Purpose:** User selects which sitemaps to process
+**Input:** SitemapFile records
+**Output:** Selected sitemaps marked for import
+**Tables:** `sitemap_files` (curation status updated)
+**GUI:** Sitemap curation interface
+
+### WF6: Sitemap Import (URL Extraction)
+**Purpose:** Extract individual page URLs from selected sitemaps
+**Input:** Selected SitemapFile records
+**Output:** Page records with Honeybee categorization
+**Tables:** `sitemap_files` → `pages`
 **Scheduler:** Configurable interval
-
-### WF6: [Status Unknown - Needs Documentation]
+**Service:** `sitemap_import_service.py`
 
 ### WF7: Page Curation / Contact Extraction
-**Purpose:** Scrape pages and extract contact information  
-**Input:** Page record  
-**Output:** Contacts stored in `scraped_content` (JSONB)  
-**Table:** `pages` (updated)  
+**Purpose:** Scrape pages and extract contact information
+**Input:** Page record
+**Output:** Contacts stored in `scraped_content` (JSONB)
+**Table:** `pages` (updated)
 **Scheduler:** Configurable interval
+**Service:** `WF7_V2_L4_1of2_PageCurationService.py`
 
 ---
 
@@ -146,8 +175,18 @@ git show <commit-hash>
 
 ### Run Tests
 ```bash
-# [Add test commands when available]
-pytest tests/
+# Run all tests
+pytest tests/ -v
+
+# Run specific test modules
+pytest tests/services/test_domain_extraction_scheduler.py
+pytest tests/services/test_deep_scan_scheduler.py
+
+# Run WF6 component tests
+cd tests/WF6
+./scripts/test_component.py
+
+# Note: Test configuration in tests/conftest.py
 ```
 
 ---

@@ -6,8 +6,38 @@
 
 ## Complete Data Flow (All 7 Workflows)
 
+### Visual Flow Diagram
+
+```mermaid
+graph TD
+    A[WF1: Single Search] -->|Google Maps API| B[Place Records]
+    B --> C[WF2: Deep Scan]
+    C -->|Enrich details| D[Place enriched]
+    D --> E[WF3: Domain Extraction]
+    E -->|Extract website| F[LocalBusiness]
+    F -->|Create| G[Domain Records]
+    G --> H[WF4: Sitemap Discovery]
+    H -->|Find sitemap.xml| I[SitemapFile Records]
+    I --> J[WF5: Sitemap Curation]
+    J -->|User selects| K[Selected Sitemaps]
+    K --> L[WF6: Sitemap Import]
+    L -->|Parse XML + Honeybee| M[Page Records]
+    M --> N[WF7: Page Curation]
+    N -->|ScraperAPI scrape| O[Contact Data]
+
+    style A fill:#e1f5ff
+    style C fill:#e1f5ff
+    style E fill:#e1f5ff
+    style H fill:#fff3cd
+    style J fill:#fff3cd
+    style L fill:#fff3cd
+    style N fill:#d4edda
 ```
-WF1: Single Search
+
+### Text Flow
+
+```
+WF1: Single Search (Google Maps)
     ↓ Google Maps API
 Place (Google Maps data)
     ↓
@@ -19,20 +49,26 @@ WF3: Domain Extraction
     ↓ Extract website field
 LocalBusiness → Domain
     ↓
-WF4: Sitemap Discovery
+WF4: Sitemap Discovery/Curation
     ↓ Try common sitemap paths
 Domain → SitemapFile (1:N)
     ↓
-WF5: Sitemap Import
-    ↓ Parse XML, Honeybee categorization
-SitemapFile → Page (1:N)
+WF5: Sitemap Curation (User Selection)
+    ↓ User curates which sitemaps to import
+Selected SitemapFiles
     ↓
-WF6: [Status Unknown - Needs Documentation]
+WF6: Sitemap Import (URL Extraction)
+    ↓ Parse XML, extract URLs, Honeybee categorization
+SitemapFile → Page (1:N)
     ↓
 WF7: Page Curation / Contact Extraction
     ↓ ScraperAPI + regex extraction
 Page → Contacts (in scraped_content JSONB)
 ```
+
+**Note:** WF5 and WF6 are distinct workflows:
+- **WF5:** User curates/selects which sitemap files to process
+- **WF6:** System imports URLs from selected sitemaps into Page records
 
 ---
 
