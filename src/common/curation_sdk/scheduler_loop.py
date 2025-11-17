@@ -69,6 +69,7 @@ async def run_job_loop(
                 select(model.id)  # Select only IDs initially
                 .where(getattr(model, status_field_name) == queued_status)
                 .limit(batch_size)
+                .with_for_update(skip_locked=True)  # Prevent race conditions
             )
             mapper = sqlainspect(model)
             has_updated_at = "updated_at" in mapper.columns
