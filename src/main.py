@@ -48,6 +48,7 @@ from .routers.modernized_sitemap import router as modernized_sitemap_api_router
 from .routers.places_staging import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
 from .routers.sitemap_files import router as sitemap_files_router
+from .routers.v3.sitemaps_direct_submission_router import router as sitemaps_direct_submission_router
 from .routers.v3.contacts_router import router as contacts_router
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
@@ -289,6 +290,7 @@ app.include_router(v3_pages_router)  # V3 compliant version
 app.include_router(pages_direct_submission_router)
 app.include_router(google_maps_api_router)
 app.include_router(modernized_sitemap_api_router)
+app.include_router(sitemaps_direct_submission_router)
 app.include_router(
     batch_page_scraper_api_router, prefix="/api/v3", tags=["Batch Page Scraper"]
 )
