@@ -49,11 +49,11 @@ class SitemapFile(Base):
 
     # Core Fields
     url: String (required, unique)
-    domain_id: UUID (optional - can be NULL or matched)
+    domain_id: UUID (REQUIRED - nullable=False) ⚠️ CRITICAL CONSTRAINT
 
-    # STATUS FIELDS (Check actual model for exact pattern)
-    sitemap_curation_status: SitemapCurationStatus (ENUM)
-    sitemap_import_status: SitemapImportStatus (ENUM)
+    # STATUS FIELDS (verified from src/models/sitemap.py)
+    deep_scrape_curation_status: SitemapImportCurationStatusEnum (ENUM)
+    sitemap_import_status: SitemapImportProcessStatusEnum (ENUM)
 
     # Sitemap Metadata (populated after import)
     url_count: Integer (nullable)
@@ -66,31 +66,31 @@ class SitemapFile(Base):
     user_id: UUID (nullable)
 ```
 
-**⚠️ CRITICAL PRE-VERIFICATION REQUIRED:**
-```bash
-# MUST verify actual model structure before implementation
-cat src/models/sitemap.py | grep -A 5 "class SitemapFile"
-cat src/models/sitemap.py | grep "status"
-```
+**✅ VERIFIED:** Model structure confirmed via SYSTEM_MAP.md and verification report
 
 ### ENUM Dependencies (CRITICAL - ADR-005)
 
-**⚠️ VERIFICATION REQUIRED - Check actual model:**
+**✅ VERIFIED from src/models/sitemap.py:**
 ```python
-# Expected pattern (verify against code):
-class SitemapCurationStatus(str, Enum):
+class SitemapImportCurationStatusEnum(enum.Enum):
+    """Curation status for sitemap import."""
     New = "New"
     Selected = "Selected"
-    Rejected = "Rejected"
+    Maybe = "Maybe"
+    Not_a_Fit = "Not a Fit"
+    Archived = "Archived"
 
-class SitemapImportStatus(str, Enum):
+class SitemapImportProcessStatusEnum(enum.Enum):
+    """Processing status for sitemap import."""
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
     Error = "Error"
 ```
 
-**ACTION REQUIRED:** Document actual ENUM definitions before proceeding
+**Status Field Names:**
+- Curation: `deep_scrape_curation_status`
+- Processing: `sitemap_import_status`
 
 ---
 
@@ -99,18 +99,19 @@ class SitemapImportStatus(str, Enum):
 ### Required Fields (Direct Submission)
 1. ✅ `id` - UUID generation
 2. ✅ `url` - User-provided sitemap URL (must validate)
-3. ✅ `sitemap_curation_status` - Set based on `auto_import` flag
+3. ✅ `deep_scrape_curation_status` - Set based on `auto_import` flag
 4. ✅ `sitemap_import_status` - Set based on `auto_import` flag
 5. ✅ `created_at` - `datetime.utcnow()`
 6. ✅ `user_id` - From JWT token
 
-### Optional Fields
-1. ⚠️ `domain_id` - **DECISION REQUIRED:**
-   - **Option A:** NULL (not matched to domain)
-   - **Option B:** Auto-match domain from sitemap URL
-   - **Option C:** User-provided domain_id (optional parameter)
+### Fields Requiring Get-or-Create Logic
+1. ✅ `domain_id` - **MUST be populated** (nullable=False constraint)
+   - Extract domain from sitemap URL using domain extraction utility
+   - Get existing domain by name OR create new domain
+   - Auto-created domains have `local_business_id=NULL` (allowed)
 
-2. ✅ `url_count` - NULL initially (populated after import)
+### Optional Fields
+1. ✅ `url_count` - NULL initially (populated after import)
 3. ✅ `last_modified` - NULL initially
 4. ✅ `file_size` - NULL initially
 
@@ -162,29 +163,51 @@ def extract_domain_from_sitemap_url(sitemap_url: str) -> str:
 
 ## Risk Assessment
 
-### MEDIUM RISK: Domain Matching Decision
+### RESOLVED: Domain ID Constraint (Critical)
 
-**Risk:** Ambiguity in how to handle `domain_id` field
+**Original Risk:** Assumed `domain_id` could be NULL for direct submissions
 
-**Options:**
-1. **NULL domain_id** (simplest, lowest risk)
-   - Pros: No domain matching logic, no conflicts
-   - Cons: Sitemaps not linked to domains
+**Ground Truth:** `domain_id` has `nullable=False` constraint (verified via SYSTEM_MAP.md Critical Constraints and WO-009-011_CRITICAL_VERIFICATION_REPORT.md)
 
-2. **Auto-match domain** (medium complexity)
-   - Pros: Maintains domain relationships
-   - Cons: What if domain doesn't exist? Create it automatically?
+**Solution: Get-or-Create Domain Pattern**
+```python
+# Extract domain from sitemap URL
+from urllib.parse import urlparse
 
-3. **User-provided domain_id** (most flexible)
-   - Pros: User controls relationship
-   - Cons: Requires user to know domain_id
+def extract_domain_from_sitemap_url(url: str) -> str:
+    """Extract domain from sitemap URL (e.g., 'example.com' from 'https://www.example.com/sitemap.xml')."""
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    # Remove 'www.' prefix if present
+    if domain.startswith('www.'):
+        domain = domain[4:]
+    return domain
 
-**RECOMMENDED DECISION:**
-- **Phase 1:** NULL domain_id (defer matching)
-- **Phase 2:** Optional `domain_id` parameter
-- **Phase 3:** Auto-match with auto-create option
+# Get or create domain
+domain_name = extract_domain_from_sitemap_url(sitemap_url_str)
+result = await session.execute(
+    select(Domain).where(Domain.domain == domain_name)
+)
+domain = result.scalar_one_or_none()
 
-**For this work order, implement Option 1 (NULL domain_id)**
+if not domain:
+    domain = Domain(
+        id=uuid.uuid4(),
+        domain=domain_name,
+        local_business_id=None,  # NULL OK here (nullable=True)
+        sitemap_curation_status=SitemapCurationStatusEnum.New,
+        sitemap_analysis_status=None,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    session.add(domain)
+    await session.flush()  # Get domain.id before using it
+
+# Now create sitemap file with valid domain_id
+sitemap_file.domain_id = domain.id  # NOT NULL ✅
+```
+
+**Impact:** Maintains referential integrity, enables domain-sitemap analytics, no database migration needed
 
 ---
 
@@ -220,60 +243,28 @@ grep -A 20 "sitemap_import_status" src/services/sitemap_import_scheduler.py
 
 ## Implementation Plan
 
-### Phase 0: Critical Pre-Verification (30 min)
+### Phase 0: Critical Pre-Verification ✅ COMPLETE
 
-**⚠️ MUST COMPLETE BEFORE PROCEEDING**
+**✅ VERIFICATION COMPLETED** via WO-009-011_CRITICAL_VERIFICATION_REPORT.md and SYSTEM_MAP.md
 
-**Task 0.1: Document Actual Model Structure**
-```bash
-# Read actual SitemapFile model
-cat src/models/sitemap.py > /tmp/sitemap_model.txt
-
-# Document:
-# 1. Exact class name (SitemapFile? Sitemap? SitemapURL?)
-# 2. Exact status field names
-# 3. Exact ENUM definitions
-# 4. domain_id: nullable or required?
+**VERIFIED MODEL STRUCTURE:**
+```
+- Class name: SitemapFile (src/models/sitemap.py)
+- Status field 1: deep_scrape_curation_status (SitemapImportCurationStatusEnum)
+- Status field 2: sitemap_import_status (SitemapImportProcessStatusEnum)
+- ENUM 1 values: New, Selected, Maybe, Not_a_Fit, Archived
+- ENUM 2 values: Queued, Processing, Complete, Error
+- domain_id nullable: NO (nullable=False) ⚠️ CRITICAL
+- Unique constraint: url (unique=True)
 ```
 
-**Task 0.2: Document Actual ENUMs**
-```bash
-# Find ENUM definitions
-grep -A 5 "class.*Sitemap.*Status" src/models/sitemap.py
-
-# Document exact values and casing
-```
-
-**Task 0.3: Verify WF5 Scheduler Query**
-```bash
-# Check scheduler logic
-cat src/services/sitemap_import_scheduler.py | grep -A 30 "def process"
-```
-
-**Task 0.4: Check Existing Sitemaps**
+**VERIFIED CONSTRAINTS:**
 ```sql
--- Check if NULL domain_id is allowed
-SELECT COUNT(*) FROM sitemap_files WHERE domain_id IS NULL;
-
--- Check unique constraints
-SELECT conname, pg_get_constraintdef(oid)
-FROM pg_constraint
-WHERE conrelid = 'sitemap_files'::regclass;
+-- From SYSTEM_MAP.md Critical Constraints section:
+domain_id = Column(PGUUID, ForeignKey("domains.id"), nullable=False, index=True)
 ```
 
-**✅ CHECKPOINT:** Document findings in this work order before proceeding
-
-**UPDATE THIS SECTION WITH FINDINGS:**
-```
-ACTUAL MODEL STRUCTURE:
-- Class name: _____________
-- Status field 1: _____________
-- Status field 2: _____________
-- ENUM 1 values: _____________
-- ENUM 2 values: _____________
-- domain_id nullable: YES / NO
-- Unique constraint: _____________
-```
+**WF5 Scheduler Compatibility:** ✅ Compatible (filters on sitemap_import_status, not domain_id)
 
 ---
 
@@ -372,17 +363,39 @@ import uuid
 
 from src.db.session import get_db_session
 from src.auth.dependencies import get_current_user
-# ⚠️ UPDATE IMPORT BASED ON PHASE 0 FINDINGS:
-from src.models.sitemap import SitemapFile, SitemapCurationStatus, SitemapImportStatus
+from src.models.sitemap import (
+    SitemapFile,
+    SitemapImportCurationStatusEnum,
+    SitemapImportProcessStatusEnum
+)
+from src.models.domain import Domain, SitemapCurationStatusEnum
 from src.schemas.sitemaps_direct_submission_schemas import (
     DirectSitemapSubmissionRequest,
     DirectSitemapSubmissionResponse
 )
+from urllib.parse import urlparse
 
 router = APIRouter(
     prefix="/api/v3/sitemaps",
     tags=["V3 - Sitemaps Direct Submission"]
 )
+
+
+def extract_domain_from_sitemap_url(url: str) -> str:
+    """
+    Extract domain name from sitemap URL.
+
+    Examples:
+        'https://www.example.com/sitemap.xml' -> 'example.com'
+        'https://example.com/sitemaps/index.xml' -> 'example.com'
+        'http://subdomain.site.org/sitemap.xml' -> 'subdomain.site.org'
+    """
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    # Remove 'www.' prefix if present
+    if domain.startswith('www.'):
+        domain = domain[4:]
+    return domain
 
 
 @router.post("/direct-submit", response_model=DirectSitemapSubmissionResponse)
@@ -403,9 +416,10 @@ async def submit_sitemaps_directly(
     - `auto_import=True`: Sets status to Selected + Queued (WF5 picks up immediately)
     - `auto_import=False`: Sets status to New + NULL (requires manual curation)
 
-    **Domain Association:**
-    - `domain_id=None`: Sitemap not linked to domain (default)
-    - `domain_id=<uuid>`: Link sitemap to specific domain
+    **Domain Handling:**
+    - Extracts domain from sitemap URL (e.g., 'example.com' from 'https://example.com/sitemap.xml')
+    - Creates domain record if doesn't exist
+    - Links sitemap to domain (maintains referential integrity)
 
     **Constraints:**
     - Maximum 50 sitemap URLs per request
@@ -414,7 +428,9 @@ async def submit_sitemaps_directly(
     - Requires authentication
 
     **Status Initialization:**
-    - ⚠️ UPDATE BASED ON PHASE 0 FINDINGS
+    - `deep_scrape_curation_status`: "Selected" if auto_import, else "New"
+    - `sitemap_import_status`: "Queued" if auto_import, else NULL
+    - `domain_id`: Auto-created via get-or-create pattern (REQUIRED)
     """
     sitemap_ids = []
 
@@ -434,22 +450,42 @@ async def submit_sitemaps_directly(
                     detail=f"Sitemap already exists: {url_str} (ID: {existing_sitemap.id})"
                 )
 
-            # ⚠️ UPDATE FIELD NAMES BASED ON PHASE 0 FINDINGS
+            # CRITICAL: Get or create domain (domain_id has nullable=False constraint)
+            domain_name = extract_domain_from_sitemap_url(url_str)
+            domain_result = await session.execute(
+                select(Domain).where(Domain.domain == domain_name)
+            )
+            domain = domain_result.scalar_one_or_none()
+
+            if not domain:
+                # Auto-create domain for direct submission
+                domain = Domain(
+                    id=uuid.uuid4(),
+                    domain=domain_name,
+                    local_business_id=None,  # NULL OK (nullable=True per SYSTEM_MAP.md)
+                    sitemap_curation_status=SitemapCurationStatusEnum.New,
+                    sitemap_analysis_status=None,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                session.add(domain)
+                await session.flush()  # Get domain.id before using it
+
+            # Create sitemap file with proper status initialization
             sitemap_file = SitemapFile(
                 id=uuid.uuid4(),
                 url=url_str,
 
-                # Domain association (NULL or user-provided)
-                domain_id=request.domain_id,
+                # Foreign key
+                domain_id=domain.id,  # REQUIRED (nullable=False per SYSTEM_MAP.md)
 
                 # DUAL-STATUS PATTERN (CRITICAL)
-                # ⚠️ UPDATE STATUS FIELD NAMES AND ENUM VALUES
-                sitemap_curation_status=(
-                    SitemapCurationStatus.Selected if request.auto_import
-                    else SitemapCurationStatus.New
+                deep_scrape_curation_status=(
+                    SitemapImportCurationStatusEnum.Selected if request.auto_import
+                    else SitemapImportCurationStatusEnum.New
                 ),
                 sitemap_import_status=(
-                    SitemapImportStatus.Queued if request.auto_import
+                    SitemapImportProcessStatusEnum.Queued if request.auto_import
                     else None
                 ),
 
@@ -457,6 +493,7 @@ async def submit_sitemaps_directly(
                 url_count=None,
                 last_modified=None,
                 file_size=None,
+                sitemap_type=None,  # Populated during import
 
                 # Timestamps
                 created_at=datetime.utcnow(),
@@ -473,8 +510,6 @@ async def submit_sitemaps_directly(
         auto_queued=request.auto_import
     )
 ```
-
-**⚠️ CRITICAL:** Update router code after Phase 0 findings
 
 **✅ CHECKPOINT:** Router compiles without errors
 
@@ -511,15 +546,25 @@ curl -X POST http://localhost:8000/api/v3/sitemaps/direct-submit \
 
 **Verification:**
 ```sql
--- ⚠️ UPDATE TABLE/FIELD NAMES BASED ON PHASE 0
-SELECT id, url, sitemap_curation_status, sitemap_import_status, domain_id
-FROM sitemap_files
-WHERE url = 'https://example.com/sitemap.xml';
+SELECT sf.id, sf.url, sf.deep_scrape_curation_status, sf.sitemap_import_status, sf.domain_id, d.domain
+FROM sitemap_files sf
+LEFT JOIN domains d ON sf.domain_id = d.id
+WHERE sf.url = 'https://example.com/sitemap.xml';
 
 -- Expected:
--- sitemap_curation_status = 'New' (or equivalent)
+-- deep_scrape_curation_status = 'New'
 -- sitemap_import_status = NULL
--- domain_id = NULL
+-- domain_id = <valid UUID>
+-- domain = 'example.com' (auto-created)
+
+-- Verify domain was auto-created
+SELECT id, domain, local_business_id, sitemap_curation_status
+FROM domains
+WHERE domain = 'example.com';
+
+-- Expected:
+-- local_business_id = NULL (direct submission domain)
+-- sitemap_curation_status = 'New'
 ```
 
 ---
@@ -625,14 +670,39 @@ curl -X POST http://localhost:8000/api/v3/sitemaps/direct-submit \
 ## Rollback Plan
 
 1. **Remove router from main.py**
-2. **Delete created sitemaps:**
-```sql
-DELETE FROM sitemap_files
-WHERE domain_id IS NULL  -- If using NULL domain_id approach
-AND created_at > '2025-11-17 00:00:00';
+```python
+# Comment out:
+# app.include_router(sitemaps_direct_router)
 ```
+
+2. **Delete created sitemaps and auto-created domains**
+```sql
+-- Delete sitemap files from direct submissions
+DELETE FROM sitemap_files
+WHERE created_at > '2025-11-17 00:00:00'
+AND user_id = '<test_user_id>';  -- Use specific user ID for safety
+
+-- Optionally delete auto-created test domains
+-- (Only if they have no other sitemaps/pages and were created during testing)
+DELETE FROM domains
+WHERE local_business_id IS NULL
+AND created_at > '2025-11-17 00:00:00'
+AND NOT EXISTS (SELECT 1 FROM sitemap_files WHERE sitemap_files.domain_id = domains.id)
+AND NOT EXISTS (SELECT 1 FROM pages WHERE pages.domain_id = domains.id);
+```
+
 3. **Remove new files**
+```bash
+rm src/routers/v3/sitemaps_direct_submission_router.py
+rm src/schemas/sitemaps_direct_submission_schemas.py
+```
+
 4. **Restart application**
+```bash
+docker compose restart app
+```
+
+**Time to rollback:** < 5 minutes
 
 ---
 
@@ -657,19 +727,19 @@ AND created_at > '2025-11-17 00:00:00';
 
 ---
 
-## Open Questions (Resolve Before Implementation)
+## ✅ All Questions Resolved
 
 1. **What is the exact SitemapFile model structure?**
-   - Answer in Phase 0 verification
+   - ✅ Verified: SitemapFile class with fields documented in Phase 0
 
 2. **What are the exact ENUM definitions and values?**
-   - Answer in Phase 0 verification
+   - ✅ Verified: SitemapImportCurationStatusEnum and SitemapImportProcessStatusEnum documented above
 
 3. **Is NULL domain_id allowed?**
-   - Answer in Phase 0 verification
+   - ✅ NO - domain_id has nullable=False constraint, get-or-create pattern implemented
 
 4. **Should we auto-create domains if user provides domain in sitemap URL?**
-   - Recommendation: No (defer to Phase 2)
+   - ✅ YES - Implemented via get-or-create pattern to satisfy nullable=False constraint
 
 ---
 
@@ -683,6 +753,6 @@ AND created_at > '2025-11-17 00:00:00';
 
 ---
 
-**Status:** REQUIRES PHASE 0 VERIFICATION
-**Blocked By:** Need to verify actual model structure
+**Status:** ✅ READY FOR IMPLEMENTATION
+**Blocked By:** None (Phase 0 verification complete)
 **Blocking:** None

@@ -49,7 +49,7 @@ class Page(Base):
 
     # Core Fields
     url: String (required, unique)
-    domain_id: UUID (optional - can be NULL for direct submission)
+    domain_id: UUID (REQUIRED - nullable=False) ⚠️ CRITICAL CONSTRAINT
     sitemap_file_id: UUID (optional - NULL for direct submission)
 
     # DUAL-STATUS PATTERN (CRITICAL)
@@ -114,10 +114,15 @@ from src.models.page import PageCurationStatus, PageProcessingStatus
 5. ✅ `created_at` - `datetime.utcnow()`
 6. ✅ `user_id` - From JWT token
 
+### Fields Requiring Get-or-Create Logic
+1. ✅ `domain_id` - **MUST be populated** (nullable=False constraint)
+   - Extract domain from URL using domain extraction utility
+   - Get existing domain by name OR create new domain
+   - Auto-created domains have `local_business_id=NULL` (allowed)
+
 ### Optional Fields (Can be NULL)
-1. ⚠️ `domain_id` - NULL for direct submission (not from WF3 flow)
-2. ⚠️ `sitemap_file_id` - NULL for direct submission (not from WF5)
-3. ✅ `page_category` - NULL initially (no Honeybee for direct submission)
+1. ✅ `sitemap_file_id` - NULL for direct submission (not from WF5)
+2. ✅ `page_category` - NULL initially (no Honeybee for direct submission)
 4. ✅ `category_confidence` - NULL initially
 5. ✅ `depth` - NULL initially
 6. ✅ `priority_level` - Default to 5 (medium priority)
@@ -158,18 +163,51 @@ if existing_page.scalar_one_or_none():
     raise HTTPException(409, "Page already exists")
 ```
 
-### MEDIUM RISK: Missing domain_id
+### RESOLVED: Domain ID Constraint (Critical)
 
-**Risk:** Pages without `domain_id` might break domain-based queries
+**Original Risk:** Assumed `domain_id` could be NULL for direct submissions
 
-**Impact Areas:**
-```bash
-# Find queries that assume domain_id exists
-grep -r "domain_id IS NOT NULL" src/
-grep -r "JOIN domains" src/services/
+**Ground Truth:** `domain_id` has `nullable=False` constraint (verified via SYSTEM_MAP.md Critical Constraints)
+
+**Solution: Get-or-Create Domain Pattern**
+```python
+# Extract domain from URL
+from urllib.parse import urlparse
+
+def extract_domain(url: str) -> str:
+    """Extract domain name from URL (e.g., 'example.com' from 'https://www.example.com/page')."""
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    # Remove 'www.' prefix if present
+    if domain.startswith('www.'):
+        domain = domain[4:]
+    return domain
+
+# Get or create domain
+domain_name = extract_domain(url_str)
+result = await session.execute(
+    select(Domain).where(Domain.domain == domain_name)
+)
+domain = result.scalar_one_or_none()
+
+if not domain:
+    domain = Domain(
+        id=uuid.uuid4(),
+        domain=domain_name,
+        local_business_id=None,  # NULL OK here (nullable=True)
+        sitemap_curation_status=SitemapCurationStatusEnum.New,
+        sitemap_analysis_status=None,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    session.add(domain)
+    await session.flush()  # Get domain.id before using it
+
+# Now create page with valid domain_id
+page.domain_id = domain.id  # NOT NULL ✅
 ```
 
-**Mitigation:** Review all domain-based queries, add NULL handling
+**Impact:** Maintains referential integrity, enables domain-level analytics, no database migration needed
 
 ### LOW RISK: Honeybee Integration
 
@@ -192,14 +230,19 @@ SELECT conname, contype, pg_get_constraintdef(oid)
 FROM pg_constraint
 WHERE conrelid = 'pages'::regclass;
 
--- Check NULL handling
-SELECT COUNT(*) FROM pages WHERE domain_id IS NULL;
+-- Verify domain_id constraint
+SELECT column_name, is_nullable, data_type
+FROM information_schema.columns
+WHERE table_name = 'pages' AND column_name IN ('domain_id', 'sitemap_file_id');
+
+-- Check existing pages can have NULL sitemap_file_id
 SELECT COUNT(*) FROM pages WHERE sitemap_file_id IS NULL;
 ```
 
 **Expected Results:**
 - Unique constraint on `url` only (not composite with `domain_id`)
-- Some pages already have NULL `domain_id` (confirms NULL is allowed)
+- `domain_id` is NOT nullable (confirmed by SYSTEM_MAP.md)
+- `sitemap_file_id` IS nullable (OK for direct submission)
 
 **Task 1.2: Audit Existing Queries**
 ```bash
@@ -297,11 +340,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
+from urllib.parse import urlparse
 import uuid
 
 from src.db.session import get_db_session
 from src.auth.dependencies import get_current_user
 from src.models.page import Page, PageCurationStatus, PageProcessingStatus
+from src.models.domain import Domain, SitemapCurationStatusEnum
 from src.schemas.pages_direct_submission_schemas import (
     DirectPageSubmissionRequest,
     DirectPageSubmissionResponse
@@ -311,6 +356,23 @@ router = APIRouter(
     prefix="/api/v3/pages",
     tags=["V3 - Pages Direct Submission"]
 )
+
+
+def extract_domain(url: str) -> str:
+    """
+    Extract domain name from URL.
+
+    Examples:
+        'https://www.example.com/page' -> 'example.com'
+        'https://example.com/contact' -> 'example.com'
+        'http://subdomain.example.com' -> 'subdomain.example.com'
+    """
+    parsed = urlparse(url)
+    domain = parsed.netloc
+    # Remove 'www.' prefix if present
+    if domain.startswith('www.'):
+        domain = domain[4:]
+    return domain
 
 
 @router.post("/direct-submit", response_model=DirectPageSubmissionResponse)
@@ -339,8 +401,13 @@ async def submit_pages_directly(
     **Status Initialization:**
     - `page_curation_status`: "Selected" if auto_queue, else "New"
     - `page_processing_status`: "Queued" if auto_queue, else NULL
-    - `domain_id`: NULL (not from domain workflow)
+    - `domain_id`: Auto-created via get-or-create pattern (REQUIRED)
     - `sitemap_file_id`: NULL (not from sitemap workflow)
+
+    **Domain Handling:**
+    - Extracts domain from URL (e.g., 'example.com' from 'https://www.example.com/page')
+    - Creates domain record if doesn't exist
+    - Links page to domain (maintains referential integrity)
     """
     page_ids = []
 
@@ -360,14 +427,35 @@ async def submit_pages_directly(
                     detail=f"Page already exists: {url_str} (ID: {existing_page.id})"
                 )
 
+            # CRITICAL: Get or create domain (domain_id has nullable=False constraint)
+            domain_name = extract_domain(url_str)
+            domain_result = await session.execute(
+                select(Domain).where(Domain.domain == domain_name)
+            )
+            domain = domain_result.scalar_one_or_none()
+
+            if not domain:
+                # Auto-create domain for direct submission
+                domain = Domain(
+                    id=uuid.uuid4(),
+                    domain=domain_name,
+                    local_business_id=None,  # NULL OK (nullable=True per SYSTEM_MAP.md)
+                    sitemap_curation_status=SitemapCurationStatusEnum.New,
+                    sitemap_analysis_status=None,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                session.add(domain)
+                await session.flush()  # Get domain.id before using it
+
             # Create page with proper status initialization
             page = Page(
                 id=uuid.uuid4(),
                 url=url_str,
 
-                # NULL foreign keys (not from WF3/WF5)
-                domain_id=None,
-                sitemap_file_id=None,
+                # Foreign keys
+                domain_id=domain.id,  # REQUIRED (nullable=False per SYSTEM_MAP.md)
+                sitemap_file_id=None,  # NULL OK (nullable=True)
 
                 # DUAL-STATUS PATTERN (CRITICAL)
                 page_curation_status=(
@@ -459,14 +547,25 @@ curl -X POST http://localhost:8000/api/v3/pages/direct-submit \
 
 **Verification:**
 ```sql
-SELECT id, url, page_curation_status, page_processing_status, domain_id
-FROM pages
-WHERE url = 'https://example.com/contact';
+SELECT p.id, p.url, p.page_curation_status, p.page_processing_status, p.domain_id, d.domain
+FROM pages p
+LEFT JOIN domains d ON p.domain_id = d.id
+WHERE p.url = 'https://example.com/contact';
 
 -- Expected:
 -- page_curation_status = 'New'
 -- page_processing_status = NULL
--- domain_id = NULL
+-- domain_id = <valid UUID>
+-- domain = 'example.com' (auto-created)
+
+-- Verify domain was auto-created
+SELECT id, domain, local_business_id, sitemap_curation_status
+FROM domains
+WHERE domain = 'example.com';
+
+-- Expected:
+-- local_business_id = NULL (direct submission domain)
+-- sitemap_curation_status = 'New'
 ```
 
 ---
@@ -595,12 +694,21 @@ LIMIT 10;
 # app.include_router(pages_direct_router)
 ```
 
-2. **Delete created pages**
+2. **Delete created pages and auto-created domains**
 ```sql
+-- First, identify auto-created domains (domains with local_business_id=NULL created during testing)
+-- Then delete pages from direct submissions
 DELETE FROM pages
-WHERE domain_id IS NULL
-AND sitemap_file_id IS NULL
-AND created_at > '2025-11-17 00:00:00';
+WHERE sitemap_file_id IS NULL
+AND created_at > '2025-11-17 00:00:00'
+AND user_id = '<test_user_id>';  -- Use specific user ID for safety
+
+-- Optionally delete auto-created test domains
+-- (Only if they have no other pages and were created during testing)
+DELETE FROM domains
+WHERE local_business_id IS NULL
+AND created_at > '2025-11-17 00:00:00'
+AND NOT EXISTS (SELECT 1 FROM pages WHERE pages.domain_id = domains.id);
 ```
 
 3. **Remove new files**
