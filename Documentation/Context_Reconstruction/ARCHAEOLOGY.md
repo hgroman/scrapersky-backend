@@ -208,6 +208,6 @@ When investigating unfamiliar code:
 ---
 
 **For more investigation techniques:**
-- [INCIDENTS/](./INCIDENTS/) - Real investigation examples
+- [INCIDENTS/](../INCIDENTS/) - Real investigation examples
 - [PATTERNS.md](./PATTERNS.md) - Common patterns to recognize
-- [DECISIONS/](./DECISIONS/) - Why things are the way they are
+- [DECISIONS/](../DECISIONS/) - Why things are the way they are

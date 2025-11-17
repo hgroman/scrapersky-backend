@@ -173,6 +173,6 @@ grep -r "WF4" Documentation/INCIDENTS/
 ---
 
 **For more context, see:**
-- [PATTERNS.md](../PATTERNS.md) - Patterns that prevent incidents
+- [PATTERNS.md](../Context_Reconstruction/PATTERNS.md) - Patterns that prevent incidents
 - [DECISIONS/](../DECISIONS/) - Why things are the way they are
 - [WO-004_HOTFIX_POSTMORTEM.md](../Work_Orders/WO-004_HOTFIX_POSTMORTEM.md) - Detailed Nov 17 timeline

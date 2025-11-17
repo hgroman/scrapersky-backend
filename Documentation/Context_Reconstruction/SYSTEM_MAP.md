@@ -54,7 +54,7 @@ domains (1) → (N) sitemap_files
 sitemap_files (1) → (N) pages
 ```
 
-**Detailed Schema:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](./Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
+**Detailed Schema:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](../Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
 
 ---
 
@@ -82,7 +82,7 @@ sitemap_files (1) → (N) pages
 
 **Tables:** domains → sitemap_files  
 **Scheduler:** domain_sitemap_submission_scheduler (1 min)  
-**Details:** [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md#wf4-services)
+**Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf4-services)
 
 ### WF5: Sitemap Import
 **Services:**
@@ -90,7 +90,7 @@ sitemap_files (1) → (N) pages
 
 **Tables:** sitemap_files → pages  
 **Scheduler:** sitemap_import_scheduler (configurable)  
-**Details:** [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md#wf5-services)
+**Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf5-services)
 
 ### WF6: [Unknown]
 **Status:** Needs investigation
@@ -101,7 +101,7 @@ sitemap_files (1) → (N) pages
 
 **Tables:** pages (updates scraped_content)  
 **Scheduler:** WF7_V2_L4_2of2_PageCurationScheduler (configurable)  
-**Details:** [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md#wf7-services)
+**Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf7-services)
 
 ---
 
@@ -186,7 +186,7 @@ NULL → Queued → Processing → Complete
 ### Sitemap Files Auto-Process (⚠️ Gap)
 **Current:** Created with `sitemap_import_status=NULL`  
 **Should:** Auto-set to 'Queued'  
-**Reference:** [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md #1](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#1-sitemap-files-not-auto-queued)
+**Reference:** [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md #1](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#1-sitemap-files-not-auto-queued)
 
 ### Pages Auto-Selected (Honeybee)
 1. `SitemapImportService` extracts URLs
@@ -308,9 +308,9 @@ grep -r "from.*models.*place import" src/
 
 ## Related Documentation
 
-- **Detailed Architecture:** [WF4_WF5_WF7_COMPLETE_INDEX.md](./Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
-- **Database Schema:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](./Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
-- **Services:** [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md)
+- **Detailed Architecture:** [WF4_WF5_WF7_COMPLETE_INDEX.md](../Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
+- **Database Schema:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](../Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
+- **Services:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md)
 - **Patterns:** [PATTERNS.md](./PATTERNS.md)
 - **Glossary:** [GLOSSARY.md](./GLOSSARY.md)
 

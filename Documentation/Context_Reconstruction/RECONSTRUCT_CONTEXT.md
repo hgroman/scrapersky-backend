@@ -29,7 +29,7 @@ This checklist allows you (a future AI or human) to quickly reconstruct the full
 
 ### Core Documentation (15 minutes)
 
-□ **Read [QUICK_START.md](./QUICK_START.md)** (5 min)
+□ **Reference:** [QUICK_START.md](./QUICK_START.md) | [Master Guide](../README_CONTEXT_RECONSTRUCTION.md) (5 min)
    - What the system does
    - All 7 workflows
    - Key files and commands
@@ -44,7 +44,7 @@ This checklist allows you (a future AI or human) to quickly reconstruct the full
 
 ### Historical Context (15 minutes)
 
-□ **Read last 5 incidents in [INCIDENTS/](./INCIDENTS/)**
+□ **Read last 5 incidents in [INCIDENTS/](../INCIDENTS/)**
    - Start with most recent
    - Focus on: symptoms, root cause, lessons learned
    - Note: Common failure patterns
@@ -89,7 +89,7 @@ This checklist allows you (a future AI or human) to quickly reconstruct the full
 
 ### Understand Current State (5 minutes)
 
-□ **Review [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md)**
+□ **Review [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md)**
    - P0 issues (critical)
    - P1 issues (high priority)
    - Current sprint plan
@@ -99,7 +99,7 @@ This checklist allows you (a future AI or human) to quickly reconstruct the full
    git log --oneline --since="7 days ago"
    ```
 
-□ **Review active work orders in [Work_Orders/](./Work_Orders/)**
+□ **Review active work orders in [Work_Orders/](../Work_Orders/)**
 
 **You should now know:** Current priorities and active work
 
@@ -114,14 +114,14 @@ If you need deeper understanding:
    - Code examples for each term
    
 □ **Study specific workflow documentation**
-   - [WF4_WF5_WF7_DATABASE_SCHEMA.md](./Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
-   - [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md)
+   - [WF4_WF5_WF7_DATABASE_SCHEMA.md](../Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
+   - [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md)
    
 □ **Read [ARCHAEOLOGY.md](./ARCHAEOLOGY.md)** (5 min)
    - How to investigate code history
    - Essential git commands
    
-□ **Review [DECISIONS/](./DECISIONS/)** (10 min)
+□ **Review [DECISIONS/](../DECISIONS/)** (10 min)
    - Why things are the way they are
    - Failed decisions and lessons learned
 
@@ -242,15 +242,15 @@ Based on your needs:
 
 **If you're debugging an issue:**
 1. Check [HEALTH_CHECKS.md](./HEALTH_CHECKS.md) for verification steps
-2. Review [INCIDENTS/](./INCIDENTS/) for similar past issues
+2. Review [INCIDENTS/](../INCIDENTS/) for similar past issues
 3. Use [ARCHAEOLOGY.md](./ARCHAEOLOGY.md) to investigate code history
 4. Check [PATTERNS.md](./PATTERNS.md) for common anti-patterns
 
 **If you're implementing a feature:**
-1. Check [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md) for known issues
+1. Check [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md) for known issues
 2. Review [PATTERNS.md](./PATTERNS.md) for correct patterns
 3. Study [SYSTEM_MAP.md](./SYSTEM_MAP.md) for architecture
-4. Check [DECISIONS/](./DECISIONS/) for architectural choices
+4. Check [DECISIONS/](../DECISIONS/) for architectural choices
 
 **If you're onboarding:**
 1. Complete this entire checklist

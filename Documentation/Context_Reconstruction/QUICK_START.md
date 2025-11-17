@@ -212,14 +212,14 @@ async with httpx.AsyncClient() as client:
 
 ### For Debugging
 1. Read [HEALTH_CHECKS.md](./HEALTH_CHECKS.md)
-2. Check [INCIDENTS/](./INCIDENTS/) for similar issues
+2. Check [INCIDENTS/](../INCIDENTS/) for similar issues
 3. Review [PATTERNS.md](./PATTERNS.md) for anti-patterns
 
 ### For Development
 1. Read [SYSTEM_MAP.md](./SYSTEM_MAP.md) for architecture
-2. Study [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md)
+2. Study [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md)
 3. Check [PATTERNS.md](./PATTERNS.md) for correct patterns
-4. Review [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md)
+4. Review [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md)
 
 ### For Onboarding
 1. Complete [RECONSTRUCT_CONTEXT.md](./RECONSTRUCT_CONTEXT.md) checklist

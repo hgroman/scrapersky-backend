@@ -278,4 +278,4 @@ grep -r "places.*api" src/
 **For more information:**
 - [SYSTEM_MAP.md](./SYSTEM_MAP.md) - How dependencies fit into architecture
 - [HEALTH_CHECKS.md](./HEALTH_CHECKS.md) - How to verify dependencies
-- [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md) - Improvement opportunities
+- [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md) - Improvement opportunities

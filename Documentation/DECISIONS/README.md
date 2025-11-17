@@ -72,4 +72,4 @@ This directory documents significant architectural and implementation decisions.
 
 **For related information:**
 - [INCIDENTS/](../INCIDENTS/) - Problems caused by decisions
-- [PATTERNS.md](../PATTERNS.md) - Patterns that implement decisions
+- [PATTERNS.md](../Context_Reconstruction/PATTERNS.md) - Patterns that implement decisions

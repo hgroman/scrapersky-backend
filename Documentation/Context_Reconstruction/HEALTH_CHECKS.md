@@ -126,7 +126,7 @@ AND p.page_processing_status = 'Complete';
 - Logs show processing started?
 
 **Solution:**
-- Check [INCIDENT-2025-11-17-sitemap-jobs-not-processing](./INCIDENTS/2025-11-17-sitemap-jobs-not-processing.md)
+- Check [INCIDENT-2025-11-17-sitemap-jobs-not-processing](../INCIDENTS/2025-11-17-sitemap-jobs-not-processing.md)
 - Verify Commit 9f091f6 is deployed
 
 ---
@@ -150,7 +150,7 @@ AND p.page_processing_status = 'Complete';
 **Symptom:** sitemap_files created but sitemap_import_status = NULL
 
 **Check:**
-- Known gap! See [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md #1](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#1-sitemap-files-not-auto-queued)
+- Known gap! See [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md #1](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#1-sitemap-files-not-auto-queued)
 
 **Solution:**
 ```sql
@@ -261,11 +261,11 @@ WHERE created_at > NOW() - INTERVAL '24 hours';
 - Error rate > 10%
 - No processing in last hour (during active hours)
 
-**Reference:** [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md #4](./Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#4-no-monitoring-for-stuck-jobs)
+**Reference:** [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md #4](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#4-no-monitoring-for-stuck-jobs)
 
 ---
 
 **For more troubleshooting:**
-- [INCIDENTS/](./INCIDENTS/) - Past incidents and solutions
+- [INCIDENTS/](../INCIDENTS/) - Past incidents and solutions
 - [PATTERNS.md](./PATTERNS.md) - Common anti-patterns
 - [SYSTEM_MAP.md](./SYSTEM_MAP.md) - Architecture overview

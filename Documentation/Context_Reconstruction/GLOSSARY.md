@@ -31,7 +31,7 @@ if request.status == PageCurationStatus.Selected:
 
 **Why:** Separates user decisions from system state, allowing independent tracking
 
-**Reference:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](./Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
+**Reference:** [WF4_WF5_WF7_DATABASE_SCHEMA.md](../Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
 
 ---
 
@@ -224,7 +224,7 @@ result = await service.process(item_id, session)
 - `deep_scan_scheduler.py` → `PlacesDeepService`
 - `domain_sitemap_submission_scheduler.py` → `DomainToSitemapAdapterService`
 
-**Reference:** [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md#service-communication-patterns)
+**Reference:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#service-communication-patterns)
 
 ---
 
@@ -525,6 +525,6 @@ Some status fields use NULL for initial state, others use "New":
 ---
 
 **For more terminology, see specific documentation:**
-- Database terms: [WF4_WF5_WF7_DATABASE_SCHEMA.md](./Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
-- Service terms: [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md)
+- Database terms: [WF4_WF5_WF7_DATABASE_SCHEMA.md](../Architecture/WF4_WF5_WF7_DATABASE_SCHEMA.md)
+- Service terms: [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md)
 - Pattern terms: [PATTERNS.md](./PATTERNS.md)

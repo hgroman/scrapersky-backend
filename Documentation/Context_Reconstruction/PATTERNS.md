@@ -599,6 +599,6 @@ if "contact" in url.lower():  # Too simplistic!
 ---
 
 **For more patterns and anti-patterns, see:**
-- [WF4_WF5_WF7_SERVICES.md](./Architecture/WF4_WF5_WF7_SERVICES.md#service-communication-patterns)
-- [INCIDENTS/](./INCIDENTS/) for real-world failures
-- [DECISIONS/](./DECISIONS/) for architectural choices
+- [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#service-communication-patterns)
+- [INCIDENTS/](../INCIDENTS/) for real-world failures
+- [DECISIONS/](../DECISIONS/) for architectural choices
