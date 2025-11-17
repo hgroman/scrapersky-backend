@@ -24,9 +24,10 @@
 | **WF2** | Deep Scan (Place Details) | Get detailed business info from Google Maps | `local_businesses` | None (queued by WF1) |
 | **WF3** | Domain Extraction | Extract domains from business data | `domains` | Domain Scheduler |
 | **WF4** | Domain Sitemap Submission | Submit domains for sitemap discovery | `domains` | Domain Sitemap Submission Scheduler |
-| **WF5** | Sitemap Discovery (Legacy) | Discover sitemaps for domains | `sitemap_files` | Sitemap Scheduler |
-| **WF6** | Sitemap Import (Modern) | Parse and import sitemap URLs | `sitemap_files`, `sitemap_urls` | Sitemap Import Scheduler |
+| **WF5** | Sitemap Import | Parse and import sitemap URLs | `sitemap_files`, `pages` | Sitemap Import Scheduler |
 | **WF7** | Page Curation | Curate and scrape pages for content | `pages`, `contacts` | Page Curation Scheduler |
+
+**Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 ---
 
@@ -215,7 +216,7 @@ Submit domain for sitemap discovery
     ↓
 Mark as submitted
     ↓
-Triggers WF5/WF6 (Sitemap Discovery/Import)
+Triggers WF5 (Sitemap Import)
 ```
 
 #### Key Components
@@ -237,12 +238,12 @@ DOMAIN_SITEMAP_SUBMISSION_SCHEDULER_MAX_INSTANCES=2
 
 ---
 
-### WF5: Sitemap Discovery (Legacy)
+### WF5: Sitemap Import
 
-**Purpose:** Discover and parse sitemap files for domains
+**Purpose:** Parse sitemap files and import individual page URLs for processing
 
-**Trigger:** Automated scheduler (every 3 minutes)
-**Status:** Legacy workflow (being replaced by WF6)
+**Trigger:** Automated scheduler (configurable interval)
+**Status:** Active background processing
 
 #### Process Flow
 
@@ -253,75 +254,39 @@ Discover sitemap URLs (robots.txt, common paths)
     ↓
 Download and parse sitemap XML
     ↓
-Store sitemap file metadata
+Extract individual page URLs with Honeybee categorization
     ↓
-Extract URLs for WF6
-```
-
-#### Key Components
-
-**Scheduler:** `src/services/sitemap_scheduler.py`
-- Multi-purpose scheduler (handles WF2, WF3, WF5)
-- Runs every 3 minutes (configurable)
-
-**Service:** `src/services/sitemap/sitemap_processing_service.py`
-- `discover_sitemaps()` - Find sitemap URLs
-- `parse_sitemap()` - Parse XML
-- `extract_urls()` - Get URLs from sitemap
-
-**Models:**
-- `SitemapFile` - Sitemap metadata
-  - URL, file size, last modified
-  - URL count
-  - Processing status
-
----
-
-### WF6: Sitemap Import (Modern)
-
-**Purpose:** Parse sitemap files and import individual URLs for processing
-
-**Trigger:** Automated scheduler (every 2 minutes)
-**Status:** Active background processing (modern replacement for WF5)
-
-#### Process Flow
-
-```
-SitemapFile with status = 'queued'
+Create Page records
     ↓
-Download and parse sitemap XML
-    ↓
-Extract individual URLs
-    ↓
-Store as SitemapUrl records
-    ↓
-Queue URLs for WF7 (Page Curation)
+Queue high-value pages for WF7 (Page Curation)
 ```
 
 #### Key Components
 
 **Scheduler:** `src/services/sitemap_import_scheduler.py`
-- Runs every 2 minutes (configurable)
-- Processes 10 sitemaps per batch (configurable)
+- Configurable interval (default: every 5 minutes)
+- Processes sitemap files in batches
 
-**Service:** `src/services/sitemap/sitemap_import_service.py`
+**Service:** `src/services/sitemap_import_service.py`
 - `process_sitemap_imports()` - Main import loop
 - `parse_sitemap_file()` - Parse XML
-- `import_urls()` - Store URLs
+- `import_urls()` - Create Page records
+- Honeybee categorization for auto-selection
 
 **Models:**
 - `SitemapFile` - Source sitemap
-  - Dual-status: `curation_status` + `processing_status`
-- `SitemapUrl` - Individual URLs from sitemap
-  - URL, priority, change frequency
-  - Queued for WF7
+  - Dual-status: `curation_status` + `import_status`
+- `Page` - Individual URLs from sitemap
+  - Dual-status: `page_curation_status` + `page_processing_status`
+  - URL, domain_id, category, priority
+  - Queued for WF7 if high-value (CONTACT_ROOT, etc.)
 
 #### Configuration
 
 ```bash
-SITEMAP_IMPORT_SCHEDULER_INTERVAL_MINUTES=2
+SITEMAP_IMPORT_SCHEDULER_INTERVAL_SECONDS=300
 SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE=10
-SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES=2
+SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES=1
 ```
 
 ---
@@ -336,7 +301,7 @@ SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES=2
 #### Process Flow (12 Steps)
 
 ```
-1. Pages exist in database (from WF6 or manual creation)
+1. Pages exist in database (from WF5 or manual creation)
     ↓
 2. User accesses WF7 interface: GET /api/v3/pages/
     ↓
@@ -471,11 +436,11 @@ WF3: Domain Extraction
   ↓
 WF4: Domain Sitemap Submission
   ↓
-WF5: Sitemap Discovery (Legacy)
-  ↓
-WF6: Sitemap Import (Modern)
+WF5: Sitemap Import
   ↓
 WF7: Page Curation
+
+Note: There is no WF6. The numbering skips from WF5 to WF7.
 ```
 
 ### Handoffs Between Workflows
@@ -495,15 +460,15 @@ WF7: Page Curation
 - Domain queued for sitemap analysis
 - Trigger: `Domain.sitemap_analysis_status = 'queued'`
 
-**WF4 → WF5/WF6:**
+**WF4 → WF5:**
 - Domain submitted for sitemap discovery
-- Sitemaps queued for parsing
+- Sitemaps queued for parsing and import
 - Trigger: `Domain.sitemap_analysis_status = 'submitted'`
 
-**WF5/WF6 → WF7:**
-- Sitemap URLs extracted
-- Pages queued for curation
-- Trigger: `SitemapUrl.curation_status = 'selected'` or `Page.curation_status = 'selected'`
+**WF5 → WF7:**
+- Sitemap URLs extracted and categorized
+- High-value pages auto-selected and queued for curation
+- Trigger: `Page.page_curation_status = 'Selected'` and `page_processing_status = 'Queued'`
 
 ---
 
@@ -518,22 +483,17 @@ WF7: Page Curation
    - Batch: 50 domains
    - Max instances: 3
 
-2. **Sitemap Scheduler** (WF2/WF3/WF5 - Multi-purpose)
-   - Interval: 3 minutes
-   - Batch: Varies
-   - Max instances: 2
+2. **Domain Sitemap Submission Scheduler** (WF4)
+   - Interval: 1 minute
+   - Batch: 5 domains
+   - Max instances: 1
 
-3. **Domain Sitemap Submission Scheduler** (WF4)
-   - Interval: 5 minutes
-   - Batch: 20 domains
-   - Max instances: 2
-
-4. **Sitemap Import Scheduler** (WF6)
-   - Interval: 2 minutes
+3. **Sitemap Import Scheduler** (WF5)
+   - Interval: 5 minutes (configurable)
    - Batch: 10 sitemaps
-   - Max instances: 2
+   - Max instances: 1
 
-5. **Page Curation Scheduler** (WF7)
+4. **Page Curation Scheduler** (WF7)
    - Interval: 5 minutes
    - Batch: 20 pages
    - Max instances: 3
@@ -665,10 +625,11 @@ async def lifespan(app: FastAPI):
 
 **Automated Background Processing:**
 - WF3: Domain Extraction (every 1 min)
-- WF4: Domain Sitemap Submission (every 5 min)
-- WF5: Sitemap Discovery - Legacy (every 3 min)
-- WF6: Sitemap Import - Modern (every 2 min)
+- WF4: Domain Sitemap Submission (every 1 min)
+- WF5: Sitemap Import (every 5 min, configurable)
 - WF7: Page Curation (every 5 min)
+
+**Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 **Key Patterns:**
 - Dual-status for processable entities (curation + processing)

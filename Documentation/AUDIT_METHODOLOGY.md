@@ -27,8 +27,8 @@
 - **Documentation/Operations/** - Vector DB, ScraperAPI Cost Control, Security Incidents
 
 ### 3. Evolution Understanding
-- **Workflow progression:** WF1 → WF2 → ... → WF7
-- **Assumption:** WF7 is MOST compliant with lessons learned from WF1-WF6
+- **Workflow progression:** WF1 → WF2 → WF3 → WF4 → WF5 → WF7 (no WF6)
+- **Assumption:** WF7 is MOST compliant with lessons learned from WF1-WF5
 - **Pattern:** Later workflows incorporate fixes from earlier disasters
 
 ---

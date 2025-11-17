@@ -176,7 +176,7 @@ pytest tests/ -v
 pytest tests/services/test_domain_extraction_scheduler.py
 pytest tests/services/test_deep_scan_scheduler.py
 
-# Run WF6 component tests
+# Run WF5 component tests (directory named WF6 is legacy/misnamed)
 cd tests/WF6
 ./scripts/test_component.py
 

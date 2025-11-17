@@ -473,13 +473,14 @@ if (
 ### WF1 through WF7
 **Definition:** The 7 main business workflows
 
-**WF1:** Single Search (Google Maps)  
-**WF2:** Deep Scan (enrichment)  
-**WF3:** Domain Extraction  
-**WF4:** Sitemap Discovery  
-**WF5:** Sitemap Import  
-**WF6:** [Unknown - needs documentation]  
+**WF1:** Single Search (Google Maps)
+**WF2:** Deep Scan (enrichment)
+**WF3:** Domain Extraction
+**WF4:** Sitemap Discovery
+**WF5:** Sitemap Import
 **WF7:** Page Curation / Contact Extraction
+
+**Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 **Reference:** [QUICK_START.md](./QUICK_START.md)
 

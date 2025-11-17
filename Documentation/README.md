@@ -123,10 +123,11 @@ WF3: Domain Extraction (automated)
   ↓
 WF4: Domain Sitemap Submission
   ↓
-WF5: Sitemap Discovery (legacy)
-WF6: Sitemap Import (modern)
+WF5: Sitemap Import
   ↓
 WF7: Page Curation
+
+Note: There is no WF6. The numbering skips from WF5 to WF7.
 ```
 
 **Key Patterns:**

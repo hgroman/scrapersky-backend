@@ -39,7 +39,7 @@ graph TD
 ### Use Case
 User has a list of URLs and wants to scrape them directly, bypassing sitemap discovery.
 
-**Skip:** WF1→WF6 (Google Maps → Sitemap Import)
+**Skip:** WF1→WF5 (Google Maps → Sitemap Import)
 **Enter at:** WF7 (Page Curation)
 
 ### Implementation Steps
@@ -297,7 +297,7 @@ GROUP BY d.domain;
 User has sitemap URLs and wants to import them directly.
 
 **Skip:** WF1→WF4 (Google Maps → Sitemap Discovery)
-**Enter at:** WF5 (Sitemap Curation) or WF6 (Sitemap Import)
+**Enter at:** WF5 (Sitemap Import)
 
 ### Implementation Steps
 
@@ -324,7 +324,7 @@ async def submit_sitemaps_directly(
     current_user: Dict = Depends(get_current_user),
 ):
     """
-    Submit sitemap URLs directly for WF6 import.
+    Submit sitemap URLs directly for WF5 import.
 
     Creates SitemapFile records and optionally queues for import.
     """
@@ -357,15 +357,15 @@ async def submit_sitemaps_directly(
 
 **Note:** This addresses **Gap #1** from [WF4_WF5_WF7_GAPS_IMPROVEMENTS.md](../Architecture/WF4_WF5_WF7_GAPS_IMPROVEMENTS.md#1-sitemap-files-not-auto-queued)
 
-#### Step 2: Verify WF6 Picks Up
+#### Step 2: Verify WF5 Picks Up
 
 ```sql
--- Check sitemaps queued for WF6
+-- Check sitemaps queued for WF5
 SELECT url, sitemap_import_status
 FROM sitemap_files
 WHERE sitemap_import_status = 'Queued';
 
--- After WF6 runs:
+-- After WF5 runs:
 SELECT sf.url, COUNT(p.id) as page_count
 FROM sitemap_files sf
 LEFT JOIN pages p ON p.sitemap_file_id = sf.id

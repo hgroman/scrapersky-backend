@@ -143,7 +143,7 @@ Validate that the context reconstruction system allows a fresh AI (with no prior
 ## Issues/Gaps Identified
 
 ### Minor Issues Found
-1. **WF6 Status Unknown** - Documented as gap, needs investigation
+1. ~~**WF6 Status Unknown** - Documented as gap, needs investigation~~ **RESOLVED:** WF6 does not exist. False claim corrected in WO-008.
 2. **Google Maps API** - Minimal documentation in DEPENDENCY_MAP.md
 3. **WF1-3 Services** - Not yet documented (acknowledged gap)
 
@@ -164,7 +164,7 @@ Validate that the context reconstruction system allows a fresh AI (with no prior
 - ✅ Add incidents as they happen - Don't lose knowledge
 - Consider adding visual diagram for workflow data flow
 - Document WF1-3 when time permits
-- Create WF6 investigation task (is it used?)
+- ~~Create WF6 investigation task (is it used?)~~ **RESOLVED:** WF6 does not exist
 
 ### For Codebase
 - Fix Gap #1 ASAP - Sitemaps not auto-queued (2 hours)

@@ -109,7 +109,7 @@ DOMAIN_SITEMAP_SUBMISSION_SCHEDULER_INTERVAL_SECONDS=60
 DOMAIN_SITEMAP_SUBMISSION_SCHEDULER_BATCH_SIZE=5
 DOMAIN_SITEMAP_SUBMISSION_SCHEDULER_MAX_INSTANCES=1
 
-# Sitemap Import Scheduler (WF6)
+# Sitemap Import Scheduler (WF5)
 SITEMAP_IMPORT_SCHEDULER_INTERVAL_SECONDS=300
 SITEMAP_IMPORT_SCHEDULER_BATCH_SIZE=10
 SITEMAP_IMPORT_SCHEDULER_MAX_INSTANCES=1
@@ -236,8 +236,9 @@ pytest tests/services/test_domain_extraction_scheduler.py -v
 pytest tests/services/test_domain_extraction_scheduler.py::test_scheduler_runs -v
 ```
 
-### WF6 Component Testing
+### WF5 Component Testing
 ```bash
+# Note: Directory named tests/WF6 is legacy/misnamed - it tests WF5 (Sitemap Import)
 cd tests/WF6
 ./scripts/test_component.py
 ```
@@ -325,8 +326,8 @@ scrapersky-backend/
 │   ├── models/                    # SQLAlchemy models (Layer 1)
 │   │   ├── place.py               # WF1-2
 │   │   ├── domain.py              # WF3-4
-│   │   ├── sitemap_file.py        # WF4-6
-│   │   └── page.py                # WF6-7
+│   │   ├── sitemap_file.py        # WF4-5
+│   │   └── page.py                # WF5, WF7
 │   ├── schemas/                   # Pydantic schemas (Layer 2)
 │   ├── routers/                   # API endpoints (Layer 3)
 │   │   ├── google_maps_api.py     # WF1
