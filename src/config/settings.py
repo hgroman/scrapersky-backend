@@ -50,7 +50,8 @@ class Settings(BaseSettings):
     # Maximum concurrent instances of the scheduler
     DOMAIN_SCHEDULER_MAX_INSTANCES: int = 3  # Increased from 1 to 3
 
-    # Sitemap Scheduler settings
+    # Sitemap Scheduler settings (DEPRECATED - Being replaced by WF2 and WF3 schedulers)
+    # TODO: Remove after WO-004 implementation complete
     # How often the scheduler runs (in minutes)
     SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = (
         1  # Fixed: Changed from 5 to 1 minute to match other schedulers
@@ -59,6 +60,18 @@ class Settings(BaseSettings):
     SITEMAP_SCHEDULER_BATCH_SIZE: int = 25  # Increased from 5 to 25
     # Maximum concurrent instances of the scheduler
     SITEMAP_SCHEDULER_MAX_INSTANCES: int = 3  # Increased from 1 to 3
+
+    # WF2 Deep Scan Scheduler (Replaces WF2 portion of sitemap_scheduler)
+    # Processes Place records queued for Google Maps deep scan analysis
+    DEEP_SCAN_SCHEDULER_INTERVAL_MINUTES: int = 5  # Slower than old shared scheduler (external API calls)
+    DEEP_SCAN_SCHEDULER_BATCH_SIZE: int = 10  # Smaller batches (API rate limits)
+    DEEP_SCAN_SCHEDULER_MAX_INSTANCES: int = 1  # Prevent API throttling
+
+    # WF3 Domain Extraction Scheduler (Replaces WF3 portion of sitemap_scheduler)
+    # Processes LocalBusiness records queued for domain extraction
+    DOMAIN_EXTRACTION_SCHEDULER_INTERVAL_MINUTES: int = 2  # Faster than deep scans (internal processing)
+    DOMAIN_EXTRACTION_SCHEDULER_BATCH_SIZE: int = 20  # Larger batches (no external dependencies)
+    DOMAIN_EXTRACTION_SCHEDULER_MAX_INSTANCES: int = 1  # Database write constraints
 
     # Domain Sitemap Submission Scheduler settings (New)
     DOMAIN_SITEMAP_SCHEDULER_INTERVAL_MINUTES: int = (

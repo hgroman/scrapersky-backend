@@ -54,6 +54,10 @@ from .services.domain_scheduler import setup_domain_scheduler
 from .services.domain_sitemap_submission_scheduler import (
     setup_domain_sitemap_submission_scheduler,
 )
+# WO-004: Split schedulers (replacing sitemap_scheduler)
+from .services.deep_scan_scheduler import setup_deep_scan_scheduler
+from .services.domain_extraction_scheduler import setup_domain_extraction_scheduler
+# TODO: Remove after WO-004 complete
 from .services.sitemap_scheduler import setup_sitemap_scheduler
 from .session.async_session import get_session
 
@@ -92,10 +96,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to setup Domain scheduler job: {e}", exc_info=True)
 
+    # WO-004: Split schedulers (WF2 and WF3) - Replaces sitemap_scheduler
     try:
-        setup_sitemap_scheduler()
+        setup_deep_scan_scheduler()  # WF2 - Deep Scans
     except Exception as e:
-        logger.error(f"Failed to setup Sitemap scheduler job: {e}", exc_info=True)
+        logger.error(f"Failed to setup Deep Scan scheduler job: {e}", exc_info=True)
+
+    try:
+        setup_domain_extraction_scheduler()  # WF3 - Domain Extraction
+    except Exception as e:
+        logger.error(f"Failed to setup Domain Extraction scheduler job: {e}", exc_info=True)
+
+    # TODO: Remove after WO-004 validation complete (keeping temporarily for rollback safety)
+    # try:
+    #     setup_sitemap_scheduler()
+    # except Exception as e:
+    #     logger.error(f"Failed to setup Sitemap scheduler job: {e}", exc_info=True)
 
     try:
         setup_domain_sitemap_submission_scheduler()
