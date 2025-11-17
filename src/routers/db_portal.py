@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.auth.jwt_auth import get_current_user
 from src.services.db_inspector import db_inspector
 from src.session.async_session import get_session_dependency
 
@@ -105,7 +106,10 @@ class QueryResult(BaseModel):
 
 # API Endpoints
 @router.get("/tables", response_model=List[TableInfo], summary="List All Tables")
-async def list_tables(session: AsyncSession = Depends(get_session_dependency)):
+async def list_tables(
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
+):
     """
     List all tables in the database with basic metadata.
 
@@ -120,7 +124,9 @@ async def list_tables(session: AsyncSession = Depends(get_session_dependency)):
     "/tables/{table_name}", response_model=TableSchema, summary="Get Table Schema"
 )
 async def get_table_schema(
-    table_name: str, session: AsyncSession = Depends(get_session_dependency)
+    table_name: str,
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get detailed schema information for a specific table.
@@ -143,6 +149,7 @@ async def get_sample_data(
     table_name: str,
     limit: int = Query(5, ge=1, le=100),
     session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Get sample data from a table for preview purposes.
@@ -159,7 +166,9 @@ async def get_sample_data(
 
 @router.post("/query", response_model=QueryResult, summary="Execute SQL Query")
 async def execute_query(
-    request: SqlQueryRequest, session: AsyncSession = Depends(get_session_dependency)
+    request: SqlQueryRequest,
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Execute a safe, read-only SQL query for database inspection.
@@ -186,6 +195,7 @@ async def validate_schema(
     table_name: str,
     request: SchemaValidationRequest,
     session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Validate expected schema against actual database schema.
@@ -203,7 +213,9 @@ async def validate_schema(
 
 @router.get("/tables/{table_name}/model", summary="Generate Model Code")
 async def generate_model(
-    table_name: str, session: AsyncSession = Depends(get_session_dependency)
+    table_name: str,
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
 ):
     """
     Generate Python model code based on database schema.
@@ -217,7 +229,10 @@ async def generate_model(
 
 
 @router.get("/health", summary="Database Portal Health Check")
-async def health_check(session: AsyncSession = Depends(get_session_dependency)):
+async def health_check(
+    session: AsyncSession = Depends(get_session_dependency),
+    current_user: Dict = Depends(get_current_user),
+):
     """
     Check if the database portal service is healthy.
 
