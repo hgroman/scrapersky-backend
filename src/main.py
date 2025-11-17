@@ -277,7 +277,7 @@ app.include_router(
     modernized_page_scraper_api_router, prefix="/api/v3", tags=["Page Scraper"]
 )
 app.include_router(dev_tools_api_router)
-app.include_router(db_portal_api_router, prefix="/api/v3", tags=["DB Portal"])
+app.include_router(db_portal_api_router, tags=["DB Portal"])
 app.include_router(profile_api_router, prefix="/api/v3", tags=["Profile"])
 app.include_router(batch_sitemap_api_router, prefix="/api/v3", tags=["Batch Sitemap"])
 app.include_router(places_staging_api_router, prefix="/api/v3")

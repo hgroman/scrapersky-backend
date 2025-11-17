@@ -20,9 +20,9 @@ Both WO-001 (DB Portal Authentication) and WO-002 (Dev Token Environment Restric
 ### Test 1.1: Unauthenticated Requests Rejected ✅ PASS
 
 **Tested Endpoints:**
-- `GET /api/v3/api/v3/db-portal/tables` → **401 Unauthorized**
-- `POST /api/v3/api/v3/db-portal/query` → **401 Unauthorized**
-- `GET /api/v3/api/v3/db-portal/health` → **401 Unauthorized**
+- `GET /api/v3/db-portal/tables` → **401 Unauthorized**
+- `POST /api/v3/db-portal/query` → **401 Unauthorized**
+- `GET /api/v3/db-portal/health` → **401 Unauthorized**
 
 **Result:** All endpoints correctly reject requests without authentication.
 
@@ -31,8 +31,8 @@ Both WO-001 (DB Portal Authentication) and WO-002 (Dev Token Environment Restric
 ### Test 1.2: Authenticated Requests Succeed ✅ PASS
 
 **Tested Endpoints:**
-- `GET /api/v3/api/v3/db-portal/tables` with bypass token → **200 OK** (returned empty array)
-- `POST /api/v3/api/v3/db-portal/query` with bypass token → **200 OK**
+- `GET /api/v3/db-portal/tables` with bypass token → **200 OK** (returned empty array)
+- `POST /api/v3/db-portal/query` with bypass token → **200 OK**
   - Query: `SELECT 1 as test`
   - Response: `{"success":true,"columns":["t"],"rows":[{"t":1}],"row_count":1}`
 
@@ -149,13 +149,15 @@ Created three docker-compose configuration files for testing:
 - `docker-compose.prod.yml` - Production environment (ENVIRONMENT=production)
 - `docker-compose.staging.yml` - Staging environment (ENV=staging)
 
-### API Path Issue Discovered
+### API Path Issue Discovered and Fixed
 
-The DB Portal endpoints have a double prefix: `/api/v3/api/v3/db-portal/*`
+**ISSUE FOUND:** The DB Portal endpoints initially had a double prefix: `/api/v3/api/v3/db-portal/*`
 
-This appears to be a routing configuration issue but does not affect the security fixes. The authentication and environment restrictions work correctly regardless of the path structure.
+**ROOT CAUSE:** In `src/main.py:280`, the router was included with `prefix="/api/v3"` even though the router already defined the full prefix `/api/v3/db-portal` in `src/routers/db_portal.py:19`.
 
-**Recommendation:** Consider fixing the double prefix in a future update, but this is not a blocker for deployment.
+**FIX APPLIED:** Removed the redundant `prefix="/api/v3"` parameter from the router inclusion in `src/main.py`. The correct path is now `/api/v3/db-portal/*`.
+
+**STATUS:** ✅ FIXED - Endpoints now use the correct single prefix pattern.
 
 ---
 
