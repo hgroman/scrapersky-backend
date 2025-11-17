@@ -1,8 +1,8 @@
 # WO-011: Direct Sitemap Submission Endpoint
 **Created:** November 17, 2025
 **Priority:** MEDIUM
-**Estimated Effort:** 2.5-3 hours
-**Risk Level:** MEDIUM (interacts with WF5 sitemap import)
+**Estimated Effort:** 3.5-4 hours (+1h for domain handling)
+**Risk Level:** LOW (critical constraints resolved)
 
 ---
 
@@ -50,6 +50,8 @@ class SitemapFile(Base):
     # Core Fields
     url: String (required, unique)
     domain_id: UUID (REQUIRED - nullable=False) ⚠️ CRITICAL CONSTRAINT
+    sitemap_type: String (REQUIRED - nullable=False) ⚠️ CRITICAL CONSTRAINT
+                  # Values: INDEX, STANDARD, IMAGE, VIDEO, NEWS
 
     # STATUS FIELDS (verified from src/models/sitemap.py)
     deep_scrape_curation_status: SitemapImportCurationStatusEnum (ENUM)
@@ -99,16 +101,17 @@ class SitemapImportProcessStatusEnum(enum.Enum):
 ### Required Fields (Direct Submission)
 1. ✅ `id` - UUID generation
 2. ✅ `url` - User-provided sitemap URL (must validate)
-3. ✅ `deep_scrape_curation_status` - Set based on `auto_import` flag
-4. ✅ `sitemap_import_status` - Set based on `auto_import` flag
-5. ✅ `created_at` - `datetime.utcnow()`
-6. ✅ `user_id` - From JWT token
+3. ✅ `sitemap_type` - Set to "STANDARD" (nullable=False constraint)
+4. ✅ `deep_scrape_curation_status` - Set based on `auto_import` flag
+5. ✅ `sitemap_import_status` - Set based on `auto_import` flag
+6. ✅ `created_at` - `datetime.utcnow()`
+7. ✅ `user_id` - From JWT token
 
 ### Fields Requiring Get-or-Create Logic
 1. ✅ `domain_id` - **MUST be populated** (nullable=False constraint)
    - Extract domain from sitemap URL using domain extraction utility
    - Get existing domain by name OR create new domain
-   - Auto-created domains have `local_business_id=NULL` (allowed)
+   - Auto-created domains have `tenant_id=DEFAULT_TENANT_ID` and `local_business_id=NULL`
 
 ### Optional Fields
 1. ✅ `url_count` - NULL initially (populated after import)
@@ -194,6 +197,7 @@ if not domain:
     domain = Domain(
         id=uuid.uuid4(),
         domain=domain_name,
+        tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # REQUIRED (nullable=False)
         local_business_id=None,  # NULL OK here (nullable=True)
         sitemap_curation_status=SitemapCurationStatusEnum.New,
         sitemap_analysis_status=None,
@@ -205,6 +209,7 @@ if not domain:
 
 # Now create sitemap file with valid domain_id
 sitemap_file.domain_id = domain.id  # NOT NULL ✅
+sitemap_file.sitemap_type = "STANDARD"  # REQUIRED (nullable=False)
 ```
 
 **Impact:** Maintains referential integrity, enables domain-sitemap analytics, no database migration needed
@@ -369,6 +374,7 @@ from src.models.sitemap import (
     SitemapImportProcessStatusEnum
 )
 from src.models.domain import Domain, SitemapCurationStatusEnum
+from src.models.tenant import DEFAULT_TENANT_ID
 from src.schemas.sitemaps_direct_submission_schemas import (
     DirectSitemapSubmissionRequest,
     DirectSitemapSubmissionResponse
@@ -462,6 +468,7 @@ async def submit_sitemaps_directly(
                 domain = Domain(
                     id=uuid.uuid4(),
                     domain=domain_name,
+                    tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # REQUIRED (nullable=False)
                     local_business_id=None,  # NULL OK (nullable=True per SYSTEM_MAP.md)
                     sitemap_curation_status=SitemapCurationStatusEnum.New,
                     sitemap_analysis_status=None,
@@ -489,11 +496,13 @@ async def submit_sitemaps_directly(
                     else None
                 ),
 
+                # Required fields
+                sitemap_type="STANDARD",  # REQUIRED (nullable=False) - default for direct submissions
+
                 # Metadata (NULL initially, populated after import)
                 url_count=None,
                 last_modified=None,
                 file_size=None,
-                sitemap_type=None,  # Populated during import
 
                 # Timestamps
                 created_at=datetime.utcnow(),

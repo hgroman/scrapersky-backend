@@ -1,8 +1,8 @@
 # WO-009: Direct Page Submission Endpoint
 **Created:** November 17, 2025
 **Priority:** HIGH
-**Estimated Effort:** 3-4 hours
-**Risk Level:** MEDIUM (touches critical WF7 processing)
+**Estimated Effort:** 4.5-5.5 hours (+1.5h for domain handling)
+**Risk Level:** LOW (critical constraints resolved)
 
 ---
 
@@ -194,6 +194,7 @@ if not domain:
     domain = Domain(
         id=uuid.uuid4(),
         domain=domain_name,
+        tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # REQUIRED (nullable=False)
         local_business_id=None,  # NULL OK here (nullable=True)
         sitemap_curation_status=SitemapCurationStatusEnum.New,
         sitemap_analysis_status=None,
@@ -347,6 +348,7 @@ from src.db.session import get_db_session
 from src.auth.dependencies import get_current_user
 from src.models.page import Page, PageCurationStatus, PageProcessingStatus
 from src.models.domain import Domain, SitemapCurationStatusEnum
+from src.models.tenant import DEFAULT_TENANT_ID
 from src.schemas.pages_direct_submission_schemas import (
     DirectPageSubmissionRequest,
     DirectPageSubmissionResponse
@@ -439,6 +441,7 @@ async def submit_pages_directly(
                 domain = Domain(
                     id=uuid.uuid4(),
                     domain=domain_name,
+                    tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # REQUIRED (nullable=False)
                     local_business_id=None,  # NULL OK (nullable=True per SYSTEM_MAP.md)
                     sitemap_curation_status=SitemapCurationStatusEnum.New,
                     sitemap_analysis_status=None,
