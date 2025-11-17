@@ -36,11 +36,17 @@ This checklist allows you (a future AI or human) to quickly reconstruct the full
    
 □ **Read [SYSTEM_MAP.md](./SYSTEM_MAP.md)** (10 min)
    - Complete architecture
-   - Data flow through all workflows
+   - Data flow through all workflows (WF1→WF7)
    - Database tables and relationships
    - Services and schedulers
 
-**You should now know:** System architecture and data flow
+□ **Optional: Deep dive into specific workflows** (varies)
+   - **WF1-3:** [WF1_SINGLE_SEARCH.md](../Architecture/WF1_SINGLE_SEARCH.md) & [WF2_WF3_ENRICHMENT_EXTRACTION.md](../Architecture/WF2_WF3_ENRICHMENT_EXTRACTION.md)
+   - **WF4-7:** [WF4_WF5_WF7_COMPLETE_INDEX.md](../Architecture/WF4_WF5_WF7_COMPLETE_INDEX.md)
+   - **Extensibility:** [EXTENSIBILITY_PATTERNS.md](./EXTENSIBILITY_PATTERNS.md) - How to add new entry points
+   - **New Workflows:** [NEW_WORKFLOW_PATTERN.md](./NEW_WORKFLOW_PATTERN.md) - How to create new workflows
+
+**You should now know:** System architecture, complete data flow, and how to extend
 
 ### Historical Context (15 minutes)
 
