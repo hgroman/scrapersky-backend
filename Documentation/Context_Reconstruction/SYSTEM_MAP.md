@@ -127,7 +127,7 @@ domain_id: Column[uuid.UUID] = Column(
 
 ### SitemapFile Model (`src/models/sitemap.py`)
 
-**CRITICAL CONSTRAINT:**
+**CRITICAL CONSTRAINT #1:**
 ```python
 # Line 104
 domain_id = Column(PGUUID, ForeignKey("domains.id"), nullable=False, index=True)  # ← NOT NULL
@@ -135,14 +135,63 @@ domain_id = Column(PGUUID, ForeignKey("domains.id"), nullable=False, index=True)
 
 **Impact:** All SitemapFile records MUST be associated with a Domain. Direct sitemap submissions must "get-or-create" a Domain record first.
 
+**CRITICAL CONSTRAINT #2:**
+```python
+# Line 106
+sitemap_type = Column(Text, nullable=False)  # ← NOT NULL
+```
+
+**Impact:** All SitemapFile records MUST have a sitemap_type. For direct submissions, use "STANDARD".
+
+**Valid sitemap_type Values:** "INDEX", "STANDARD", "IMAGE", "VIDEO", "NEWS"
+
+**Example:**
+```python
+sitemap_file = SitemapFile(
+    domain_id=domain.id,  # REQUIRED
+    url=sitemap_url,
+    sitemap_type="STANDARD",  # REQUIRED - default for direct submission
+    ...
+)
+```
+
 **Nullable Fields:**
 - `url_count` - CAN be NULL (populated after import)
 - `last_modified` - CAN be NULL
 - `size_bytes` - CAN be NULL
+- `discovery_method` - CAN be NULL
 
 ---
 
 ### Domain Model (`src/models/domain.py`)
+
+**CRITICAL CONSTRAINT:**
+```python
+# Line 117-123
+tenant_id = Column(
+    PGUUID,
+    ForeignKey("tenants.id"),
+    nullable=False,  # ← NOT NULL
+    index=True,
+    default=lambda: uuid.UUID(DEFAULT_TENANT_ID),
+)
+```
+
+**Impact:** All Domain records MUST have a tenant_id. For direct submissions, use DEFAULT_TENANT_ID.
+
+**DEFAULT_TENANT_ID:** `"550e8400-e29b-41d4-a716-446655440000"` (from `src/models/tenant.py:16`)
+
+**Example:**
+```python
+from src.models.tenant import DEFAULT_TENANT_ID
+
+domain = Domain(
+    domain=domain_name,
+    tenant_id=uuid.UUID(DEFAULT_TENANT_ID),  # REQUIRED
+    local_business_id=None,  # NULL OK
+    ...
+)
+```
 
 **Nullable Foreign Keys:**
 ```python
