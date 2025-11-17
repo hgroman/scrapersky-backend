@@ -101,9 +101,38 @@ SitemapFile.sitemap_type: nullable=False (must be "STANDARD")
 
 **This is your execution playbook.**
 
+#### 6. The Docker & Environment Guide (HOW to run it)
+**File:** `README_ADDENDUM.md`
+
+**Why Read This:**
+- Docker environment options (dev vs staging vs prod)
+- Common Docker troubleshooting (silent failures)
+- Database connection format (port 6543, not 5432)
+- Debug mode endpoints (optional)
+
+**Critical sections:**
+- Lines 27-57: Docker environment-specific compose files
+- Lines 59-77: Local Docker troubleshooting & gotchas
+- Lines 93-103: Database connection (Supavisor pooler)
+- Lines 212-248: Debug tools (optional for testing)
+
+**Key Takeaway:** Use `docker-compose.dev.yml` for testing (bypass token enabled).
+
 ---
 
 ## Phase 1: Environment Setup (15-20 minutes)
+
+### Step 0: Read Docker Guide (IMPORTANT)
+
+**File:** `README_ADDENDUM.md`
+
+**Critical sections to read:**
+- **Docker** (lines 27-57) - Environment-specific compose files
+- **Local Docker Troubleshooting** (lines 59-77) - Common gotchas
+- **Database** (lines 93-103) - Connection string format
+- **Debug Tools** (lines 212-248) - Optional debug endpoints
+
+**Key Takeaway:** Use `docker-compose.dev.yml` for testing (bypass token enabled).
 
 ### Step 1: Verify Branch and Code
 
@@ -124,30 +153,38 @@ ls -la src/schemas/pages_direct_submission_schemas.py
 ls -la src/schemas/sitemaps_direct_submission_schemas.py
 ```
 
-### Step 2: Build Docker Environment
+### Step 2: Build Docker Environment (Development Mode)
+
+**IMPORTANT:** Use `docker-compose.dev.yml` for easier testing (bypass token enabled).
 
 ```bash
 # Stop existing containers
 docker compose down
+docker compose -f docker-compose.dev.yml down
 
 # Build fresh containers with new code
-docker compose build --no-cache
+docker compose -f docker-compose.dev.yml build --no-cache
 
-# Start services
-docker compose up -d
+# Start services in development mode
+docker compose -f docker-compose.dev.yml up -d
 
 # Wait for initialization
 sleep 10
 
 # Verify services are running
-docker compose ps
+docker compose -f docker-compose.dev.yml ps
 # Expected: All services "Up"
 
 # Check app logs for errors
-docker compose logs app | tail -50
+docker compose -f docker-compose.dev.yml logs app | tail -50
 # Expected: "Uvicorn running on http://0.0.0.0:8000"
 # Expected: No ERROR messages
 ```
+
+**Troubleshooting:** If containers fail silently, check `README_ADDENDUM.md` lines 59-77 for common issues:
+- Environment variable loading problems
+- Volume mount issues
+- Pip install failures
 
 ### Step 3: Verify Router Registration
 
