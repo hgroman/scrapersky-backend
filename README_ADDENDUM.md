@@ -26,15 +26,34 @@
 
 ## Docker
 
+### Environment-Specific Compose Files
+
+The project includes multiple docker-compose configurations for different environments:
+
+| File | Environment | Use Case |
+| ---- | ----------- | -------- |
+| `docker-compose.yml` | Default | Standard local development |
+| `docker-compose.dev.yml` | Development | Testing with `ENV=development` (bypass token enabled) |
+| `docker-compose.staging.yml` | Staging | Testing with `ENV=staging` (bypass token disabled) |
+| `docker-compose.prod.yml` | Production | Production deployment (bypass token disabled) |
+
+### Basic Commands
+
 ```bash
-# Start stack
+# Start stack (default)
 docker compose up --build
 
+# Start with specific environment
+docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.staging.yml up --build
+docker compose -f docker-compose.prod.yml up --build
+
 # View logs for app service
-docker compose logs -f app
+docker compose logs -f scrapersky
 
 # Shut down
 docker compose down
+docker compose -f docker-compose.dev.yml down
 ```
 
 ## Local Docker Troubleshooting & Gotchas
