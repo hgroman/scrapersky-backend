@@ -27,10 +27,15 @@ from .config.logging_config import setup_logging
 setup_logging()
 
 from src.services.sitemap_import_scheduler import setup_sitemap_import_scheduler
-from src.services.WF7_V2_L4_2of2_PageCurationScheduler import setup_page_curation_scheduler
+from src.services.WF7_V2_L4_2of2_PageCurationScheduler import (
+    setup_page_curation_scheduler,
+)
+from src.services.crm.brevo_sync_scheduler import setup_brevo_sync_scheduler
 from src.routers.v2.WF7_V2_L3_1of1_PagesRouter import router as v2_pages_router
 from src.routers.v3.WF7_V3_L3_1of1_PagesRouter import router as v3_pages_router
-from src.routers.v3.pages_direct_submission_router import router as pages_direct_submission_router
+from src.routers.v3.pages_direct_submission_router import (
+    router as pages_direct_submission_router,
+)
 from src.routers.v3.pages_csv_import_router import router as pages_csv_import_router
 from .health.db_health import check_database_connection
 from .routers.batch_page_scraper import router as batch_page_scraper_api_router
@@ -38,7 +43,9 @@ from .routers.batch_sitemap import router as batch_sitemap_api_router
 from .routers.db_portal import router as db_portal_api_router
 from .routers.dev_tools import router as dev_tools_api_router
 from .routers.domains import router as domains_api_router
-from .routers.v3.domains_direct_submission_router import router as domains_direct_submission_router
+from .routers.v3.domains_direct_submission_router import (
+    router as domains_direct_submission_router,
+)
 from .routers.v3.domains_csv_import_router import router as domains_csv_import_router
 from .routers.email_scanner import router as email_scanner_api_router
 from .routers.google_maps_api import router as google_maps_api_router
@@ -50,7 +57,9 @@ from .routers.modernized_sitemap import router as modernized_sitemap_api_router
 from .routers.places_staging import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
 from .routers.sitemap_files import router as sitemap_files_router
-from .routers.v3.sitemaps_direct_submission_router import router as sitemaps_direct_submission_router
+from .routers.v3.sitemaps_direct_submission_router import (
+    router as sitemaps_direct_submission_router,
+)
 from .routers.v3.sitemaps_csv_import_router import router as sitemaps_csv_import_router
 from .routers.v3.contacts_router import router as contacts_router
 from .routers.sqlalchemy import routers as sqlalchemy_routers
@@ -60,9 +69,11 @@ from .services.domain_scheduler import setup_domain_scheduler
 from .services.domain_sitemap_submission_scheduler import (
     setup_domain_sitemap_submission_scheduler,
 )
+
 # WO-004: Split schedulers (replacing sitemap_scheduler)
 from .services.deep_scan_scheduler import setup_deep_scan_scheduler
 from .services.domain_extraction_scheduler import setup_domain_extraction_scheduler
+
 # TODO: Remove after WO-004 complete
 from .services.sitemap_scheduler import setup_sitemap_scheduler
 from .session.async_session import get_session
@@ -111,7 +122,9 @@ async def lifespan(app: FastAPI):
     try:
         setup_domain_extraction_scheduler()  # WF3 - Domain Extraction
     except Exception as e:
-        logger.error(f"Failed to setup Domain Extraction scheduler job: {e}", exc_info=True)
+        logger.error(
+            f"Failed to setup Domain Extraction scheduler job: {e}", exc_info=True
+        )
 
     # TODO: Remove after WO-004 validation complete (keeping temporarily for rollback safety)
     # try:
@@ -138,9 +151,13 @@ async def lifespan(app: FastAPI):
     try:
         setup_page_curation_scheduler()
     except Exception as e:
-        logger.error(
-            f"Failed to setup Page Curation scheduler job: {e}", exc_info=True
-        )
+        logger.error(f"Failed to setup Page Curation scheduler job: {e}", exc_info=True)
+
+    # WO-015: Brevo CRM sync scheduler
+    try:
+        setup_brevo_sync_scheduler()
+    except Exception as e:
+        logger.error(f"Failed to setup Brevo Sync scheduler job: {e}", exc_info=True)
 
     logger.info("Finished adding jobs to shared scheduler.")
 
