@@ -63,14 +63,20 @@ class Settings(BaseSettings):
 
     # WF2 Deep Scan Scheduler (Replaces WF2 portion of sitemap_scheduler)
     # Processes Place records queued for Google Maps deep scan analysis
-    DEEP_SCAN_SCHEDULER_INTERVAL_MINUTES: int = 5  # Slower than old shared scheduler (external API calls)
+    DEEP_SCAN_SCHEDULER_INTERVAL_MINUTES: int = (
+        5  # Slower than old shared scheduler (external API calls)
+    )
     DEEP_SCAN_SCHEDULER_BATCH_SIZE: int = 10  # Smaller batches (API rate limits)
     DEEP_SCAN_SCHEDULER_MAX_INSTANCES: int = 1  # Prevent API throttling
 
     # WF3 Domain Extraction Scheduler (Replaces WF3 portion of sitemap_scheduler)
     # Processes LocalBusiness records queued for domain extraction
-    DOMAIN_EXTRACTION_SCHEDULER_INTERVAL_MINUTES: int = 2  # Faster than deep scans (internal processing)
-    DOMAIN_EXTRACTION_SCHEDULER_BATCH_SIZE: int = 20  # Larger batches (no external dependencies)
+    DOMAIN_EXTRACTION_SCHEDULER_INTERVAL_MINUTES: int = (
+        2  # Faster than deep scans (internal processing)
+    )
+    DOMAIN_EXTRACTION_SCHEDULER_BATCH_SIZE: int = (
+        20  # Larger batches (no external dependencies)
+    )
     DOMAIN_EXTRACTION_SCHEDULER_MAX_INSTANCES: int = 1  # Database write constraints
 
     # Domain Sitemap Submission Scheduler settings (New)
@@ -100,6 +106,21 @@ class Settings(BaseSettings):
     # langchain_tracing_v2: Optional[str] = None
     # langchain_endpoint: Optional[str] = None
     # langchain_project: Optional[str] = None
+
+    # Brevo CRM Integration (WO-015)
+    BREVO_API_KEY: Optional[str] = None
+    BREVO_LIST_ID: Optional[str] = None  # Optional - Brevo list ID to add contacts to
+    BREVO_API_BASE_URL: str = "https://api.brevo.com/v3"
+
+    # Brevo Sync Scheduler (WO-015 Phase 2)
+    BREVO_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 5
+    BREVO_SYNC_SCHEDULER_BATCH_SIZE: int = 10
+    BREVO_SYNC_SCHEDULER_MAX_INSTANCES: int = 1
+
+    # Brevo Retry Logic (WO-015 Phase 2)
+    BREVO_SYNC_MAX_RETRIES: int = 3
+    BREVO_SYNC_RETRY_DELAY_MINUTES: int = 5
+    BREVO_SYNC_RETRY_EXPONENTIAL: bool = True
 
     # Mautic settings
     mautic_base_url: Optional[str] = None
