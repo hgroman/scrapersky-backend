@@ -31,6 +31,7 @@ from src.services.WF7_V2_L4_2of2_PageCurationScheduler import setup_page_curatio
 from src.routers.v2.WF7_V2_L3_1of1_PagesRouter import router as v2_pages_router
 from src.routers.v3.WF7_V3_L3_1of1_PagesRouter import router as v3_pages_router
 from src.routers.v3.pages_direct_submission_router import router as pages_direct_submission_router
+from src.routers.v3.pages_csv_import_router import router as pages_csv_import_router
 from .health.db_health import check_database_connection
 from .routers.batch_page_scraper import router as batch_page_scraper_api_router
 from .routers.batch_sitemap import router as batch_sitemap_api_router
@@ -38,6 +39,7 @@ from .routers.db_portal import router as db_portal_api_router
 from .routers.dev_tools import router as dev_tools_api_router
 from .routers.domains import router as domains_api_router
 from .routers.v3.domains_direct_submission_router import router as domains_direct_submission_router
+from .routers.v3.domains_csv_import_router import router as domains_csv_import_router
 from .routers.email_scanner import router as email_scanner_api_router
 from .routers.google_maps_api import router as google_maps_api_router
 from .routers.local_businesses import router as local_businesses_api_router
@@ -49,6 +51,7 @@ from .routers.places_staging import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
 from .routers.sitemap_files import router as sitemap_files_router
 from .routers.v3.sitemaps_direct_submission_router import router as sitemaps_direct_submission_router
+from .routers.v3.sitemaps_csv_import_router import router as sitemaps_csv_import_router
 from .routers.v3.contacts_router import router as contacts_router
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
@@ -288,9 +291,11 @@ logger.info("Including API routers...")
 app.include_router(v2_pages_router)
 app.include_router(v3_pages_router)  # V3 compliant version
 app.include_router(pages_direct_submission_router)
+app.include_router(pages_csv_import_router)
 app.include_router(google_maps_api_router)
 app.include_router(modernized_sitemap_api_router)
 app.include_router(sitemaps_direct_submission_router)
+app.include_router(sitemaps_csv_import_router)
 app.include_router(
     batch_page_scraper_api_router, prefix="/api/v3", tags=["Batch Page Scraper"]
 )
@@ -305,6 +310,7 @@ app.include_router(places_staging_api_router, prefix="/api/v3")
 app.include_router(local_businesses_api_router)
 app.include_router(domains_api_router, tags=["Domains"])
 app.include_router(domains_direct_submission_router)
+app.include_router(domains_csv_import_router)
 app.include_router(sitemap_files_router)
 app.include_router(contacts_router)
 app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"])
