@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import uuid
 
 from src.db.session import get_db_session
-from src.auth.dependencies import get_current_user
+from src.auth.jwt_auth import get_current_user
 from src.models.sitemap import (
     SitemapFile,
     SitemapImportCurationStatusEnum,
@@ -147,7 +147,7 @@ async def submit_sitemaps_directly(
                 # Metadata (NULL initially, populated after import)
                 url_count=None,
                 last_modified=None,
-                file_size=None,
+                size_bytes=None,
                 # Timestamps
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),

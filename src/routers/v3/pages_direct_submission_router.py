@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import uuid
 
 from src.db.session import get_db_session
-from src.auth.dependencies import get_current_user
+from src.auth.jwt_auth import get_current_user
 from src.models.page import Page, PageCurationStatus, PageProcessingStatus
 from src.models.domain import Domain, SitemapCurationStatusEnum
 from src.models.tenant import DEFAULT_TENANT_ID
@@ -124,6 +124,7 @@ async def submit_pages_directly(
                 id=uuid.uuid4(),
                 url=url_str,
                 # Foreign keys
+                tenant_id=DEFAULT_TENANT_ID,  # REQUIRED (nullable=False)
                 domain_id=domain.id,  # REQUIRED (nullable=False per SYSTEM_MAP.md)
                 sitemap_file_id=None,  # NULL OK (nullable=True)
                 # DUAL-STATUS PATTERN (CRITICAL)
@@ -139,10 +140,6 @@ async def submit_pages_directly(
                 priority_level=request.priority_level,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                # Honeybee fields (NULL for direct submission)
-                page_category=None,
-                category_confidence=None,
-                depth=None,
             )
 
             session.add(page)

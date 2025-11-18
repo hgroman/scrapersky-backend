@@ -11,7 +11,7 @@ from datetime import datetime
 import uuid
 
 from src.db.session import get_db_session
-from src.auth.dependencies import get_current_user
+from src.auth.jwt_auth import get_current_user
 from src.models.domain import (
     Domain,
     SitemapCurationStatusEnum,
