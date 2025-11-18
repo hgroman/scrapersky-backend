@@ -50,6 +50,7 @@ class HubSpotSyncStatus(str, Enum):
     """Status values for HubSpot sync workflow"""
 
     New = "New"
+    Selected = "Selected"
     Queued = "Queued"
     Processing = "Processing"
     Complete = "Complete"
@@ -59,6 +60,27 @@ class HubSpotSyncStatus(str, Enum):
 
 class HubSpotProcessingStatus(str, Enum):
     """Status values for HubSpot processing workflow"""
+
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+
+
+class CRMSyncStatus(str, Enum):
+    """Shared status values for all CRM sync workflows (Brevo, Mautic, n8n)"""
+
+    New = "New"
+    Selected = "Selected"
+    Queued = "Queued"
+    Processing = "Processing"
+    Complete = "Complete"
+    Error = "Error"
+    Skipped = "Skipped"
+
+
+class CRMProcessingStatus(str, Enum):
+    """Shared processing status for all CRM sync workflows"""
 
     Queued = "Queued"
     Processing = "Processing"

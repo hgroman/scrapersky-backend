@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, ForeignKey, Text, Boolean, Enum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, ForeignKey, Text, Boolean, Enum, Integer
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
@@ -36,7 +36,7 @@ class Contact(Base, BaseModel):
     contact_processing_error = Column(Text, nullable=True)
 
     hubspot_sync_status = Column(
-        Enum('New', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='hubspot_sync_status'),
+        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='hubspot_sync_status'),
         nullable=False,
         default='New',
         index=True,
@@ -47,5 +47,57 @@ class Contact(Base, BaseModel):
         index=True,
     )
     hubspot_processing_error = Column(Text, nullable=True)
+    hubspot_contact_id = Column(String, nullable=True, index=True)
+
+    # Brevo sync status fields
+    brevo_sync_status = Column(
+        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='crm_sync_status'),
+        nullable=False,
+        default='New',
+        index=True,
+    )
+    brevo_processing_status = Column(
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='crm_processing_status'),
+        nullable=True,
+        index=True,
+    )
+    brevo_processing_error = Column(Text, nullable=True)
+    brevo_contact_id = Column(String, nullable=True, index=True)
+
+    # Mautic sync status fields
+    mautic_sync_status = Column(
+        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='crm_sync_status'),
+        nullable=False,
+        default='New',
+        index=True,
+    )
+    mautic_processing_status = Column(
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='crm_processing_status'),
+        nullable=True,
+        index=True,
+    )
+    mautic_processing_error = Column(Text, nullable=True)
+    mautic_contact_id = Column(String, nullable=True, index=True)
+
+    # n8n sync status fields
+    n8n_sync_status = Column(
+        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='crm_sync_status'),
+        nullable=False,
+        default='New',
+        index=True,
+    )
+    n8n_processing_status = Column(
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='crm_processing_status'),
+        nullable=True,
+        index=True,
+    )
+    n8n_processing_error = Column(Text, nullable=True)
+    n8n_workflow_id = Column(String, nullable=True, index=True)
+
+    # Retry tracking fields (shared across all CRM syncs)
+    retry_count = Column(Integer, nullable=False, default=0)
+    last_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    last_failed_crm = Column(String, nullable=True)
 
     page = relationship("Page", back_populates="contacts")
