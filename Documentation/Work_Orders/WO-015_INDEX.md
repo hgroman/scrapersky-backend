@@ -86,6 +86,87 @@
 
 ---
 
+### 4. WO-015.4_IMPLEMENTATION_PLAN.md (Phased Implementation)
+**Author:** Online Claude AI
+**Date:** 2025-01-18
+**Size:** ~1,200 lines
+**Status:** ✅ Active Implementation Guide
+
+**Contents:**
+- Phased implementation strategy (4 phases)
+- Phase 1: Selection Endpoints (Days 1-3)
+- Phase 2: Brevo Sync Service (Days 4-8)
+- Phase 3: Remaining CRMs (Days 9-13)
+- Phase 4: Polish & Documentation (Days 14-15)
+
+**Key Features:**
+- Conservative rollout strategy
+- Testing gates between phases
+- Break-nothing approach
+- Detailed implementation steps per phase
+
+---
+
+### 5. WO-015.5_PHASE_1_COMPLETE.md (Phase 1 Completion)
+**Author:** Online Claude AI
+**Date:** 2025-01-18
+**Status:** ✅ Complete (Enhanced)
+
+**Contents:**
+- Phase 1 completion report
+- Files modified and created
+- API endpoints added/modified
+- Testing results
+- Known issues (including dual-status adapter fix)
+- Context for Phase 2
+
+**Key Issue Resolved:**
+- Dual-status adapter missing (WO-015.7 fix applied)
+- Now properly sets processing_status when selecting contacts
+
+---
+
+### 6. WO-015.6_FRONTEND_INTEGRATION_GUIDE.md (Frontend Guide)
+**Author:** Local Claude AI
+**Date:** 2025-01-18
+**Status:** ✅ Reference Document
+
+**Contents:**
+- Frontend integration patterns
+- API usage examples
+- UI/UX recommendations
+- Response schema documentation
+
+---
+
+### 7. WO-015.7_PHASE_1_DUAL_STATUS_ADAPTER_REQUIRED.md (Critical Enhancement)
+**Author:** Local Claude AI
+**Date:** 2025-01-18
+**Priority:** 🔴 CRITICAL - Blocks Phase 2
+**Status:** ✅ IMPLEMENTED
+
+**Contents:**
+- Problem identification (missing dual-status pattern)
+- Solution specification (dual-status adapter logic)
+- Reference implementations (Pages, Domains, Sitemap Files, Local Businesses)
+- Required code changes
+- Testing requirements
+- Phase 2 dependency explanation
+
+**Key Issue:**
+- Initial Phase 1 implementation only set `{crm}_sync_status`
+- Did NOT set `{crm}_processing_status = 'Queued'`
+- Would have prevented Phase 2 schedulers from finding contacts
+
+**Fix Applied:**
+- Added dual-status adapter to `/crm/select` endpoint
+- Now sets both sync_status AND processing_status
+- Clears processing_error on select
+- Resets processing_status on unselect
+- Returns queued_count in response
+
+---
+
 ## Phase Tracking & Handoff
 
 **Purpose:** Track progress across multiple Claude instances and ensure zero context loss between phases.
@@ -105,13 +186,15 @@
 
 ---
 
-### Phase 1: Selection Endpoints ✅ COMPLETE
+### Phase 1: Selection Endpoints ✅ COMPLETE (Enhanced)
 - **Implementer:** Online Claude
-- **Status:** ✅ Complete
+- **Status:** ✅ Complete (with dual-status adapter)
 - **Completion Doc:** `WO-015.5_PHASE_1_COMPLETE.md`
+- **Enhancement:** WO-015.7 (dual-status pattern added)
 - **Implementation Plan:** See WO-015.4_IMPLEMENTATION_PLAN.md (lines 43-472)
 - **Started:** 2025-01-18
 - **Completed:** 2025-01-18
+- **Enhanced:** 2025-01-18 (WO-015.7 dual-status adapter)
 - **Estimated Duration:** 3 days
 - **Prerequisites:** 
   - ✅ Database migration complete

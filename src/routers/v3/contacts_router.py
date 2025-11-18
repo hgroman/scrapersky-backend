@@ -11,7 +11,9 @@ from src.models.enums import (
     ContactCurationStatus,
     ContactEmailTypeEnum,
     ContactProcessingStatus,
+    CRMProcessingStatus,
     CRMSyncStatus,
+    HubSpotProcessingStatus,
     HubSpotSyncStatus,
 )
 from src.models.WF7_V2_L1_1of1_ContactModel import Contact
@@ -124,7 +126,9 @@ async def list_contacts(
     if contact_curation_status:
         filters.append(Contact.contact_curation_status == contact_curation_status.value)
     if contact_processing_status:
-        filters.append(Contact.contact_processing_status == contact_processing_status.value)
+        filters.append(
+            Contact.contact_processing_status == contact_processing_status.value
+        )
     if hubspot_sync_status:
         filters.append(Contact.hubspot_sync_status == hubspot_sync_status.value)
     if brevo_sync_status:
@@ -195,11 +199,19 @@ async def filtered_batch_update_status(
     """Batch update status for all contacts matching filter criteria."""
     filters = []
     if update_request.contact_curation_status:
-        filters.append(Contact.contact_curation_status == update_request.contact_curation_status.value)
+        filters.append(
+            Contact.contact_curation_status
+            == update_request.contact_curation_status.value
+        )
     if update_request.contact_processing_status:
-        filters.append(Contact.contact_processing_status == update_request.contact_processing_status.value)
+        filters.append(
+            Contact.contact_processing_status
+            == update_request.contact_processing_status.value
+        )
     if update_request.hubspot_sync_status:
-        filters.append(Contact.hubspot_sync_status == update_request.hubspot_sync_status.value)
+        filters.append(
+            Contact.hubspot_sync_status == update_request.hubspot_sync_status.value
+        )
     if update_request.email_type:
         filters.append(Contact.email_type == update_request.email_type.value)
     if update_request.domain_id:
@@ -245,8 +257,8 @@ async def select_contacts_for_crm_sync(
     """
     Mark contacts as 'Selected' for one or more CRM platforms.
 
-    Sets {crm}_sync_status = 'Selected' for specified CRMs.
-    Does NOT queue for processing yet - that happens when sync service is implemented.
+    Sets {crm}_sync_status = 'Selected' AND {crm}_processing_status = 'Queued'.
+    Implements dual-status pattern: user selection triggers system queuing.
 
     Request body:
     {
@@ -256,16 +268,10 @@ async def select_contacts_for_crm_sync(
     }
     """
     if not request.contact_ids:
-        return {
-            "updated_count": 0,
-            "message": "No contact IDs provided"
-        }
+        return {"updated_count": 0, "message": "No contact IDs provided"}
 
     if not request.crms:
-        return {
-            "updated_count": 0,
-            "message": "No CRMs specified"
-        }
+        return {"updated_count": 0, "message": "No CRMs specified"}
 
     # Validate CRM names
     valid_crms = {"brevo", "mautic", "n8n", "hubspot"}
@@ -273,7 +279,7 @@ async def select_contacts_for_crm_sync(
     if invalid_crms:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid CRM names: {invalid_crms}. Valid: {valid_crms}"
+            detail=f"Invalid CRM names: {invalid_crms}. Valid: {valid_crms}",
         )
 
     stmt = select(Contact).where(Contact.id.in_(request.contact_ids))
@@ -282,24 +288,66 @@ async def select_contacts_for_crm_sync(
 
     if not contacts:
         raise HTTPException(
-            status_code=404,
-            detail="No contacts found with provided IDs"
+            status_code=404, detail="No contacts found with provided IDs"
         )
 
     updated_count = 0
-    target_status = CRMSyncStatus.Selected.value if request.action == "select" else CRMSyncStatus.New.value
+    queued_count = 0  # Track how many CRM entries were queued for processing
+    target_status = (
+        CRMSyncStatus.Selected.value
+        if request.action == "select"
+        else CRMSyncStatus.New.value
+    )
 
     for contact in contacts:
         for crm in request.crms:
-            # Update the appropriate status field
+            # Update the appropriate sync status field (curation status)
             if crm == "brevo":
                 contact.brevo_sync_status = target_status
+                # Dual-Status Pattern - trigger when Selected
+                if request.action == "select":
+                    contact.brevo_processing_status = CRMProcessingStatus.Queued.value
+                    contact.brevo_processing_error = None
+                    queued_count += 1
+                elif request.action == "unselect":
+                    # Reset processing status when unselecting
+                    contact.brevo_processing_status = None
+                    contact.brevo_processing_error = None
+
             elif crm == "mautic":
                 contact.mautic_sync_status = target_status
+                # Dual-Status Pattern
+                if request.action == "select":
+                    contact.mautic_processing_status = CRMProcessingStatus.Queued.value
+                    contact.mautic_processing_error = None
+                    queued_count += 1
+                elif request.action == "unselect":
+                    contact.mautic_processing_status = None
+                    contact.mautic_processing_error = None
+
             elif crm == "n8n":
                 contact.n8n_sync_status = target_status
+                # Dual-Status Pattern
+                if request.action == "select":
+                    contact.n8n_processing_status = CRMProcessingStatus.Queued.value
+                    contact.n8n_processing_error = None
+                    queued_count += 1
+                elif request.action == "unselect":
+                    contact.n8n_processing_status = None
+                    contact.n8n_processing_error = None
+
             elif crm == "hubspot":
                 contact.hubspot_sync_status = target_status
+                # Dual-Status Pattern
+                if request.action == "select":
+                    contact.hubspot_processing_status = (
+                        HubSpotProcessingStatus.Queued.value
+                    )
+                    contact.hubspot_processing_error = None
+                    queued_count += 1
+                elif request.action == "unselect":
+                    contact.hubspot_processing_status = None
+                    contact.hubspot_processing_error = None
 
         updated_count += 1
 
@@ -307,7 +355,8 @@ async def select_contacts_for_crm_sync(
 
     return {
         "updated_count": updated_count,
+        "queued_count": queued_count,
         "crms": request.crms,
         "action": request.action,
-        "message": f"{request.action.capitalize()}ed {updated_count} contacts for {len(request.crms)} CRM(s)"
+        "message": f"{request.action.capitalize()}ed {updated_count} contacts for {len(request.crms)} CRM(s), {queued_count} queued for processing",
     }
