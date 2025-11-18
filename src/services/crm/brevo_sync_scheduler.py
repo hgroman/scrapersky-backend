@@ -14,8 +14,7 @@ This scheduler:
 """
 
 import logging
-from sqlalchemy import asc, or_
-from datetime import datetime
+from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
@@ -55,13 +54,6 @@ async def process_brevo_sync_queue():
         order_by_column=asc(Contact.updated_at),
         status_field_name="brevo_processing_status",
         error_field_name="brevo_processing_error",
-        # Additional filter: Only process contacts ready for retry
-        additional_filters=[
-            or_(
-                Contact.next_retry_at.is_(None),
-                Contact.next_retry_at <= datetime.utcnow(),
-            )
-        ],
     )
 
     logger.info("✅ Finished Brevo sync scheduler cycle")
