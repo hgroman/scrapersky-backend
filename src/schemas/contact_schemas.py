@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from src.models.enums import (
     ContactCurationStatus,
@@ -115,3 +115,28 @@ class ContactCurationBatchUpdateResponse(BaseModel):
     updated_count: int
     queued_count: int
     hubspot_queued_count: int = 0
+
+
+class CRMSelectionRequest(BaseModel):
+    """Request to mark contacts for CRM sync"""
+    contact_ids: List[uuid.UUID]
+    crms: List[str]  # ["brevo", "hubspot", "mautic", "n8n"]
+    action: str = "select"  # "select" or "unselect"
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('action')
+    @classmethod
+    def validate_action(cls, v):
+        if v not in ["select", "unselect"]:
+            raise ValueError("action must be 'select' or 'unselect'")
+        return v
+
+    @field_validator('crms')
+    @classmethod
+    def validate_crms(cls, v):
+        valid_crms = {"brevo", "mautic", "n8n", "hubspot"}
+        invalid = set(v) - valid_crms
+        if invalid:
+            raise ValueError(f"Invalid CRM names: {invalid}")
+        return v

@@ -2,7 +2,6 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -12,7 +11,7 @@ from src.models.enums import (
     ContactCurationStatus,
     ContactEmailTypeEnum,
     ContactProcessingStatus,
-    HubSpotProcessingStatus,
+    CRMSyncStatus,
     HubSpotSyncStatus,
 )
 from src.models.WF7_V2_L1_1of1_ContactModel import Contact
@@ -23,6 +22,7 @@ from src.schemas.contact_schemas import (
     ContactCurationFilteredUpdateRequest,
     ContactRead,
     ContactUpdate,
+    CRMSelectionRequest,
 )
 
 router = APIRouter(
@@ -109,6 +109,9 @@ async def list_contacts(
     contact_curation_status: Optional[ContactCurationStatus] = Query(None),
     contact_processing_status: Optional[ContactProcessingStatus] = Query(None),
     hubspot_sync_status: Optional[HubSpotSyncStatus] = Query(None),
+    brevo_sync_status: Optional[CRMSyncStatus] = Query(None),
+    mautic_sync_status: Optional[CRMSyncStatus] = Query(None),
+    n8n_sync_status: Optional[CRMSyncStatus] = Query(None),
     email_type: Optional[ContactEmailTypeEnum] = Query(None),
     domain_id: Optional[uuid.UUID] = Query(None),
     page_id: Optional[uuid.UUID] = Query(None),
@@ -124,6 +127,12 @@ async def list_contacts(
         filters.append(Contact.contact_processing_status == contact_processing_status.value)
     if hubspot_sync_status:
         filters.append(Contact.hubspot_sync_status == hubspot_sync_status.value)
+    if brevo_sync_status:
+        filters.append(Contact.brevo_sync_status == brevo_sync_status.value)
+    if mautic_sync_status:
+        filters.append(Contact.mautic_sync_status == mautic_sync_status.value)
+    if n8n_sync_status:
+        filters.append(Contact.n8n_sync_status == n8n_sync_status.value)
     if email_type:
         filters.append(Contact.email_type == email_type.value)
     if domain_id:
@@ -225,3 +234,80 @@ async def filtered_batch_update_status(
     return ContactCurationBatchUpdateResponse(
         updated_count=updated_count, queued_count=queued_count
     )
+
+
+@router.put("/crm/select", response_model=Dict[str, Any])
+async def select_contacts_for_crm_sync(
+    request: CRMSelectionRequest,
+    session: AsyncSession = Depends(get_db_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Mark contacts as 'Selected' for one or more CRM platforms.
+
+    Sets {crm}_sync_status = 'Selected' for specified CRMs.
+    Does NOT queue for processing yet - that happens when sync service is implemented.
+
+    Request body:
+    {
+        "contact_ids": ["uuid1", "uuid2"],
+        "crms": ["brevo", "hubspot"],  // Which CRMs to mark as selected
+        "action": "select"  // or "unselect" to set back to "New"
+    }
+    """
+    if not request.contact_ids:
+        return {
+            "updated_count": 0,
+            "message": "No contact IDs provided"
+        }
+
+    if not request.crms:
+        return {
+            "updated_count": 0,
+            "message": "No CRMs specified"
+        }
+
+    # Validate CRM names
+    valid_crms = {"brevo", "mautic", "n8n", "hubspot"}
+    invalid_crms = set(request.crms) - valid_crms
+    if invalid_crms:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid CRM names: {invalid_crms}. Valid: {valid_crms}"
+        )
+
+    stmt = select(Contact).where(Contact.id.in_(request.contact_ids))
+    result = await session.execute(stmt)
+    contacts = result.scalars().all()
+
+    if not contacts:
+        raise HTTPException(
+            status_code=404,
+            detail="No contacts found with provided IDs"
+        )
+
+    updated_count = 0
+    target_status = CRMSyncStatus.Selected.value if request.action == "select" else CRMSyncStatus.New.value
+
+    for contact in contacts:
+        for crm in request.crms:
+            # Update the appropriate status field
+            if crm == "brevo":
+                contact.brevo_sync_status = target_status
+            elif crm == "mautic":
+                contact.mautic_sync_status = target_status
+            elif crm == "n8n":
+                contact.n8n_sync_status = target_status
+            elif crm == "hubspot":
+                contact.hubspot_sync_status = target_status
+
+        updated_count += 1
+
+    await session.commit()
+
+    return {
+        "updated_count": updated_count,
+        "crms": request.crms,
+        "action": request.action,
+        "message": f"{request.action.capitalize()}ed {updated_count} contacts for {len(request.crms)} CRM(s)"
+    }
