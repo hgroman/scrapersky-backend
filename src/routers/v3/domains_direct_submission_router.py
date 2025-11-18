@@ -68,6 +68,10 @@ async def submit_domains_directly(
     # Domains are already validated and normalized by pydantic
     normalized_domains = request.domains
 
+    # Deduplicate in case multiple input variations normalize to same domain
+    # e.g., ["www.example.com", "https://example.com"] both become "example.com"
+    normalized_domains = list(dict.fromkeys(normalized_domains))
+
     async with session.begin():
         for domain_str in normalized_domains:
 
