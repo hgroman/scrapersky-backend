@@ -105,7 +105,6 @@ async def submit_domains_directly(
                 # Timestamps
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                user_id=current_user.get("user_id"),
             )
 
             session.add(domain)

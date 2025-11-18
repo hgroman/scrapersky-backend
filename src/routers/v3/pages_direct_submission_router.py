@@ -139,7 +139,6 @@ async def submit_pages_directly(
                 priority_level=request.priority_level,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                user_id=current_user.get("user_id"),
                 # Honeybee fields (NULL for direct submission)
                 page_category=None,
                 category_confidence=None,
