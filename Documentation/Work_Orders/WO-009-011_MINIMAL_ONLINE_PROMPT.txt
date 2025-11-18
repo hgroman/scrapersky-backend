@@ -1,0 +1,5 @@
+Testing complete. Bug #4 needs your fix.
+
+Read: Documentation/Work_Orders/WO-012_HANDOFF_TO_ONLINE_CLAUDE.md
+
+Then fix Bug #4 in src/routers/v3/domains_direct_submission_router.py
