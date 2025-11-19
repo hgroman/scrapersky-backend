@@ -169,6 +169,24 @@ class Settings(BaseSettings):
     DEBOUNCE_SKIP_INVALID: bool = True  # Never queue invalid emails
     DEBOUNCE_QUEUE_CATCH_ALL: bool = False  # Don't auto-queue catch-all (manual review)
 
+    # ============================================================================
+    # n8n Webhook Integration (WO-020)
+    # ============================================================================
+
+    # Webhook Configuration
+    N8N_WEBHOOK_URL: Optional[str] = None  # Full webhook URL (e.g., https://n8n.example.com/webhook/contact-enrichment)
+    N8N_WEBHOOK_SECRET: Optional[str] = None  # Optional Bearer token for webhook auth
+
+    # n8n Sync Scheduler (WO-020)
+    N8N_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 5
+    N8N_SYNC_SCHEDULER_BATCH_SIZE: int = 10
+    N8N_SYNC_SCHEDULER_MAX_INSTANCES: int = 1
+
+    # n8n Retry Logic (WO-020)
+    N8N_SYNC_MAX_RETRIES: int = 3
+    N8N_SYNC_RETRY_DELAY_MINUTES: int = 5
+    N8N_SYNC_RETRY_EXPONENTIAL: bool = True
+
     # Mautic settings
     mautic_base_url: Optional[str] = None
     mautic_client_id: Optional[str] = None
