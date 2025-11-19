@@ -32,9 +32,11 @@ async def process_hubspot_sync_queue():
 
     This function:
     1. Queries contacts with hubspot_processing_status = 'Queued'
-    2. Filters for contacts ready for retry (next_retry_at <= now OR next_retry_at IS NULL)
-    3. Processes each contact via HubSpotSyncService.process_single_contact()
-    4. Automatically handles status transitions via run_job_loop
+    2. Processes each contact via HubSpotSyncService.process_single_contact()
+    3. Automatically handles status transitions via run_job_loop
+
+    Note: Retry logic (next_retry_at filtering) is handled in the service layer,
+    not in the scheduler, as the SDK run_job_loop() does not support additional_filters.
 
     Called by: APScheduler at configured interval
     Frequency: HUBSPOT_SYNC_SCHEDULER_INTERVAL_MINUTES (default: 5 minutes)

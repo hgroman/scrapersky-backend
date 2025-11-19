@@ -144,6 +144,31 @@ class Settings(BaseSettings):
     HUBSPOT_CUSTOM_PROPERTY_PAGE_ID: str = "scrapersky_page_id"
     HUBSPOT_CUSTOM_PROPERTY_SYNC_DATE: str = "scrapersky_sync_date"
 
+    # ============================================================================
+    # DeBounce Email Validation (WO-017)
+    # ============================================================================
+
+    # API Authentication
+    DEBOUNCE_API_KEY: Optional[str] = None  # api-key format: db_xxxxxxxx
+    DEBOUNCE_API_BASE_URL: str = "https://api.debounce.io/v1"
+
+    # Validation Scheduler (WO-017 Phase 2)
+    DEBOUNCE_VALIDATION_SCHEDULER_INTERVAL_MINUTES: int = 5
+    DEBOUNCE_VALIDATION_SCHEDULER_BATCH_SIZE: int = 50  # Max 50 free tier, 100 paid
+    DEBOUNCE_VALIDATION_SCHEDULER_MAX_INSTANCES: int = 1
+
+    # Validation Retry Logic (WO-017 Phase 2)
+    DEBOUNCE_VALIDATION_MAX_RETRIES: int = 3
+    DEBOUNCE_VALIDATION_RETRY_DELAY_MINUTES: int = 5
+    DEBOUNCE_VALIDATION_RETRY_EXPONENTIAL: bool = True
+
+    # Auto-CRM Queue Settings
+    DEBOUNCE_AUTO_QUEUE_VALID_EMAILS: bool = True  # Auto-queue valid emails for CRM
+    DEBOUNCE_AUTO_QUEUE_DEFAULT_CRM: str = "brevo"  # Which CRM to queue to
+    DEBOUNCE_SKIP_DISPOSABLE: bool = True  # Never queue disposable emails
+    DEBOUNCE_SKIP_INVALID: bool = True  # Never queue invalid emails
+    DEBOUNCE_QUEUE_CATCH_ALL: bool = False  # Don't auto-queue catch-all (manual review)
+
     # Mautic settings
     mautic_base_url: Optional[str] = None
     mautic_client_id: Optional[str] = None
