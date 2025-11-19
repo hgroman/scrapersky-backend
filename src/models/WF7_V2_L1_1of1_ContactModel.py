@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, ForeignKey, Text, Boolean, Enum, Integer
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
+from sqlalchemy import Column, String, ForeignKey, Text, Boolean, Enum, Integer, Float
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
 from sqlalchemy.orm import relationship
 
 from .base import Base, BaseModel
@@ -118,5 +118,27 @@ class Contact(Base, BaseModel):
     debounce_suggestion = Column(String, nullable=True)  # Did you mean suggestion
     debounce_processing_error = Column(Text, nullable=True)
     debounce_validated_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    # n8n Enrichment Fields (WO-021)
+    # Enrichment status tracking
+    enrichment_status = Column(String(20), nullable=True)  # pending/complete/partial/failed
+    enrichment_started_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    enrichment_completed_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    enrichment_error = Column(Text, nullable=True)
+    last_enrichment_id = Column(String(255), nullable=True)  # For idempotency
+
+    # Enriched data fields (JSONB for flexible schema)
+    enriched_phone = Column(String(50), nullable=True)
+    enriched_address = Column(JSONB, nullable=True)  # {street, city, state, zip, country}
+    enriched_social_profiles = Column(JSONB, nullable=True)  # {linkedin, twitter, facebook, etc}
+    enriched_company = Column(JSONB, nullable=True)  # {name, website, industry, size}
+    enriched_additional_emails = Column(JSONB, nullable=True)  # Array of additional emails
+    enrichment_confidence_score = Column(Integer, nullable=True)  # 0-100 quality score
+    enrichment_sources = Column(JSONB, nullable=True)  # Array of data sources used
+
+    # Enrichment metadata
+    enrichment_duration_seconds = Column(Float, nullable=True)
+    enrichment_api_calls = Column(Integer, nullable=True)
+    enrichment_cost_estimate = Column(Float, nullable=True)
 
     page = relationship("Page", back_populates="contacts")

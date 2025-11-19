@@ -70,6 +70,7 @@ from .routers.v3.contacts_router import router as contacts_router
 from .routers.v3.contacts_validation_router import (
     router as contacts_validation_router,
 )
+from .routers.v3.n8n_webhook_router import router as n8n_webhook_router  # WO-021
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
@@ -359,6 +360,7 @@ app.include_router(domains_csv_import_router)
 app.include_router(sitemap_files_router)
 app.include_router(contacts_router)
 app.include_router(contacts_validation_router)  # WO-018: Email validation endpoints
+app.include_router(n8n_webhook_router)  # WO-021: n8n enrichment return webhook
 app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"])
 
 logger.info("API routers included.")
