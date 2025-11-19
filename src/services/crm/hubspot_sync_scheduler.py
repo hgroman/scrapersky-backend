@@ -14,9 +14,7 @@ This scheduler:
 """
 
 import logging
-from datetime import datetime
-
-from sqlalchemy import asc, or_
+from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
@@ -57,13 +55,6 @@ async def process_hubspot_sync_queue():
         order_by_column=asc(Contact.updated_at),
         status_field_name="hubspot_processing_status",
         error_field_name="hubspot_processing_error",
-        # Additional filter: Only process contacts ready for retry
-        additional_filters=[
-            or_(
-                Contact.next_retry_at.is_(None),
-                Contact.next_retry_at <= datetime.utcnow(),
-            )
-        ],
     )
 
     logger.info("✅ Finished HubSpot sync scheduler cycle")
