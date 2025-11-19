@@ -100,4 +100,22 @@ class Contact(Base, BaseModel):
     next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
     last_failed_crm = Column(String, nullable=True)
 
+    # DeBounce Email Validation (WO-017)
+    debounce_validation_status = Column(
+        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='debounce_validation_status'),
+        nullable=True,
+        index=True,
+    )
+    debounce_processing_status = Column(
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='debounce_processing_status'),
+        nullable=True,
+        index=True,
+    )
+    debounce_result = Column(String, nullable=True)  # valid/invalid/catch-all/unknown/disposable
+    debounce_score = Column(Integer, nullable=True)  # 0-100 confidence score
+    debounce_reason = Column(String(500), nullable=True)  # Explanation if invalid
+    debounce_suggestion = Column(String, nullable=True)  # Did you mean suggestion
+    debounce_processing_error = Column(Text, nullable=True)
+    debounce_validated_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
     page = relationship("Page", back_populates="contacts")
