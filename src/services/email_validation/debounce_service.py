@@ -216,7 +216,7 @@ class DeBounceValidationService:
         """
         results = []
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             for email in emails:
                 try:
                     # DeBounce API uses query parameters for auth and email
