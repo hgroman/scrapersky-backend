@@ -101,13 +101,14 @@ class Contact(Base, BaseModel):
     last_failed_crm = Column(String, nullable=True)
 
     # DeBounce Email Validation (WO-017)
+    # Reuses existing crm_sync_status and crm_processing_status ENUMs for consistency
     debounce_validation_status = Column(
-        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='debounce_validation_status'),
+        Enum('New', 'Selected', 'Queued', 'Processing', 'Complete', 'Error', 'Skipped', name='crm_sync_status'),
         nullable=True,
         index=True,
     )
     debounce_processing_status = Column(
-        Enum('Queued', 'Processing', 'Complete', 'Error', name='debounce_processing_status'),
+        Enum('Queued', 'Processing', 'Complete', 'Error', name='crm_processing_status'),
         nullable=True,
         index=True,
     )

@@ -17,8 +17,13 @@ This script:
 import asyncio
 import sys
 from uuid import UUID
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from src.services.email_validation.debounce_service import DeBounceValidationService
-from src.session.async_session import get_db_session
+from src.session.async_session import get_session
 import logging
 
 # Configure logging
@@ -54,7 +59,7 @@ async def test_manual_validation(contact_ids: list):
 
     logger.info(f"📧 Preparing to validate {len(contact_uuids)} contact(s)")
 
-    async for session in get_db_session():
+    async with get_session() as session:
         try:
             await service.process_batch_validation(contact_uuids, session)
             logger.info("✅ VALIDATION COMPLETED SUCCESSFULLY!")
