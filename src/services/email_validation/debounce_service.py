@@ -343,16 +343,17 @@ class DeBounceValidationService:
         """
         Calculate a 0-100 score from DeBounce data.
 
-        DeBounce provides a "code" (0-5) and other indicators.
+        DeBounce provides a "code" (string) and other indicators.
         We convert this to a 0-100 scale.
 
-        Code meanings:
+        Code meanings (from DeBounce API documentation):
         - 5: Safe to Send (100)
         - 4: Deliverable (90)
         - 3: Risky (50)
         - 2: Unknown (30)
         - 1: Invalid (10)
         - 0: Invalid (0)
+        - 7: Role-based email (60) - info@, contact@, etc. (send_transactional=1)
 
         Args:
             debounce_data: DeBounce API response data
@@ -367,11 +368,12 @@ class DeBounceValidationService:
 
         score_map = {
             5: 100,  # Safe to Send
-            4: 90,  # Deliverable
-            3: 50,  # Risky
-            2: 30,  # Unknown
-            1: 10,  # Invalid
-            0: 0,  # Invalid
+            4: 90,   # Deliverable
+            3: 50,   # Risky
+            2: 30,   # Unknown
+            1: 10,   # Invalid
+            0: 0,    # Invalid
+            7: 60,   # Role-based email (safe for transactional)
         }
 
         return score_map.get(code, 0)
