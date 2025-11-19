@@ -14,8 +14,7 @@ This scheduler:
 """
 
 import logging
-from sqlalchemy import asc, or_
-from datetime import datetime
+from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
@@ -32,9 +31,11 @@ async def process_brevo_sync_queue():
 
     This function:
     1. Queries contacts with brevo_processing_status = 'Queued'
-    2. Filters for contacts ready for retry (next_retry_at <= now OR next_retry_at IS NULL)
-    3. Processes each contact via BrevoSyncService.process_single_contact()
-    4. Automatically handles status transitions via run_job_loop
+    2. Processes each contact via BrevoSyncService.process_single_contact()
+    3. Automatically handles status transitions via run_job_loop
+
+    Note: Retry logic (next_retry_at filtering) is handled in the service layer,
+    not in the scheduler, as the SDK run_job_loop() does not support additional_filters.
 
     Called by: APScheduler at configured interval
     Frequency: BREVO_SYNC_SCHEDULER_INTERVAL_MINUTES (default: 5 minutes)
@@ -55,13 +56,6 @@ async def process_brevo_sync_queue():
         order_by_column=asc(Contact.updated_at),
         status_field_name="brevo_processing_status",
         error_field_name="brevo_processing_error",
-        # Additional filter: Only process contacts ready for retry
-        additional_filters=[
-            or_(
-                Contact.next_retry_at.is_(None),
-                Contact.next_retry_at <= datetime.utcnow(),
-            )
-        ],
     )
 
     logger.info("✅ Finished Brevo sync scheduler cycle")
