@@ -309,8 +309,9 @@ class HubSpotSyncService:
         if contact.page_id:
             properties[self.prop_page_id] = str(contact.page_id)
 
-        # Sync timestamp
-        properties[self.prop_sync_date] = datetime.utcnow().isoformat()
+        # Sync timestamp - store as ISO string instead of date picker to avoid timezone issues
+        # HubSpot date picker properties are very strict about midnight UTC
+        properties[self.prop_sync_date] = datetime.utcnow().strftime("%Y-%m-%d")
 
         return properties
 
