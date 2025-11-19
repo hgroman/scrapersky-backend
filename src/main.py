@@ -66,6 +66,9 @@ from .routers.v3.sitemaps_direct_submission_router import (
 )
 from .routers.v3.sitemaps_csv_import_router import router as sitemaps_csv_import_router
 from .routers.v3.contacts_router import router as contacts_router
+from .routers.v3.contacts_validation_router import (
+    router as contacts_validation_router,
+)
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
@@ -348,6 +351,7 @@ app.include_router(domains_direct_submission_router)
 app.include_router(domains_csv_import_router)
 app.include_router(sitemap_files_router)
 app.include_router(contacts_router)
+app.include_router(contacts_validation_router)  # WO-018: Email validation endpoints
 app.include_router(email_scanner_api_router, prefix="/api/v3", tags=["Email Scanner"])
 
 logger.info("API routers included.")
