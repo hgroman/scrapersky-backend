@@ -32,6 +32,7 @@ from src.services.WF7_V2_L4_2of2_PageCurationScheduler import (
 )
 from src.services.crm.brevo_sync_scheduler import setup_brevo_sync_scheduler
 from src.services.crm.hubspot_sync_scheduler import setup_hubspot_sync_scheduler
+from src.services.crm.n8n_sync_scheduler import setup_n8n_sync_scheduler
 from src.services.email_validation.debounce_scheduler import (
     setup_debounce_validation_scheduler,
 )
@@ -179,6 +180,12 @@ async def lifespan(app: FastAPI):
         logger.error(
             f"Failed to setup DeBounce validation scheduler job: {e}", exc_info=True
         )
+
+    # WO-020: n8n webhook sync scheduler
+    try:
+        setup_n8n_sync_scheduler()
+    except Exception as e:
+        logger.error(f"Failed to setup n8n webhook sync scheduler job: {e}", exc_info=True)
 
     logger.info("Finished adding jobs to shared scheduler.")
 
