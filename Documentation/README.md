@@ -2,9 +2,9 @@
 
 **Welcome to the clean, essential ScraperSky documentation.**
 
-This directory contains the core architectural knowledge, operational procedures, and development guidelines extracted from comprehensive codebase analysis.
+This directory contains the core architectural knowledge, operational procedures, and development guidelines.
 
-**Philosophy:** Code speaks for itself. Documentation explains **why**, not **what**. Show AI the code to copy, don't rely on docs to guide it.
+**Philosophy:** Code is truth. Documentation explains **why**, not **what**. Show AI the code to understand what; read docs to understand why.
 
 ---
 
@@ -14,15 +14,8 @@ This directory contains the core architectural knowledge, operational procedures
 
 1. **Read:** `Development/CONTRIBUTING.md` - Essential patterns and standards
 2. **Read:** `Architecture/` - Architecture Decision Records (ADRs) explaining critical decisions
-3. **Browse:** Code in `src/` - The source of truth
-
-### Continuing Documentation Cleanup?
-
-**→ Read:** `CONTINUATION_GUIDE.md` - How to continue cleanup work in new sessions
-**→ Read:** `CLEANUP_ROADMAP.md` - Full cleanup plan and current phase
-
-**Current Phase:** Phase 2 - Audit remaining Docs/ directories for valuable content
-**Status:** In Progress (see CLEANUP_ROADMAP.md for details)
+3. **Read:** `Guides/INTEGRATION_PLAYBOOK.md` - How to add new integrations
+4. **Browse:** Code in `src/` - The source of truth
 
 ### Need to Find Something?
 
@@ -38,6 +31,16 @@ This directory contains the core architectural knowledge, operational procedures
 **Development:**
 → `Development/CONTRIBUTING.md` - Code standards, patterns, how to add features
 
+**Integration Guides:**
+→ `Guides/INTEGRATION_PLAYBOOK.md` - Proven pattern for CRM/validation integrations
+→ `Guides/DEVELOPMENT_PHILOSOPHY.md` - Decision-making framework and lessons learned
+
+**Work Orders:**
+→ `Work_Orders/INDEX.md` - Complete history of all work orders (WO-001 through WO-021)
+
+**Reference:**
+→ `Reference/` - Technical reference docs (n8n fields, scheduler intervals, etc.)
+
 ---
 
 ## Documentation Structure
@@ -52,7 +55,8 @@ Documentation/
 │   ├── ADR-002-Removed-Tenant-Isolation.md
 │   ├── ADR-003-Dual-Status-Workflow.md
 │   ├── ADR-004-Transaction-Boundaries.md
-│   └── ADR-005-ENUM-Catastrophe.md
+│   ├── ADR-005-ENUM-Catastrophe.md
+│   └── WF*.md (Workflow documentation)
 │
 ├── Workflows/
 │   └── README.md (WF1-WF7 descriptions)
@@ -63,9 +67,34 @@ Documentation/
 │   ├── ScraperAPI-Cost-Control.md
 │   └── Security-Incidents.md
 │
-└── Development/
-    ├── README.md
-    └── CONTRIBUTING.md
+├── Development/
+│   ├── README.md
+│   └── CONTRIBUTING.md
+│
+├── Guides/
+│   ├── INTEGRATION_PLAYBOOK.md (How to add CRM/validation integrations)
+│   └── DEVELOPMENT_PHILOSOPHY.md (Decision-making framework)
+│
+├── Reference/
+│   ├── N8N_TRIGGER_FIELDS.md
+│   └── SCHEDULER_INTERVALS_DEVELOPMENT.md
+│
+├── Work_Orders/
+│   ├── INDEX.md (Complete work order history)
+│   ├── WO-020_*.md (Active: n8n send integration)
+│   ├── WO-021_*.md (Active: n8n receive integration)
+│   └── Archive/2025/ (Completed work orders)
+│
+├── Sessions/
+│   └── 2025-11/ (Session summaries and handoffs)
+│
+├── DECISIONS/
+│   └── *.md (Architectural decisions with dates)
+│
+└── Archive/
+    ├── Blog/ (Blogging system docs - future use)
+    ├── Context_Reconstruction/ (Historical context docs)
+    └── Cleanup-Process-2025-11/ (Documentation cleanup process docs)
 ```
 
 ---
