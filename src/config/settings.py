@@ -122,6 +122,28 @@ class Settings(BaseSettings):
     BREVO_SYNC_RETRY_DELAY_MINUTES: int = 5
     BREVO_SYNC_RETRY_EXPONENTIAL: bool = True
 
+    # HubSpot CRM Integration (WO-016)
+    HUBSPOT_API_KEY: Optional[str] = (
+        None  # Private app token (pat-na1-xxx or pat-eu1-xxx)
+    )
+    HUBSPOT_PORTAL_ID: Optional[str] = None  # Optional - for multi-account scenarios
+    HUBSPOT_API_BASE_URL: str = "https://api.hubapi.com"
+
+    # HubSpot Sync Scheduler (WO-016 Phase 2)
+    HUBSPOT_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 5
+    HUBSPOT_SYNC_SCHEDULER_BATCH_SIZE: int = 10
+    HUBSPOT_SYNC_SCHEDULER_MAX_INSTANCES: int = 1
+
+    # HubSpot Retry Logic (WO-016 Phase 2)
+    HUBSPOT_SYNC_MAX_RETRIES: int = 3
+    HUBSPOT_SYNC_RETRY_DELAY_MINUTES: int = 5
+    HUBSPOT_SYNC_RETRY_EXPONENTIAL: bool = True
+
+    # HubSpot Custom Property Names (must match properties created in HubSpot)
+    HUBSPOT_CUSTOM_PROPERTY_DOMAIN_ID: str = "scrapersky_domain_id"
+    HUBSPOT_CUSTOM_PROPERTY_PAGE_ID: str = "scrapersky_page_id"
+    HUBSPOT_CUSTOM_PROPERTY_SYNC_DATE: str = "scrapersky_sync_date"
+
     # Mautic settings
     mautic_base_url: Optional[str] = None
     mautic_client_id: Optional[str] = None
