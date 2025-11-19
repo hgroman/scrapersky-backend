@@ -47,6 +47,30 @@ class DeBounceValidationService:
         self.base_url = settings.DEBOUNCE_API_BASE_URL
         self.batch_size = settings.DEBOUNCE_VALIDATION_SCHEDULER_BATCH_SIZE
 
+    async def process_single_contact(
+        self, contact_id: UUID, session: AsyncSession
+    ) -> None:
+        """
+        Process a single contact for email validation.
+
+        SDK-compatible method signature: (contact_id: UUID, session: AsyncSession)
+        Called by scheduler via run_job_loop pattern.
+
+        This is the entry point called by the SDK scheduler. It delegates to
+        the batch validation method with a single contact.
+
+        Args:
+            contact_id: Contact UUID to validate
+            session: Async database session (managed by SDK)
+
+        Raises:
+            Exception: Re-raises any exceptions for SDK to handle
+        """
+        logger.info(f"🚀 Starting DeBounce validation for contact {contact_id}")
+
+        # Delegate to batch validation with single contact
+        await self.process_batch_validation([contact_id], session)
+
     async def process_batch_validation(
         self, contact_ids: List[UUID], session: AsyncSession
     ) -> None:
