@@ -88,6 +88,16 @@ class ContactRead(ContactBase):
     last_retry_at: Optional[datetime] = None
     next_retry_at: Optional[datetime] = None
     last_failed_crm: Optional[str] = None
+    
+    # DeBounce email validation fields (WO-017)
+    debounce_validation_status: Optional[CRMSyncStatus] = None
+    debounce_processing_status: Optional[CRMProcessingStatus] = None
+    debounce_result: Optional[str] = None
+    debounce_score: Optional[int] = None
+    debounce_reason: Optional[str] = None
+    debounce_suggestion: Optional[str] = None
+    debounce_processing_error: Optional[str] = None
+    debounce_validated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
