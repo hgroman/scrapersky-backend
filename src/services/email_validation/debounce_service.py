@@ -119,14 +119,22 @@ class DeBounceValidationService:
 
             logger.info(f"📧 Validating {len(emails)} emails via DeBounce API")
 
-            # Step 3: Call DeBounce bulk API
-            results = await self._call_debounce_bulk_api(emails)
+            # Step 3: Call DeBounce API (sequential validation)
+            results = await self._call_debounce_api(emails)
 
             # Step 4: Map results back to contacts
             for result in results:
                 email = result["email"]
                 contact = email_to_contact.get(email)
                 if not contact:
+                    continue
+
+                # Check if this email had an error
+                if "error" in result:
+                    contact.debounce_validation_status = CRMSyncStatus.Error.value
+                    contact.debounce_processing_status = CRMProcessingStatus.Error.value
+                    contact.debounce_processing_error = result["error"][:500]
+                    logger.error(f"❌ Failed to validate {email}: {result['error']}")
                     continue
 
                 # Update validation fields
@@ -190,41 +198,159 @@ class DeBounceValidationService:
             await session.commit()
             raise
 
-    async def _call_debounce_bulk_api(self, emails: List[str]) -> List[dict]:
+    async def _call_debounce_api(self, emails: List[str]) -> List[dict]:
         """
-        Call DeBounce.io bulk validation API.
+        Call DeBounce.io real-time lookup API for each email.
+
+        DeBounce does NOT have a bulk endpoint. We validate emails sequentially
+        to respect the 5 concurrent call limit.
 
         Args:
             emails: List of email addresses to validate
 
         Returns:
-            List of validation results
+            List of validation results in standardized format
 
         Raises:
             httpx.HTTPStatusError: If API call fails
         """
-        headers = {
-            "Authorization": f"api-key {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        payload = {"emails": emails}
+        results = []
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{self.base_url}/validate/bulk",
-                headers=headers,
-                json=payload,
-            )
+            for email in emails:
+                try:
+                    # DeBounce API uses query parameters for auth and email
+                    params = {"api": self.api_key, "email": email}
 
-            if response.status_code != 200:
-                logger.error(
-                    f"DeBounce API failed (HTTP {response.status_code}): {response.text}"
-                )
-                response.raise_for_status()
+                    # GET request (not POST)
+                    response = await client.get(
+                        self.base_url, params=params, timeout=30.0
+                    )
 
-            data = response.json()
-            return data.get("results", [])
+                    if response.status_code == 401:
+                        logger.error("❌ Invalid DeBounce API key")
+                        raise ValueError("Invalid DeBounce API key")
+
+                    if response.status_code == 402:
+                        logger.error("❌ DeBounce credits exhausted")
+                        raise ValueError("DeBounce validation credits finished")
+
+                    if response.status_code == 429:
+                        logger.warning("⚠️ DeBounce rate limit exceeded - will retry")
+                        raise ValueError("DeBounce rate limit exceeded")
+
+                    if response.status_code != 200:
+                        logger.error(
+                            f"DeBounce API failed for {email} (HTTP {response.status_code}): {response.text}"
+                        )
+                        response.raise_for_status()
+
+                    data = response.json()
+
+                    # Check if request was successful
+                    if data.get("success") == "1":
+                        debounce_data = data.get("debounce", {})
+
+                        # Map DeBounce response to our format
+                        result = {
+                            "email": email,
+                            "result": self._map_debounce_result(
+                                debounce_data.get("result")
+                            ),
+                            "score": self._calculate_score(debounce_data),
+                            "reason": debounce_data.get("reason", ""),
+                            "did_you_mean": debounce_data.get("did_you_mean", ""),
+                            "code": debounce_data.get("code"),
+                            "role": debounce_data.get("role") == "true",
+                            "free_email": debounce_data.get("free_email") == "true",
+                            "send_transactional": debounce_data.get(
+                                "send_transactional"
+                            )
+                            == "1",
+                        }
+                        results.append(result)
+                        logger.info(f"✅ Validated {email}: {result['result']}")
+                    else:
+                        # API returned success=0
+                        error_msg = data.get("debounce", {}).get(
+                            "error", "Unknown error"
+                        )
+                        logger.error(f"❌ DeBounce API error for {email}: {error_msg}")
+                        results.append({"email": email, "error": error_msg})
+
+                except Exception as e:
+                    logger.error(f"❌ Failed to validate {email}: {e}")
+                    results.append({"email": email, "error": str(e)})
+
+        return results
+
+    def _map_debounce_result(self, debounce_result: str) -> str:
+        """
+        Map DeBounce result strings to our standardized format.
+
+        DeBounce Results:
+        - "Safe to Send" → "valid"
+        - "Deliverable" → "valid"
+        - "Invalid" → "invalid"
+        - "Risky" → "catch-all" or "unknown"
+        - "Unknown" → "unknown"
+        - "Disposable" → "disposable"
+
+        Args:
+            debounce_result: DeBounce result string
+
+        Returns:
+            Standardized result string
+        """
+        result_lower = (debounce_result or "").lower()
+
+        if "safe" in result_lower or "deliverable" in result_lower:
+            return "valid"
+        elif "invalid" in result_lower:
+            return "invalid"
+        elif "risky" in result_lower:
+            return "catch-all"
+        elif "disposable" in result_lower:
+            return "disposable"
+        else:
+            return "unknown"
+
+    def _calculate_score(self, debounce_data: dict) -> int:
+        """
+        Calculate a 0-100 score from DeBounce data.
+
+        DeBounce provides a "code" (0-5) and other indicators.
+        We convert this to a 0-100 scale.
+
+        Code meanings:
+        - 5: Safe to Send (100)
+        - 4: Deliverable (90)
+        - 3: Risky (50)
+        - 2: Unknown (30)
+        - 1: Invalid (10)
+        - 0: Invalid (0)
+
+        Args:
+            debounce_data: DeBounce API response data
+
+        Returns:
+            Score from 0-100
+        """
+        try:
+            code = int(debounce_data.get("code", 0))
+        except (ValueError, TypeError):
+            code = 0
+
+        score_map = {
+            5: 100,  # Safe to Send
+            4: 90,  # Deliverable
+            3: 50,  # Risky
+            2: 30,  # Unknown
+            1: 10,  # Invalid
+            0: 0,  # Invalid
+        }
+
+        return score_map.get(code, 0)
 
     async def _auto_queue_for_crm(self, contact: Contact, validation_result: dict):
         """
