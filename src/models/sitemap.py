@@ -125,6 +125,7 @@ class SitemapFile(Base, BaseModel):
     # Security and ownership
     tenant_id = Column(
         PGUUID,
+        ForeignKey("tenants.id"),
         nullable=True,
         index=True,
         default="550e8400-e29b-41d4-a716-446655440000",
@@ -153,7 +154,7 @@ class SitemapFile(Base, BaseModel):
     deep_scrape_curation_status = Column(
         SQLAlchemyEnum(
             SitemapImportCurationStatusEnum,  # Use renamed Enum
-            name="SitemapCurationStatusEnum",  # Match actual DB enum type name
+            name="sitemap_curation_status_enum",  # Match actual DB enum type name
             create_type=False,
         ),
         nullable=True,
@@ -417,6 +418,7 @@ class SitemapUrl(Base, BaseModel):
     # Security and ownership
     tenant_id = Column(
         PGUUID,
+        ForeignKey("tenants.id"),
         nullable=True,
         index=True,
         default="550e8400-e29b-41d4-a716-446655440000",

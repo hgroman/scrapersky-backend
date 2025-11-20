@@ -187,10 +187,11 @@ class Domain(Base, BaseModel):
     # ------------------------------------------------------- #
 
     # --- New fields for Sitemap Curation and Analysis --- #
+    # --- New fields for Sitemap Curation and Analysis --- #
     sitemap_curation_status = Column(
         SQLAlchemyEnum(
             SitemapCurationStatusEnum,
-            name="SitemapCurationStatusEnum",
+            name="sitemap_curation_status_enum",  # Match actual DB enum type name
             create_type=False,
         ),
         nullable=True,

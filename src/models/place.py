@@ -78,7 +78,7 @@ class Place(Base):
     status = Column(
         Enum(
             PlaceStatusEnum,
-            name="place_status",  # Fixed: Use actual DB enum name (not place_status_enum)
+            name="place_status_enum",  # Fixed: Use actual DB enum name
             create_type=False,
             native_enum=True,
             values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values, not names
@@ -88,7 +88,11 @@ class Place(Base):
         index=True,
     )
     tenant_id = Column(
-        UUID(as_uuid=True), nullable=False, index=True, default=DEFAULT_TENANT_ID
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        default=DEFAULT_TENANT_ID,
     )
     created_by = Column(UUID(as_uuid=True), nullable=True)
     user_id = Column(UUID(as_uuid=True), nullable=True)

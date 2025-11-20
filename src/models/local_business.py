@@ -7,6 +7,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     Enum,
+    ForeignKey,
     Integer,
     Numeric,
     String,
@@ -47,7 +48,9 @@ class LocalBusiness(Base):
     id = Column(
         UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
     )
-    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True
+    )
     place_id = Column(String, unique=True, nullable=True, index=True)
     lead_source = Column(Text, nullable=True)
     business_name = Column(Text, nullable=True, index=True)
@@ -107,7 +110,7 @@ class LocalBusiness(Base):
     status = Column(
         Enum(
             PlaceStatusEnum,
-            name="sitemap_import_curation_status",  # Fixed: Use actual DB enum name (not place_status_enum)
+            name="place_status_enum",  # Fixed: Use actual DB enum name
             create_type=False,
             native_enum=True,
             values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values, not names
@@ -122,7 +125,7 @@ class LocalBusiness(Base):
     domain_extraction_status = Column(
         Enum(
             DomainExtractionStatusEnum,  # Reference the updated Enum
-            name="domain_extraction_status",  # Fixed: Use actual DB enum name
+            name="domain_extraction_status_enum",  # Fixed: Use snake_case DB enum name
             create_type=False,
         ),
         nullable=True,
