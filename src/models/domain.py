@@ -29,6 +29,9 @@ from .base import Base, BaseModel, model_to_dict
 from .enums import HubSpotSyncStatus, HubSpotProcessingStatus
 from .tenant import DEFAULT_TENANT_ID
 
+# Import TaskStatus for content_scrape_status, page_scrape_status, sitemap_monitor_status columns
+from . import TaskStatus
+
 logger = logging.getLogger(__name__)
 
 
