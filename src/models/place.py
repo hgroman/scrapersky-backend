@@ -78,7 +78,7 @@ class Place(Base):
     status = Column(
         Enum(
             PlaceStatusEnum,
-            name="place_status",  # Match DB enum name (no _enum suffix)
+            name="place_status_enum",  # Restored: Going Forward with standardized name
             create_type=False,
             native_enum=True,
             values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values, not names
