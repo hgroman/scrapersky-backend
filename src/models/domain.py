@@ -226,6 +226,28 @@ class Domain(Base, BaseModel):
     hubspot_processing_error = Column(Text, nullable=True)
     # ------------------------------------ #
 
+    # --- Task Status Fields (Legacy - exist in DB) --- #
+    # These columns exist in database and have data but weren't in model
+    # Added 2025-11-20 to fix missing column issue
+    content_scrape_status = Column(
+        SQLAlchemyEnum(TaskStatus, name="task_status", create_type=False),
+        nullable=True,
+        index=True,
+    )
+    
+    page_scrape_status = Column(
+        SQLAlchemyEnum(TaskStatus, name="task_status", create_type=False),
+        nullable=True,
+        index=True,
+    )
+    
+    sitemap_monitor_status = Column(
+        SQLAlchemyEnum(TaskStatus, name="task_status", create_type=False),
+        nullable=True,
+        index=True,
+    )
+    # ------------------------------------------------- #
+
     # Relationships
     jobs = relationship("Job", back_populates="domain", lazy="selectin")
     batch = relationship("BatchJob", back_populates="domains")
