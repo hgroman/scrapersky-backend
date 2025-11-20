@@ -127,6 +127,8 @@ class LocalBusiness(Base):
             DomainExtractionStatusEnum,  # Reference the updated Enum
             name="domain_extraction_status_enum",  # Fixed: Use snake_case DB enum name
             create_type=False,
+            native_enum=True,  # CRITICAL: Use native PostgreSQL enum
+            values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values
         ),
         nullable=True,
         default=None,
