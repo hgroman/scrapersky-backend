@@ -154,7 +154,7 @@ class SitemapFile(Base, BaseModel):
     deep_scrape_curation_status = Column(
         SQLAlchemyEnum(
             SitemapImportCurationStatusEnum,  # Use renamed Enum
-            name="sitemap_curation_status_enum",  # Match actual DB enum type name
+            name="SitemapCurationStatusEnum",  # Match actual DB enum type name (PascalCase)
             create_type=False,
             native_enum=True,  # CRITICAL: Use native PostgreSQL enum
             values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values
