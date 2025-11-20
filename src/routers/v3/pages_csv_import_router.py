@@ -1,7 +1,95 @@
 """
-CSV Import Router for Pages (WO-014).
+WO-012: CSV Import Router for Pages
 
-Implements /api/v3/pages/import-csv endpoint for bulk page URL import via CSV.
+WHAT THIS DOES:
+Bulk import page URLs from CSV files, bypassing workflows WF1-WF5.
+Processes hundreds/thousands of URLs in a single request.
+
+ENDPOINT:
+POST /api/v3/pages/import-csv
+
+CSV FORMAT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Required Column:
+  • url - Full page URL (https://example.com/contact)
+
+Optional Columns:
+  • tenant_id - Tenant UUID (defaults to DEFAULT_TENANT_ID)
+
+Example CSV:
+url
+https://example.com/contact
+https://another.com/about
+https://third.com/team
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW:
+1. User uploads CSV file
+2. System parses CSV and validates format
+3. For each row:
+   a. Extract domain from URL
+   b. Create/find domain record
+   c. Check for duplicate page URL
+   d. Create page record with curation_status='Queued'
+4. Return summary: created, skipped (duplicates), errors
+
+ERROR HANDLING:
+• Per-row error tracking (doesn't fail entire import)
+• Invalid URLs logged but don't stop processing
+• Duplicate URLs skipped (idempotent)
+• Returns detailed error report
+
+REQUEST:
+POST /api/v3/pages/import-csv
+Content-Type: multipart/form-data
+Body: file (CSV file upload)
+
+RESPONSE:
+{
+  "total_rows": 100,
+  "created": 95,
+  "skipped": 3,
+  "errors": 2,
+  "error_details": [
+    {"row": 5, "url": "invalid-url", "error": "Invalid URL format"},
+    {"row": 12, "url": "bad://url", "error": "Unsupported protocol"}
+  ]
+}
+
+FILE SIZE LIMITS:
+• Max file size: 10MB (configurable)
+• Max rows: 10,000 (configurable)
+• Recommended batch: 100-1,000 rows
+
+DUPLICATE DETECTION:
+• Checks existing pages by URL
+• Skips duplicates (doesn't update)
+• Counts as "skipped" in response
+
+NULL FOREIGN KEY PATTERN:
+CSV-imported pages have:
+• domain_id: Set (extracted from URL)
+• sitemap_id: NULL (no parent sitemap)
+
+RELATED FILES:
+• Single page: src/routers/v3/pages_direct_submission_router.py (WO-009)
+• Domain CSV: src/routers/v3/domains_csv_import_router.py (WO-012)
+• Sitemap CSV: src/routers/v3/sitemaps_csv_import_router.py (WO-012)
+• Docs: Documentation/Guides/csv_import_user_guide.md
+• Docs: Documentation/Operations/csv_import_maintenance.md
+
+MAINTENANCE:
+• Monitor imports: SELECT COUNT(*) FROM pages WHERE sitemap_id IS NULL AND created_at > NOW() - INTERVAL '24 hours'
+• Check errors: Review error_details in API response
+• Performance: ~100 rows/second processing speed
+
+USE CASES:
+• Bulk page import from external sources
+• Migrating from other systems
+• Large-scale contact extraction projects
+• Supplementing sitemap-based discovery
+
+IMPLEMENTED: 2025-11-14 (WO-012)
 """
 
 import csv

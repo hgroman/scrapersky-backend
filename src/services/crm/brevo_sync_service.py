@@ -1,12 +1,82 @@
 """
-Brevo Contact Sync Service (WO-015 Phase 2)
+WO-015: Brevo CRM Integration Service
 
-Handles synchronization of contacts to Brevo CRM via their API.
+WHAT THIS DOES:
+Synchronizes ScraperSky contacts to Brevo CRM using their REST API.
+Implements the Dual-Status Adapter Pattern for reliable, retryable CRM sync.
 
-Architecture: SDK-compatible service for use with run_job_loop pattern.
-Pattern Reference: src/services/WF7_V2_L4_2of2_PageCurationScheduler.py
+PURPOSE:
+Send validated contact data to Brevo for email marketing campaigns and CRM management.
 
-API Documentation: https://developers.brevo.com/reference/createcontact
+THE DUAL-STATUS PATTERN (Critical Architecture):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status Tracking (2 fields):
+  • brevo_sync_status (CRMSyncStatus) - User selection: New/Selected/Queued/Complete/Error/Skipped
+  • brevo_processing_status (CRMProcessingStatus) - System state: NULL/Queued/Processing/Complete/Error
+
+Retry Fields (3 fields):
+  • retry_count (int) - Number of retry attempts (max 3)
+  • next_retry_at (timestamp) - When to retry failed syncs
+  • brevo_processing_error (text) - Error message for debugging
+
+Metadata (1 field):
+  • brevo_contact_id (varchar) - Brevo's ID for the contact (returned from API)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW:
+1. Scheduler queries contacts WHERE brevo_processing_status = 'Queued'
+2. Service fetches contact and validates required fields (email, first_name, last_name)
+3. Service calls Brevo API: POST /v3/contacts (upsert via updateEnabled=true)
+4. On success: Set brevo_sync_status='Complete', brevo_processing_status='Complete'
+5. On failure: Increment retry_count, set next_retry_at with exponential backoff (5→10→20 min)
+6. After 3 failures: Set brevo_sync_status='Error', stop retrying
+
+SCHEDULER CONFIGURATION:
+• Interval: 1 minute (dev) / 5 minutes (prod)
+• Batch size: 10 contacts per cycle
+• Environment variable: BREVO_SYNC_SCHEDULER_INTERVAL_MINUTES
+
+BREVO API DETAILS:
+• Endpoint: POST https://api.brevo.com/v3/contacts
+• Authentication: api-key header (BREVO_API_KEY)
+• Upsert: updateEnabled=true (creates or updates by email)
+• List assignment: Uses BREVO_LIST_ID for contact organization
+• Rate limit: 10 requests/second (handled by batch size)
+
+EXAMPLE PAYLOAD:
+{
+  "email": "contact@example.com",
+  "attributes": {
+    "FIRSTNAME": "John",
+    "LASTNAME": "Doe",
+    "DOMAIN_ID": "uuid-string",
+    "PAGE_ID": "uuid-string"
+  },
+  "listIds": [123],
+  "updateEnabled": true
+}
+
+RETRY LOGIC (Exponential Backoff):
+• Attempt 1 fails → retry in 5 minutes
+• Attempt 2 fails → retry in 10 minutes  
+• Attempt 3 fails → retry in 20 minutes
+• After 3 attempts → mark as Error, stop retrying
+
+RELATED FILES:
+• Scheduler: src/services/crm/brevo_sync_scheduler.py
+• Model: src/models/WF7_V2_L1_1of1_ContactModel.py (brevo_* fields)
+• Enums: src/models/enums.py (CRMSyncStatus, CRMProcessingStatus)
+• Docs: Documentation/Guides/brevo_crm_user_guide.md
+• Docs: Documentation/Operations/brevo_crm_maintenance.md
+
+MAINTENANCE:
+• Check logs: docker logs scraper-sky-backend-scrapersky-1 | grep -i brevo
+• Monitor success: SELECT COUNT(*) FROM contacts WHERE brevo_sync_status='Complete' AND updated_at > NOW() - INTERVAL '24 hours'
+• Check failures: SELECT email, brevo_processing_error, retry_count FROM contacts WHERE brevo_sync_status='Error'
+• Reset failed: UPDATE contacts SET brevo_processing_status='Queued', retry_count=0 WHERE brevo_sync_status='Error'
+
+IMPLEMENTED: 2025-11-15 (WO-015 Phase 2)
+API DOCS: https://developers.brevo.com/reference/createcontact
 """
 
 import logging

@@ -1,17 +1,109 @@
 """
-DeBounce Email Validation Service (WO-017 Phase 1)
+WO-017: DeBounce Email Validation Service
 
-Validates email addresses using DeBounce.io API before CRM sync.
+WHAT THIS DOES:
+Validates email addresses using DeBounce.io API before sending to CRM systems.
+Acts as a quality gate to prevent bounces and improve deliverability.
 
-Key Features:
-- Bulk validation (up to 50 emails per request)
-- Pre-CRM quality gate
-- Auto-queue valid emails for CRM sync (optional)
-- Exponential backoff retry logic
-- SDK-compatible signature: process_batch_validation(contact_ids, session)
+PURPOSE:
+Filter out invalid, disposable, and catch-all emails before expensive CRM operations.
 
-Architecture Pattern: WO-015/WO-016 validated pattern
-DeBounce API Docs: https://debounce.io/api-documentation/
+THE 8 VALIDATION FIELDS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Validation Results (8 fields):
+  • debounce_result (varchar 50) - valid/invalid/disposable/catch_all/unknown/accept_all/role_based
+  • debounce_reason (text) - Detailed reason for the result
+  • debounce_score (int 0-100) - Confidence score (higher = better quality)
+  • debounce_free_email (bool) - Is it a free email provider? (gmail, yahoo, etc)
+  • debounce_role_account (bool) - Is it a role account? (info@, support@, etc)
+  • debounce_disposable (bool) - Is it a disposable email? (tempmail, etc)
+  • debounce_accept_all (bool) - Does domain accept all emails? (catch-all)
+  • debounce_validated_at (timestamp) - When validation was performed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW:
+1. Scheduler queries contacts WHERE debounce_result IS NULL (never validated)
+2. Service batches up to 50 contacts for bulk validation
+3. Service calls DeBounce API: POST /v1/validate/bulk
+4. Service updates all contacts with validation results
+5. OPTIONAL: Auto-queue valid emails for CRM sync (if AUTO_QUEUE_VALID_EMAILS=true)
+6. On failure: Retry with exponential backoff (5→10→20 min)
+
+VALIDATION RESULTS EXPLAINED:
+• valid - Email exists and can receive mail ✅
+• invalid - Email doesn't exist ❌
+• disposable - Temporary email service (10minutemail, etc) ⚠️
+• catch_all - Domain accepts all emails (risky) ⚠️
+• unknown - Cannot determine (server issues) ❓
+• accept_all - Same as catch_all ⚠️
+• role_based - Generic role account (info@, support@) ⚠️
+
+SCORE INTERPRETATION:
+• 80-100: Excellent - Safe to send
+• 60-79: Good - Probably safe
+• 40-59: Fair - Use with caution
+• 0-39: Poor - High risk of bounce
+
+SCHEDULER CONFIGURATION:
+• Interval: 1 minute (dev) / 5 minutes (prod)
+• Batch size: 50 contacts per cycle (DeBounce API limit)
+• Environment variable: DEBOUNCE_VALIDATION_SCHEDULER_INTERVAL_MINUTES
+
+DEBOUNCE API DETAILS:
+• Endpoint: POST https://api.debounce.io/v1/validate/bulk
+• Authentication: api-key query parameter (DEBOUNCE_API_KEY)
+• Bulk limit: 50 emails per request
+• Rate limit: 10 requests/second
+• Cost: ~$0.01 per email (varies by plan)
+
+EXAMPLE REQUEST:
+POST /v1/validate/bulk?api=YOUR_API_KEY
+{
+  "emails": [
+    "valid@example.com",
+    "invalid@fake-domain.com",
+    "disposable@tempmail.com"
+  ]
+}
+
+EXAMPLE RESPONSE:
+{
+  "valid@example.com": {
+    "result": "valid",
+    "reason": "Accepted",
+    "score": 95,
+    "free_email": false,
+    "role_account": false,
+    "disposable": false,
+    "accept_all": false
+  },
+  "invalid@fake-domain.com": {
+    "result": "invalid",
+    "reason": "Mailbox does not exist",
+    "score": 0,
+    ...
+  }
+}
+
+AUTO-QUEUE LOGIC (Optional):
+If AUTO_QUEUE_VALID_EMAILS=true:
+• debounce_result='valid' AND debounce_score >= 60 → Queue for Brevo/HubSpot
+• All other results → Skip CRM sync
+
+RELATED FILES:
+• Scheduler: src/services/email_validation/debounce_validation_scheduler.py
+• Model: src/models/WF7_V2_L1_1of1_ContactModel.py (debounce_* fields)
+• Docs: Documentation/Guides/email_validation_user_guide.md
+• Docs: Documentation/Operations/email_validation_maintenance.md
+
+MAINTENANCE:
+• Check logs: docker logs scraper-sky-backend-scrapersky-1 | grep -i debounce
+• Monitor validation: SELECT debounce_result, COUNT(*) FROM contacts WHERE debounce_validated_at IS NOT NULL GROUP BY debounce_result
+• Check costs: SELECT COUNT(*) * 0.01 as estimated_cost FROM contacts WHERE debounce_validated_at > NOW() - INTERVAL '30 days'
+• Quality check: SELECT AVG(debounce_score) FROM contacts WHERE debounce_result='valid'
+
+IMPLEMENTED: 2025-11-17 (WO-017 Phase 1)
+API DOCS: https://debounce.io/api-documentation/
 """
 
 import logging

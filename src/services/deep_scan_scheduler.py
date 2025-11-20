@@ -69,7 +69,8 @@ async def process_single_deep_scan_wrapper(item_id: UUID, session: AsyncSession)
         service = PlacesDeepService()
         result = await service.process_single_deep_scan(
             place_id=str(place.place_id),
-            tenant_id=str(place.tenant_id)
+            tenant_id=str(place.tenant_id),
+            session=session
         )
 
         # Update status based on result

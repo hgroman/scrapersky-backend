@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 
 # Import insert for PostgreSQL upsert
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_session  # Use absolute path
 
@@ -92,7 +93,7 @@ class PlacesDeepService(PlacesService):
 
     # --- Single Place Processing Method (from previous steps) ---
     async def process_single_deep_scan(
-        self, place_id: str, tenant_id: str
+        self, place_id: str, tenant_id: str, session: AsyncSession
     ) -> Optional[LocalBusiness]:
         """Retrieves details for a single place_id and upserts into local_businesses."""
         logger.info(
@@ -101,7 +102,6 @@ class PlacesDeepService(PlacesService):
         
         # Initialize job tracking variables
         job_id = None
-        session = None
         
         # Basic input validation
         if not place_id or not tenant_id:
@@ -122,39 +122,45 @@ class PlacesDeepService(PlacesService):
             return None
 
         try:
-            # Get database session first for job tracking
-            session = await get_session()
+            # Session is now passed in
+            logger.info(f"DEBUG: Session received: {session}, Type: {type(session)}")
             if not session:
-                logger.error("Failed to acquire database session.")
+                logger.error("No session provided for deep scan.")
                 return None
             
             # Create job record for tracking if JobService is available
             if self.job_service:
                 try:
-                    async with session.begin():
-                        job_data = {
-                            "job_type": "places_deep_scan",
-                            "status": "running",
-                            "progress": 0.0,
-                            "created_by": tenant_uuid,  # Use tenant_id as created_by
-                            "job_metadata": {
-                                "place_id": place_id,
-                                "tenant_id": tenant_id
-                            }
+                    # Use nested transaction or savepoint if needed, or just use session
+                    # Assuming caller manages main transaction, but we might want to commit job creation immediately?
+                    # If we are in a transaction, we can just add.
+                    # However, the original code used session.begin() which implies it wanted a transaction.
+                    # If the passed session has an active transaction (from session.begin() in caller), 
+                    # we can just use it.
+                    
+                    job_data = {
+                        "job_type": "places_deep_scan",
+                        "status": "running",
+                        "progress": 0.0,
+                        "created_by": tenant_uuid,  # Use tenant_id as created_by
+                        "job_metadata": {
+                            "place_id": place_id,
+                            "tenant_id": tenant_id
                         }
-                        job = await self.job_service.create(session, job_data)
-                        job_id = job.job_id
-                        logger.info(f"Created deep scan job {job_id} for place_id: {place_id}")
+                    }
+                    job = await self.job_service.create(session, job_data)
+                    job_id = job.job_id
+                    logger.info(f"Created deep scan job {job_id} for place_id: {place_id}")
                 except Exception as e:
                     logger.warning(f"Failed to create job record: {e}. Continuing without job tracking.")
             
             # Update job progress: Starting API call
             if self.job_service and job_id:
                 try:
-                    async with session.begin():
-                        await self.job_service.update_status(
-                            session, job_id, status="running", progress=0.2
-                        )
+                    # Just call update, let caller commit or flush if needed
+                    await self.job_service.update_status(
+                        session, job_id, status="running", progress=0.2
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to update job progress: {e}")
 
@@ -228,42 +234,41 @@ class PlacesDeepService(PlacesService):
             # Update job progress: Starting database upsert
             if self.job_service and job_id:
                 try:
-                    async with session.begin():
-                        await self.job_service.update_status(
-                            session, job_id, status="running", progress=0.8
-                        )
+                    await self.job_service.update_status(
+                        session, job_id, status="running", progress=0.8
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to update job progress: {e}")
 
             # Save to DB (using existing session)
             try:
-                async with session.begin():  # Start transaction
-                    # Example using PG Upsert (more explicit)
-                    # Pass the full dictionary including tenant_id
-                    stmt = insert(LocalBusiness).values(**mapped_data)
-                    # Define columns to update on conflict
-                    # Exclude primary key ('id') and potentially 'created_at' if you don't want it updated
-                    # Also exclude 'place_id' itself as it's the conflict target
-                    # Ensure tenant_id is updated if needed, though usually it wouldn't change on conflict
-                    update_dict = {
-                        col.name: getattr(stmt.excluded, col.name)
-                        for col in LocalBusiness.__table__.columns
-                        if col.name
-                        not in [
-                            "id",
-                            "place_id",
-                            "created_at",
-                            "tenant_id",
-                        ]  # Exclude tenant_id from update?
-                    }
-                    on_conflict_stmt = stmt.on_conflict_do_update(
-                        index_elements=[
-                            "place_id"
-                        ],  # Assumes unique constraint on place_id
-                        set_=update_dict,
-                    ).returning(LocalBusiness)
-                    result = await session.execute(on_conflict_stmt)
-                    merged_business = result.scalar_one_or_none()
+                # No new transaction block needed if caller handles it
+                # Example using PG Upsert (more explicit)
+                # Pass the full dictionary including tenant_id
+                stmt = insert(LocalBusiness).values(**mapped_data)
+                # Define columns to update on conflict
+                # Exclude primary key ('id') and potentially 'created_at' if you don't want it updated
+                # Also exclude 'place_id' itself as it's the conflict target
+                # Ensure tenant_id is updated if needed, though usually it wouldn't change on conflict
+                update_dict = {
+                    col.name: getattr(stmt.excluded, col.name)
+                    for col in LocalBusiness.__table__.columns
+                    if col.name
+                    not in [
+                        "id",
+                        "place_id",
+                        "created_at",
+                        "tenant_id",
+                    ]  # Exclude tenant_id from update?
+                }
+                on_conflict_stmt = stmt.on_conflict_do_update(
+                    index_elements=[
+                        "place_id"
+                    ],  # Assumes unique constraint on place_id
+                    set_=update_dict,
+                ).returning(LocalBusiness)
+                result = await session.execute(on_conflict_stmt)
+                merged_business = result.scalar_one_or_none()
 
                 # Transaction automatically committed/rolled back by session.begin()
 
@@ -275,10 +280,9 @@ class PlacesDeepService(PlacesService):
                     # Update job status to completed
                     if self.job_service and job_id:
                         try:
-                            async with session.begin():
-                                await self.job_service.update_status(
-                                    session, job_id, status="completed", progress=1.0
-                                )
+                            await self.job_service.update_status(
+                                session, job_id, status="completed", progress=1.0
+                            )
                             logger.info(f"Deep scan job {job_id} completed successfully")
                         except Exception as e:
                             logger.warning(f"Failed to update job completion status: {e}")
@@ -293,10 +297,9 @@ class PlacesDeepService(PlacesService):
                     # Update job status to failed
                     if self.job_service and job_id:
                         try:
-                            async with session.begin():
-                                await self.job_service.update_status(
-                                    session, job_id, status="failed", progress=1.0, error=error_msg
-                                )
+                            await self.job_service.update_status(
+                                session, job_id, status="failed", progress=1.0, error=error_msg
+                            )
                         except Exception as e:
                             logger.warning(f"Failed to update job failure status: {e}")
                     
@@ -308,20 +311,17 @@ class PlacesDeepService(PlacesService):
                 # Update job status to failed
                 if self.job_service and job_id:
                     try:
-                        async with session.begin():
-                            await self.job_service.update_status(
-                                session, job_id, status="failed", progress=1.0, error=str(db_error)
-                            )
+                        await self.job_service.update_status(
+                            session, job_id, status="failed", progress=1.0, error=str(db_error)
+                        )
                     except Exception as e:
                         logger.warning(f"Failed to update job failure status: {e}")
                 
                 # The session.begin() context manager handles rollback on exception
                 return None
             finally:
-                # Ensure session is closed if get_session doesn't use a context manager internally
-                # This depends on get_session implementation; if it yields, closing might be automatic.
-                # Assuming get_session provides a session that needs closing:
-                await session.close()
+                # Session management is now handled by caller
+                pass
             # logger.warning(f"DB save for {place_id} not yet implemented.") # Placeholder - REMOVED
             # return None # Placeholder return - REMOVED
 
@@ -335,10 +335,9 @@ class PlacesDeepService(PlacesService):
             # Update job status to failed
             if self.job_service and job_id and session:
                 try:
-                    async with session.begin():
-                        await self.job_service.update_status(
-                            session, job_id, status="failed", progress=1.0, error=error_msg
-                        )
+                    await self.job_service.update_status(
+                        session, job_id, status="failed", progress=1.0, error=error_msg
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to update job failure status: {e}")
             
@@ -350,10 +349,9 @@ class PlacesDeepService(PlacesService):
             # Update job status to failed
             if self.job_service and job_id and session:
                 try:
-                    async with session.begin():
-                        await self.job_service.update_status(
-                            session, job_id, status="failed", progress=1.0, error=str(e)
-                        )
+                    await self.job_service.update_status(
+                        session, job_id, status="failed", progress=1.0, error=str(e)
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to update job failure status: {e}")
             

@@ -1,16 +1,103 @@
 """
-HubSpot Contact Sync Service (WO-016 Phase 1)
+WO-016: HubSpot CRM Integration Service
 
+WHAT THIS DOES:
 Synchronizes ScraperSky contacts to HubSpot CRM using HubSpot API v3.
+Implements the Dual-Status Adapter Pattern with 2-step upsert (search → create/update).
 
-Key Features:
-- 2-step upsert pattern (search → create/update)
-- Exponential backoff retry logic
-- Custom property mapping (domain_id, page_id)
-- SDK-compatible signature: process_single_contact(contact_id, session)
+PURPOSE:
+Send validated contact data to HubSpot for sales pipeline management and CRM workflows.
 
-Architecture Pattern: WO-015 (Brevo) validated pattern
-HubSpot API Docs: https://developers.hubspot.com/docs/api/crm/contacts
+THE DUAL-STATUS PATTERN (Critical Architecture):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status Tracking (2 fields):
+  • hubspot_sync_status (CRMSyncStatus) - User selection: New/Selected/Queued/Complete/Error/Skipped
+  • hubspot_processing_status (CRMProcessingStatus) - System state: NULL/Queued/Processing/Complete/Error
+
+Retry Fields (3 fields):
+  • retry_count (int) - Number of retry attempts (max 3)
+  • next_retry_at (timestamp) - When to retry failed syncs
+  • hubspot_processing_error (text) - Error message for debugging
+
+Metadata (1 field):
+  • hubspot_contact_id (varchar) - HubSpot's VID (contact ID) returned from API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW (2-Step Upsert):
+1. Scheduler queries contacts WHERE hubspot_processing_status = 'Queued'
+2. Service fetches contact and validates required fields (email, firstname, lastname)
+3. STEP 1: Search for existing contact by email (GET /crm/v3/objects/contacts/search)
+4. STEP 2a: If found → Update contact (PATCH /crm/v3/objects/contacts/{id})
+5. STEP 2b: If not found → Create contact (POST /crm/v3/objects/contacts)
+6. On success: Set hubspot_sync_status='Complete', hubspot_processing_status='Complete'
+7. On failure: Increment retry_count, set next_retry_at with exponential backoff (5→10→20 min)
+8. After 3 failures: Set hubspot_sync_status='Error', stop retrying
+
+WHY 2-STEP UPSERT?
+HubSpot API v3 doesn't have built-in upsert like Brevo. Must search first, then create/update.
+This adds ~3 seconds per contact (2 API calls) vs Brevo's 1 second (1 API call).
+
+SCHEDULER CONFIGURATION:
+• Interval: 1 minute (dev) / 5 minutes (prod)
+• Batch size: 10 contacts per cycle
+• Environment variable: HUBSPOT_SYNC_SCHEDULER_INTERVAL_MINUTES
+
+HUBSPOT API DETAILS:
+• Base URL: https://api.hubapi.com
+• Authentication: Bearer token (HUBSPOT_API_KEY - Private App token)
+• Portal ID: HUBSPOT_PORTAL_ID (your HubSpot account ID)
+• Rate limit: 100 requests/10 seconds (handled by batch size)
+
+CUSTOM PROPERTIES (Must be created in HubSpot first):
+• domain_id (text) - ScraperSky domain UUID
+• page_id (text) - ScraperSky page UUID  
+• scrapersky_sync_date (text) - Last sync timestamp (text field for compatibility)
+
+EXAMPLE SEARCH PAYLOAD:
+{
+  "filterGroups": [{
+    "filters": [{
+      "propertyName": "email",
+      "operator": "EQ",
+      "value": "contact@example.com"
+    }]
+  }]
+}
+
+EXAMPLE CREATE/UPDATE PAYLOAD:
+{
+  "properties": {
+    "email": "contact@example.com",
+    "firstname": "John",
+    "lastname": "Doe",
+    "domain_id": "uuid-string",
+    "page_id": "uuid-string",
+    "scrapersky_sync_date": "2025-11-20T08:00:00Z"
+  }
+}
+
+RETRY LOGIC (Exponential Backoff):
+• Attempt 1 fails → retry in 5 minutes
+• Attempt 2 fails → retry in 10 minutes
+• Attempt 3 fails → retry in 20 minutes
+• After 3 attempts → mark as Error, stop retrying
+
+RELATED FILES:
+• Scheduler: src/services/crm/hubspot_sync_scheduler.py
+• Model: src/models/WF7_V2_L1_1of1_ContactModel.py (hubspot_* fields)
+• Enums: src/models/enums.py (CRMSyncStatus, CRMProcessingStatus)
+• Docs: Documentation/Guides/hubspot_crm_user_guide.md
+• Docs: Documentation/Operations/hubspot_crm_maintenance.md
+
+MAINTENANCE:
+• Check logs: docker logs scraper-sky-backend-scrapersky-1 | grep -i hubspot
+• Monitor success: SELECT COUNT(*) FROM contacts WHERE hubspot_sync_status='Complete' AND updated_at > NOW() - INTERVAL '24 hours'
+• Check failures: SELECT email, hubspot_processing_error, retry_count FROM contacts WHERE hubspot_sync_status='Error'
+• Reset failed: UPDATE contacts SET hubspot_processing_status='Queued', retry_count=0 WHERE hubspot_sync_status='Error'
+• Performance: AVG ~3 seconds per contact (2 API calls: search + create/update)
+
+IMPLEMENTED: 2025-11-16 (WO-016 Phase 1)
+API DOCS: https://developers.hubspot.com/docs/api/crm/contacts
 """
 
 import logging

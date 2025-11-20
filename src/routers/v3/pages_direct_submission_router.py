@@ -1,11 +1,93 @@
 """
-Direct Page Submission Router (WO-009).
+WO-009: Direct Page Submission Router
 
-Implements /api/v3/pages/direct-submit endpoint to allow users to submit
-individual page URLs directly, bypassing WF1-WF5 (Google Maps → Sitemap Import).
+WHAT THIS DOES:
+Allows users to submit individual page URLs directly, bypassing workflows WF1-WF5.
+Useful when you already have specific page URLs and don't need sitemap discovery.
 
-Entry Point: WF7 (Page Curation)
-Bypass: WF1, WF2, WF3, WF4, WF5
+ENDPOINT:
+POST /api/v3/pages/direct-submit
+
+WORKFLOW BYPASS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Skipped Workflows:
+  • WF1: Google Maps Search (no need - user provides URL)
+  • WF2: Deep Scan (no need - user provides URL)
+  • WF3: Domain Extraction (no need - user provides URL)
+  • WF4: Sitemap Discovery (no need - user provides URL)
+  • WF5: Sitemap Import (no need - user provides URL)
+
+Entry Point:
+  • WF7: Page Curation (contact extraction from submitted URL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW:
+1. User POSTs page URL
+2. System extracts domain from URL
+3. System creates/finds domain record (with NULL foreign keys - no parent sitemap)
+4. System creates page record with curation_status='Queued'
+5. WF7 Page Curation Scheduler picks up page
+6. WF7 scrapes page and extracts contacts
+
+NULL FOREIGN KEY PATTERN:
+Pages created via direct submission have:
+• domain_id: Set (extracted from URL)
+• sitemap_id: NULL (no parent sitemap)
+• This is valid and expected for direct submissions
+
+DUPLICATE DETECTION:
+• Checks if page URL already exists
+• If exists: Returns existing page (idempotent)
+• If new: Creates new page record
+
+REQUEST BODY:
+{
+  "url": "https://example.com/contact-us",
+  "tenant_id": "uuid-string" (optional, defaults to DEFAULT_TENANT_ID)
+}
+
+RESPONSE:
+{
+  "id": "uuid-string",
+  "url": "https://example.com/contact-us",
+  "domain_id": "uuid-string",
+  "sitemap_id": null,
+  "curation_status": "Queued",
+  "processing_status": "Queued",
+  "message": "Page submitted successfully and queued for curation"
+}
+
+URL VALIDATION:
+• Must be valid HTTP/HTTPS URL
+• Must have domain (e.g., example.com)
+• Path is optional (defaults to /)
+
+DOMAIN NORMALIZATION:
+• Extracts domain from URL (www.example.com → example.com)
+• Creates domain if doesn't exist
+• Links page to domain
+
+RELATED FILES:
+• Domain submission: src/routers/v3/domains_direct_submission_router.py (WO-010)
+• Sitemap submission: src/routers/v3/sitemaps_direct_submission_router.py (WO-011)
+• Page model: src/models/page.py
+• Domain model: src/models/domain.py
+• WF7 Scheduler: src/services/WF7_V2_L4_2of2_PageCurationScheduler.py
+• Docs: Documentation/Guides/direct_submission_user_guide.md
+• Docs: Documentation/Operations/direct_submission_maintenance.md
+
+MAINTENANCE:
+• Check submissions: SELECT COUNT(*) FROM pages WHERE sitemap_id IS NULL AND created_at > NOW() - INTERVAL '24 hours'
+• Monitor queue: SELECT COUNT(*) FROM pages WHERE curation_status='Queued' AND sitemap_id IS NULL
+• Check processing: SELECT url, curation_status, processing_status FROM pages WHERE sitemap_id IS NULL ORDER BY created_at DESC LIMIT 20
+
+USE CASES:
+• Quick contact extraction from known pages
+• Testing page curation without full workflow
+• Manual page additions to supplement sitemap imports
+• Emergency contact extraction
+
+IMPLEMENTED: 2025-11-14 (WO-009)
 """
 
 from fastapi import APIRouter, Depends, HTTPException

@@ -1,14 +1,96 @@
 """
-n8n Webhook Integration Service (WO-020)
+WO-020: n8n Webhook Integration Service (Outbound)
 
-Handles sending contact data to n8n webhook for external enrichment processing.
-This is a fire-and-forget integration that pushes contacts to n8n workflows.
+WHAT THIS DOES:
+Sends contact data to n8n webhook for external enrichment processing.
+This is the OUTBOUND half of the two-way n8n integration (WO-020 = outbound, WO-021 = inbound).
 
-Architecture: SDK-compatible service for use with run_job_loop pattern.
-Pattern Reference: src/services/crm/brevo_sync_service.py
+PURPOSE:
+Trigger n8n workflows to enrich contacts with additional data from external sources
+(Clearbit, Hunter.io, LinkedIn API, etc). Fire-and-forget pattern - webhook acceptance = success.
 
-Note: This service only sends data to n8n. Receiving enriched data back
-is handled by a separate endpoint (future work order).
+THE DUAL-STATUS PATTERN (Critical Architecture):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status Tracking (2 fields):
+  • n8n_sync_status (CRMSyncStatus) - User selection: New/Selected/Queued/Complete/Error/Skipped
+  • n8n_processing_status (CRMProcessingStatus) - System state: NULL/Queued/Processing/Complete/Error
+
+Retry Fields (3 fields):
+  • retry_count (int) - Number of retry attempts (max 3)
+  • next_retry_at (timestamp) - When to retry failed sends
+  • n8n_processing_error (text) - Error message for debugging
+
+Metadata (1 field):
+  • n8n_workflow_id (varchar) - n8n workflow identifier (optional, for tracking)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW (Fire-and-Forget):
+1. Scheduler queries contacts WHERE n8n_processing_status = 'Queued'
+2. Service fetches contact and validates required fields (email, id)
+3. Service POSTs contact data to n8n webhook
+4. n8n webhook accepts (200 OK) → Mark as Complete immediately
+5. n8n processes enrichment asynchronously (may take 10-30 seconds)
+6. n8n POSTs enriched data back via WO-021 inbound webhook (separate flow)
+7. On failure: Increment retry_count, set next_retry_at with exponential backoff (5→10→20 min)
+
+FIRE-AND-FORGET PATTERN:
+Unlike Brevo/HubSpot, we don't wait for enrichment to complete.
+Webhook acceptance (200 OK) = success. Enrichment happens async.
+Results come back via separate inbound webhook (WO-021).
+
+SCHEDULER CONFIGURATION:
+• Interval: 1 minute (dev) / 5 minutes (prod)
+• Batch size: 10 contacts per cycle
+• Environment variable: N8N_SYNC_SCHEDULER_INTERVAL_MINUTES
+
+N8N WEBHOOK DETAILS:
+• URL: N8N_WEBHOOK_URL (your n8n instance webhook endpoint)
+• Authentication: Optional Bearer token (N8N_WEBHOOK_SECRET)
+• Timeout: 30 seconds (webhook must respond quickly)
+• Method: POST with JSON body
+
+EXAMPLE PAYLOAD:
+{
+  "contact_id": "uuid-string",
+  "email": "contact@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "company": "Acme Corp",
+  "phone": "+1-555-0123",
+  "domain_id": "uuid-string",
+  "page_id": "uuid-string"
+}
+
+AUTHENTICATION (Optional):
+If N8N_WEBHOOK_SECRET is set:
+  Header: Authorization: Bearer {N8N_WEBHOOK_SECRET}
+
+RETRY LOGIC (Exponential Backoff):
+• Attempt 1 fails → retry in 5 minutes
+• Attempt 2 fails → retry in 10 minutes
+• Attempt 3 fails → retry in 20 minutes
+• After 3 attempts → mark as Error, stop retrying
+
+TWO-WAY INTEGRATION:
+• WO-020 (this file): Send contacts TO n8n for enrichment
+• WO-021 (separate): Receive enriched data FROM n8n via webhook
+
+RELATED FILES:
+• Scheduler: src/services/crm/n8n_sync_scheduler.py
+• Inbound webhook: src/routers/v3/n8n_webhook_router.py (WO-021)
+• Enrichment service: src/services/crm/n8n_enrichment_service.py (WO-021)
+• Model: src/models/WF7_V2_L1_1of1_ContactModel.py (n8n_* fields)
+• Enums: src/models/enums.py (CRMSyncStatus, CRMProcessingStatus)
+• Docs: Documentation/Guides/n8n_webhook_user_guide.md
+• Docs: Documentation/Operations/n8n_webhook_maintenance.md
+
+MAINTENANCE:
+• Check logs: docker logs scraper-sky-backend-scrapersky-1 | grep -i "n8n.*webhook"
+• Monitor sends: SELECT COUNT(*) FROM contacts WHERE n8n_sync_status='Complete' AND updated_at > NOW() - INTERVAL '24 hours'
+• Check failures: SELECT email, n8n_processing_error, retry_count FROM contacts WHERE n8n_sync_status='Error'
+• Reset failed: UPDATE contacts SET n8n_processing_status='Queued', retry_count=0 WHERE n8n_sync_status='Error'
+
+IMPLEMENTED: 2025-11-19 (WO-020)
 """
 
 import logging
