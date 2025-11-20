@@ -4,7 +4,18 @@
 
 This directory contains the core architectural knowledge, operational procedures, and development guidelines.
 
-**Philosophy:** Code is truth. Documentation explains **why**, not **what**. Show AI the code to understand what; read docs to understand why.
+**Philosophy:** Code is truth. Documentation explains **why** and **how**, not **what**. 
+
+### Three-Tier Documentation System
+
+```
+CODE HEADERS (Tier 1) → Technical specs, always current
+    ↓
+    ├─→ USER GUIDES (Tier 2) → How to use features
+    └─→ OPERATIONS GUIDES (Tier 3) → How to maintain
+```
+
+**See:** `DOCUMENTATION_INITIATIVE.md` for implementation details and progress (1/8 features complete)
 
 ---
 
@@ -423,3 +434,34 @@ Match this structure exactly: same auth, same pagination, same dual-status."
 - Keep it minimal
 
 **Welcome to ScraperSky. The code is good. Trust it.**
+
+---
+
+# ScraperSky Backend Documentation
+
+**Last Updated:** 2025-11-19  
+**Status:** Clean and Organized  
+**Documentation Pattern:** "Code is Truth" (see `DOCUMENTATION_INITIATIVE.md`)
+
+---
+
+## Philosophy
+
+**Code is Truth. Documentation Explains Why and How.**
+
+- **Code headers** are the source of truth for technical specifications
+- **User guides** explain how to use features (non-technical)
+- **Operations guides** explain how to maintain and troubleshoot
+- When code and docs conflict, code wins
+- Keep docs minimal, essential, and current
+
+### Three-Tier Documentation System
+
+```
+CODE HEADERS (Tier 1) → Technical specs, always current
+    ↓
+    ├─→ USER GUIDES (Tier 2) → How to use features
+    └─→ OPERATIONS GUIDES (Tier 3) → How to maintain
+```
+
+**See:** `DOCUMENTATION_INITIATIVE.md` for implementation details
