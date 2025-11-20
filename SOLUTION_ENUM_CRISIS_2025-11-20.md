@@ -208,8 +208,9 @@ When defining enum columns:
 1. ✅ Created Testing framework (Documentation/Testing/)
 2. ✅ Documented "Use MCP not migrations" (README_ADDENDUM.md)
 3. ✅ Created KNOWN_FAILURES.md documenting this incident
-4. ⏳ TODO: Create automated enum audit test
-5. ⏳ TODO: Add to pre-deployment checklist
+4. ✅ Created automated enum audit test (`tests/test_enum_type_audit.py`)
+5. ✅ Dropped orphaned enum types that caused production failures
+6. ⏳ TODO: Add to pre-deployment checklist
 
 ---
 
