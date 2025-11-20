@@ -83,18 +83,18 @@ async def handle_job_error(job_id: int, error_message: str):
     try:
         async with get_background_session() as session:
             # Update job status to failed and store error message
-            stmt = (
-                update(Job)
-                .where(Job.id == job_id)
-                .values(
-                    status="failed",
-                    error=error_message[:1024],  # Truncate error if too long
-                    updated_at=func.now(),
-                )
-            )
-            await session.execute(stmt)
-            # FIXED: Removed manual commit - get_background_session() handles this automatically
-            logger.info(f"Marked Job {job_id} as failed: {error_message}")
+            # Fetch the job object first
+            result = await session.execute(select(Job).where(Job.id == job_id))
+            job = result.scalar_one_or_none()
+
+            if job:
+                job.status = "failed"
+                job.error = error_message[:1024]  # Truncate error if too long
+                job.updated_at = func.now()
+                # Session context manager will handle commit
+                logger.info(f"Marked Job {job_id} as failed: {error_message}")
+            else:
+                logger.error(f"Job {job_id} not found when attempting to mark as failed.")
     except Exception as db_error:
         logger.error(
             f"Database error while marking job {job_id} as failed: {db_error}",

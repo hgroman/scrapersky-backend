@@ -1,10 +1,88 @@
 """
-WO-021: n8n Webhook Router
+WO-021: n8n Enrichment Return Pipeline - Webhook Router
 
-FastAPI endpoints for receiving enriched contact data from n8n workflows.
+WHAT THIS DOES:
+Receives enriched contact data from n8n workflows and stores it in 15 database fields.
+This is the INBOUND half of the two-way n8n integration (WO-020 = outbound, WO-021 = inbound).
 
-This router provides a secure webhook endpoint that n8n can POST to after
-completing contact enrichment. Authentication is via Bearer token.
+ENDPOINT:
+POST /api/v3/webhooks/n8n/enrichment-complete
+
+AUTHENTICATION:
+Bearer token via Authorization header (N8N_WEBHOOK_SECRET environment variable)
+
+THE 15 ENRICHMENT FIELDS (Contact Model):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status Tracking (5 fields):
+  • enrichment_status (varchar 20) - pending/complete/partial/failed
+  • enrichment_started_at (timestamp) - When enrichment began
+  • enrichment_completed_at (timestamp) - When enrichment finished
+  • enrichment_error (text) - Error message if failed
+  • last_enrichment_id (varchar 255) - For idempotency (prevents duplicates)
+
+Enriched Data (7 fields - JSONB for flexibility):
+  • enriched_phone (varchar 50) - Additional phone number
+  • enriched_address (jsonb) - {street, city, state, zip, country}
+  • enriched_social_profiles (jsonb) - {linkedin, twitter, facebook, etc}
+  • enriched_company (jsonb) - {name, website, industry, size}
+  • enriched_additional_emails (jsonb array) - ["email1", "email2"]
+  • enrichment_confidence_score (int 0-100) - Quality score
+  • enrichment_sources (jsonb array) - ["clearbit", "hunter.io"]
+
+Metadata (3 fields):
+  • enrichment_duration_seconds (float) - Processing time
+  • enrichment_api_calls (int) - Number of API calls made
+  • enrichment_cost_estimate (float) - Estimated cost in dollars
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IDEMPOTENCY:
+Safe to retry - same enrichment_id won't duplicate data.
+Uses last_enrichment_id field to track processed enrichments.
+
+WORKFLOW:
+1. n8n workflow completes enrichment
+2. n8n POSTs to this endpoint with enriched data
+3. Service validates contact exists
+4. Service checks idempotency (skip if already processed)
+5. Service updates all 15 fields
+6. Service returns success with list of updated fields
+
+EXAMPLE REQUEST:
+{
+  "contact_id": "uuid",
+  "enrichment_id": "unique-run-id-123",
+  "status": "complete",
+  "timestamp": "2025-11-19T10:00:00Z",
+  "enriched_data": {
+    "phone": "+1-555-0123",
+    "address": {"street": "123 Main", "city": "SF", "state": "CA"},
+    "social_profiles": {"linkedin": "https://..."},
+    "company": {"name": "Acme", "website": "https://acme.com"},
+    "additional_emails": ["work@example.com"],
+    "confidence_score": 85,
+    "sources": ["clearbit", "hunter.io"]
+  },
+  "metadata": {
+    "duration_seconds": 12.5,
+    "api_calls": 3,
+    "cost_estimate": 0.15
+  }
+}
+
+RELATED FILES:
+• Service: src/services/crm/n8n_enrichment_service.py
+• Schemas: src/schemas/n8n_enrichment_schemas.py
+• Model: src/models/WF7_V2_L1_1of1_ContactModel.py (lines 122-142)
+• Outbound: src/services/crm/n8n_sync_service.py (WO-020)
+• Docs: Documentation/Guides/n8n_enrichment_user_guide.md
+• Docs: Documentation/Operations/n8n_enrichment_maintenance.md
+
+MAINTENANCE:
+• Check logs: docker logs scraper-sky-backend-scrapersky-1 | grep enrichment
+• Verify fields: SELECT enrichment_status, enrichment_completed_at FROM contacts WHERE enrichment_status IS NOT NULL
+• Test webhook: curl -X POST {url} -H "Authorization: Bearer {secret}" -d @test_payload.json
+
+IMPLEMENTED: 2025-11-19 (Commit b029792)
 """
 
 import logging
