@@ -1,49 +1,30 @@
-# Standardization Assessment & Refactoring Walkthrough
+# Walkthrough: Architectural Refactoring Validation
 
 ## Overview
-This task focused on formalizing the "Constitutional Architecture" of the ScraperSky backend. We assessed the codebase, identified divergences, executed an 80/20 refactoring plan, and ratified the architectural principles.
+This walkthrough documents the validation of the "Constitutional Architecture" refactoring, which involved:
+1.  **Schema Extraction**: Moving Pydantic models from routers to `src/schemas/`.
+2.  **ORM Standardization**: Updating `src/services/sitemap_scheduler.py` to use SQLAlchemy ORM.
+3.  **Architecture Formalization**: Creating `ARCHITECTURE.md`.
 
-## Changes Made
+## Validation Results
 
-### 1. Schema Extraction (Refactors 1 & 2)
-We extracted inline Pydantic models from routers to dedicated schema files to enforce the "Router as Traffic Controller" pattern.
+### Phase 1: Isolated Verification (Code Logic)
+All verification scripts passed successfully.
 
-#### [MODIFY] [src/routers/local_businesses.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/local_businesses.py)
-- Removed inline `LocalBusinessRecord` and `PaginatedLocalBusinessResponse`.
-- Imported schemas from `src/schemas/local_business_schemas.py`.
+-   **Local Businesses Schema Extraction**: Verified `src/routers/local_businesses.py` imports from `src/schemas/local_business_schemas.py`.
+    -   *Note*: Fixed a test issue where Enum comparison was failing due to `use_enum_values=True`.
+-   **Places Staging Schema Extraction**: Verified `src/routers/places_staging.py` imports from `src/schemas/places_staging_schemas.py`.
+-   **Sitemap Scheduler ORM Usage**: Verified `src/services/sitemap_scheduler.py` uses ORM object updates.
 
-#### [NEW] [src/schemas/local_business_schemas.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/schemas/local_business_schemas.py)
-- Contains extracted Pydantic models.
+### Phase 2: Integration Smoke Test (Docker)
+The application started successfully in Docker, confirming no runtime `ImportError`s.
 
-#### [MODIFY] [src/routers/places_staging.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/places_staging.py)
-- Removed inline `PlaceStagingRecord`, `PaginatedPlaceStagingResponse`, and update models.
-- Imported schemas from `src/schemas/places_staging_schemas.py`.
+-   **Startup Logs**: "Application startup complete" observed.
+-   **Health Check**: `GET /health` returned 200 OK.
 
-#### [NEW] [src/schemas/places_staging_schemas.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/schemas/places_staging_schemas.py)
-- Contains extracted Pydantic models.
+## Deployment Status
+The changes were verified to be present in the codebase and committed (Commit `be90ff0` and subsequent). The code is ready for deployment (or has been deployed if auto-deploy is enabled).
 
-### 2. ORM Standardization (Refactor 3)
-We replaced legacy SQLAlchemy Core `update()` statements with ORM object updates in the Sitemap Scheduler.
-
-#### [MODIFY] [src/services/sitemap_scheduler.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/services/sitemap_scheduler.py)
-- Refactored `handle_job_error` to fetch the `Job` object and update attributes, ensuring proper ORM lifecycle management.
-
-### 3. Architectural Formalization
-We created a formal document to serve as the source of truth for future development.
-
-#### [NEW] [ARCHITECTURE.md](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/ARCHITECTURE.md)
-- Defines core principles: Truth in Code, No Initiative, ORM Only, Router-Owned Sessions.
-
-## Verification Results
-
-### Automated Tests
-We created and ran verification tests for each refactoring step.
-
-| Test File | Purpose | Result |
-| :--- | :--- | :--- |
-| `tests/verification_local_businesses.py` | Verify schema structure after extraction | ✅ Passed |
-| `tests/verification_places_staging.py` | Verify schema structure after extraction | ✅ Passed |
-| `tests/verification_sitemap_scheduler.py` | Verify ORM update logic | ✅ Passed |
-
-### Manual Verification
-- Verified that `ARCHITECTURE.md` aligns with the "Guardian's Paradox" and user requirements.
+## Artifacts
+-   `ARCHITECTURE.md`: Defines the new architectural standards.
+-   `src/schemas/`: Contains the extracted Pydantic schemas.

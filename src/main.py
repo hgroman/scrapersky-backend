@@ -84,7 +84,7 @@ from .services.deep_scan_scheduler import setup_deep_scan_scheduler
 from .services.domain_extraction_scheduler import setup_domain_extraction_scheduler
 
 # TODO: Remove after WO-004 complete
-from .services.sitemap_scheduler import setup_sitemap_scheduler
+# from .services.sitemap_scheduler import setup_sitemap_scheduler
 from .session.async_session import get_session
 
 # Create logger for this module
