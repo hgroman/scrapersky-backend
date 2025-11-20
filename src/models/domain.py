@@ -29,10 +29,21 @@ from .base import Base, BaseModel, model_to_dict
 from .enums import HubSpotSyncStatus, HubSpotProcessingStatus
 from .tenant import DEFAULT_TENANT_ID
 
-# Import TaskStatus for content_scrape_status, page_scrape_status, sitemap_monitor_status columns
-from . import TaskStatus
-
 logger = logging.getLogger(__name__)
+
+
+# Task status enum for content/page/sitemap monitoring
+class TaskStatus(str, enum.Enum):
+    """Status values mapped to task_status in database (MUST MATCH DB DEFINITION)"""
+    Queued = "Queued"
+    InProgress = "InProgress"
+    Completed = "Completed"
+    Error = "Error"
+    ManualReview = "ManualReview"
+    Cancelled = "Cancelled"
+    Paused = "Paused"
+    Processing = "Processing"
+    Complete = "Complete"
 
 
 # Python Enum for USER curation status
