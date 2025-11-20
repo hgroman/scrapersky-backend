@@ -101,6 +101,33 @@ postgresql+asyncpg://<user>:<password>@<project>.supabase.co:6543/postgres?sslmo
 - Port **6543** goes through the pooler and prevents connection exhaustion.
 - `application_name=scrapersky_backend` helps with query tracing.
 
+### Database Changes: Use MCP Direct SQL, NOT Migrations
+
+**CRITICAL: We have Supabase MCP with direct database access. DO NOT create migration files.**
+
+**✅ CORRECT: Execute SQL directly via MCP**
+```python
+# Use Supabase MCP tool
+mcp3_execute_sql(
+    project_id="ddfldwzhdhhzhxywqnyz",
+    query="ALTER TABLE table_name ADD COLUMN new_col TEXT;"
+)
+```
+
+**❌ WRONG: Creating migration files**
+```bash
+# DON'T DO THIS - we don't use migration files
+supabase/migrations/20251120_some_change.sql
+```
+
+**Why:**
+- We have direct Supabase access via MCP
+- Migration files add unnecessary complexity
+- Changes are immediate and verifiable
+- No migration runner needed
+
+**Exception:** Only create migration files if explicitly requested for documentation purposes.
+
 ## Schedulers
 
 | Variable                             | Default | What it does                     |
