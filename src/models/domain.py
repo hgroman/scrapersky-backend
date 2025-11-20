@@ -191,7 +191,7 @@ class Domain(Base, BaseModel):
     sitemap_curation_status = Column(
         SQLAlchemyEnum(
             SitemapCurationStatusEnum,
-            name="SitemapCurationStatusEnum",  # Match actual DB enum type name (PascalCase)
+            name="sitemap_curation_status_enum",  # NOW MATCHES DB
             create_type=False,
             native_enum=True,  # CRITICAL: Use native PostgreSQL enum
             values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values

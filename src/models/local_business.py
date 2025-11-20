@@ -125,7 +125,7 @@ class LocalBusiness(Base):
     domain_extraction_status = Column(
         Enum(
             DomainExtractionStatusEnum,  # Reference the updated Enum
-            name="domain_extraction_status",  # Use actual DB enum name (not _enum suffix)
+            name="domain_extraction_status_enum",  # NOW MATCHES DB
             create_type=False,
             native_enum=True,  # CRITICAL: Use native PostgreSQL enum
             values_callable=lambda x: [e.value for e in x],  # Explicitly use enum values
