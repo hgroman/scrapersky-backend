@@ -45,8 +45,8 @@ async def update_sitemap_curation_status_batch(
             )
 
         for sitemap_file in files_to_update:
-            # Update the V2-compliant curation status field
-            sitemap_file.sitemap_import_curation_status = request.status
+            # Update the curation status field (actual column name: deep_scrape_curation_status)
+            sitemap_file.deep_scrape_curation_status = request.status
             updated_count += 1
 
             # Dual-Status Update Pattern
