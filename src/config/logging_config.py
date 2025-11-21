@@ -11,7 +11,7 @@ def setup_logging():
     os.makedirs(log_directory, exist_ok=True)
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,  # Changed from DEBUG to INFO to reduce log noise
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.StreamHandler(),
