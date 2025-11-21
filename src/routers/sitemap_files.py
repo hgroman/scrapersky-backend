@@ -212,6 +212,7 @@ async def update_sitemap_import_curation_status_filtered(
     filters = []
     
     if request.deep_scrape_curation_status_filter is not None:
+        # Direct enum comparison - SQLAlchemy handles the type matching
         filters.append(SitemapFile.deep_scrape_curation_status == request.deep_scrape_curation_status_filter)
     
     if request.domain_id is not None:

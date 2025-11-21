@@ -50,15 +50,8 @@ class SitemapUrlStatusEnum(enum.Enum):
     Error = "Error"
 
 
-# Rename Enum related to Sitemap Curation status
-class SitemapImportCurationStatusEnum(enum.Enum):
-    """Status values for Sitemap Import Curation Status"""
-
-    New = "New"
-    Selected = "Selected"
-    Maybe = "Maybe"
-    Not_a_Fit = "Not a Fit"
-    Archived = "Archived"
+# Import from centralized enums instead of defining here
+from .enums import SitemapImportCurationStatusEnum
 
 
 # Rename Enum related to Sitemap Processing status

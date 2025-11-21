@@ -170,14 +170,14 @@ class SitemapFileStatusEnum(str, Enum):
 
 
 class SitemapImportCurationStatusEnum(str, Enum):
-    """Status values for sitemap import curation workflow"""
+    """Status values for sitemap import curation workflow - MUST match sitemap_curation_status_enum in DB"""
 
     New = "New"
-    Queued = "Queued"
-    Processing = "Processing"
-    Complete = "Complete"
-    Error = "Error"
-    Skipped = "Skipped"
+    Selected = "Selected"
+    Maybe = "Maybe"
+    Not_a_Fit = "Not a Fit"  # DB has space, not underscore
+    Archived = "Archived"
+    Completed = "Completed"  # DB has this value
 
 
 class SitemapImportProcessStatusEnum(str, Enum):
