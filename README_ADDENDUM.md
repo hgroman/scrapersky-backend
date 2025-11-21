@@ -75,6 +75,48 @@ If the local container fails to start silently (i.e., `docker compose ps` is emp
     *   **Cause**: Conflicting version pins in `requirements.txt`.
     *   **Solution**: Avoid over-pinning dependencies. Allow `pip` to resolve compatible versions where possible. For complex projects, consider using a tool like `pip-tools` to manage dependencies.
 
+### Testing Protocol: Build vs Run
+
+**CRITICAL:** `docker compose build` only tests compilation, NOT runtime imports.
+
+**What `build` does:**
+- ✅ Copies files into image
+- ✅ Installs Python packages
+- ✅ Creates the image
+- ❌ **Does NOT** start the application
+- ❌ **Does NOT** test imports
+
+**What `up` does:**
+- ✅ Everything `build` does
+- ✅ **Starts the container**
+- ✅ **Runs `uvicorn src.main:app`**
+- ✅ **Tests all imports at runtime**
+
+**Proper Verification Workflow:**
+
+```bash
+# 1. Build AND run the container
+docker compose -f docker-compose.dev.yml up --build -d
+
+# 2. Wait for startup (10-15 seconds)
+sleep 15
+
+# 3. Check logs for errors
+docker compose -f docker-compose.dev.yml logs --tail=50 | grep -E "(ERROR|ModuleNotFoundError|Traceback|Application startup complete)"
+
+# 4. Verify health check
+curl -f http://localhost:8000/health && echo " ✅ PASSED" || echo "❌ FAILED"
+
+# 5. Clean up
+docker compose -f docker-compose.dev.yml down
+```
+
+**When to use each:**
+- **Build only:** Never for verification - only for creating images
+- **Build + Run:** Always for verification before deploying
+
+**Lesson learned:** Import errors only appear when Python tries to import modules at runtime, not during Docker build.
+
 ## Environment
 
 Full `.env.example` reference:
