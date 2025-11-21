@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     # WF2 Deep Scan Scheduler (Replaces WF2 portion of sitemap_scheduler)
     # Processes Place records queued for Google Maps deep scan analysis
     DEEP_SCAN_SCHEDULER_INTERVAL_MINUTES: int = (
-        5  # Slower than old shared scheduler (external API calls)
+        1  # Development: Fast iteration (Production: Consider 5 for API rate limits)
     )
     DEEP_SCAN_SCHEDULER_BATCH_SIZE: int = 10  # Smaller batches (API rate limits)
     DEEP_SCAN_SCHEDULER_MAX_INSTANCES: int = 1  # Prevent API throttling
@@ -113,7 +113,7 @@ class Settings(BaseSettings):
     BREVO_API_BASE_URL: str = "https://api.brevo.com/v3"
 
     # Brevo Sync Scheduler (WO-015 Phase 2)
-    BREVO_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 5
+    BREVO_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 1  # Development: Fast iteration (Production: Consider 5)
     BREVO_SYNC_SCHEDULER_BATCH_SIZE: int = 10
     BREVO_SYNC_SCHEDULER_MAX_INSTANCES: int = 1
 
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
     HUBSPOT_API_BASE_URL: str = "https://api.hubapi.com"
 
     # HubSpot Sync Scheduler (WO-016 Phase 2)
-    HUBSPOT_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 5
+    HUBSPOT_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 1  # Development: Fast iteration (Production: Consider 5)
     HUBSPOT_SYNC_SCHEDULER_BATCH_SIZE: int = 10
     HUBSPOT_SYNC_SCHEDULER_MAX_INSTANCES: int = 1
 
@@ -153,7 +153,7 @@ class Settings(BaseSettings):
     DEBOUNCE_API_BASE_URL: str = "https://api.debounce.io/v1"
 
     # Validation Scheduler (WO-017 Phase 2)
-    DEBOUNCE_VALIDATION_SCHEDULER_INTERVAL_MINUTES: int = 5
+    DEBOUNCE_VALIDATION_SCHEDULER_INTERVAL_MINUTES: int = 1  # Development: Fast iteration (Production: Consider 5)
     DEBOUNCE_VALIDATION_SCHEDULER_BATCH_SIZE: int = 50  # Max 50 free tier, 100 paid
     DEBOUNCE_VALIDATION_SCHEDULER_MAX_INSTANCES: int = 1
 
@@ -178,7 +178,7 @@ class Settings(BaseSettings):
     N8N_WEBHOOK_SECRET: Optional[str] = None  # Optional Bearer token for webhook auth
 
     # n8n Sync Scheduler (WO-020)
-    N8N_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 5
+    N8N_SYNC_SCHEDULER_INTERVAL_MINUTES: int = 1  # Development: Fast iteration (Production: Consider 5)
     N8N_SYNC_SCHEDULER_BATCH_SIZE: int = 10
     N8N_SYNC_SCHEDULER_MAX_INSTANCES: int = 1
 
