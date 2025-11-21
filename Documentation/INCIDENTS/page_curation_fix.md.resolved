@@ -1,0 +1,57 @@
+# Page Curation Workflow Fix
+
+## Problem
+Pages were not appearing in the database after setting sitemaps to "Selected" status.
+
+## Root Cause
+**Critical Bug:** [SitemapImportProcessStatusEnum](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/models/wf5_sitemap_file.py#58-67) was not imported in [src/routers/sitemap_files.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/sitemap_files.py)
+
+### Error Details
+- **Error:** `name 'SitemapImportProcessStatusEnum' is not defined`
+- **Location:** [src/routers/sitemap_files.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/sitemap_files.py) line 261
+- **Impact:** 500 Internal Server Error when updating sitemap curation status
+- **Workflow Blocked:** Entire page curation pipeline (WF5 → WF7)
+
+### Code Issue
+```python
+# Line 261 - Using enum without importing it
+sitemap_file.sitemap_import_status = SitemapImportProcessStatusEnum.Queued
+```
+
+## Fix Applied
+Added missing import to [src/routers/sitemap_files.py](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/sitemap_files.py):
+
+```python
+from ..models.wf5_sitemap_file import (
+    SitemapFile,
+    SitemapFileStatusEnum,
+    SitemapImportCurationStatusEnum,
+    SitemapImportProcessStatusEnum,  # ← ADDED
+)
+```
+
+## Deployment
+- **Commit:** `ecdadcf`
+- **Status:** Pushed to production
+- **Expected Result:** Users can now set sitemaps to "Selected" and trigger page import processing
+
+## How the Workflow Should Work
+
+1. **User Action:** Set sitemap curation status to "Selected" via API/UI
+2. **Dual-Status Update:** Router automatically sets `sitemap_import_status = Queued`
+3. **Scheduler Pickup:** `wf5_sitemap_import_scheduler` processes queued sitemaps
+4. **Page Extraction:** URLs from sitemap are extracted and saved to [pages](file:///Users/henrygroman/development/python-projects/ScraperSky-Back-End-WorkSpace/scraper-sky-backend/src/routers/v3/WF7_V3_L3_1of1_PagesRouter.py#31-99) table
+5. **Page Curation:** Pages become available for WF7 curation workflow
+
+## Other Issues Noted (Lower Priority)
+
+### SSL Certificate Errors
+Some target websites have incomplete certificate chains. Consider:
+- Updating `certifi` package
+- Adding fallback for SSL verification failures
+
+### Scraper Rate Limiting
+Sitemap discovery is aggressive (15+ requests/second). Consider:
+- Adding delays between discovery attempts
+- Implementing exponential backoff
+- Using more realistic User-Agent strings

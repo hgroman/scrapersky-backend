@@ -25,6 +25,7 @@ from ..models.wf5_sitemap_file import (
     SitemapFile,
     SitemapFileStatusEnum,
     SitemapImportCurationStatusEnum,
+    SitemapImportProcessStatusEnum,
 )
 from ..schemas.sitemap_file import PaginatedSitemapFileResponse, SitemapFileRead
 
