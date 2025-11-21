@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from src.db.session import get_db_session
-from src.models.page import Page
+from src.models.wf7_page import Page
 from src.models.enums import PageCurationStatus, PageProcessingStatus
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_contact import Contact
 
 router = APIRouter(prefix="/api/v2/pages", tags=["V2 - Page Curation"])
 

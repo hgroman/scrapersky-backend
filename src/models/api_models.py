@@ -353,7 +353,7 @@ class LocalBusinessBatchUpdateResponse(BaseModel):
 # Import DB Enums required for response/request models
 # Note: Adjust path if your models are structured differently
 # try:
-from .domain import SitemapAnalysisStatusEnum, SitemapCurationStatusEnum
+from .wf4_domain import SitemapAnalysisStatusEnum, SitemapCurationStatusEnum
 
 # except ImportError:
 #     # Fallback or specific handling if the import path differs

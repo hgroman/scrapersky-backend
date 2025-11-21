@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from sqlalchemy.future import select as future_select
 
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_contact import Contact
 from src.schemas.contact_validation_schemas import ContactFilters
 
 logger = logging.getLogger(__name__)

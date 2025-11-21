@@ -32,16 +32,16 @@ from .api_models import (
 )
 from .base import Base, BaseModel, model_to_dict
 from .batch_job import BatchJob
-from .WF7_V2_L1_1of1_ContactModel import Contact
-from .domain import Domain
+from .wf7_contact import Contact
+from .wf4_domain import Domain
 from .job import Job
-from .local_business import LocalBusiness
-from .page import Page
-from .place import Place
+from .wf3_local_business import LocalBusiness
+from .wf7_page import Page
+from .wf1_place_staging import Place
 from .place_search import PlaceSearch
 
 # Import sitemap models
-from .sitemap import SitemapFile, SitemapUrl
+from .wf5_sitemap_file import SitemapFile, SitemapUrl
 from .tenant import Tenant
 
 

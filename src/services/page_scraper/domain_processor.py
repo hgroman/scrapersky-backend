@@ -13,7 +13,8 @@ from typing import Any, Dict, Optional
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.future import select
 
-from ...models import Domain, Job
+from ...models.wf4_domain import Domain
+from ...models.job import Job
 from ...models.tenant import DEFAULT_TENANT_ID
 from ...scraper.domain_utils import get_domain_url, standardize_domain
 from ...scraper.metadata_extractor import detect_site_metadata

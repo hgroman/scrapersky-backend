@@ -10,8 +10,8 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.sitemap_parser import SitemapParser, SitemapURL
-from src.models.page import Page
-from src.models.sitemap import SitemapFile
+from src.models.wf7_page import Page
+from src.models.wf5_sitemap_file import SitemapFile
 from src.models.enums import SitemapImportProcessStatusEnum
 from src.models.enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
 from src.utils.honeybee_categorizer import HoneybeeCategorizer

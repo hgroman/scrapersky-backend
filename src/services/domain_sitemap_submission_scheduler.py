@@ -35,7 +35,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.future import select
 
 from src.config.settings import settings
-from src.models.domain import Domain, SitemapAnalysisStatusEnum
+from src.models.wf4_domain import Domain, SitemapAnalysisStatusEnum
 from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
 from src.session.async_session import get_background_session
 from src.scheduler_instance import scheduler

@@ -29,8 +29,8 @@ from src.schemas.local_business_schemas import (
     LocalBusinessRecord,
     PaginatedLocalBusinessResponse,
 )
-from src.models.local_business import DomainExtractionStatusEnum, LocalBusiness
-from src.models.place import PlaceStatusEnum  # For DB mapping
+from src.models.wf3_local_business import DomainExtractionStatusEnum, LocalBusiness
+from src.models.wf1_place_staging import PlaceStatusEnum  # For DB mapping
 
 logger = logging.getLogger(__name__)
 

@@ -26,22 +26,22 @@ from .config.logging_config import setup_logging
 
 setup_logging()
 
-from src.services.sitemap_import_scheduler import setup_sitemap_import_scheduler
-from src.services.WF7_V2_L4_2of2_PageCurationScheduler import (
+from src.services.background.wf5_sitemap_import_scheduler import setup_sitemap_import_scheduler
+from src.services.background.wf7_page_curation_scheduler import (
     setup_page_curation_scheduler,
 )
-from src.services.crm.brevo_sync_scheduler import setup_brevo_sync_scheduler
-from src.services.crm.hubspot_sync_scheduler import setup_hubspot_sync_scheduler
-from src.services.crm.n8n_sync_scheduler import setup_n8n_sync_scheduler
-from src.services.email_validation.debounce_scheduler import (
+from src.services.background.wf7_crm_brevo_sync_scheduler import setup_brevo_sync_scheduler
+from src.services.background.wf7_crm_hubspot_sync_scheduler import setup_hubspot_sync_scheduler
+from src.services.background.wf7_crm_n8n_sync_scheduler import setup_n8n_sync_scheduler
+from src.services.background.wf7_crm_debounce_scheduler import (
     setup_debounce_validation_scheduler,
 )
 from src.routers.v2.WF7_V2_L3_1of1_PagesRouter import router as v2_pages_router
 from src.routers.v3.WF7_V3_L3_1of1_PagesRouter import router as v3_pages_router
-from src.routers.v3.pages_direct_submission_router import (
+from src.routers.wf7_page_direct_submission_router import (
     router as pages_direct_submission_router,
 )
-from src.routers.v3.pages_csv_import_router import router as pages_csv_import_router
+from src.routers.wf7_page_csv_import_router import router as pages_csv_import_router
 from .health.db_health import check_database_connection
 from .routers.batch_page_scraper import router as batch_page_scraper_api_router
 from .routers.batch_sitemap import router as batch_sitemap_api_router
@@ -62,10 +62,10 @@ from .routers.modernized_sitemap import router as modernized_sitemap_api_router
 from .routers.places_staging import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
 from .routers.sitemap_files import router as sitemap_files_router
-from .routers.v3.sitemaps_direct_submission_router import (
+from src.routers.wf5_sitemap_direct_submission_router import (
     router as sitemaps_direct_submission_router,
 )
-from .routers.v3.sitemaps_csv_import_router import router as sitemaps_csv_import_router
+from src.routers.wf5_sitemap_csv_import_router import router as sitemaps_csv_import_router
 from .routers.v3.contacts_router import router as contacts_router
 from .routers.v3.contacts_validation_router import (
     router as contacts_validation_router,
@@ -74,14 +74,14 @@ from .routers.v3.n8n_webhook_router import router as n8n_webhook_router  # WO-02
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
-from .services.domain_scheduler import setup_domain_scheduler
-from .services.domain_sitemap_submission_scheduler import (
-    setup_domain_sitemap_submission_scheduler,
+from src.services.background.wf4_domain_monitor_scheduler import setup_domain_scheduler
+from src.services.background.wf4_sitemap_discovery_scheduler import (
+    setup_sitemap_discovery_scheduler,
 )
 
 # WO-004: Split schedulers (replacing sitemap_scheduler)
-from .services.deep_scan_scheduler import setup_deep_scan_scheduler
-from .services.domain_extraction_scheduler import setup_domain_extraction_scheduler
+from src.services.background.wf2_deep_scan_scheduler import setup_deep_scan_scheduler
+from src.services.background.wf3_domain_extraction_scheduler import setup_domain_extraction_scheduler
 
 # TODO: Remove after WO-004 complete
 # from .services.sitemap_scheduler import setup_sitemap_scheduler
@@ -142,7 +142,7 @@ async def lifespan(app: FastAPI):
     #     logger.error(f"Failed to setup Sitemap scheduler job: {e}", exc_info=True)
 
     try:
-        setup_domain_sitemap_submission_scheduler()
+        setup_sitemap_discovery_scheduler()
     except Exception as e:
         logger.error(
             f"Failed to setup Domain Sitemap Submission scheduler job: {e}",

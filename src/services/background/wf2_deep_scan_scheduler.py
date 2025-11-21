@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.place import GcpApiDeepScanStatusEnum, Place
+from src.models.wf1_place_staging import GcpApiDeepScanStatusEnum, Place
 from src.scheduler_instance import scheduler
 from src.services.places.places_deep_service import PlacesDeepService
 

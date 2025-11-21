@@ -1,10 +1,10 @@
 import logging
 from sqlalchemy import asc
 from src.common.curation_sdk.scheduler_loop import run_job_loop
-from ..config.settings import settings
-from ..models.page import Page
-from ..models.enums import PageProcessingStatus
-from .WF7_V2_L4_1of2_PageCurationService import PageCurationService
+from ...config.settings import settings
+from ...models.wf7_page import Page
+from ...models.enums import PageProcessingStatus
+from ..WF7_V2_L4_1of2_PageCurationService import PageCurationService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models.place import Place, PlaceStatusEnum
+from ...models.wf1_place_staging import Place, PlaceStatusEnum
 from .places_service import PlacesService
 
 logger = logging.getLogger(__name__)

@@ -9,8 +9,8 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from src.models.domain import Domain
-from src.models.local_business import LocalBusiness
+from src.models.wf4_domain import Domain
+from src.models.wf3_local_business import LocalBusiness
 
 # Assuming a utility for domain extraction exists or will be created
 # from src.utils.domain_extractor import extract_domain_from_url

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models.place import Place
+from ...models.wf1_place_staging import Place
 from ...models.place_search import PlaceSearch
 
 logger = logging.getLogger(__name__)

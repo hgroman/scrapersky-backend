@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from src.db.session import get_db_session
-from src.models.sitemap import SitemapFile
-from src.models.sitemap import (
+from src.models.wf5_sitemap_file import SitemapFile
+from src.models.wf5_sitemap_file import (
     SitemapImportCurationStatusEnum,
     SitemapImportProcessStatusEnum,
 )

@@ -8,8 +8,8 @@ from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import and_
-from src.models.page import Page
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_page import Page
+from src.models.wf7_contact import Contact
 from src.models.enums import PageProcessingStatus
 from src.utils.simple_scraper import scrape_page_simple_async
 import logging

@@ -1,95 +1,7 @@
 """
-WO-012: CSV Import Router for Pages
+CSV Import Router for Sitemaps (WO-014).
 
-WHAT THIS DOES:
-Bulk import page URLs from CSV files, bypassing workflows WF1-WF5.
-Processes hundreds/thousands of URLs in a single request.
-
-ENDPOINT:
-POST /api/v3/pages/import-csv
-
-CSV FORMAT:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Required Column:
-  • url - Full page URL (https://example.com/contact)
-
-Optional Columns:
-  • tenant_id - Tenant UUID (defaults to DEFAULT_TENANT_ID)
-
-Example CSV:
-url
-https://example.com/contact
-https://another.com/about
-https://third.com/team
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-WORKFLOW:
-1. User uploads CSV file
-2. System parses CSV and validates format
-3. For each row:
-   a. Extract domain from URL
-   b. Create/find domain record
-   c. Check for duplicate page URL
-   d. Create page record with curation_status='Queued'
-4. Return summary: created, skipped (duplicates), errors
-
-ERROR HANDLING:
-• Per-row error tracking (doesn't fail entire import)
-• Invalid URLs logged but don't stop processing
-• Duplicate URLs skipped (idempotent)
-• Returns detailed error report
-
-REQUEST:
-POST /api/v3/pages/import-csv
-Content-Type: multipart/form-data
-Body: file (CSV file upload)
-
-RESPONSE:
-{
-  "total_rows": 100,
-  "created": 95,
-  "skipped": 3,
-  "errors": 2,
-  "error_details": [
-    {"row": 5, "url": "invalid-url", "error": "Invalid URL format"},
-    {"row": 12, "url": "bad://url", "error": "Unsupported protocol"}
-  ]
-}
-
-FILE SIZE LIMITS:
-• Max file size: 10MB (configurable)
-• Max rows: 10,000 (configurable)
-• Recommended batch: 100-1,000 rows
-
-DUPLICATE DETECTION:
-• Checks existing pages by URL
-• Skips duplicates (doesn't update)
-• Counts as "skipped" in response
-
-NULL FOREIGN KEY PATTERN:
-CSV-imported pages have:
-• domain_id: Set (extracted from URL)
-• sitemap_id: NULL (no parent sitemap)
-
-RELATED FILES:
-• Single page: src/routers/v3/pages_direct_submission_router.py (WO-009)
-• Domain CSV: src/routers/v3/domains_csv_import_router.py (WO-012)
-• Sitemap CSV: src/routers/v3/sitemaps_csv_import_router.py (WO-012)
-• Docs: Documentation/Guides/csv_import_user_guide.md
-• Docs: Documentation/Operations/csv_import_maintenance.md
-
-MAINTENANCE:
-• Monitor imports: SELECT COUNT(*) FROM pages WHERE sitemap_id IS NULL AND created_at > NOW() - INTERVAL '24 hours'
-• Check errors: Review error_details in API response
-• Performance: ~100 rows/second processing speed
-
-USE CASES:
-• Bulk page import from external sources
-• Migrating from other systems
-• Large-scale contact extraction projects
-• Supplementing sitemap-based discovery
-
-IMPLEMENTED: 2025-11-14 (WO-012)
+Implements /api/v3/sitemaps/import-csv endpoint for bulk sitemap URL import via CSV.
 """
 
 import csv
@@ -104,16 +16,19 @@ import uuid
 
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
-from src.models.page import Page, PageCurationStatus
-from src.models.domain import Domain, SitemapCurationStatusEnum
+from src.models.wf5_sitemap_file import (
+    SitemapFile,
+    SitemapImportCurationStatusEnum,
+)
+from src.models.wf4_domain import Domain, SitemapCurationStatusEnum
 from src.models.tenant import DEFAULT_TENANT_ID
 from src.schemas.csv_import_schemas import CSVImportResponse, CSVRowResult
 
-router = APIRouter(prefix="/api/v3/pages", tags=["V3 - Pages CSV Import"])
+router = APIRouter(prefix="/api/v3/sitemaps", tags=["V3 - Sitemaps CSV Import"])
 
 
-def extract_domain(url: str) -> str:
-    """Extract domain from URL."""
+def extract_domain_from_sitemap_url(url: str) -> str:
+    """Extract domain from sitemap URL."""
     parsed = urlparse(url)
     domain = parsed.netloc
     if domain.startswith("www."):
@@ -122,31 +37,31 @@ def extract_domain(url: str) -> str:
 
 
 @router.post("/import-csv", response_model=CSVImportResponse)
-async def import_pages_csv(
+async def import_sitemaps_csv(
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_db_session),
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Import page URLs from CSV file.
+    Import sitemap URLs from CSV file.
 
     **CSV Format:**
-    - Required column: `url`
+    - Required column: `sitemap_url` (or `url`)
     - No header row required (auto-detected)
     - Max 1000 rows
 
     **Processing:**
     - Partial success: continues on errors
-    - Validates each URL
+    - Validates each sitemap URL (.xml requirement)
     - Skips duplicates (already in DB)
     - Auto-creates domains if needed
-    - Sets page_curation_status=New, priority_level=5
+    - Sets deep_scrape_curation_status=New, sitemap_type=STANDARD
 
     **Example CSV:**
     ```
-    https://example.com/contact
-    https://example.com/about
-    https://testsite.org/services
+    https://example.com/sitemap.xml
+    https://example.com/sitemap_index.xml
+    https://testsite.org/sitemap.xml
     ```
 
     **Returns:**
@@ -182,7 +97,8 @@ async def import_pages_csv(
     first_row = rows[0]
     has_header = (
         len(first_row) > 0
-        and first_row[0].lower() in ['url', 'urls', 'page', 'pages', 'link']
+        and first_row[0].lower()
+        in ['sitemap_url', 'sitemap', 'url', 'sitemaps', 'sitemap_urls']
     )
 
     data_rows = rows[1:] if has_header else rows
@@ -193,7 +109,7 @@ async def import_pages_csv(
         if row and row[0].strip():
             raw_urls.append(row[0].strip())
 
-    # Process URLs
+    # Process sitemap URLs
     results: List[CSVRowResult] = []
     successful = 0
     failed = 0
@@ -204,11 +120,13 @@ async def import_pages_csv(
 
     async with session.begin():
         for row_num, url_str in enumerate(raw_urls, start=1):
-            # Validate URL format
+            # Validate sitemap URL format
             try:
                 parsed = urlparse(url_str)
                 if not parsed.scheme or not parsed.netloc:
                     raise ValueError("Invalid URL format")
+                if not (parsed.path.endswith('.xml') or 'sitemap' in parsed.path.lower()):
+                    raise ValueError("URL must be a sitemap file (.xml)")
             except Exception as e:
                 results.append(
                     CSVRowResult(
@@ -216,33 +134,33 @@ async def import_pages_csv(
                         value=url_str,
                         status="error",
                         id=None,
-                        error=f"Invalid URL: {str(e)}",
+                        error=f"Invalid sitemap URL: {str(e)}",
                     )
                 )
                 failed += 1
                 continue
 
-            # Check if page already exists
+            # Check if sitemap already exists
             existing_check = await session.execute(
-                select(Page).where(Page.url == url_str)
+                select(SitemapFile).where(SitemapFile.url == url_str)
             )
-            existing_page = existing_check.scalar_one_or_none()
+            existing_sitemap = existing_check.scalar_one_or_none()
 
-            if existing_page:
+            if existing_sitemap:
                 results.append(
                     CSVRowResult(
                         row_number=row_num,
                         value=url_str,
                         status="skipped",
-                        id=existing_page.id,
-                        error="Page already exists in database",
+                        id=existing_sitemap.id,
+                        error="Sitemap already exists in database",
                     )
                 )
                 skipped += 1
                 continue
 
             # Get or create domain
-            domain_name = extract_domain(url_str)
+            domain_name = extract_domain_from_sitemap_url(url_str)
 
             if domain_name in domain_cache:
                 domain = domain_cache[domain_name]
@@ -269,21 +187,23 @@ async def import_pages_csv(
 
                 domain_cache[domain_name] = domain
 
-            # Create page
+            # Create sitemap
             try:
-                page = Page(
+                sitemap_file = SitemapFile(
                     id=uuid.uuid4(),
                     url=url_str,
-                    tenant_id=DEFAULT_TENANT_ID,
                     domain_id=domain.id,
-                    sitemap_file_id=None,
-                    page_curation_status=PageCurationStatus.New,
-                    page_processing_status=None,
-                    priority_level=5,
+                    deep_scrape_curation_status=SitemapImportCurationStatusEnum.New,
+                    sitemap_import_status=None,
+                    sitemap_type="STANDARD",
+                    url_count=None,
+                    last_modified=None,
+                    size_bytes=None,
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
+                    user_id=current_user.get("user_id"),
                 )
-                session.add(page)
+                session.add(sitemap_file)
                 await session.flush()
 
                 results.append(
@@ -291,7 +211,7 @@ async def import_pages_csv(
                         row_number=row_num,
                         value=url_str,
                         status="success",
-                        id=page.id,
+                        id=sitemap_file.id,
                         error=None,
                     )
                 )

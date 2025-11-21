@@ -30,7 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 # Project specifics
-from src.models.domain import Domain, SitemapAnalysisStatusEnum
+from src.models.wf4_domain import Domain, SitemapAnalysisStatusEnum
 from src.services.job_service import job_service
 
 logger = logging.getLogger(__name__)

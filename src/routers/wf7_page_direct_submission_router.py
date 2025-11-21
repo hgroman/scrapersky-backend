@@ -99,8 +99,8 @@ import uuid
 
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
-from src.models.page import Page, PageCurationStatus, PageProcessingStatus
-from src.models.domain import Domain, SitemapCurationStatusEnum
+from src.models.wf7_page import Page, PageCurationStatus, PageProcessingStatus
+from src.models.wf4_domain import Domain, SitemapCurationStatusEnum
 from src.models.tenant import DEFAULT_TENANT_ID
 from src.schemas.pages_direct_submission_schemas import (
     DirectPageSubmissionRequest,

@@ -4,8 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from src.models.local_business import DomainExtractionStatusEnum
-from src.models.place import PlaceStatusEnum
+from src.models.wf3_local_business import DomainExtractionStatusEnum
+from src.models.wf1_place_staging import PlaceStatusEnum
 
 
 # Define a Pydantic model that mirrors the LocalBusiness SQLAlchemy model

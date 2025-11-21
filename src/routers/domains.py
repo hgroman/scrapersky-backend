@@ -29,7 +29,7 @@ from src.models.api_models import (
     DomainRecord,
     PaginatedDomainResponse,
 )
-from src.models.domain import (
+from src.models.wf4_domain import (
     Domain,
     SitemapAnalysisStatusEnum,
     SitemapCurationStatusEnum,

@@ -18,9 +18,9 @@ from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_contact import Contact
 from src.models.enums import CRMProcessingStatus
-from .brevo_sync_service import BrevoSyncService
+from ..crm.brevo_sync_service import BrevoSyncService
 
 logger = logging.getLogger(__name__)
 

@@ -17,12 +17,12 @@ import uuid
 
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
-from src.models.sitemap import (
+from src.models.wf5_sitemap_file import (
     SitemapFile,
     SitemapImportCurationStatusEnum,
     SitemapImportProcessStatusEnum,
 )
-from src.models.domain import Domain, SitemapCurationStatusEnum
+from src.models.wf4_domain import Domain, SitemapCurationStatusEnum
 from src.models.tenant import DEFAULT_TENANT_ID
 from src.schemas.sitemaps_direct_submission_schemas import (
     DirectSitemapSubmissionRequest,

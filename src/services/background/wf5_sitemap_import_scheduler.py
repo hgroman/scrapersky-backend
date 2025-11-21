@@ -8,7 +8,7 @@ from sqlalchemy import asc
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 
 # Model and Enum Imports
-from src.models.sitemap import SitemapFile, SitemapImportProcessStatusEnum
+from src.models.wf5_sitemap_file import SitemapFile, SitemapImportProcessStatusEnum
 from src.scheduler_instance import scheduler  # Import shared scheduler instance
 
 # Service to be called

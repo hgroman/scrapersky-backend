@@ -14,7 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import get_db_session
-from src.models.domain import Domain
+from src.models.wf4_domain import Domain
 from src.services.sitemap_import_service import SitemapImportService
 from src.services.website_scan_service import WebsiteScanService
 

@@ -19,7 +19,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models import BatchJob, Domain
+from ...models.batch_job import BatchJob
+from ...models.wf4_domain import Domain
 from ...scraper.domain_utils import get_domain_url, standardize_domain
 from ...services.core.validation_service import validation_service
 from ...services.job_service import job_service

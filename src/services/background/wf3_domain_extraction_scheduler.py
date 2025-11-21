@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.local_business import DomainExtractionStatusEnum, LocalBusiness
+from src.models.wf3_local_business import DomainExtractionStatusEnum, LocalBusiness
 from src.scheduler_instance import scheduler
 from src.services.business_to_domain_service import LocalBusinessToDomainService
 

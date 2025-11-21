@@ -23,9 +23,11 @@ from typing import List
 from sqlalchemy.future import select
 from sqlalchemy.exc import DBAPIError
 
-from src.models.domain import Domain, SitemapAnalysisStatusEnum
+from src.models.wf4_domain import Domain, SitemapAnalysisStatusEnum
 from src.scraper.sitemap_analyzer import SitemapAnalyzer
 from src.session.async_session_fixed import get_fixed_scheduler_session
+from src.scheduler_instance import scheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
 logger = logging.getLogger(__name__)
 
@@ -217,3 +219,37 @@ async def test_fixed_scheduler():
     logger.info("🧪 Testing FIXED scheduler...")
     await process_pending_domain_sitemap_submissions_fixed()
     logger.info("🧪 FIXED scheduler test complete")
+
+
+def setup_sitemap_discovery_scheduler():
+    """Setup the fixed sitemap discovery scheduler."""
+    try:
+        job_id = "process_pending_domain_sitemap_submissions_fixed"
+        interval_minutes = 1
+
+        logger.info(
+            f"🔧 Setting up FIXED sitemap discovery scheduler (runs every {interval_minutes} minute)"
+        )
+
+        if scheduler.get_job(job_id):
+            scheduler.remove_job(job_id)
+            logger.info(f"🗑️  Removed existing job '{job_id}'")
+
+        scheduler.add_job(
+            process_pending_domain_sitemap_submissions_fixed,
+            trigger=IntervalTrigger(minutes=interval_minutes),
+            id=job_id,
+            name="WF4 Sitemap Discovery Scheduler (Fixed)",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+            misfire_grace_time=60,
+        )
+
+        logger.info(f"✅ Added job '{job_id}'")
+
+    except Exception as e:
+        logger.error(
+            f"💥 Error setting up sitemap discovery scheduler: {e}",
+            exc_info=True,
+        )

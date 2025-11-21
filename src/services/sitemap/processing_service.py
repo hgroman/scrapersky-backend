@@ -381,8 +381,8 @@ async def process_domain_with_own_session(
     # Import the proper session factory that works with Supabase - this is the ONE AND ONLY ONE acceptable method
     from sqlalchemy import select, update
 
-    from ...models.domain import Domain
-    from ...models.sitemap import (
+    from ...models.wf4_domain import Domain
+    from ...models.wf5_sitemap_file import (
         SitemapFile,
         SitemapUrl,
         SitemapFileStatusEnum,

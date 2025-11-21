@@ -21,7 +21,7 @@ from src.schemas.WF7_V3_L2_1of1_PageCurationSchemas import (
 )
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
-from src.models.page import Page
+from src.models.wf7_page import Page
 from src.models.enums import PageCurationStatus, PageProcessingStatus, PageTypeEnum
 
 # V3 API prefix per Constitutional mandate

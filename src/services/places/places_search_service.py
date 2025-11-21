@@ -343,7 +343,8 @@ async def process_places_search_background(
 
     from sqlalchemy import select
 
-    from ...models import Place, SearchJob
+    from ...models.wf1_place_staging import Place
+    from ...models.job import Job as SearchJob
     from ...services.job_service import job_service
 
     # Create job_uuid from job_id

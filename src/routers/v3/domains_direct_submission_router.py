@@ -12,7 +12,7 @@ import uuid
 
 from src.db.session import get_db_session
 from src.auth.jwt_auth import get_current_user
-from src.models.domain import (
+from src.models.wf4_domain import (
     Domain,
     SitemapCurationStatusEnum,
     SitemapAnalysisStatusEnum,

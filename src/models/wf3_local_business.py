@@ -17,7 +17,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.sql import func
 
 # Import the actual PlaceStatusEnum definition
-from .place import PlaceStatusEnum
+from .wf1_place_staging import PlaceStatusEnum
 
 try:
     from .base import Base

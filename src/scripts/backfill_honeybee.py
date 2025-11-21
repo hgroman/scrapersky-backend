@@ -1,7 +1,7 @@
 import asyncio
 from sqlalchemy import select
 from src.session.async_session import get_session
-from src.models.page import Page
+from src.models.wf7_page import Page
 from src.models.enums import PageCurationStatus, PageTypeEnum
 from src.utils.honeybee_categorizer import HoneybeeCategorizer
 

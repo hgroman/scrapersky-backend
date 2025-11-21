@@ -109,7 +109,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_contact import Contact
 from src.models.enums import CRMProcessingStatus, CRMSyncStatus
 
 logger = logging.getLogger(__name__)

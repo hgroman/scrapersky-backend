@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.session import get_session  # Use absolute path
 
 # Import only Job model, JobStatus is a string literal
-from src.models.local_business import LocalBusiness  # Use absolute path
+from src.models.wf3_local_business import LocalBusiness  # Use absolute path
 
 # Import base service, session factory, and models
 from .places_service import PlacesService
