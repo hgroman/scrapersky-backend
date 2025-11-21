@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Corrected import path
-from ..models.sitemap import (
+from ..models.wf5_sitemap_file import (
     SitemapFile,
+    SitemapFileStatusEnum,
     SitemapImportCurationStatusEnum,
-    SitemapImportProcessStatusEnum,
 )
 from ..schemas.sitemap_file import PaginatedSitemapFileResponse, SitemapFileRead
 
@@ -262,7 +262,7 @@ class SitemapFilesService:
                 if hasattr(sitemap_file, field):
                     setattr(sitemap_file, field, value)
                     # REMOVED Trigger Logic Here - Per Spec 23.5/23.6, this logic is now in batch update
-                    # if field == 'deep_scrape_curation_status' and value == SitemapDeepCurationStatusEnum.Selected.value: # Compare against .value
+                    # if field == 'deep_scrape_curation_status' and value == SitemapImportCurationStatusEnum.Selected.value: # Compare against .value
                     #    logger.info(f"Deep scrape curation status set to Selected for sitemap file ID {sitemap_file_id}. Setting process status to Pending.")
                     #    setattr(sitemap_file, 'deep_scrape_process_status', SitemapFileStatusEnum.Pending)
                     #    # Optionally clear any previous error message

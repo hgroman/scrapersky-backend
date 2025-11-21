@@ -15,10 +15,10 @@ from src.auth.jwt_auth import get_current_user
 
 # Core Dependencies
 from ..db.session import get_db_session
-from ..models.sitemap import (
+from ..models.wf5_sitemap_file import (
     SitemapFile,
+    SitemapFileStatusEnum,
     SitemapImportCurationStatusEnum,
-    SitemapImportProcessStatusEnum,
 )
 from ..schemas.sitemap_file import (
     PaginatedSitemapFileResponse,

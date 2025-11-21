@@ -9,7 +9,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 # Import the Renamed Enum from the model to reuse it
-from ..models.sitemap import SitemapFileStatusEnum, SitemapImportCurationStatusEnum
+from ..models.wf5_sitemap_file import SitemapFileStatusEnum, SitemapImportCurationStatusEnum
 
 
 # Base Schema: Fields common to Create and Read

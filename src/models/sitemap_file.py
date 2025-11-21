@@ -9,7 +9,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 # Import the Enum from the model to reuse it
-from ..models.sitemap import SitemapDeepCurationStatusEnum, SitemapFileStatusEnum
+from ..models.wf5_sitemap_file import SitemapImportCurationStatusEnum, SitemapFileStatusEnum
 
 
 # Base Schema: Fields common to Create and Read
@@ -50,7 +50,7 @@ class SitemapFileUpdate(BaseModel):
     error_message: Optional[str] = None
     processing_time: Optional[float] = None
     url_count: Optional[int] = None
-    deep_scrape_curation_status: Optional[SitemapDeepCurationStatusEnum] = None
+    deep_scrape_curation_status: Optional[SitemapImportCurationStatusEnum] = None
     # updated_by will likely be set automatically
     # If API allows manual update, add: updated_by: Optional[uuid.UUID] = None
 
@@ -83,7 +83,7 @@ class PaginatedSitemapFileResponse(BaseModel):
 # Schema for Batch Update operations (example: updating status)
 class SitemapFileBatchUpdate(BaseModel):
     sitemap_file_ids: List[uuid.UUID]
-    deep_scrape_curation_status: SitemapDeepCurationStatusEnum
+    deep_scrape_curation_status: SitemapImportCurationStatusEnum
 
     class Config:
         # REMOVED use_enum_values = True

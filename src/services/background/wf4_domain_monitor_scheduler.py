@@ -14,18 +14,18 @@ from datetime import datetime, timezone
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.future import select
 
-from ..config.settings import settings
-from ..models.domain import (
+from ...config.settings import settings
+from ...models.wf4_domain import (
     Domain,
     SitemapAnalysisStatusEnum,
 )  # Import the Domain model and SitemapAnalysisStatusEnum
-from ..models.enums import DomainStatusEnum  # Import the new Enum
+from ...models.enums import DomainStatusEnum  # Import the new Enum
 
 # Import the shared scheduler instance
-from ..scheduler_instance import scheduler
-from ..scraper.domain_utils import get_domain_url, standardize_domain
-from ..scraper.metadata_extractor import detect_site_metadata
-from ..session.async_session import get_background_session
+from src.scheduler_instance import scheduler
+from src.scraper.domain_utils import get_domain_url, standardize_domain
+from src.scraper.metadata_extractor import detect_site_metadata
+from src.session.async_session import get_background_session
 
 # Load settings
 if not os.environ.get("PYTHONPATH"):

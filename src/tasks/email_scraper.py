@@ -12,11 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.settings import Settings
 from ..models import TaskStatus  # Import TaskStatus enum
-from ..models.WF7_V2_L1_1of1_ContactModel import Contact
+from ..models.wf7_contact import Contact
 from ..models.enums import ContactEmailTypeEnum
-from ..models.domain import Domain
+from ..models.wf4_domain import Domain
 from ..models.job import Job  # Import Job model
-from ..models.page import Page
+from ..models.wf7_page import Page
 from ..session.async_session import get_background_session
 
 logger = logging.getLogger(__name__)
