@@ -54,7 +54,7 @@ from .routers.v3.domains_direct_submission_router import (
 from .routers.v3.domains_csv_import_router import router as domains_csv_import_router
 from .routers.wf7_email_scanner_router import router as email_scanner_api_router
 from .routers.google_maps_api import router as google_maps_api_router
-from .routers.local_businesses import router as local_businesses_api_router
+from .routers.wf3_local_business_router import router as local_businesses_api_router
 from .routers.wf7_page_modernized_scraper_router import (
     router as modernized_page_scraper_api_router,
 )

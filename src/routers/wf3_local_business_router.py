@@ -25,7 +25,7 @@ from src.models.api_models import (
     LocalBusinessFilteredUpdateRequest,
     LocalBusinessBatchUpdateResponse,
 )
-from src.schemas.local_business_schemas import (
+from src.schemas.wf3_local_business_schemas import (
     LocalBusinessRecord,
     PaginatedLocalBusinessResponse,
 )
