@@ -47,7 +47,7 @@ from .routers.wf7_page_batch_scraper_router import router as batch_page_scraper_
 from .routers.batch_sitemap import router as batch_sitemap_api_router
 from .routers.db_portal import router as db_portal_api_router
 from .routers.dev_tools import router as dev_tools_api_router
-from .routers.domains import router as domains_api_router
+from .routers.wf4_domain_router import router as domains_api_router
 from .routers.v3.domains_direct_submission_router import (
     router as domains_direct_submission_router,
 )

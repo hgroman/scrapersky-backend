@@ -102,7 +102,7 @@ from src.auth.jwt_auth import get_current_user
 from src.models.wf7_page import Page, PageCurationStatus, PageProcessingStatus
 from src.models.wf4_domain import Domain, SitemapCurationStatusEnum
 from src.models.tenant import DEFAULT_TENANT_ID
-from src.schemas.pages_direct_submission_schemas import (
+from src.schemas.wf7_page_direct_submission_schemas import (
     DirectPageSubmissionRequest,
     DirectPageSubmissionResponse,
 )
