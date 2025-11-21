@@ -680,40 +680,18 @@ class SitemapAnalyzer:
                                 f"SITEMAP DEBUG: Found {len(urls)} URLs with alternative pattern"
                             )
 
-                        # Extract lastmod, changefreq, priority if available
+                        # Extract URLs only - skip expensive per-URL metadata extraction
+                        # to prevent OOM on large sitemaps (was causing O(n²) regex operations)
                         for url_value in urls:
                             url_data = {"loc": url_value}
-
-                            # Try to extract lastmod
-                            lastmod_pattern = f"<loc>\\s*{re.escape(url_value)}\\s*</loc>.*?<lastmod>\\s*(.*?)\\s*</lastmod>"
-                            lastmod_match = re.search(
-                                lastmod_pattern, content, re.DOTALL | re.IGNORECASE
-                            )
-                            if lastmod_match:
-                                url_data["lastmod"] = lastmod_match.group(1)
-                                result["has_lastmod"] = True
-
-                            # Try to extract priority
-                            priority_pattern = f"<loc>\\s*{re.escape(url_value)}\\s*</loc>.*?<priority>\\s*(.*?)\\s*</priority>"
-                            priority_match = re.search(
-                                priority_pattern, content, re.DOTALL | re.IGNORECASE
-                            )
-                            if priority_match:
-                                url_data["priority"] = priority_match.group(1)
-                                result["has_priority"] = True
-
-                            # Try to extract changefreq
-                            changefreq_pattern = f"<loc>\\s*{re.escape(url_value)}\\s*</loc>.*?<changefreq>\\s*(.*?)\\s*</changefreq>"
-                            changefreq_match = re.search(
-                                changefreq_pattern, content, re.DOTALL | re.IGNORECASE
-                            )
-                            if changefreq_match:
-                                url_data["changefreq"] = changefreq_match.group(1)
-                                result["has_changefreq"] = True
-
                             result["urls"].append(url_data)
                             if len(result["urls"]) >= max_urls:
                                 break
+                        
+                        # Check for metadata presence in sitemap (not per-URL)
+                        result["has_lastmod"] = "<lastmod>" in content
+                        result["has_priority"] = "<priority>" in content
+                        result["has_changefreq"] = "<changefreq>" in content
 
                         result["url_count"] = len(result["urls"])
                         result["sitemap_type"] = SitemapType.STANDARD
