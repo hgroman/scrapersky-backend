@@ -44,7 +44,7 @@ from src.routers.wf7_page_direct_submission_router import (
 from src.routers.wf7_page_csv_import_router import router as pages_csv_import_router
 from .health.db_health import check_database_connection
 from .routers.wf7_page_batch_scraper_router import router as batch_page_scraper_api_router
-from .routers.batch_sitemap import router as batch_sitemap_api_router
+from .routers.wf5_sitemap_batch_router import router as batch_sitemap_api_router
 from .routers.db_portal import router as db_portal_api_router
 from .routers.dev_tools import router as dev_tools_api_router
 from .routers.wf4_domain_router import router as domains_api_router
@@ -55,7 +55,7 @@ from .routers.v3.domains_csv_import_router import router as domains_csv_import_r
 from .routers.wf7_email_scanner_router import router as email_scanner_api_router
 from .routers.google_maps_api import router as google_maps_api_router
 from .routers.local_businesses import router as local_businesses_api_router
-from .routers.modernized_page_scraper import (
+from .routers.wf7_page_modernized_scraper_router import (
     router as modernized_page_scraper_api_router,
 )
 from .routers.wf5_sitemap_modernized_router import router as modernized_sitemap_api_router
