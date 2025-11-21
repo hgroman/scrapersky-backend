@@ -37,7 +37,7 @@ from src.schemas.places_staging_schemas import (
 )
 
 # We need a service or direct model access to interact with Place model
-from ..models.place import (  # Import the Place model AND the new DeepScanStatusEnum
+from ..models.wf1_place_staging import (  # Import the Place model AND the new DeepScanStatusEnum
     GcpApiDeepScanStatusEnum,
     Place,
     PlaceStatusEnum,
