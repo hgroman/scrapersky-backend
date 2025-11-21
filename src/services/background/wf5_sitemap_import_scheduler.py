@@ -22,7 +22,7 @@ async def process_pending_sitemap_imports() -> None:
     logger.info("Running scheduled job: process_pending_sitemap_imports")
 
     # Import the INSTANCE 'settings' from the module 'src.config.settings'
-    from ..config.settings import settings
+    from src.config.settings import settings
 
     service = SitemapImportService()  # Use renamed service
     try:
@@ -53,7 +53,7 @@ async def process_pending_sitemap_imports() -> None:
 def setup_sitemap_import_scheduler() -> None:
     """Adds the sitemap import processing job to the shared scheduler."""
     # Import the INSTANCE 'settings' from the module 'src.config.settings'
-    from ..config.settings import settings
+    from src.config.settings import settings
 
     job_id = "process_sitemap_imports"  # Renamed job_id
     logger.info(f"Setting up scheduler job: {job_id}")
