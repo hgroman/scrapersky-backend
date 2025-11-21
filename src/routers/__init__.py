@@ -7,11 +7,11 @@ This package contains all the FastAPI routers for the application.
 from src.config.settings import settings
 
 from .batch_page_scraper import router as batch_page_scraper_router
-from .batch_sitemap import router as batch_sitemap_router
+from .wf5_sitemap_batch_router import router as batch_sitemap_router
 from .db_portal import router as db_portal_router
 from .google_maps_api import router as google_maps_router
 from .modernized_page_scraper import router as modernized_page_scraper_router
-from .modernized_sitemap import router as modernized_sitemap_router
+from .wf5_sitemap_modernized_router import router as modernized_sitemap_router
 from .places_staging import router as places_staging_router
 from .profile import router as profile_router
 

@@ -58,10 +58,10 @@ from .routers.local_businesses import router as local_businesses_api_router
 from .routers.modernized_page_scraper import (
     router as modernized_page_scraper_api_router,
 )
-from .routers.modernized_sitemap import router as modernized_sitemap_api_router
+from .routers.wf5_sitemap_modernized_router import router as modernized_sitemap_api_router
 from .routers.places_staging import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
-from .routers.sitemap_files import router as sitemap_files_router
+from .routers.wf5_sitemap_file_router import router as sitemap_files_router
 from src.routers.wf5_sitemap_direct_submission_router import (
     router as sitemaps_direct_submission_router,
 )
