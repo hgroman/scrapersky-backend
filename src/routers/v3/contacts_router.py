@@ -17,7 +17,7 @@ from src.models.enums import (
     HubSpotSyncStatus,
 )
 from src.models.wf7_contact import Contact
-from src.schemas.contact_schemas import (
+from src.schemas.wf7_contact_schemas import (
     ContactCreate,
     ContactCurationBatchStatusUpdateRequest,
     ContactCurationBatchUpdateResponse,

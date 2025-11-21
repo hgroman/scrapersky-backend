@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.jwt_auth import get_current_user
 from src.db.session import get_db_session
-from src.schemas.contact_validation_schemas import (
+from src.schemas.wf7_contact_validation_schemas import (
     ValidateContactsRequest,
     ValidateContactsResponse,
     ValidateAllContactsRequest,

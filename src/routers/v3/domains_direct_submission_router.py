@@ -18,7 +18,7 @@ from src.models.wf4_domain import (
     SitemapAnalysisStatusEnum,
 )
 from src.models.tenant import DEFAULT_TENANT_ID
-from src.schemas.domains_direct_submission_schemas import (
+from src.schemas.wf4_domain_direct_submission_schemas import (
     DirectDomainSubmissionRequest,
     DirectDomainSubmissionResponse,
 )

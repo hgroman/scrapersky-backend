@@ -21,7 +21,7 @@ from src.models.wf4_domain import (
 )
 from src.models.tenant import DEFAULT_TENANT_ID
 from src.schemas.csv_import_schemas import CSVImportResponse, CSVRowResult
-from src.schemas.domains_direct_submission_schemas import DirectDomainSubmissionRequest
+from src.schemas.wf4_domain_direct_submission_schemas import DirectDomainSubmissionRequest
 
 router = APIRouter(prefix="/api/v3/domains", tags=["V3 - Domains CSV Import"])
 

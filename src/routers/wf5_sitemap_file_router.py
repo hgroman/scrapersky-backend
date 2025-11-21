@@ -21,7 +21,7 @@ from ..models.wf5_sitemap_file import (
     SitemapImportCurationStatusEnum,
     SitemapImportProcessStatusEnum,
 )
-from ..schemas.sitemap_file import (
+from ..schemas.wf5_sitemap_file_schemas import (
     PaginatedSitemapFileResponse,
     SitemapFileBatchUpdate,  # Assuming batch status update needed
     SitemapFileBatchUpdateResponse,

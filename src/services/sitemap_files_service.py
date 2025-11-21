@@ -27,7 +27,7 @@ from ..models.wf5_sitemap_file import (
     SitemapImportCurationStatusEnum,
     SitemapImportProcessStatusEnum,
 )
-from ..schemas.sitemap_file import PaginatedSitemapFileResponse, SitemapFileRead
+from ..schemas.wf5_sitemap_file_schemas import PaginatedSitemapFileResponse, SitemapFileRead
 
 # If get_session is needed later, import it:
 # from ..db.session import get_session

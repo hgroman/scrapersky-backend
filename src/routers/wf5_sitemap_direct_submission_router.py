@@ -24,7 +24,7 @@ from src.models.wf5_sitemap_file import (
 )
 from src.models.wf4_domain import Domain, SitemapCurationStatusEnum
 from src.models.tenant import DEFAULT_TENANT_ID
-from src.schemas.sitemaps_direct_submission_schemas import (
+from src.schemas.wf5_sitemap_direct_submission_schemas import (
     DirectSitemapSubmissionRequest,
     DirectSitemapSubmissionResponse,
 )

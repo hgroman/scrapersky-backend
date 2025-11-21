@@ -18,7 +18,7 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.future import select as future_select
 
 from src.models.wf7_contact import Contact
-from src.schemas.contact_validation_schemas import ContactFilters
+from src.schemas.wf7_contact_validation_schemas import ContactFilters
 
 logger = logging.getLogger(__name__)
 

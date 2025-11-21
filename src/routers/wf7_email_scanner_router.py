@@ -13,7 +13,7 @@ from src.models.job import Job  # Import Job model
 from src.models.tenant import DEFAULT_TENANT_ID  # <-- Add this import
 
 # Import Schemas
-from src.schemas.email_scan import EmailScanRequest  # Correct path
+from src.schemas.wf7_email_scan_schemas import EmailScanRequest  # Correct path
 from src.schemas.job import JobStatusResponse, JobSubmissionResponse  # Correct path
 
 # from ..db.sb_connection import db  # Supabase connection from sb_connection.py
