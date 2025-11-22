@@ -33,7 +33,7 @@ from ..services.batch.batch_functions import (
     create_batch,
     get_batch_status,
 )
-from ..services.sitemap.processing_service import process_domain_with_own_session
+from ..services.sitemap.wf5_processing_service import process_domain_with_own_session
 from ..session.async_session import get_background_session, get_session_dependency
 
 # Configure logger

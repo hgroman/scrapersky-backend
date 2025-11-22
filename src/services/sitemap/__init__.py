@@ -4,7 +4,7 @@ Sitemap Services Package
 This package contains services for handling sitemap scanning, processing, and domain metadata extraction.
 """
 
-from .processing_service import (
+from .wf5_processing_service import (
     JobStatusResponse,
     SitemapScrapingRequest,
     SitemapScrapingResponse,

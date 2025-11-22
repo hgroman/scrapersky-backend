@@ -105,7 +105,7 @@ class DomainToSitemapAdapterService:
             job = await job_service.create(session, job_data)
             
             # 4. Initialize job in memory (required for background processing)
-            from src.services.sitemap.processing_service import _job_statuses
+            from src.services.sitemap.wf5_processing_service import _job_statuses
             
             _job_statuses[job_id] = {
                 "status": "pending",
@@ -117,7 +117,7 @@ class DomainToSitemapAdapterService:
             
             # 5. Trigger background processing (this is what the HTTP endpoint does)
             import asyncio
-            from src.services.sitemap.processing_service import process_domain_with_own_session
+            from src.services.sitemap.wf5_processing_service import process_domain_with_own_session
             
             # Start background task without waiting for it
             asyncio.create_task(

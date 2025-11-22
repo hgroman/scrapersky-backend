@@ -40,7 +40,7 @@ from ..models.api_models import (
 
 # Import JobStatusResponse from its correct schema location
 from ..schemas.job import JobStatusResponse
-from ..services.sitemap.processing_service import sitemap_processing_service
+from ..services.sitemap.wf5_processing_service import sitemap_processing_service
 from ..session.async_session import get_session_dependency
 
 # Constants
@@ -149,7 +149,7 @@ async def scan_domain(
             )
 
             # Initialize the job in memory
-            from ..services.sitemap.processing_service import _job_statuses
+            from ..services.sitemap.wf5_processing_service import _job_statuses
 
             _job_statuses[job_id] = {
                 "status": "pending",
@@ -161,7 +161,7 @@ async def scan_domain(
 
             # Add background task to process the domain
             # The fixed version of process_domain_with_own_session properly manages transactions
-            from ..services.sitemap.processing_service import (
+            from ..services.sitemap.wf5_processing_service import (
                 process_domain_with_own_session,
             )
 

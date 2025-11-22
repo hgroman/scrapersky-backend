@@ -12,7 +12,7 @@ from src.models.wf5_sitemap_file import SitemapFile, SitemapImportProcessStatusE
 from src.scheduler_instance import scheduler  # Import shared scheduler instance
 
 # Service to be called
-from src.services.sitemap_import_service import SitemapImportService
+from src.services.wf5_sitemap_import_service import SitemapImportService
 
 logger = logging.getLogger(__name__)
 

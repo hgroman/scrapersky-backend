@@ -32,7 +32,7 @@ from ..schemas.wf5_sitemap_file_schemas import (
 )
 
 # Service and Schemas
-from ..services.sitemap_files_service import SitemapFilesService
+from ..services.wf5_sitemap_files_service import SitemapFilesService
 
 logger = logging.getLogger(__name__)
 
