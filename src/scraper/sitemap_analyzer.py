@@ -646,12 +646,10 @@ class SitemapAnalyzer:
                 )
 
                 # Extract URLs using regex for robustness - try multiple patterns
+                # BUT: Skip sitemap indexes - they MUST use XML parsing below
                 if (
-                    "sitemap" in url.lower()
-                    or has_urlset
-                    or has_sitemapindex
-                    or has_loc_tag
-                    or has_url_tag
+                    ("sitemap" in url.lower() or has_urlset or has_loc_tag or has_url_tag)
+                    and not has_sitemapindex
                 ):
                     # Try regex-based extraction for flexibility
                     logger.info(
