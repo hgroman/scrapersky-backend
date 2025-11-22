@@ -25,7 +25,7 @@ from sqlalchemy.exc import DBAPIError
 
 from src.models.wf4_domain import Domain, SitemapAnalysisStatusEnum
 from src.scraper.sitemap_analyzer import SitemapAnalyzer
-from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
+from src.services.wf4_domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
 from src.session.async_session_fixed import get_fixed_scheduler_session
 from src.scheduler_instance import scheduler
 from apscheduler.triggers.interval import IntervalTrigger
