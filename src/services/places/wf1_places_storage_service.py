@@ -13,7 +13,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...models.wf1_place_staging import Place, PlaceStatusEnum
-from .places_service import PlacesService
+from .wf1_places_service import PlacesService
 
 logger = logging.getLogger(__name__)
 

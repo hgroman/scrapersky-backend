@@ -31,9 +31,9 @@ from ..auth.jwt_auth import DEFAULT_TENANT_ID, get_current_user
 # )
 from ..config.settings import settings
 from ..models import PlaceSearch
-from ..services.places.places_search_service import PlacesSearchService
-from ..services.places.places_service import PlacesService
-from ..services.places.places_storage_service import PlacesStorageService
+from ..services.places.wf1_places_search_service import PlacesSearchService
+from ..services.places.wf1_places_service import PlacesService
+from ..services.places.wf1_places_storage_service import PlacesStorageService
 from ..session.async_session import get_session, get_session_dependency
 
 # from ..constants.rbac import ROLE_HIERARCHY

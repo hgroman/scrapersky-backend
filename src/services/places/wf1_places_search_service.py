@@ -236,7 +236,7 @@ class PlacesSearchService:
         from sqlalchemy import update
 
         from ...models.wf1_place_search import PlaceSearch
-        from .places_storage_service import PlacesStorageService
+        from .wf1_places_storage_service import PlacesStorageService
 
         try:
             # Update the search record to mark it as processing

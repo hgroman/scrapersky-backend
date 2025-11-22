@@ -19,7 +19,7 @@ from src.db.session import get_session  # Use absolute path
 from src.models.wf3_local_business import LocalBusiness  # Use absolute path
 
 # Import base service, session factory, and models
-from .places_service import PlacesService
+from .wf1_places_service import PlacesService
 
 # Define logger early
 logger = logging.getLogger(__name__)

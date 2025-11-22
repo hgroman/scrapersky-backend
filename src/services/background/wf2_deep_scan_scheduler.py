@@ -25,7 +25,7 @@ from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
 from src.models.wf1_place_staging import GcpApiDeepScanStatusEnum, Place
 from src.scheduler_instance import scheduler
-from src.services.places.places_deep_service import PlacesDeepService
+from src.services.places.wf1_places_deep_service import PlacesDeepService
 
 logger = logging.getLogger(__name__)
 
