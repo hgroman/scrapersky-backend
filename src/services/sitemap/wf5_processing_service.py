@@ -580,6 +580,11 @@ async def process_domain_with_own_session(
                     async with session.begin():
                         sitemap_url = sitemap.get("url", "")
                         sitemap_type = sitemap.get("sitemap_type", "standard")
+                        # CRITICAL: Convert enum to string if needed (handles SitemapType.INDEX -> "index")
+                        if hasattr(sitemap_type, 'value'):
+                            sitemap_type = sitemap_type.value
+                        elif sitemap_type is None:
+                            sitemap_type = "standard"
                         discovery_method = sitemap.get("discovery_method", "unknown")
                         url_count = sitemap.get("url_count", 0)
                         sitemap_size = sitemap.get("size_bytes", 0)
