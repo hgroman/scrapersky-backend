@@ -28,7 +28,7 @@ from ..models.api_models import (
     PlaceStagingRecord,
     PlaceStagingStatusEnum,
 )
-from src.schemas.places_staging_schemas import (
+from src.schemas.wf1_place_staging_schemas import (
     PaginatedPlaceStagingResponse,
     QueueDeepScanRequest,
     PlaceBatchStatusUpdateRequest,

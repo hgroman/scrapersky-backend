@@ -53,13 +53,13 @@ from .routers.v3.domains_direct_submission_router import (
 )
 from .routers.v3.domains_csv_import_router import router as domains_csv_import_router
 from .routers.wf7_email_scanner_router import router as email_scanner_api_router
-from .routers.google_maps_api import router as google_maps_api_router
+from .routers.wf1_google_maps_api_router import router as google_maps_api_router
 from .routers.wf3_local_business_router import router as local_businesses_api_router
 from .routers.wf7_page_modernized_scraper_router import (
     router as modernized_page_scraper_api_router,
 )
 from .routers.wf5_sitemap_modernized_router import router as modernized_sitemap_api_router
-from .routers.places_staging import router as places_staging_api_router
+from .routers.wf1_place_staging_router import router as places_staging_api_router
 from .routers.profile import router as profile_api_router
 from .routers.wf5_sitemap_file_router import router as sitemap_files_router
 from src.routers.wf5_sitemap_direct_submission_router import (

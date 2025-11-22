@@ -38,7 +38,7 @@ from .job import Job
 from .wf3_local_business import LocalBusiness
 from .wf7_page import Page
 from .wf1_place_staging import Place
-from .place_search import PlaceSearch
+from .wf1_place_search import PlaceSearch
 
 # Import sitemap models
 from .wf5_sitemap_file import SitemapFile, SitemapUrl

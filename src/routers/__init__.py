@@ -9,10 +9,10 @@ from src.config.settings import settings
 from .wf7_page_batch_scraper_router import router as batch_page_scraper_router
 from .wf5_sitemap_batch_router import router as batch_sitemap_router
 from .db_portal import router as db_portal_router
-from .google_maps_api import router as google_maps_router
+from .wf1_google_maps_api_router import router as google_maps_router
 from .wf7_page_modernized_scraper_router import router as modernized_page_scraper_router
 from .wf5_sitemap_modernized_router import router as modernized_sitemap_router
-from .places_staging import router as places_staging_router
+from .wf1_place_staging_router import router as places_staging_router
 from .profile import router as profile_router
 
 # Export all routers

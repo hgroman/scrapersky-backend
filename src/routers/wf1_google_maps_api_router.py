@@ -207,7 +207,7 @@ async def search_places(
                             # Update status to failed in database
                             from sqlalchemy import update
 
-                            from ..models.place_search import PlaceSearch
+                            from ..models.wf1_place_search import PlaceSearch
 
                             stmt = (
                                 update(PlaceSearch)
@@ -586,7 +586,7 @@ async def get_job_results(
         # Get search job details first to include in response
         from sqlalchemy import select
 
-        from ..models.place_search import PlaceSearch
+        from ..models.wf1_place_search import PlaceSearch
 
         # Get job details
         stmt = select(PlaceSearch).where(PlaceSearch.id == uuid.UUID(job_id))
@@ -715,7 +715,7 @@ async def get_search_history(
     try:
         from sqlalchemy import desc, select
 
-        from ..models.place_search import PlaceSearch
+        from ..models.wf1_place_search import PlaceSearch
 
         # Build base query
         query = (

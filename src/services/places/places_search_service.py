@@ -235,7 +235,7 @@ class PlacesSearchService:
         """
         from sqlalchemy import update
 
-        from ...models.place_search import PlaceSearch
+        from ...models.wf1_place_search import PlaceSearch
         from .places_storage_service import PlacesStorageService
 
         try:
@@ -306,7 +306,7 @@ class PlacesSearchService:
         """
         from sqlalchemy import select
 
-        from ...models.place_search import PlaceSearch
+        from ...models.wf1_place_search import PlaceSearch
 
         try:
             stmt = select(PlaceSearch).where(PlaceSearch.id == job_id)
