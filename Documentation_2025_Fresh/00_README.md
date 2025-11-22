@@ -11,7 +11,16 @@ If a document is here, it is **true**.
 If a document is in the old `Documentation/` folder, it is **suspect** until proven otherwise.
 
 ## 🚨 FOR AI AGENTS: START HERE
-**[Core/AI_CHEAT_SHEET.md](Core/AI_CHEAT_SHEET.md)** - The "Iron Mandates" and Rules of Engagement. Read this before writing a single line of code.
+
+### Tier 1: The Iron Rules (Read First)
+*   **[Core/AI_CHEAT_SHEET.md](Core/AI_CHEAT_SHEET.md)** - The "Iron Mandates". Non-negotiable rules.
+
+### Tier 2: The Territory (The Map)
+*   **[Core/DATA_SCHEMA.md](Core/DATA_SCHEMA.md)** - The Verified Database Schema.
+*   **[Architecture/MASTER_APPLICATION_OVERVIEW.md](Architecture/MASTER_APPLICATION_OVERVIEW.md)** - The System Architecture.
+
+### Tier 3: The Building Blocks (The Library)
+*   **[Core/COMPONENT_LIBRARY.md](Core/COMPONENT_LIBRARY.md)** - **MANDATORY TEMPLATES**. Copy/Paste from here. Do not invent new patterns.
 
 ## Directory Structure
 
