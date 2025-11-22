@@ -25,6 +25,7 @@ from sqlalchemy.exc import DBAPIError
 
 from src.models.wf4_domain import Domain, SitemapAnalysisStatusEnum
 from src.scraper.sitemap_analyzer import SitemapAnalyzer
+from src.services.domain_to_sitemap_adapter_service import DomainToSitemapAdapterService
 from src.session.async_session_fixed import get_fixed_scheduler_session
 from src.scheduler_instance import scheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -129,45 +130,33 @@ async def process_pending_domain_sitemap_submissions_fixed():
                     continue
 
                 try:
-                    # PERFORM REAL SITEMAP ANALYSIS
-                    logger.info(f"🔍 Analyzing sitemaps for: {domain_url}")
-                    sitemap_results = await sitemap_analyzer.analyze_domain_sitemaps(
-                        str(domain_url)
+                    # CRITICAL: Use adapter service to create sitemap job
+                    # This triggers the actual sitemap discovery AND database insertion
+                    logger.info(f"🔍 Submitting domain to sitemap adapter: {domain_url}")
+
+                    adapter_service = DomainToSitemapAdapterService()
+                    submitted_ok = await adapter_service.submit_domain_to_legacy_sitemap(
+                        domain_id=domain.id,
+                        session=session,
                     )
 
-                    if sitemap_results and not sitemap_results.get("error"):
-                        # Success!
-                        sitemaps_found = len(sitemap_results.get("sitemaps", []))
-                        total_urls_found = sitemap_results.get("total_urls", 0)
+                    # Check adapter result (status is set IN MEMORY by adapter)
+                    current_status = getattr(domain, "sitemap_analysis_status", None)
 
-                        setattr(
-                            domain,
-                            "sitemap_analysis_status",
-                            SitemapAnalysisStatusEnum.submitted.value,
-                        )
-                        setattr(domain, "sitemap_analysis_error", None)
-
-                        logger.info(
-                            f"✅ SUCCESS: Found {sitemaps_found} sitemaps with {total_urls_found} URLs for {domain_url}"
-                        )
+                    if current_status == SitemapAnalysisStatusEnum.submitted:
+                        logger.info(f"✅ SUCCESS: Submitted {domain_url} for sitemap processing")
                         domains_successful += 1
-
+                    elif current_status == SitemapAnalysisStatusEnum.failed:
+                        error_msg = getattr(domain, "sitemap_analysis_error", "Unknown error")
+                        logger.error(f"❌ Adapter failed for {domain_url}: {error_msg}")
+                        domains_failed += 1
                     else:
-                        # Analysis failed
-                        error_msg = (
-                            sitemap_results.get("error", "Sitemap analysis failed")
-                            if sitemap_results
-                            else "No results returned"
-                        )
+                        # Adapter didn't set status - force failed
                         logger.error(
-                            f"❌ Analysis failed for {domain_url}: {error_msg}"
+                            f"❌ Adapter failed to set status for {domain_url}! Current: {current_status}"
                         )
-                        setattr(
-                            domain,
-                            "sitemap_analysis_status",
-                            SitemapAnalysisStatusEnum.failed.value,
-                        )
-                        setattr(domain, "sitemap_analysis_error", error_msg[:1024])
+                        setattr(domain, "sitemap_analysis_status", SitemapAnalysisStatusEnum.failed.value)
+                        setattr(domain, "sitemap_analysis_error", "Adapter did not set final status")
                         domains_failed += 1
 
                 except Exception as analysis_error:
