@@ -26,7 +26,7 @@ from src.schemas.wf7_contact_validation_schemas import (
     ValidationStatusResponse,
     ValidationSummaryResponse,
 )
-from src.services.email_validation.validation_api_service import ValidationAPIService
+from src.services.email_validation.wf7_validation_api_service import ValidationAPIService
 
 logger = logging.getLogger(__name__)
 

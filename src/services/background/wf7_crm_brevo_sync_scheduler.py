@@ -20,7 +20,7 @@ from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
 from src.models.wf7_contact import Contact
 from src.models.enums import CRMProcessingStatus
-from ..crm.brevo_sync_service import BrevoSyncService
+from ..crm.wf7_brevo_sync_service import BrevoSyncService
 
 logger = logging.getLogger(__name__)
 

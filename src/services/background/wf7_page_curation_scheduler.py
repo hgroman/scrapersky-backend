@@ -4,7 +4,7 @@ from src.common.curation_sdk.scheduler_loop import run_job_loop
 from ...config.settings import settings
 from ...models.wf7_page import Page
 from ...models.enums import PageProcessingStatus
-from ..WF7_V2_L4_1of2_PageCurationService import PageCurationService
+from ..wf7_page_curation_service import PageCurationService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

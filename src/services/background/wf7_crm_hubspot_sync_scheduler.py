@@ -21,7 +21,7 @@ from src.config.settings import settings
 from src.models.wf7_contact import Contact
 from src.models.enums import CRMProcessingStatus
 
-from ..crm.hubspot_sync_service import HubSpotSyncService
+from ..crm.wf7_hubspot_sync_service import HubSpotSyncService
 
 logger = logging.getLogger(__name__)
 

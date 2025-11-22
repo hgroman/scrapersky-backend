@@ -20,7 +20,7 @@ from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
 from src.models.wf7_contact import Contact
 from src.models.enums import CRMProcessingStatus
-from ..crm.n8n_sync_service import N8nSyncService
+from ..crm.wf7_n8n_sync_service import N8nSyncService
 
 logger = logging.getLogger(__name__)
 
