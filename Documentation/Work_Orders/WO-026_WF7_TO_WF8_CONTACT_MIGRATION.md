@@ -22,9 +22,23 @@ This aligns with the existing documentation in `Docs/Docs_49_Contacts_CRUD/` whi
 
 ---
 
-## 2. Scope of Changes
+## 2. MANDATORY: Workflow Header Comment
 
-### 2.1 Files to REMAIN in WF7 (Page Curation) - NO CHANGES
+**CRITICAL:** Every renamed `wf8_*.py` file MUST have this comment block added at the top of the file (after any existing module docstring):
+
+```python
+# WF8 – The Connector
+# Responsibility: Contact validation, enrichment, and CRM/webhook sync
+# DO NOT put page-scraping logic here — that belongs in WF7
+```
+
+This comment prevents future workflow contamination by making the boundary explicit to any developer who opens the file.
+
+---
+
+## 3. Scope of Changes
+
+### 3.1 Files to REMAIN in WF7 (Page Curation) - NO CHANGES
 
 | Layer | File | Purpose |
 |-------|------|---------|

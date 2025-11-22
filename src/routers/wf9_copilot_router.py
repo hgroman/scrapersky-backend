@@ -13,6 +13,10 @@ ARCHITECTURE NOTE: This router uses AsyncSession with the Supavisor connection
 pooler, consistent with all other routers in the system.
 """
 
+# WF9 – The Librarian
+# Responsibility: Knowledge management, semantic search, AI-assisted documentation
+# DO NOT put scraping or contact logic here — those belong in WF7/WF8
+
 import json
 import logging
 import os
