@@ -3,6 +3,7 @@
 **Status:** Pending Research
 **Priority:** Medium
 **Created:** 2025-11-21
+**Updated:** 2025-11-21 (Added Router Cleanup)
 
 ## Context
 The "WF1-WF7 Naming Standardization" project (Nov 2025) successfully renamed core models, schedulers, and routers. However, during verification, we discovered several files that were not included in the original plan but should be standardized to match the new convention.
@@ -41,10 +42,24 @@ These files appear to be Pydantic schemas but are located in the SQLAlchemy mode
 *   `src/models/sitemap_file.py` (Confirmed Pydantic schema, imports from `wf5_sitemap_file.py`)
 *   *Check for others...*
 
-### 3. Ghost Files (To Delete)
+### 3. Legacy Routers (In `src/routers/v2` and `src/routers/v3`)
+These routers are active but should be moved to `src/routers/` with `wfX_` prefix.
+
+*   **WF4 (Domains):**
+    *   `src/routers/v3/domains_direct_submission_router.py` -> `src/routers/wf4_domain_direct_submission_router.py`
+    *   `src/routers/v3/domains_csv_import_router.py` -> `src/routers/wf4_domain_csv_import_router.py`
+*   **WF7 (Pages/Contacts):**
+    *   `src/routers/v2/WF7_V2_L3_1of1_PagesRouter.py` -> `src/routers/wf7_page_v2_router.py`
+    *   `src/routers/v3/WF7_V3_L3_1of1_PagesRouter.py` -> `src/routers/wf7_page_v3_router.py`
+    *   `src/routers/v3/contacts_router.py` -> `src/routers/wf7_contact_router.py`
+    *   `src/routers/v3/contacts_validation_router.py` -> `src/routers/wf7_contact_validation_router.py`
+    *   `src/routers/v3/n8n_webhook_router.py` -> `src/routers/wf7_n8n_webhook_router.py`
+
+### 4. Ghost Files (To Delete)
 Files that were supposed to be removed/renamed but still exist.
 
 *   `src/services/domain_sitemap_submission_scheduler.py` (Old version, replaced by `wf4_sitemap_discovery_scheduler.py`)
+*   `src/routers/v2/sitemap_files.py` (Appears unused, check imports)
 
 ## Action Plan for Researcher
 1.  **Verify Usage:** Check where each candidate file is imported.
