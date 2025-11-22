@@ -25,7 +25,7 @@ from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
 from src.models.wf3_local_business import DomainExtractionStatusEnum, LocalBusiness
 from src.scheduler_instance import scheduler
-from src.services.business_to_domain_service import LocalBusinessToDomainService
+from src.services.wf3_business_to_domain_service import LocalBusinessToDomainService
 
 logger = logging.getLogger(__name__)
 
