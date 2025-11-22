@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import and_
 from src.models.wf7_page import Page
-from src.models.wf7_contact import Contact
+from src.models.wf8_contact import Contact
 from src.models.enums import PageProcessingStatus
 from src.utils.simple_scraper import scrape_page_simple_async
 import logging

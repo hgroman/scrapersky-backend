@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -16,8 +20,8 @@ from src.models.enums import (
     HubSpotProcessingStatus,
     HubSpotSyncStatus,
 )
-from src.models.wf7_contact import Contact
-from src.schemas.wf7_contact_schemas import (
+from src.models.wf8_contact import Contact
+from src.schemas.wf8_contact_schemas import (
     ContactCreate,
     ContactCurationBatchStatusUpdateRequest,
     ContactCurationBatchUpdateResponse,

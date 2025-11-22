@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.settings import Settings
 from ..models import TaskStatus  # Import TaskStatus enum
-from ..models.wf7_contact import Contact
+from ..models.wf8_contact import Contact
 from ..models.enums import ContactEmailTypeEnum
 from ..models.wf4_domain import Domain
 from ..models.job import Job  # Import Job model

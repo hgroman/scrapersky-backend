@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 WO-021: n8n Enrichment Service
 
@@ -13,7 +17,7 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.models.wf7_contact import Contact
+from src.models.wf8_contact import Contact
 from src.schemas.n8n_enrichment_schemas import (
     EnrichmentCompleteRequest,
     EnrichedData,

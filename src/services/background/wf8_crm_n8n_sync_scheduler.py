@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 n8n Webhook Sync Scheduler (WO-020)
 
@@ -18,9 +22,9 @@ from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.wf7_contact import Contact
+from src.models.wf8_contact import Contact
 from src.models.enums import CRMProcessingStatus
-from ..crm.wf7_n8n_sync_service import N8nSyncService
+from ..crm.wf8_n8n_sync_service import N8nSyncService
 
 logger = logging.getLogger(__name__)
 

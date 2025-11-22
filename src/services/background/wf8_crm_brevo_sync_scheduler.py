@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 Brevo Contact Sync Scheduler (WO-015 Phase 2 Step 2)
 
@@ -18,9 +22,9 @@ from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.wf7_contact import Contact
+from src.models.wf8_contact import Contact
 from src.models.enums import CRMProcessingStatus
-from ..crm.wf7_brevo_sync_service import BrevoSyncService
+from ..crm.wf8_brevo_sync_service import BrevoSyncService
 
 logger = logging.getLogger(__name__)
 

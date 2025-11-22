@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 from sqlalchemy import Column, String, ForeignKey, Text, Boolean, Enum, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, JSONB
 from sqlalchemy.orm import relationship

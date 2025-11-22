@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 WO-021: n8n Enrichment Return Pipeline - Webhook Router
 
@@ -98,7 +102,7 @@ from src.schemas.n8n_enrichment_schemas import (
     EnrichmentCompleteResponse,
     EnrichmentErrorResponse,
 )
-from src.services.crm.wf7_n8n_enrichment_service import N8nEnrichmentService
+from src.services.crm.wf8_n8n_enrichment_service import N8nEnrichmentService
 
 logger = logging.getLogger(__name__)
 

@@ -30,10 +30,10 @@ from src.services.background.wf5_sitemap_import_scheduler import setup_sitemap_i
 from src.services.background.wf7_page_curation_scheduler import (
     setup_page_curation_scheduler,
 )
-from src.services.background.wf7_crm_brevo_sync_scheduler import setup_brevo_sync_scheduler
-from src.services.background.wf7_crm_hubspot_sync_scheduler import setup_hubspot_sync_scheduler
-from src.services.background.wf7_crm_n8n_sync_scheduler import setup_n8n_sync_scheduler
-from src.services.background.wf7_crm_debounce_scheduler import (
+from src.services.background.wf8_crm_brevo_sync_scheduler import setup_brevo_sync_scheduler
+from src.services.background.wf8_crm_hubspot_sync_scheduler import setup_hubspot_sync_scheduler
+from src.services.background.wf8_crm_n8n_sync_scheduler import setup_n8n_sync_scheduler
+from src.services.background.wf8_crm_debounce_scheduler import (
     setup_debounce_validation_scheduler,
 )
 from src.routers.wf7_pages_router import router as wf7_pages_router
@@ -51,7 +51,7 @@ from .routers.wf3_domains_direct_submission_router import (
     router as domains_direct_submission_router,
 )
 from .routers.wf3_domains_csv_import_router import router as domains_csv_import_router
-from .routers.wf7_email_scanner_router import router as email_scanner_api_router
+from .routers.wf8_email_scanner_router import router as email_scanner_api_router
 from .routers.wf1_google_maps_api_router import router as google_maps_api_router
 from .routers.wf3_local_business_router import router as local_businesses_api_router
 from .routers.wf7_page_modernized_scraper_router import (
@@ -65,11 +65,11 @@ from src.routers.wf5_sitemap_direct_submission_router import (
     router as sitemaps_direct_submission_router,
 )
 from src.routers.wf5_sitemap_csv_import_router import router as sitemaps_csv_import_router
-from .routers.wf7_contacts_router import router as contacts_router
-from .routers.wf7_contacts_validation_router import (
+from .routers.wf8_contacts_router import router as contacts_router
+from .routers.wf8_contacts_validation_router import (
     router as contacts_validation_router,
 )
-from .routers.wf7_n8n_webhook_router import router as n8n_webhook_router  # WO-021
+from .routers.wf8_n8n_webhook_router import router as n8n_webhook_router  # WO-021
 from .routers.wf9_copilot_router import router as wf9_copilot_router
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler

@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 DeBounce Email Validation Scheduler (WO-017 Phase 2)
 
@@ -18,9 +22,9 @@ from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.wf7_contact import Contact
+from src.models.wf8_contact import Contact
 from src.models.enums import CRMProcessingStatus
-from ..email_validation.wf7_debounce_service import DeBounceValidationService
+from ..email_validation.wf8_debounce_service import DeBounceValidationService
 
 logger = logging.getLogger(__name__)
 

@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 import logging
 import uuid
 from typing import Any, Dict, Optional
@@ -13,7 +17,7 @@ from src.models.job import Job  # Import Job model
 from src.models.tenant import DEFAULT_TENANT_ID  # <-- Add this import
 
 # Import Schemas
-from src.schemas.wf7_email_scan_schemas import EmailScanRequest  # Correct path
+from src.schemas.wf8_email_scan_schemas import EmailScanRequest  # Correct path
 from src.schemas.job import JobStatusResponse, JobSubmissionResponse  # Correct path
 
 # from ..db.sb_connection import db  # Supabase connection from sb_connection.py

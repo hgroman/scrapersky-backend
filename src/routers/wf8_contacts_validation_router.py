@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 Contact Validation Router (WO-018)
 
@@ -18,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.jwt_auth import get_current_user
 from src.db.session import get_db_session
-from src.schemas.wf7_contact_validation_schemas import (
+from src.schemas.wf8_contact_validation_schemas import (
     ValidateContactsRequest,
     ValidateContactsResponse,
     ValidateAllContactsRequest,
@@ -26,7 +30,7 @@ from src.schemas.wf7_contact_validation_schemas import (
     ValidationStatusResponse,
     ValidationSummaryResponse,
 )
-from src.services.email_validation.wf7_validation_api_service import ValidationAPIService
+from src.services.email_validation.wf8_validation_api_service import ValidationAPIService
 
 logger = logging.getLogger(__name__)
 

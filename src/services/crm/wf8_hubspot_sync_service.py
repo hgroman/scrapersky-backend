@@ -1,3 +1,7 @@
+# WF8 – The Connector
+# Purpose: Contact validation, enrichment, and delivery to external systems
+# NEVER put page-scraping logic here – that belongs in WF7
+
 """
 WO-016: HubSpot CRM Integration Service
 
@@ -109,7 +113,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
-from src.models.wf7_contact import Contact
+from src.models.wf8_contact import Contact
 from src.models.enums import CRMProcessingStatus, CRMSyncStatus
 
 logger = logging.getLogger(__name__)
