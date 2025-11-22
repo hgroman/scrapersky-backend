@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.session import get_session  # Use absolute path
 
 # Import only Job model, JobStatus is a string literal
-from src.models.wf3_local_business import LocalBusiness  # Use absolute path
+from src.models.wf3_local_business import LocalBusiness, DomainExtractionStatusEnum  # Use absolute path
 
 # Import base service, session factory, and models
 from .wf1_places_service import PlacesService
@@ -228,6 +228,10 @@ class PlacesDeepService(PlacesService):
                 return None
             mapped_data["place_id"] = place_id  # Ensure place_id is included for upsert
             mapped_data["tenant_id"] = tenant_id  # <<< ADD TENANT ID TO DATA >>>
+            # CRITICAL: Queue for WF3 domain extraction (dual-status pattern)
+            # When WF2 creates LocalBusiness, set domain_extraction_status='Queued'
+            # so WF3 scheduler picks it up to create Domain records
+            mapped_data["domain_extraction_status"] = DomainExtractionStatusEnum.Queued
             # logger.warning(f"Mapping for {place_id} not yet implemented.") # Placeholder # Remove placeholder comment
             # mapped_data = {'place_id': place_id} # Remove this placeholder
 
