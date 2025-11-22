@@ -36,8 +36,7 @@ from src.services.background.wf7_crm_n8n_sync_scheduler import setup_n8n_sync_sc
 from src.services.background.wf7_crm_debounce_scheduler import (
     setup_debounce_validation_scheduler,
 )
-from src.routers.v2.WF7_V2_L3_1of1_PagesRouter import router as v2_pages_router
-from src.routers.v3.WF7_V3_L3_1of1_PagesRouter import router as v3_pages_router
+from src.routers.wf7_pages_router import router as wf7_pages_router
 from src.routers.wf7_page_direct_submission_router import (
     router as pages_direct_submission_router,
 )
@@ -48,10 +47,10 @@ from .routers.wf5_sitemap_batch_router import router as batch_sitemap_api_router
 from .routers.db_portal import router as db_portal_api_router
 from .routers.dev_tools import router as dev_tools_api_router
 from .routers.wf4_domain_router import router as domains_api_router
-from .routers.v3.domains_direct_submission_router import (
+from .routers.wf3_domains_direct_submission_router import (
     router as domains_direct_submission_router,
 )
-from .routers.v3.domains_csv_import_router import router as domains_csv_import_router
+from .routers.wf3_domains_csv_import_router import router as domains_csv_import_router
 from .routers.wf7_email_scanner_router import router as email_scanner_api_router
 from .routers.wf1_google_maps_api_router import router as google_maps_api_router
 from .routers.wf3_local_business_router import router as local_businesses_api_router
@@ -66,11 +65,11 @@ from src.routers.wf5_sitemap_direct_submission_router import (
     router as sitemaps_direct_submission_router,
 )
 from src.routers.wf5_sitemap_csv_import_router import router as sitemaps_csv_import_router
-from .routers.v3.contacts_router import router as contacts_router
-from .routers.v3.contacts_validation_router import (
+from .routers.wf7_contacts_router import router as contacts_router
+from .routers.wf7_contacts_validation_router import (
     router as contacts_validation_router,
 )
-from .routers.v3.n8n_webhook_router import router as n8n_webhook_router  # WO-021
+from .routers.wf7_n8n_webhook_router import router as n8n_webhook_router  # WO-021
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
@@ -334,14 +333,13 @@ logger.info("Including API routers...")
 # --- END IMPORTANT ROUTER PREFIX CONVENTION --- #
 
 # Include all routers
-app.include_router(v2_pages_router)
-app.include_router(v3_pages_router)  # V3 compliant version
+
+app.include_router(wf7_pages_router)
 app.include_router(pages_direct_submission_router)
 app.include_router(pages_csv_import_router)
 app.include_router(google_maps_api_router)
 app.include_router(modernized_sitemap_api_router)
-app.include_router(sitemaps_direct_submission_router)
-app.include_router(sitemaps_csv_import_router)
+
 app.include_router(
     batch_page_scraper_api_router, prefix="/api/v3", tags=["Batch Page Scraper"]
 )
@@ -355,8 +353,8 @@ app.include_router(batch_sitemap_api_router, prefix="/api/v3", tags=["Batch Site
 app.include_router(places_staging_api_router, prefix="/api/v3")
 app.include_router(local_businesses_api_router)
 app.include_router(domains_api_router, tags=["Domains"])
-app.include_router(domains_direct_submission_router)
-app.include_router(domains_csv_import_router)
+app.include_router(sitemaps_direct_submission_router)
+app.include_router(sitemaps_csv_import_router)
 app.include_router(sitemap_files_router)
 app.include_router(contacts_router)
 app.include_router(contacts_validation_router)  # WO-018: Email validation endpoints
@@ -371,7 +369,8 @@ static_dir = os.path.join(
 )
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-
+app.include_router(domains_direct_submission_router)
+app.include_router(domains_csv_import_router)
 # Root routes
 @app.get("/")
 async def root():

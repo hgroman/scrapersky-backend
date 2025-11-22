@@ -21,6 +21,7 @@ WF7 ran, hit the page, but **failed to extract the contact** that is visibly pre
 
 ### Exact Failing Record (as of 2025-11-22 ~08:44 UTC)
 ```
+Page ID:           9e2ba34b-9aa6-4d98-9159-edc14948da41
 URL:               http://www.sfwheels.com/contact.php
 PageCurationStatus: Selected
 PageProcessingStatus: Error
