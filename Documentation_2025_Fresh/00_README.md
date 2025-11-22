@@ -10,6 +10,9 @@ This directory contains **only** documentation that has been verified against th
 If a document is here, it is **true**.
 If a document is in the old `Documentation/` folder, it is **suspect** until proven otherwise.
 
+## 🚨 FOR AI AGENTS: START HERE
+**[Core/AI_CHEAT_SHEET.md](Core/AI_CHEAT_SHEET.md)** - The "Iron Mandates" and Rules of Engagement. Read this before writing a single line of code.
+
 ## Directory Structure
 
 *   **`00_STATE_OF_THE_NATION.md`**: The high-level executive summary of the project status.
