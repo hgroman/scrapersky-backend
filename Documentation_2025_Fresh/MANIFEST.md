@@ -1,75 +1,80 @@
-# Documentation Manifest (The Code Truth)
-
+# Codebase Manifest
 **Generated:** 2025-11-22
-**Purpose:** This document lists the *actual* files present in the codebase at the time of the "Great Cleanup". Any documentation that references files NOT on this list is considered "Stale" or "Fiction".
+**Status:** VERIFIED TRUTH
 
-## 1. Active Routers (The API Surface)
-*Verified `src/routers/` contents:*
+This document lists every active file in the `src/` directory. If a file is NOT on this list, it is either:
+1.  **Dead Code** (Delete it)
+2.  **New & Unverified** (Audit it)
 
-*   `copilot.py`
-*   `db_portal.py`
-*   `dev_tools.py`
-*   `profile.py`
-*   `vector_db_ui.py`
-*   `wf1_google_maps_api_router.py`
-*   `wf1_place_staging_router.py`
-*   `wf3_domains_csv_import_router.py`
-*   `wf3_domains_direct_submission_router.py`
-*   `wf3_local_business_router.py`
-*   `wf4_domain_router.py`
-*   `wf5_sitemap_batch_router.py`
-*   `wf5_sitemap_csv_import_router.py`
-*   `wf5_sitemap_direct_submission_router.py`
-*   `wf5_sitemap_file_router.py`
-*   `wf5_sitemap_modernized_router.py`
-*   `wf7_contacts_router.py`
-*   `wf7_contacts_validation_router.py`
-*   `wf7_email_scanner_router.py`
-*   `wf7_n8n_webhook_router.py`
-*   `wf7_page_batch_scraper_router.py`
-*   `wf7_page_csv_import_router.py`
-*   `wf7_page_direct_submission_router.py`
-*   `wf7_page_modernized_scraper_router.py`
-*   `wf7_pages_router.py`
+## The Source of Truth (`src/`)
 
-## 2. Active Services (The Business Logic)
-*Verified `src/services/` contents:*
+### Auth
+- `src/auth/jwt_auth.py`: JWT authentication logic
 
-### Background Schedulers
-*   `wf2_deep_scan_scheduler.py`
-*   `wf3_domain_extraction_scheduler.py`
-*   `wf4_domain_monitor_scheduler.py`
-*   `wf4_sitemap_discovery_scheduler.py`
-*   `wf5_sitemap_import_scheduler.py`
-*   `wf7_crm_brevo_sync_scheduler.py`
-*   `wf7_crm_debounce_scheduler.py`
-*   `wf7_crm_hubspot_sync_scheduler.py`
-*   `wf7_crm_n8n_sync_scheduler.py`
-*   `wf7_page_curation_scheduler.py`
+### Common
+- `src/common/crud_base.py`: Universal CRUD base class (Tier 3)
+- `src/common/curation_sdk/scheduler_loop.py`: The "Brain" of background processing
+- `src/common/sitemap_parser.py`: XML sitemap parsing logic
 
-### Core Services
-*   `places/wf1_places_search_service.py`
-*   `places/wf1_places_service.py`
-*   `sitemap/wf5_sitemap_service.py`
-*   `page_scraper/wf7_processing_service.py`
-*   `crm/wf7_brevo_sync_service.py`
-*   `crm/wf7_hubspot_sync_service.py`
-*   `crm/wf7_n8n_sync_service.py`
-*   `email_validation/wf7_debounce_service.py`
+### Config
+- `src/config/settings.py`: Environment variables and configuration
+- `src/config/logging_config.py`: Centralized logging setup
+- `src/config/runtime_tracer.py`: Debugging tool
 
-## 3. Active Models (The Data Structure)
-*Verified `src/models/` contents:*
+### Core
+- `src/core/exceptions.py`: Custom exception classes
+- `src/core/response.py`: Standardized API response wrappers
 
-*   `wf1_place_search.py`
-*   `wf1_place_staging.py`
-*   `wf3_local_business.py`
-*   `wf4_domain.py`
-*   `wf5_sitemap_file.py`
-*   `wf7_contact.py`
-*   `wf7_page.py`
-*   `tenant.py` (CRITICAL)
-*   `enums.py`
+### Database
+- `src/db/engine.py`: SQLAlchemy async engine configuration (Supavisor settings)
+- `src/db/session.py`: Session management
+- `src/db/sitemap_handler.py`: Database-specific sitemap operations
+
+### Models (The Schema Truth)
+- `src/models/base.py`: SQLAlchemy Base and Mixins
+- `src/models/enums.py`: **Centralized Enums (Tier 1 Rule)**
+- `src/models/job.py`: Job tracking model
+- `src/models/wf1_place_search.py`: Google Maps API results
+- `src/models/wf1_place_staging.py`: Staging area for places
+- `src/models/wf3_local_business.py`: Local Business entity
+- `src/models/wf4_domain.py`: Domain entity
+- `src/models/wf5_sitemap_file.py`: Sitemap file entity
+- `src/models/wf7_page.py`: Page entity (Scraped content)
+- `src/models/wf7_contact.py`: Contact entity (Extracted emails)
+
+### Routers (The API Surface)
+- `src/routers/wf1_google_maps_api_router.py`
+- `src/routers/wf1_place_staging_router.py`
+- `src/routers/wf3_local_business_router.py`
+- `src/routers/wf4_domain_router.py`
+- `src/routers/wf5_sitemap_file_router.py`
+- `src/routers/wf5_sitemap_modernized_router.py`
+- `src/routers/wf5_sitemap_batch_router.py`
+- `src/routers/wf7_pages_router.py`
+- `src/routers/wf7_page_modernized_scraper_router.py`
+- `src/routers/wf7_page_batch_scraper_router.py`
+- `src/routers/wf7_contacts_router.py`
+- `src/routers/wf9_copilot_router.py`
+
+### Services (The Business Logic)
+- `src/services/wf3_business_to_domain_service.py`: Logic for extracting domains from businesses
+- `src/services/wf4_domain_to_sitemap_adapter_service.py`: Logic for finding sitemaps
+- `src/services/wf5_sitemap_import_service.py`: Logic for importing pages from sitemaps
+- `src/services/wf7_page_curation_service.py`: Logic for scraping pages
+- `src/services/crm/wf7_brevo_sync_service.py`: Brevo integration
+- `src/services/crm/wf7_hubspot_sync_service.py`: HubSpot integration
+
+### Schedulers (The Heartbeat)
+- `src/services/background/wf3_domain_extraction_scheduler.py`
+- `src/services/background/wf4_sitemap_discovery_scheduler.py`
+- `src/services/background/wf5_sitemap_import_scheduler.py`
+- `src/services/background/wf7_page_curation_scheduler.py`
+- `src/services/background/wf7_crm_brevo_sync_scheduler.py`
+
+### Utils
+- `src/utils/honeybee_categorizer.py`: AI categorization logic
+- `src/utils/scraper_api.py`: ScraperAPI client
+- `src/utils/simple_scraper.py`: Fallback scraper
 
 ---
-
-**Audit Rule:** If a document references `v2/` routers or `old_enum_names`, it does NOT belong in this folder until updated.
+**Note:** This list is auto-generated. Always check `src/` for the absolute latest state, but treat this as the "Expected State".

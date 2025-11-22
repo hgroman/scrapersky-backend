@@ -122,7 +122,7 @@ WHERE next_retry_at IS NOT NULL;
 
 ### Step 1.3: Update Contact Model
 
-**File:** `src/models/WF7_V2_L1_1of1_ContactModel.py`
+**File:** `src/models/wf7_contact.py`
 
 **Add fields:**
 ```python
@@ -181,7 +181,7 @@ class {Service}ValidationStatus(str, Enum):
 
 ### Step 2.2: Import in Models
 
-**File:** `src/models/WF7_V2_L1_1of1_ContactModel.py`
+**File:** `src/models/wf7_contact.py`
 
 ```python
 from src.models.enums import CRMSyncStatus, CRMProcessingStatus
@@ -224,7 +224,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from src.config.settings import settings
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_contact import Contact
 from src.models.enums import CRMSyncStatus, CRMProcessingStatus
 
 logger = logging.getLogger(__name__)
@@ -480,7 +480,7 @@ from sqlalchemy import asc
 
 from src.common.curation_sdk.scheduler_loop import run_job_loop
 from src.config.settings import settings
-from src.models.WF7_V2_L1_1of1_ContactModel import Contact
+from src.models.wf7_contact import Contact
 from src.models.enums import CRMProcessingStatus
 from .{service}_service import {Service}Service
 
