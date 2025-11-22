@@ -260,10 +260,10 @@ Can rebuild understanding from scratch in 30-60 minutes.
 - `places` → `local_business` → `domains` → `sitemap_files` → `pages`
 
 ### Key Services
-- DomainToSitemapAdapterService (WF4)
-- SitemapProcessingService (WF4→WF5)
-- SitemapImportService (WF5)
-- PageCurationService (WF7)
+- wf4_domain_to_sitemap_adapter_service (WF4)
+- wf5_processing_service (WF4→WF5)
+- wf5_sitemap_import_service (WF5)
+- wf7_page_curation_service (WF7)
 
 ### External Dependencies
 - **Google Maps API** (WF1-2 business discovery) - [DEPENDENCY_MAP.md](./Context_Reconstruction/DEPENDENCY_MAP.md#google-maps-api)

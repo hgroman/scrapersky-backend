@@ -92,13 +92,13 @@ sitemap_files (1) → (N) pages
 
 | Model | File Path | Primary Table |
 |-------|-----------|---------------|
-| Domain | `src/models/domain.py` | `domains` |
-| SitemapFile | `src/models/sitemap.py` | `sitemap_files` |
-| Page | `src/models/page.py` | `pages` |
-| LocalBusiness | `src/models/local_business.py` | `local_businesses` |
-| Place | `src/models/place.py` | `places` |
-| Contact | `src/models/contact.py` | `contacts` |
-| Job | `src/models/job.py` | `jobs` |
+| Domain | `src/models/wf4_domain.py` | `domains` |
+| SitemapFile | `src/models/wf5_sitemap_file.py` | `sitemap_files` |
+| Page | `src/models/wf7_page.py` | `pages` |
+| LocalBusiness | `src/models/wf3_local_business.py` | `local_businesses` |
+| Place | `src/models/wf1_place_staging.py` | `places` |
+| Contact | `src/models/wf7_contact.py` | `contacts` |
+| Job | `src/models/wf4_job.py` | `jobs` |
 
 ---
 
@@ -349,29 +349,29 @@ class SitemapImportProcessStatusEnum(enum.Enum):
 
 ### WF4: Sitemap Discovery
 **Services:**
-- `DomainToSitemapAdapterService` - Bridges WF3→WF4
-- `SitemapProcessingService` - Discovers sitemaps
+- `wf4_domain_to_sitemap_adapter_service` - Bridges WF3→WF4
+- `wf5_processing_service` - Discovers sitemaps
 
 **Tables:** domains → sitemap_files  
-**Scheduler:** domain_sitemap_submission_scheduler (1 min)  
+**Scheduler:** wf4_sitemap_discovery_scheduler (1 min)  
 **Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf4-services)
 
 ### WF5: Sitemap Import
 **Services:**
-- `SitemapImportService` - Extracts URLs from sitemaps
+- `wf5_sitemap_import_service` - Extracts URLs from sitemaps
 
 **Tables:** sitemap_files → pages
-**Scheduler:** sitemap_import_scheduler (configurable)
+**Scheduler:** wf5_sitemap_import_scheduler (configurable)
 **Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf5-services)
 
 **Note:** There is no WF6. The numbering skips from WF5 to WF7.
 
 ### WF7: Page Curation
 **Services:**
-- `PageCurationService` - Scrapes pages, extracts contacts
+- `wf7_page_curation_service` - Scrapes pages, extracts contacts
 
 **Tables:** pages (updates scraped_content)  
-**Scheduler:** WF7_V2_L4_2of2_PageCurationScheduler (configurable)  
+**Scheduler:** wf7_page_curation_scheduler (configurable)  
 **Details:** [WF4_WF5_WF7_SERVICES.md](../Architecture/WF4_WF5_WF7_SERVICES.md#wf7-services)
 
 ---
@@ -509,28 +509,27 @@ NULL → Queued → Processing → Complete
 
 ## File Locations
 
-```
 src/
 ├── services/
-│   ├── domain_to_sitemap_adapter_service.py (WF4)
+│   ├── wf4_domain_to_sitemap_adapter_service.py (WF4)
 │   ├── sitemap/
-│   │   └── processing_service.py (WF4→WF5)
-│   ├── sitemap_import_service.py (WF5)
-│   ├── WF7_V2_L4_1of2_PageCurationService.py (WF7)
-│   ├── domain_sitemap_submission_scheduler.py
-│   ├── sitemap_import_scheduler.py
-│   └── WF7_V2_L4_2of2_PageCurationScheduler.py
+│   │   └── wf5_processing_service.py (WF4→WF5)
+│   ├── wf5_sitemap_import_service.py (WF5)
+│   ├── wf7_page_curation_service.py (WF7)
+│   ├── background/
+│   │   ├── wf4_sitemap_discovery_scheduler.py
+│   │   ├── wf5_sitemap_import_scheduler.py
+│   │   └── wf7_page_curation_scheduler.py
 ├── routers/v3/
 │   ├── WF4_V3_L3_1of1_DomainsRouter.py
 │   ├── WF5_V3_L3_1of1_SitemapRouter.py
 │   └── WF7_V3_L3_1of1_PagesRouter.py
 └── models/
-    ├── place.py
-    ├── local_business.py
-    ├── domain.py
-    ├── sitemap.py
-    └── page.py
-```
+    ├── wf1_place_staging.py
+    ├── wf3_local_business.py
+    ├── wf4_domain.py
+    ├── wf5_sitemap_file.py
+    └── wf7_page.py
 
 ---
 
