@@ -8,17 +8,26 @@ Endpoints:
 - POST /ask - Semantic search with filters
 - GET /stats - Knowledge base statistics
 - GET /filters - Available filter options
+
+ARCHITECTURE NOTE: This router uses AsyncSession with the Supavisor connection
+pooler, consistent with all other routers in the system.
 """
 
+import json
+import logging
 import os
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
-from supabase import create_client
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.jwt_auth import get_current_active_user
+from src.session.async_session import get_session_dependency
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v3/copilot", tags=["Co-Pilot"])
 
@@ -118,22 +127,20 @@ class FiltersResponse(BaseModel):
 # =============================================================================
 
 
-def get_supabase_client():
-    """Create and return a Supabase client."""
-    return create_client(
-        os.getenv("SUPABASE_URL"),
-        os.getenv("SUPABASE_SERVICE_ROLE_KEY"),
-    )
-
-
-async def get_embedding(text: str) -> List[float]:
+async def get_embedding(text_input: str) -> List[float]:
     """Generate embedding for text using OpenAI."""
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = await client.embeddings.create(
-        input=[text.replace("\n", " ")],
+        input=[text_input.replace("\n", " ")],
         model="text-embedding-ada-002",
     )
     return response.data[0].embedding
+
+
+def format_vector_for_postgres(embedding: List[float]) -> str:
+    """Format embedding vector for PostgreSQL halfvec type."""
+    # Format as PostgreSQL array literal: [0.1, 0.2, ...]
+    return "[" + ",".join(str(x) for x in embedding) + "]"
 
 
 # =============================================================================
@@ -144,6 +151,7 @@ async def get_embedding(text: str) -> List[float]:
 @router.post("/ask", response_model=AskResponse)
 async def ask_copilot(
     payload: AskRequest,
+    session: AsyncSession = Depends(get_session_dependency),
     current_user: Dict[str, Any] = Depends(get_current_active_user),
 ):
     """
@@ -159,71 +167,97 @@ async def ask_copilot(
     - `include_patterns`: Also search fix_patterns for code issues
     """
     try:
-        supabase = get_supabase_client()
+        # Generate embedding for the question
         embedding = await get_embedding(payload.question)
+        vector_str = format_vector_for_postgres(embedding)
 
-        # Build metadata filter
-        metadata_filter = {}
+        # Build metadata filter for the RPC function
+        metadata_filter: Dict[str, Any] = {}
         if payload.layers:
             metadata_filter["architectural_layer"] = payload.layers
         if payload.doc_types:
             metadata_filter["document_type"] = payload.doc_types
 
-        # Primary search: project_docs
-        doc_result = supabase.rpc(
-            "perform_semantic_search_direct",
-            {
-                "query_embedding_param": embedding,
-                "match_count_param": payload.limit,
-                "match_threshold_param": payload.threshold,
-                "metadata_filter_param": metadata_filter,
-            },
-        ).execute()
-
-        # Build results with optional content
-        results = []
-        for r in doc_result.data:
-            result = SearchResult(
-                id=r["id"],
-                title=r["title"],
-                similarity=r["similarity"],
-                content=r.get("content") if payload.include_content else None,
-                source="project_docs",
+        # Call the RPC function using raw SQL through SQLAlchemy
+        # The function: perform_semantic_search_direct(halfvec, double, int, jsonb)
+        # Use CAST() instead of :: to avoid conflicts with SQLAlchemy parameter binding
+        query = text("""
+            SELECT id, title, content, similarity
+            FROM perform_semantic_search_direct(
+                CAST(:embedding AS halfvec),
+                CAST(:threshold AS double precision),
+                CAST(:limit AS integer),
+                CAST(:metadata_filter AS jsonb)
             )
-            results.append(result)
+        """)
+
+        result = await session.execute(
+            query,
+            {
+                "embedding": vector_str,
+                "threshold": float(payload.threshold),
+                "limit": int(payload.limit),
+                "metadata_filter": json.dumps(metadata_filter),
+            },
+        )
+        rows = result.fetchall()
+
+        # Build results
+        results = []
+        for row in rows:
+            results.append(
+                SearchResult(
+                    id=row.id,
+                    title=row.title,
+                    similarity=row.similarity,
+                    content=row.content if payload.include_content else None,
+                    source="project_docs",
+                )
+            )
 
         # If workflow filter specified, filter results by checking document_registry
-        if payload.workflows:
-            # Get document IDs that match workflow filter
-            workflow_query = supabase.table("document_registry").select(
-                "id"
-            ).or_(
-                ",".join([f"associated_workflow.cs.{{{w}}}" for w in payload.workflows])
-            ).execute()
+        if payload.workflows and results:
+            result_ids = [r.id for r in results]
+            # Build OR condition for workflow array contains
+            workflow_conditions = " OR ".join(
+                [f"associated_workflow @> :wf_{i}::jsonb" for i in range(len(payload.workflows))]
+            )
+            workflow_query = text(f"""
+                SELECT id FROM document_registry
+                WHERE id = ANY(:ids) AND ({workflow_conditions})
+            """)
+            params = {"ids": result_ids}
+            for i, wf in enumerate(payload.workflows):
+                params[f"wf_{i}"] = json.dumps([wf])
 
-            valid_ids = {r["id"] for r in workflow_query.data}
+            workflow_result = await session.execute(workflow_query, params)
+            valid_ids = {row.id for row in workflow_result.fetchall()}
             results = [r for r in results if r.id in valid_ids]
 
         # Optional: Search fix_patterns
         patterns = None
         if payload.include_patterns:
-            # Direct query to fix_patterns
-            pattern_query = supabase.table("fix_patterns").select(
-                "id, title, problem_type, severity, problem_description, solution_steps"
-            ).limit(10).execute()
+            pattern_query = text("""
+                SELECT id, title, problem_type, severity,
+                       problem_description, solution_steps
+                FROM fix_patterns
+                LIMIT 10
+            """)
+            pattern_result = await session.execute(pattern_query)
+            pattern_rows = pattern_result.fetchall()
 
-            if pattern_query.data:
+            if pattern_rows:
                 patterns = [
                     PatternResult(
-                        id=str(p["id"]),
-                        title=p["title"],
-                        similarity=0.75,  # Placeholder until we add proper vector search
-                        problem_type=p.get("problem_type"),
-                        severity=p.get("severity"),
-                        problem_description=p.get("problem_description"),
-                        solution_steps=p.get("solution_steps"),
+                        id=str(p.id),
+                        title=p.title,
+                        similarity=0.75,  # Placeholder until proper vector search
+                        problem_type=p.problem_type,
+                        severity=p.severity,
+                        problem_description=p.problem_description,
+                        solution_steps=p.solution_steps,
                     )
-                    for p in pattern_query.data[:5]
+                    for p in pattern_rows[:5]
                 ]
 
         return AskResponse(
@@ -241,11 +275,13 @@ async def ask_copilot(
         )
 
     except Exception as e:
+        logger.error(f"Co-Pilot error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Co-Pilot error: {str(e)}")
 
 
 @router.get("/stats", response_model=StatsResponse)
 async def get_stats(
+    session: AsyncSession = Depends(get_session_dependency),
     current_user: Dict[str, Any] = Depends(get_current_active_user),
 ):
     """
@@ -254,72 +290,66 @@ async def get_stats(
     Returns counts of documents and patterns by various dimensions.
     """
     try:
-        supabase = get_supabase_client()
-
         # Total documents (active only)
-        docs_count = supabase.table("document_registry").select(
-            "id", count="exact"
-        ).eq("embedding_status", "active").execute()
+        docs_result = await session.execute(
+            text("SELECT COUNT(*) FROM document_registry WHERE embedding_status = 'active'")
+        )
+        total_docs = docs_result.scalar() or 0
 
         # Total patterns
-        patterns_count = supabase.table("fix_patterns").select(
-            "id", count="exact"
-        ).execute()
+        patterns_result = await session.execute(
+            text("SELECT COUNT(*) FROM fix_patterns")
+        )
+        total_patterns = patterns_result.scalar() or 0
 
         # Documents by layer
-        layers_query = supabase.table("document_registry").select(
-            "architectural_layer"
-        ).eq("embedding_status", "active").not_.is_("architectural_layer", "null").execute()
-
-        layer_counts = {}
-        for r in layers_query.data:
-            layer = f"Layer {r['architectural_layer']}"
-            layer_counts[layer] = layer_counts.get(layer, 0) + 1
+        layers_result = await session.execute(
+            text("""
+                SELECT architectural_layer, COUNT(*) as cnt
+                FROM document_registry
+                WHERE embedding_status = 'active' AND architectural_layer IS NOT NULL
+                GROUP BY architectural_layer
+            """)
+        )
+        layer_counts = {f"Layer {row.architectural_layer}": row.cnt for row in layers_result.fetchall()}
 
         # Documents by type
-        types_query = supabase.table("document_registry").select(
-            "document_type"
-        ).eq("embedding_status", "active").not_.is_("document_type", "null").execute()
-
-        type_counts = {}
-        for r in types_query.data:
-            doc_type = r["document_type"]
-            type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
+        types_result = await session.execute(
+            text("""
+                SELECT document_type, COUNT(*) as cnt
+                FROM document_registry
+                WHERE embedding_status = 'active' AND document_type IS NOT NULL
+                GROUP BY document_type
+            """)
+        )
+        type_counts = {row.document_type: row.cnt for row in types_result.fetchall()}
 
         # Documents by workflow (from associated_workflow array)
-        workflow_counts = {}
-        workflows_query = supabase.table("document_registry").select(
-            "associated_workflow"
-        ).eq("embedding_status", "active").not_.is_("associated_workflow", "null").execute()
-
-        for r in workflows_query.data:
-            if r["associated_workflow"]:
-                for wf in r["associated_workflow"]:
-                    workflow_counts[wf] = workflow_counts.get(wf, 0) + 1
+        workflows_result = await session.execute(
+            text("""
+                SELECT unnest(associated_workflow) as workflow, COUNT(*) as cnt
+                FROM document_registry
+                WHERE embedding_status = 'active' AND associated_workflow IS NOT NULL
+                GROUP BY workflow
+            """)
+        )
+        workflow_counts = {row.workflow: row.cnt for row in workflows_result.fetchall()}
 
         # Patterns by type
-        pattern_types_query = supabase.table("fix_patterns").select(
-            "problem_type"
-        ).execute()
-
-        pattern_type_counts = {}
-        for r in pattern_types_query.data:
-            ptype = r["problem_type"]
-            pattern_type_counts[ptype] = pattern_type_counts.get(ptype, 0) + 1
+        pattern_types_result = await session.execute(
+            text("SELECT problem_type, COUNT(*) as cnt FROM fix_patterns GROUP BY problem_type")
+        )
+        pattern_type_counts = {row.problem_type: row.cnt for row in pattern_types_result.fetchall()}
 
         # Patterns by severity
-        severity_query = supabase.table("fix_patterns").select(
-            "severity"
-        ).execute()
-
-        severity_counts = {}
-        for r in severity_query.data:
-            sev = r["severity"]
-            severity_counts[sev] = severity_counts.get(sev, 0) + 1
+        severity_result = await session.execute(
+            text("SELECT severity, COUNT(*) as cnt FROM fix_patterns GROUP BY severity")
+        )
+        severity_counts = {row.severity: row.cnt for row in severity_result.fetchall()}
 
         return StatsResponse(
-            total_documents=docs_count.count or 0,
-            total_patterns=patterns_count.count or 0,
+            total_documents=total_docs,
+            total_patterns=total_patterns,
             documents_by_layer=layer_counts,
             documents_by_type=type_counts,
             documents_by_workflow=workflow_counts,
@@ -328,11 +358,13 @@ async def get_stats(
         )
 
     except Exception as e:
+        logger.error(f"Stats error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Stats error: {str(e)}")
 
 
 @router.get("/filters", response_model=FiltersResponse)
 async def get_filters(
+    session: AsyncSession = Depends(get_session_dependency),
     current_user: Dict[str, Any] = Depends(get_current_active_user),
 ):
     """
@@ -341,50 +373,57 @@ async def get_filters(
     Returns all valid values for layers, workflows, document types, etc.
     """
     try:
-        supabase = get_supabase_client()
-
         # Get distinct layers
-        layers_query = supabase.table("document_registry").select(
-            "architectural_layer"
-        ).eq("embedding_status", "active").not_.is_("architectural_layer", "null").execute()
-
-        unique_layers = sorted(set(r["architectural_layer"] for r in layers_query.data))
+        layers_result = await session.execute(
+            text("""
+                SELECT DISTINCT architectural_layer
+                FROM document_registry
+                WHERE embedding_status = 'active' AND architectural_layer IS NOT NULL
+                ORDER BY architectural_layer
+            """)
+        )
         layers = [
-            {"value": layer_num, "label": f"Layer {layer_num}", "description": get_layer_description(layer_num)}
-            for layer_num in unique_layers
+            {
+                "value": row.architectural_layer,
+                "label": f"Layer {row.architectural_layer}",
+                "description": get_layer_description(row.architectural_layer),
+            }
+            for row in layers_result.fetchall()
         ]
 
         # Get distinct document types
-        types_query = supabase.table("document_registry").select(
-            "document_type"
-        ).eq("embedding_status", "active").not_.is_("document_type", "null").execute()
-
-        doc_types = sorted(set(r["document_type"] for r in types_query.data))
+        types_result = await session.execute(
+            text("""
+                SELECT DISTINCT document_type
+                FROM document_registry
+                WHERE embedding_status = 'active' AND document_type IS NOT NULL
+                ORDER BY document_type
+            """)
+        )
+        doc_types = [row.document_type for row in types_result.fetchall()]
 
         # Get distinct workflows
-        workflows_query = supabase.table("document_registry").select(
-            "associated_workflow"
-        ).eq("embedding_status", "active").not_.is_("associated_workflow", "null").execute()
-
-        workflows = set()
-        for r in workflows_query.data:
-            if r["associated_workflow"]:
-                workflows.update(r["associated_workflow"])
-        workflows = sorted(workflows)
+        workflows_result = await session.execute(
+            text("""
+                SELECT DISTINCT unnest(associated_workflow) as workflow
+                FROM document_registry
+                WHERE embedding_status = 'active' AND associated_workflow IS NOT NULL
+                ORDER BY workflow
+            """)
+        )
+        workflows = [row.workflow for row in workflows_result.fetchall()]
 
         # Get distinct pattern types
-        pattern_types_query = supabase.table("fix_patterns").select(
-            "problem_type"
-        ).execute()
-
-        pattern_types = sorted(set(r["problem_type"] for r in pattern_types_query.data))
+        pattern_types_result = await session.execute(
+            text("SELECT DISTINCT problem_type FROM fix_patterns ORDER BY problem_type")
+        )
+        pattern_types = [row.problem_type for row in pattern_types_result.fetchall()]
 
         # Get distinct severities
-        severity_query = supabase.table("fix_patterns").select(
-            "severity"
-        ).execute()
-
-        severities = sorted(set(r["severity"] for r in severity_query.data))
+        severity_result = await session.execute(
+            text("SELECT DISTINCT severity FROM fix_patterns ORDER BY severity")
+        )
+        severities = [row.severity for row in severity_result.fetchall()]
 
         return FiltersResponse(
             layers=layers,
@@ -395,6 +434,7 @@ async def get_filters(
         )
 
     except Exception as e:
+        logger.error(f"Filters error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Filters error: {str(e)}")
 
 
