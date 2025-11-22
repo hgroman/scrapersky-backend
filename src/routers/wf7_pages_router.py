@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 # CRITICAL: Import schemas from properly named Layer 2 file
-from src.schemas.WF7_V3_L2_1of1_PageCurationSchemas import (
+from src.schemas.wf7_page_curation_schemas import (
     PageCurationBatchStatusUpdateRequest,
     PageCurationBatchUpdateResponse,
     PageCurationFilteredUpdateRequest
