@@ -70,6 +70,7 @@ from .routers.wf7_contacts_validation_router import (
     router as contacts_validation_router,
 )
 from .routers.wf7_n8n_webhook_router import router as n8n_webhook_router  # WO-021
+from .routers.copilot import router as copilot_router
 from .routers.sqlalchemy import routers as sqlalchemy_routers
 from .scheduler_instance import shutdown_scheduler, start_scheduler
 from .scraper.metadata_extractor import session_manager
@@ -371,6 +372,8 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.include_router(domains_direct_submission_router)
 app.include_router(domains_csv_import_router)
+app.include_router(copilot_router)
+
 # Root routes
 @app.get("/")
 async def root():
